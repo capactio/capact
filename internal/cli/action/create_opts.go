@@ -3,6 +3,7 @@ package action
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
@@ -14,6 +15,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -33,7 +35,7 @@ type CreateOptions struct {
 	ActionPolicyFilePath  string
 
 	// internal fields
-	parameters    string
+	parameters    json.RawMessage
 	typeInstances []types.InputTypeInstanceRef
 	policy        *gqlengine.PolicyInput
 
@@ -58,14 +60,20 @@ func (c *CreateOptions) setDefaults() {
 
 func (c *CreateOptions) validate(ctx context.Context) error {
 	r := validation.ResultAggregator{}
-	err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(c.parameters)))
+
+	parameters, err := argo.ToParametersCollection(c.parameters)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while getting parameters collection")
+	}
+
+	err = r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, parameters))
+	if err != nil {
+		return errors.Wrap(err, "while validating parameters collection")
 	}
 
 	err = r.Report(c.validator.ValidateTypeInstances(ctx, c.ifaceTypes, c.typeInstances))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while validating TypeInstances")
 	}
 
 	return r.ErrorOrNil()
@@ -133,14 +141,14 @@ func (c *CreateOptions) resolveWithSurvey() error {
 
 func (c *CreateOptions) resolveFromFiles() error {
 	if c.ParametersFilePath != "" {
-		rawInput, err := ioutil.ReadFile(c.ParametersFilePath)
+		yamlInputParameters, err := ioutil.ReadFile(c.ParametersFilePath)
 		if err != nil {
 			return err
 		}
 
-		c.parameters, err = toInputParameters(rawInput)
+		c.parameters, err = yaml.YAMLToJSON(yamlInputParameters)
 		if err != nil {
-			return err
+			return nil
 		}
 	}
 
@@ -178,7 +186,7 @@ func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	}
 }
 
-func (c *CreateOptions) askForInputParameters() (string, error) {
+func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 	rawInput := ""
 	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
 
@@ -189,19 +197,29 @@ func (c *CreateOptions) askForInputParameters() (string, error) {
 
 	if c.Validate {
 		valid = append(valid, validatorAdapter(func(inputParams string) error {
-			result, err := c.validator.ValidateParameters(context.Background(), c.ifaceSchemas, argo.ToInputParams(inputParams))
+			jsonInputParameters, err := yaml.YAMLToJSON([]byte(inputParams))
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while converting YAML to JSON")
+			}
+
+			parameters, err := argo.ToParametersCollection(json.RawMessage(jsonInputParameters))
+			if err != nil {
+				return errors.Wrap(err, "while getting parameters collection")
+			}
+
+			result, err := c.validator.ValidateParameters(context.Background(), c.ifaceSchemas, parameters)
+			if err != nil {
+				return errors.Wrap(err, "while validating parameters collection")
 			}
 			return result.ErrorOrNil()
 		}))
 	}
 
 	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return toInputParameters([]byte(rawInput))
+	return json.RawMessage(rawInput), nil
 }
 
 func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
@@ -321,15 +339,6 @@ func toTypeInstance(rawInput []byte) ([]types.InputTypeInstanceRef, error) {
 	}
 
 	return resp.TypeInstances, nil
-}
-
-func toInputParameters(rawInput []byte) (string, error) {
-	converted, err := yaml.YAMLToJSON(rawInput)
-	if err != nil {
-		return "", err
-	}
-
-	return string(converted), nil
 }
 
 func toActionPolicy(rawInput []byte) (*gqlengine.PolicyInput, error) {

@@ -52,20 +52,18 @@ LABEL app=$COMPONENT
 
 CMD ["/app"]
 
-FROM builder as e2e
-
-# Copy common CA certificates from Builder image (installed by default with ca-certificates package)
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
-COPY --from=builder /bin/$COMPONENT /app.test
+FROM builder as e2e-builder
 
 RUN apk add --no-cache 'git=>2.30' && \
-    go install github.com/onsi/ginkgo/ginkgo@latest
+    export CGO_ENABLED=0 && go install github.com/onsi/ginkgo/ginkgo@latest
 
-LABEL source=git@github.com:capactio/capact.git
-LABEL app=$COMPONENT
+FROM generic as e2e
+ARG COMPONENT
 
-CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
+COPY --from=builder /bin/$COMPONENT /app.test
+COPY --from=e2e-builder /go/bin/ginkgo /ginkgo
+
+CMD ["/ginkgo", "-v", "-nodes=1", "/app.test" ]
 
 FROM alpine:3.13.5 as terraform-runner
 ARG COMPONENT

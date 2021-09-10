@@ -229,10 +229,14 @@ var _ = Describe("Action", func() {
 			}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNil())
 		},
 			Entry("Passing action", map[string]interface{}{
-				"testString": "success",
+				"input-parameters": map[string]interface{}{
+					"testString": "success",
+				},
 			}, enginegraphql.ActionStatusPhaseSucceeded),
 			Entry("Failing action", map[string]interface{}{
-				"testString": "failure",
+				"input-parameters": map[string]interface{}{
+					"testString": "failure",
+				},
 			}, enginegraphql.ActionStatusPhaseFailed),
 		)
 	})

@@ -2,11 +2,14 @@ package action
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
+	"strings"
 
 	"capact.io/capact/internal/k8s-engine/graphql/model"
 	"capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
@@ -15,8 +18,8 @@ import (
 )
 
 const (
-	// ParametersSecretDataKey defines key name for Action runner parameters.
-	ParametersSecretDataKey = "parameters.json"
+	// ParameterDataKeyPrefix prefixes every user input parameter key in the Secret data
+	ParameterDataKeyPrefix = "parameter-"
 	// ActionPolicySecretDataKey defines key name for Action Policy.
 	ActionPolicySecretDataKey = "action-policy.json"
 	// LatestRevision defines keyword to indicate latest revision.
@@ -24,6 +27,22 @@ const (
 
 	secretKind = "Secret"
 )
+
+// GetParameterDataKey returns the parameter data key in the Secret resource
+func GetParameterDataKey(parameterName string) string {
+	return fmt.Sprintf("%s%s", ParameterDataKeyPrefix, parameterName)
+}
+
+// IsParameterDataKey returns two values given a Secret data key:
+// First value - bool indicating, if the key represents an user input parameter
+// Second value - name of the user input parameter
+func IsParameterDataKey(key string) (bool, string) {
+	if !strings.HasPrefix(key, ParameterDataKeyPrefix) {
+		return false, ""
+	}
+
+	return true, strings.TrimPrefix(key, ParameterDataKeyPrefix)
+}
 
 // Converter provides functionality to convert GraphQL DTO to models.
 type Converter struct{}
@@ -190,9 +209,16 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		return nil, nil
 	}
 
-	data := map[string]string{}
+	var (
+		data = make(map[string]string)
+		err  error
+	)
+
 	if in.Parameters != nil {
-		data[ParametersSecretDataKey] = string(*in.Parameters)
+		data, err = toParametersData(json.RawMessage(*in.Parameters))
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting parameters collection")
+		}
 	}
 
 	if in.ActionPolicy != nil {
@@ -214,6 +240,32 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		},
 		StringData: data,
 	}, nil
+}
+
+func toParametersData(parameters json.RawMessage) (map[string]string, error) {
+	if parameters == nil {
+		return nil, nil
+	}
+
+	parametersMap := make(map[string]interface{})
+	if err := json.Unmarshal(parameters, &parametersMap); err != nil {
+		return make(map[string]string), err
+	}
+
+	result := make(map[string]string)
+
+	for name := range parametersMap {
+		value := parametersMap[name]
+		valueData, err := json.Marshal(&value)
+		if err != nil {
+			return types.ParametersCollection{}, errors.Wrapf(err, "while marshaling %s parameter to JSON", name)
+		}
+
+		key := GetParameterDataKey(name)
+		result[key] = string(valueData)
+	}
+
+	return result, nil
 }
 
 func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) (*graphql.ActionInput, error) {

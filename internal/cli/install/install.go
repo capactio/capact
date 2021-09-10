@@ -7,7 +7,9 @@ import (
 	"log"
 
 	"capact.io/capact/internal/cli/capact"
+	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/printer"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 )
@@ -21,7 +23,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 
 	err = opts.Parameters.SetCapactValuesFromOverrides()
 	if err != nil {
-		return errors.Wrap(err, "while parsing capact overrides")
+		return errors.Wrap(err, "while parsing Capact overrides")
 	}
 
 	err = opts.Parameters.ResolveVersion()
@@ -30,17 +32,27 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 	}
 
 	version := opts.Parameters.Version
-	if version == "@local" {
+	if version == capact.LocalVersionTag {
+		if opts.LocalRegistryEnabled {
+			opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path = create.ContainerRegistry
+		}
 		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
 		registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
+
 		// TODO can we parallelize it?
-		created, err := capact.BuildImages(ctx, w, registryPath, registryTag, opts.BuildImages)
+		created, err := capact.BuildImages(ctx, status, registryPath, registryTag, opts.BuildImages)
 		if err != nil {
 			return errors.Wrap(err, "while building images")
 		}
 
-		if err := capact.LoadImages(ctx, created, opts); err != nil {
-			return err
+		if opts.LocalRegistryEnabled { // push to Docker registry
+			if err := capact.PushImages(ctx, status, created); err != nil {
+				return err
+			}
+		} else { // load into a given environment
+			if err := capact.LoadImages(ctx, status, created, opts); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -69,20 +81,24 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		return err
 	}
 
+	if opts.UpdateHostsFile || opts.UpdateTrustedCerts {
+		status.Step("Preparing local changes")
+		status.End(true)
+	}
+
 	if opts.UpdateHostsFile {
-		err = capact.AddGatewayToHostsFile(status)
+		err = capact.AddGatewayToHostsFile()
 		if err != nil {
 			return err
 		}
 	}
 
 	if opts.UpdateTrustedCerts {
-		err = capact.TrustSelfSigned(status)
+		err = capact.TrustSelfSigned()
 		if err != nil {
 			return err
 		}
 	}
-	status.End(true)
 
 	welcomeMessage(w)
 
