@@ -17,7 +17,7 @@ type (
 			IngressStringOverrides     []string
 			CertManagerStringOverrides []string
 
-			HelmRepoURL  string      `json:"helmRepoURL"`
+			HelmRepo     string      `json:"helmRepoURL"`
 			CapactValues Values      `json:"capactValues,omitempty"`
 			Neo4jValues  Neo4jValues `json:"neo4jValues,omitempty"`
 		} `json:"override"`
@@ -137,18 +137,20 @@ func IncreasedNeo4jResources() Resources {
 	}
 }
 
-//ResolveVersion resolves @latest tag
+// ResolveVersion resolves @latest tag
 func (i *InputParameters) ResolveVersion() error {
-	if i.Override.HelmRepoURL == LatestVersionTag {
-		i.Override.HelmRepoURL = HelmRepoLatest
+	if i.Override.HelmRepo == LatestVersionTag {
+		i.Override.HelmRepo = HelmRepoLatest
 	}
 	if i.Version == LatestVersionTag {
-		ver, err := NewHelmHelper().GetLatestVersion(i.Override.HelmRepoURL, Name)
+		ver, err := NewHelmHelper().GetLatestVersion(i.Override.HelmRepo, Name)
 		if err != nil {
 			return err
 		}
 		i.Version = ver
 	} else if i.Version == LocalVersionTag {
+		i.Override.HelmRepo = LocalChartsPath
+
 		if i.Override.CapactValues.Global.ContainerRegistry.Path == "" {
 			i.Override.CapactValues.Global.ContainerRegistry.Path = LocalDockerPath
 		}

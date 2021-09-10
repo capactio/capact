@@ -35,7 +35,7 @@ capact install --version @local
       --cert-manager-overrides strings         Overrides for Cert Manager component.
       --enable-registry                        If specified, Capact images are pushed to Capact local Docker registry.
       --environment string                     Capact environment. (default "kind")
-      --helm-repo-url string                   Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
+      --helm-repo string                       Capact Helm chart repository location. It can be relative path to current working directory or URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
   -h, --help                                   help for install
       --increase-resource-limits               Enables higher resource requests and limits for components. (default true)
       --ingress-controller-overrides strings   Overrides for Ingress controller component.
@@ -52,7 +52,7 @@ capact install --version @local
 
 ```
   -c, --config string                 Path to the YAML config file
-  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - tracing (default 0 - disable)
+  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - trace (default 0 - disable)
 ```
 
 ### SEE ALSO

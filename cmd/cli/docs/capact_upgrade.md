@@ -29,7 +29,7 @@ capact upgrade --version 0.1.0
 ```
       --action-name-prefix string           Specifies Capact upgrade Action name prefix. (default "capact-upgrade-")
       --enable-test-setup                   Enables test setup for the Capact E2E validation scenarios.
-      --helm-repo-url string                Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
+      --helm-repo string                    Capact Helm chart repository location. It can be relative path to current working directory or URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
   -h, --help                                help for upgrade
       --increase-resource-limits            Enables higher resource requests and limits for components. (default true)
       --max-queue-time duration             Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
@@ -45,7 +45,7 @@ capact upgrade --version 0.1.0
 
 ```
   -c, --config string                 Path to the YAML config file
-  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - tracing (default 0 - disable)
+  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - trace (default 0 - disable)
 ```
 
 ### SEE ALSO

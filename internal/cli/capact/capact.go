@@ -68,7 +68,6 @@ type Options struct {
 
 	// Helm client opts
 	DryRun     bool
-	Replace    bool
 	ClientOnly bool
 }
 

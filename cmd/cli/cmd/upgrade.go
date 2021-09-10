@@ -40,7 +40,7 @@ func NewUpgrade() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVar(&opts.Parameters.Version, "version", capact.LatestVersionTag, "Capact version.")
-	flags.StringVar(&opts.Parameters.Override.HelmRepoURL, "helm-repo-url", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
+	flags.StringVar(&opts.Parameters.Override.HelmRepo, "helm-repo", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository location. It can be relative path to current working directory or URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
 	flags.StringVar(&opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag, "override-capact-image-tag", "", "Allows you to override Docker image tag for Capact components. By default, Docker image tag from Helm chart is used.")
 	flags.StringVar(&opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path, "override-capact-image-repo", "", "Allows you to override Docker image repository for Capact components. By default, Docker image repository from Helm chart is used.")
 	flags.BoolVar(&opts.Parameters.IncreaseResourceLimits, "increase-resource-limits", true, "Enables higher resource requests and limits for components.")
