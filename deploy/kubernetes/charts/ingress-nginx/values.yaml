@@ -7,6 +7,8 @@
 #      default-ssl-certificate: "ingress-nginx/default-ssl-cert"
 ingress-nginx:
   controller:
+    image:
+      digest: ""
     resources:
       requests:
         cpu: 50m

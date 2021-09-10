@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -162,27 +163,34 @@ func addPrefix(prefix, s string) string {
 	return fmt.Sprintf("%s-%s", prefix, s)
 }
 
-// ToInputParams maps a single parameters into an array which has this one parameter with
+// ToParametersCollection maps a single parameters into an array which has this one parameter with
 // a hardcoded name.
 // Accepts only string, for all other types returns nil response.
 // Empty interface is used only to simplify usage.
 //
 // It's a known bug that we accept only one input parameter for render process
 // but we allow to specify multiple in Hub manifests definition
-func ToInputParams(parameters interface{}) types.ParametersCollection {
+func ToParametersCollection(parameters json.RawMessage) (types.ParametersCollection, error) {
 	if parameters == nil {
-		return nil
-	}
-	str, ok := parameters.(string)
-	if !ok {
-		return nil
+		return nil, nil
 	}
 
-	if strings.TrimSpace(str) == "" {
-		return nil
+	parametersMap := make(map[string]interface{})
+	if err := json.Unmarshal(parameters, &parametersMap); err != nil {
+		return types.ParametersCollection{}, err
 	}
 
-	return types.ParametersCollection{
-		UserInputName: str,
+	result := types.ParametersCollection{}
+
+	for name := range parametersMap {
+		value := parametersMap[name]
+		valueData, err := json.Marshal(&value)
+		if err != nil {
+			return types.ParametersCollection{}, errors.Wrapf(err, "while marshaling %s parameter to JSON", name)
+		}
+
+		result[name] = string(valueData)
 	}
+
+	return result, nil
 }

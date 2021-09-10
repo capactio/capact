@@ -357,7 +357,7 @@ func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha
 
 // RenderAction returns rendered Implementation for Interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
-	ref, userInput, err := a.getUserInputData(ctx, action)
+	ref, parametersCollection, err := a.getUserInputData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 	ownerID := ownerIDKey(action)
 	options := []argo.RendererOption{
-		argo.WithSecretUserInput(ref, userInput),
+		argo.WithSecretUserInput(ref, parametersCollection),
 		argo.WithPolicyOrder(a.policyOrder),
 		argo.WithGlobalPolicy(policy),
 		argo.WithTypeInstances(typeInstances),
@@ -408,25 +408,34 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
 
-	if err := a.actionValidator.Validate(renderOutput.Action, action.Namespace); err != nil {
-		return nil, errors.Wrap(err, "while validating rendered Action")
-	}
-
 	actionBytes, err := json.Marshal(renderOutput.Action)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 
 	status := &v1alpha1.RenderingStatus{}
+
+	if parametersCollection != nil {
+		parametersBytes, err := json.Marshal(parametersCollection)
+		if err != nil {
+			return nil, errors.Wrap(err, "while marshaling user input to json")
+		}
+
+		status.SetInputParameters(parametersBytes)
+	}
+
 	status.SetAction(actionBytes)
-	status.SetInputParameters(userInput)
 	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
 	status.SetActionPolicy(actionPolicyData)
+
+	if err := a.actionValidator.Validate(renderOutput.Action, action.Namespace); err != nil {
+		return status, errors.Wrap(err, "while validating rendered Action")
+	}
 
 	return status, nil
 }
 
-func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, []byte, error) {
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, types.ParametersCollection, error) {
 	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
 		return nil, nil, nil
 	}
@@ -437,10 +446,16 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 		return nil, nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}
 
+	parameters := types.ParametersCollection{}
+	for key, data := range secret.Data {
+		if ok, name := graphqldomain.IsParameterDataKey(key); ok {
+			parameters[name] = string(data)
+		}
+	}
+
 	return &argo.UserInputSecretRef{
 		Name: action.Spec.Input.Parameters.SecretRef.Name,
-		Key:  graphqldomain.ParametersSecretDataKey,
-	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
+	}, parameters, nil
 }
 
 func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.ActionPolicy, []byte, error) {

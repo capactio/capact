@@ -32,7 +32,6 @@ main() {
     capact::create_cluster
 
     export DOCKER_TAG=dev
-    export DOCKER_REPOSITORY="local"
     export PRINT_INSECURE_NOTES="true"
     shout "Installing Capact on development local cluster..."
     capact::install

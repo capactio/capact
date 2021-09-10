@@ -12,7 +12,7 @@ import (
 // If message starts with a gerund then it's spinner is active until next message is logged.
 type LogrusSpinnerFormatter struct {
 	failedPreviously bool
-	spinner          *Status
+	spinner          Status
 }
 
 // NewLogrusSpinnerFormatter returns a new LogrusSpinnerFormatter instance.

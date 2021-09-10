@@ -19,9 +19,5 @@ func LoadK3dImages(ctx context.Context, clusterName string, images []string) err
 		return err
 	}
 
-	err = tools.ImageImportIntoClusterMulti(ctx, runtimes.SelectedRuntime, images, cluster, k3dtypes.ImageImportOpts{})
-	if err != nil {
-		return err
-	}
-	return nil
+	return tools.ImageImportIntoClusterMulti(ctx, runtimes.SelectedRuntime, images, cluster, k3dtypes.ImageImportOpts{})
 }

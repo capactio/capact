@@ -1,6 +1,8 @@
 package action
 
 import (
+	"encoding/json"
+
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
@@ -14,10 +16,11 @@ func convertTypeInstancesRefsToGQL(refs []types.InputTypeInstanceRef) []*gqlengi
 	return out
 }
 
-func convertParametersToGQL(parameters string) *gqlengine.JSON {
-	if parameters == "" {
+func convertParametersToGQL(parameters json.RawMessage) *gqlengine.JSON {
+	if parameters == nil {
 		return nil
 	}
-	out := gqlengine.JSON(parameters)
+
+	out := gqlengine.JSON(string(parameters))
 	return &out
 }

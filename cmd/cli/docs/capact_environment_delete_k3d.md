@@ -13,8 +13,9 @@ capact environment delete k3d [flags]
 ### Options
 
 ```
-  -h, --help          help for k3d
-      --name string   Cluster name (default "dev-capact")
+  -h, --help              help for k3d
+      --name string       Cluster name (default "dev-capact")
+      --remove-registry   Remove registry (default true)
 ```
 
 ### Options inherited from parent commands
