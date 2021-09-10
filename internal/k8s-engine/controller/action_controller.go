@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
@@ -18,9 +19,17 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+)
+
+const (
+	// noWait is used when requeue is needed
+	// has to be higher than 0
+	noWait = 1 * time.Microsecond
 )
 
 // ActionReconciler reconciles a Action object.
@@ -171,15 +180,14 @@ func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Acti
 			return ctrl.Result{}, errors.Wrap(err, "while adding action finalizer")
 		}
 
-		return ctrl.Result{}, nil
+		return ctrl.Result{RequeueAfter: noWait}, nil
 	}
 
 	action.Status = r.successStatus(action, v1alpha1.BeingRenderedActionPhase, "Rendering runner action")
 	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
 	}
-	// should be re-queued by status change
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: noWait}, nil
 }
 
 // renderAction renders a given action. If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
@@ -267,11 +275,11 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "while updating status of running action")
 		}
-		// should be re-queued by status change
-		return ctrl.Result{}, nil
+		return ctrl.Result{RequeueAfter: noWait}, nil
 	}
 
 	// status didn't change, no need to requeue
+	// Reconcile will be run when job status is changed
 	return ctrl.Result{}, nil
 }
 
@@ -420,7 +428,7 @@ func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager, maxConcurrentRecon
 	r.rateLimiter = workqueue.DefaultControllerRateLimiter()
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.Action{}).
+		For(&v1alpha1.Action{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 			RateLimiter:             r.rateLimiter,
