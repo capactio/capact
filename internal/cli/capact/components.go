@@ -629,17 +629,17 @@ func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printe
 // InstallCRD installs Capact CRD
 func (h *Helm) InstallCRD() error {
 	var reader io.Reader
-	if h.opts.Parameters.Version == LocalVersionTag {
-		f, err := os.Open(CRDLocalPath)
+	if isLocalFile(h.opts.Parameters.ActionCRDLocation) {
+		f, err := os.Open(h.opts.Parameters.ActionCRDLocation)
 		if err != nil {
-			return errors.Wrapf(err, "while opening local CRD file%s", CRDLocalPath)
+			return errors.Wrapf(err, "while opening local CRD file%s", h.opts.Parameters.ActionCRDLocation)
 		}
 		defer f.Close()
 		reader = f
 	} else {
-		resp, err := http.Get(CRDUrl)
+		resp, err := http.Get(h.opts.Parameters.ActionCRDLocation)
 		if err != nil {
-			return errors.Wrapf(err, "while getting CRD %s", CRDUrl)
+			return errors.Wrapf(err, "while getting CRD %s", h.opts.Parameters.ActionCRDLocation)
 		}
 		defer resp.Body.Close()
 		reader = resp.Body
@@ -647,7 +647,7 @@ func (h *Helm) InstallCRD() error {
 
 	content, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.Wrapf(err, "while downloading CRD %s", CRDUrl)
+		return errors.Wrapf(err, "while reading CRD %s", h.opts.Parameters.ActionCRDLocation)
 	}
 	return createObject(h.configuration, content)
 }
@@ -685,4 +685,9 @@ func ignoreAlreadyExistError(err error) error {
 func isLocalDir(in string) bool {
 	f, err := os.Stat(in)
 	return err == nil && f.IsDir()
+}
+
+func isLocalFile(in string) bool {
+	f, err := os.Stat(in)
+	return err == nil && !f.IsDir()
 }

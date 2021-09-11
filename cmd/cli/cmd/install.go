@@ -61,6 +61,7 @@ func NewInstall() *cobra.Command {
 	flags.BoolVar(&opts.UpdateHostsFile, "update-hosts-file", true, "Updates /etc/hosts with entry for Capact GraphQL Gateway.")
 	flags.BoolVar(&opts.UpdateTrustedCerts, "update-trusted-certs", true, "Add Capact GraphQL Gateway certificate.")
 	flags.StringVar(&opts.Parameters.Override.HelmRepo, "helm-repo", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository location. It can be relative path to current working directory or URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
+	flags.StringVar(&opts.Parameters.ActionCRDLocation, "crd", capact.CRDUrl, "Capact Action CRD location.")
 	flags.BoolVar(&opts.LocalRegistryEnabled, "enable-registry", false, "If specified, Capact images are pushed to Capact local Docker registry.")
 	flags.StringSliceVar(&opts.Parameters.Override.CapactStringOverrides, "capact-overrides", []string{}, "Overrides for Capact component.")
 	flags.StringSliceVar(&opts.Parameters.Override.IngressStringOverrides, "ingress-controller-overrides", []string{}, "Overrides for Ingress controller component.")

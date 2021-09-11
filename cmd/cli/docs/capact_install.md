@@ -33,6 +33,7 @@ capact install --version @local
       --build-image strings                    Local images names that should be build when using @local version. Takes comma-separated list. (default [argo-actions,argo-runner,e2e-test,gateway,hub-js,k8s-engine,populator])
       --capact-overrides strings               Overrides for Capact component.
       --cert-manager-overrides strings         Overrides for Cert Manager component.
+      --crd string                             Capact Action CRD location. (default "https://raw.githubusercontent.com/capactio/capact/main/deploy/kubernetes/crds/core.capact.io_actions.yaml")
       --enable-registry                        If specified, Capact images are pushed to Capact local Docker registry.
       --environment string                     Capact environment. (default "kind")
       --helm-repo string                       Capact Helm chart repository location. It can be relative path to current working directory or URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")

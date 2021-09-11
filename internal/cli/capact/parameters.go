@@ -12,6 +12,7 @@ type (
 	InputParameters struct {
 		Version                string `json:"version"`
 		IncreaseResourceLimits bool   `json:"-"`
+		ActionCRDLocation      string `json:"-"`
 		Override               struct {
 			CapactStringOverrides      []string
 			IngressStringOverrides     []string
@@ -150,6 +151,7 @@ func (i *InputParameters) ResolveVersion() error {
 		i.Version = ver
 	} else if i.Version == LocalVersionTag {
 		i.Override.HelmRepo = LocalChartsPath
+		i.ActionCRDLocation = LocalCRDPath
 
 		if i.Override.CapactValues.Global.ContainerRegistry.Path == "" {
 			i.Override.CapactValues.Global.ContainerRegistry.Path = LocalDockerPath

@@ -36,8 +36,8 @@ const (
 
 	// CRDUrl Capact CRD URL
 	CRDUrl = "https://raw.githubusercontent.com/capactio/capact/main/deploy/kubernetes/crds/core.capact.io_actions.yaml"
-	// CRDLocalPath is a path to CRD definition in the repository
-	CRDLocalPath = "deploy/kubernetes/crds/core.capact.io_actions.yaml"
+	// LocalCRDPath is a path to CRD definition in the repository
+	LocalCRDPath = "deploy/kubernetes/crds/core.capact.io_actions.yaml"
 
 	// Name Capact name
 	Name = "capact"
