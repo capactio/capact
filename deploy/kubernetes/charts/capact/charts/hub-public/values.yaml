@@ -80,6 +80,7 @@ populator:
   port: 8081
   updateOnGitCommit: true
   manifestsLocation:
+    local: false
     # It's public repository
     repository: github.com/capactio/hub-manifests
     branch: main

@@ -65,9 +65,13 @@ Create the name of the service account to use
 Create the manifest source path
 */}}
 {{- define "populator.manifestPath" -}}
+{{- if .Values.populator.manifestsLocation.local -}}
+/hub-manifests
+{{- else }}
 {{- .Values.populator.manifestsLocation.repository -}}
 ?ref={{ .Values.populator.manifestsLocation.branch -}}
 {{- if .Values.populator.manifestsLocation.sshKey -}}
 &sshkey={{ .Values.populator.manifestsLocation.sshKey -}}
+{{- end }}
 {{- end }}
 {{- end }}
