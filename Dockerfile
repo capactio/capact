@@ -47,6 +47,7 @@ RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
     chmod 700 /root/.ssh && \
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
+# hadolint ignore=DL3059
 RUN git clone --depth 1 --branch $BRANCH https://github.com/capactio/hub-manifests.git /hub-manifests
 
 LABEL source=git@github.com:capactio/capact.git
