@@ -35,7 +35,7 @@ func NewOCFManifests(cliName string) *cobra.Command {
 		Example: heredoc.WithCLIName(`
 			APP_JSON_PUBLISH_ADDR=http://{HOST_IP} <cli> .
 		`, cliName),
-		Args: cli.ExactArgs(1),
+		Args: cli.RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDBPopulate(cmd.Context(), args[0])
 		},
