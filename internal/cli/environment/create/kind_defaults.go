@@ -10,7 +10,7 @@ nodeRegistration:
 
 const (
 	// KindDefaultNodeImage defines default Kubernetes image for a new kind cluster.
-	KindDefaultNodeImage = "kindest/node:v1.19.1"
+	KindDefaultNodeImage = "kindest/node:v1.20.7"
 )
 
 // KindDefaultConfig holds kind cluster configuration suitable for Capact installation.
