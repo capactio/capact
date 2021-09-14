@@ -28,7 +28,7 @@ type K3dOptions struct {
 }
 
 // WaitForK3dReadyNodes waits until nodes are in Ready state based on the role message log.
-func WaitForK3dReadyNodes(ctx context.Context, status *printer.Status, clusterName string) (err error) {
+func WaitForK3dReadyNodes(ctx context.Context, status printer.Status, clusterName string) (err error) {
 	defer func() {
 		status.End(err == nil)
 	}()

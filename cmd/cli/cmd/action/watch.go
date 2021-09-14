@@ -1,10 +1,10 @@
 package action
 
 import (
+	"capact.io/capact/cmd/cli/cmd/action/argocommands"
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/heredoc"
 
-	"github.com/argoproj/argo-workflows/v3/cmd/argo/commands"
 	"github.com/argoproj/argo-workflows/v3/cmd/argo/commands/client"
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,7 @@ import (
 // NewWatch returns a cobra.Command for watching of runnning Actions.
 // It uses the command from "argo watch".
 func NewWatch() *cobra.Command {
-	cmd := commands.NewWatchCommand()
+	cmd := argocommands.NewWatchCommand()
 	cmd.Use = "watch ACTION"
 	cmd.Short = "Watch an Action until it has completed execution"
 	cmd.Long = `

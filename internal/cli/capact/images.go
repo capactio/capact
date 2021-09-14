@@ -9,7 +9,7 @@ import (
 )
 
 // LoadImages loads Docker images into proper environment
-func LoadImages(ctx context.Context, status *printer.Status, images []string, opts Options) error {
+func LoadImages(ctx context.Context, status printer.Status, images []string, opts Options) error {
 	switch opts.Environment {
 	case KindEnv:
 		status.Step("Loading Docker images into kind cluster")

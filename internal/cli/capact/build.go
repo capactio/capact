@@ -73,7 +73,7 @@ var Images = images{
 	},
 }
 
-func buildImage(ctx context.Context, status *printer.Status, imgName string, img image, repository, version string) (string, error) {
+func buildImage(ctx context.Context, status printer.Status, imgName string, img image, repository, version string) (string, error) {
 	// docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
 	imageTag := fmt.Sprintf("%s/%s:%s", repository, imgName, version)
 	// #nosec G204
@@ -108,7 +108,7 @@ func buildImage(ctx context.Context, status *printer.Status, imgName string, img
 }
 
 // BuildImages builds passed images setting passed repository and version
-func BuildImages(ctx context.Context, status *printer.Status, repository, version string, names []string) ([]string, error) {
+func BuildImages(ctx context.Context, status printer.Status, repository, version string, names []string) ([]string, error) {
 	var created []string
 
 	for _, image := range Images.All() {
@@ -125,7 +125,7 @@ func BuildImages(ctx context.Context, status *printer.Status, repository, versio
 }
 
 // PushImages pushes passed images to a given registry
-func PushImages(ctx context.Context, status *printer.Status, names []string) error {
+func PushImages(ctx context.Context, status printer.Status, names []string) error {
 	for _, image := range names {
 		// #nosec G204
 		cmd := exec.CommandContext(ctx, "docker", "push", image)
@@ -137,7 +137,11 @@ func PushImages(ctx context.Context, status *printer.Status, names []string) err
 	return nil
 }
 
-func runCMD(cmd *exec.Cmd, status *printer.Status, stageFmt string, args ...interface{}) error {
+func runCMD(cmd *exec.Cmd, status printer.Status, stageFmt string, args ...interface{}) (err error) {
+	defer func() {
+		status.End(err == nil)
+	}()
+
 	if cli.VerboseMode.IsTracing() {
 		cmd.Stdout = status.Writer()
 		cmd.Stderr = status.Writer()
@@ -147,7 +151,7 @@ func runCMD(cmd *exec.Cmd, status *printer.Status, stageFmt string, args ...inte
 	var buff bytes.Buffer
 	status.Step(stageFmt, args...)
 	cmd.Stderr = &buff
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(err, "while running cmd [stderr: %s]", buff.String())
 	}

@@ -37,7 +37,7 @@ func K3d(ctx context.Context, opts K3dOptions) (err error) {
 	return LocalRegistry(ctx, status)
 }
 
-func ensureK3dClusterDeleted(ctx context.Context, status *printer.Status, name string) error {
+func ensureK3dClusterDeleted(ctx context.Context, status printer.Status, name string) error {
 	c, err := client.ClusterGet(ctx, runtimes.SelectedRuntime, &k3dtypes.Cluster{Name: name})
 	switch {
 	case err == nil:
