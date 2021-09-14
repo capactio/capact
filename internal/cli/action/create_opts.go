@@ -148,7 +148,7 @@ func (c *CreateOptions) resolveFromFiles() error {
 
 		c.parameters, err = yaml.YAMLToJSON(yamlInputParameters)
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 
