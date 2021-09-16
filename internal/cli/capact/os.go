@@ -56,7 +56,6 @@ func TrustSelfSigned() error {
 		return err
 	}
 
-	fmt.Printf("   * Trusting self-signed CA certificate if not already trusted. Entering sudo password may be required\n")
 	switch os := runtime.GOOS; os {
 	case "darwin":
 		return trustSelfSignedDarwin(tmpFileName)
@@ -79,6 +78,7 @@ func trustSelfSignedDarwin(tmpCertPath string) error {
 		return nil
 	}
 
+	fmt.Printf("   * Trusting self-signed CA certificate. Entering sudo password may be required\n")
 	addCertCmd := "sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s"
 	// #nosec G204
 	cmd = exec.Command("/bin/sh", "-c", fmt.Sprintf(addCertCmd, tmpCertPath))
@@ -99,25 +99,27 @@ func trustSelfSignedLinux(tmpCertPath string) error {
 	}
 	certData = string(data)
 
-	if certData != tlsCrt {
-		// #nosec G204
-		cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo cp %s %s", tmpCertPath, certPath))
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
-
-		err = cmd.Run()
-		if err != nil {
-			return err
-		}
-
-		// #nosec G204
-		cmd = exec.Command("/bin/sh", "-c", "sudo update-ca-certificates")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
-
-		return cmd.Run()
+	if certData == tlsCrt {
+		return nil
 	}
-	return nil
+
+	fmt.Printf("   * Trusting self-signed CA certificate. Entering sudo password may be required\n")
+	// #nosec G204
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo cp %s %s", tmpCertPath, certPath))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	// #nosec G204
+	cmd = exec.Command("/bin/sh", "-c", "sudo update-ca-certificates")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	return cmd.Run()
 }

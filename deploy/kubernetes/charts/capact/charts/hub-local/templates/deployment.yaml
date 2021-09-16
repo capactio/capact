@@ -51,15 +51,9 @@ spec:
               containerPort: 8080
               protocol: TCP
           livenessProbe:
-            initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
-            httpGet:
-              path: /healthz
-              port: 8080
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
-            initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
-            httpGet:
-              path: /healthz
-              port: 8080
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

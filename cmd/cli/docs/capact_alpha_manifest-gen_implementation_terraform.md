@@ -43,7 +43,7 @@ capact alpha manifest-gen implementation terraform cap.implementation.gcp.clouds
   -c, --config string                 Path to the YAML config file
   -o, --output string                 Path to the output directory for the generated manifests (default "generated")
       --overwrite                     Overwrite existing manifest files
-  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - tracing (default 0 - disable)
+  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - trace (default 0 - disable)
 ```
 
 ### SEE ALSO

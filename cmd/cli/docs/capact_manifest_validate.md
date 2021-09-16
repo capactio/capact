@@ -39,7 +39,7 @@ capact manifest validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interf
 
 ```
   -c, --config string                 Path to the YAML config file
-  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - tracing (default 0 - disable)
+  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - trace (default 0 - disable)
 ```
 
 ### SEE ALSO

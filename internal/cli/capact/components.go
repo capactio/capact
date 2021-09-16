@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"capact.io/capact/internal/cli"
@@ -57,7 +58,6 @@ func (i components) All() []string {
 // ComponentData information about component
 type ComponentData struct {
 	ReleaseName string
-	LocalPath   string
 	ChartName   string
 	Wait        bool
 
@@ -86,7 +86,6 @@ func (c *ComponentData) Chart() string {
 func (c *ComponentData) installAction(version string) *action.Install {
 	installCli := action.NewInstall(c.configuration)
 
-	installCli.Replace = c.opts.Replace
 	installCli.ClientOnly = c.opts.ClientOnly
 
 	installCli.DryRun = c.opts.DryRun
@@ -94,7 +93,6 @@ func (c *ComponentData) installAction(version string) *action.Install {
 	installCli.Timeout = c.opts.Timeout
 
 	installCli.ChartPathOptions.Version = version
-	installCli.ChartPathOptions.RepoURL = c.opts.Parameters.Override.HelmRepoURL
 
 	installCli.NameTemplate = c.Name()
 	installCli.ReleaseName = c.Name()
@@ -113,7 +111,6 @@ func (c *ComponentData) upgradeAction(version string) *action.Upgrade {
 	upgradeAction.Timeout = c.opts.Timeout
 
 	upgradeAction.ChartPathOptions.Version = version
-	upgradeAction.ChartPathOptions.RepoURL = c.opts.Parameters.Override.HelmRepoURL
 
 	upgradeAction.Wait = c.Wait
 
@@ -139,17 +136,17 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 	if _, err := histClient.Run(c.Name()); err == driver.ErrReleaseNotFound {
 		return c.RunInstall(upgradeCli.Version, values)
 	}
-	var chartPath string
-	var err error
-	var location string
 
-	if upgradeCli.Version == LocalVersionTag {
-		location = c.LocalPath
+	var location string
+	if isLocalDir(c.opts.Parameters.Override.HelmRepo) {
+		location = path.Join(c.opts.Parameters.Override.HelmRepo, c.Chart())
+		upgradeCli.ChartPathOptions.RepoURL = ""
 	} else {
 		location = c.Chart()
+		upgradeCli.ChartPathOptions.RepoURL = c.opts.Parameters.Override.HelmRepo
 	}
 
-	chartPath, err = upgradeCli.ChartPathOptions.LocateChart(location, &helmcli.EnvSettings{
+	chartPath, err := upgradeCli.ChartPathOptions.LocateChart(location, &helmcli.EnvSettings{
 		RepositoryCache: RepositoryCache,
 	})
 	if err != nil {
@@ -167,7 +164,7 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 	err = retry.Do(func() error {
 		r, err = upgradeCli.Run(c.Name(), chartData, values)
 		return errors.Wrapf(err, "while upgrading Helm chart [%s]", c.Name())
-	}, retry.Attempts(3))
+	}, retry.Attempts(3), retry.Delay(time.Second))
 	if err != nil {
 		return nil, err
 	}
@@ -178,17 +175,16 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 func (c *ComponentData) RunInstall(version string, values map[string]interface{}) (*release.Release, error) {
 	installCli := c.installAction(version)
 
-	var chartPath string
-	var err error
 	var location string
-
-	if installCli.Version == LocalVersionTag {
-		location = c.LocalPath
+	if isLocalDir(c.opts.Parameters.Override.HelmRepo) {
+		location = path.Join(c.opts.Parameters.Override.HelmRepo, c.Chart())
+		installCli.ChartPathOptions.RepoURL = ""
 	} else {
 		location = c.Chart()
+		installCli.ChartPathOptions.RepoURL = c.opts.Parameters.Override.HelmRepo
 	}
 
-	chartPath, err = installCli.ChartPathOptions.LocateChart(location, &helmcli.EnvSettings{
+	chartPath, err := installCli.ChartPathOptions.LocateChart(location, &helmcli.EnvSettings{
 		RepositoryCache: RepositoryCache,
 	})
 	if err != nil {
@@ -206,7 +202,7 @@ func (c *ComponentData) RunInstall(version string, values map[string]interface{}
 	err = retry.Do(func() error {
 		r, err = installCli.Run(chartData, values)
 		return errors.Wrapf(err, "while installing Helm chart [%s]", installCli.ReleaseName)
-	}, retry.Attempts(3))
+	}, retry.Attempts(3), retry.Delay(time.Second))
 	if err != nil {
 		return nil, err
 	}
@@ -229,15 +225,12 @@ func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 	fmt.Fprintf(out, "\tDESCRIPTION: %s\n", r.Info.Description)
 }
 
-func (h Helm) writeHelmDetails(out io.Writer) {
-	fmt.Fprintf(out, "\n  Installation details:\n")
+func (h Helm) helmInstallDetails() string {
+	out := &strings.Builder{}
 	fmt.Fprintf(out, "\tVersion: %s\n", h.opts.Parameters.Version)
+	fmt.Fprintf(out, "\tHelm repository: %s\n\n", h.opts.Parameters.Override.HelmRepo)
 
-	helmRepo := h.opts.Parameters.Override.HelmRepoURL
-	if h.opts.Parameters.Version == LocalVersionTag {
-		helmRepo = LocalChartsPath
-	}
-	fmt.Fprintf(out, "\tHelm repository: %s\n\n", helmRepo)
+	return out.String()
 }
 
 // Components is a list of all Capact components available to install.
@@ -246,7 +239,6 @@ var Components = components{
 		ComponentData{
 			configuration: new(action.Configuration),
 			ReleaseName:   "neo4j",
-			LocalPath:     path.Join(LocalChartsPath, "neo4j"),
 			Wait:          true,
 		},
 	},
@@ -255,7 +247,6 @@ var Components = components{
 			configuration: new(action.Configuration),
 			ReleaseName:   "ingress-nginx",
 			ChartName:     "ingress-controller",
-			LocalPath:     path.Join(LocalChartsPath, "ingress-nginx"),
 			Wait:          true,
 		},
 	},
@@ -263,14 +254,12 @@ var Components = components{
 		ComponentData{
 			configuration: new(action.Configuration),
 			ReleaseName:   "argo",
-			LocalPath:     path.Join(LocalChartsPath, "argo"),
 		},
 	},
 	&CertManager{
 		ComponentData{
 			configuration: new(action.Configuration),
 			ReleaseName:   "cert-manager",
-			LocalPath:     path.Join(LocalChartsPath, "cert-manager"),
 			Wait:          true,
 		},
 	},
@@ -278,21 +267,18 @@ var Components = components{
 		ComponentData{
 			configuration: new(action.Configuration),
 			ReleaseName:   "kubed",
-			LocalPath:     path.Join(LocalChartsPath, "kubed"),
 		},
 	},
 	&Monitoring{
 		ComponentData{
 			configuration: new(action.Configuration),
 			ReleaseName:   "monitoring",
-			LocalPath:     path.Join(LocalChartsPath, "monitoring"),
 		},
 	},
 	&Capact{
 		ComponentData{
 			configuration: new(action.Configuration),
 			ReleaseName:   "capact",
-			LocalPath:     path.Join(LocalChartsPath, "capact"),
 			Wait:          true,
 		},
 	},
@@ -615,9 +601,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printer.Status) error {
 	if cli.VerboseMode.IsEnabled() {
-		status.Step("Resolving installation config")
-		status.End(true)
-		h.writeHelmDetails(w)
+		status.InfoWithBody("Installation details:", h.helmInstallDetails())
 	}
 
 	for _, component := range Components {
@@ -645,17 +629,17 @@ func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printe
 // InstallCRD installs Capact CRD
 func (h *Helm) InstallCRD() error {
 	var reader io.Reader
-	if h.opts.Parameters.Version == LocalVersionTag {
-		f, err := os.Open(CRDLocalPath)
+	if isLocalFile(h.opts.Parameters.ActionCRDLocation) {
+		f, err := os.Open(h.opts.Parameters.ActionCRDLocation)
 		if err != nil {
-			return errors.Wrapf(err, "while opening local CRD file%s", CRDLocalPath)
+			return errors.Wrapf(err, "while opening local CRD file%s", h.opts.Parameters.ActionCRDLocation)
 		}
 		defer f.Close()
 		reader = f
 	} else {
-		resp, err := http.Get(CRDUrl)
+		resp, err := http.Get(h.opts.Parameters.ActionCRDLocation)
 		if err != nil {
-			return errors.Wrapf(err, "while getting CRD %s", CRDUrl)
+			return errors.Wrapf(err, "while getting CRD %s", h.opts.Parameters.ActionCRDLocation)
 		}
 		defer resp.Body.Close()
 		reader = resp.Body
@@ -663,7 +647,7 @@ func (h *Helm) InstallCRD() error {
 
 	content, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.Wrapf(err, "while downloading CRD %s", CRDUrl)
+		return errors.Wrapf(err, "while reading CRD %s", h.opts.Parameters.ActionCRDLocation)
 	}
 	return createObject(h.configuration, content)
 }
@@ -696,4 +680,14 @@ func ignoreAlreadyExistError(err error) error {
 		return nil
 	}
 	return err
+}
+
+func isLocalDir(in string) bool {
+	f, err := os.Stat(in)
+	return err == nil && f.IsDir()
+}
+
+func isLocalFile(in string) bool {
+	f, err := os.Stat(in)
+	return err == nil && !f.IsDir()
 }

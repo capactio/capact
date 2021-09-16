@@ -20,7 +20,7 @@ readonly CAPACTIO_LATEST_BUCKET="capactio-latest-charts"
 
 readonly charts=(
   "argo"
-  "ingress-nginx"
+  "ingress-controller"
   "kubed"
   "cert-manager"
   "monitoring"

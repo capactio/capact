@@ -29,7 +29,7 @@ const (
 var VerboseModeHumanMapping = map[VerboseModeFlag]string{
 	VerboseModeDisabled: "disable",
 	VerboseModeSimple:   "simple",
-	VerboseModeTracing:  "tracing",
+	VerboseModeTracing:  "trace",
 }
 
 // ErrInvalidFormatType is returned when an unsupported verbose mode is used.

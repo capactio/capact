@@ -36,7 +36,7 @@ CMD ["/app"]
 
 FROM alpine:3.13.5 as generic-alpine
 ARG COMPONENT
-
+ARG BRANCH=main
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
@@ -46,6 +46,9 @@ RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
     mkdir /root/.ssh && \
     chmod 700 /root/.ssh && \
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
+# hadolint ignore=DL3059
+RUN git clone --depth 1 --branch $BRANCH https://github.com/capactio/hub-manifests.git /hub-manifests
 
 LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT

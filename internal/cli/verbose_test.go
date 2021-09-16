@@ -31,7 +31,7 @@ func TestVerboseModeFlagHappPath(t *testing.T) {
 			expectedMode:   cli.VerboseModeSimple,
 		},
 		"Should parse tracing verbose by human name": {
-			givenRawOption: "-v=tracing",
+			givenRawOption: "-v=trace",
 			expectedMode:   cli.VerboseModeTracing,
 		},
 		"Should parse disable verbose by human name": {
