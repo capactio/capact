@@ -205,7 +205,7 @@ capact::delete_cluster() {
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - HUB_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
 #  - HUB_MANIFESTS_SOURCE_REPO_URL - set this to override the Git URL from which the source manifests are populated
-#  - CAPACT_HELM_REPO_URL - set this to override the Helm repo url used to install Capact.
+#  - CAPACT_HELM_REPO - set this to override the Helm repo used to install Capact. It can be local path or URL.
 #  - ENABLE_HOSTS_UPDATE - if set to true, /etc/hosts is updated
 #  - ENABLE_ADDING_TRUSTED_CERT - if set to true, add Capact self-signed TLS certificate as trusted
 capact::install() {
@@ -258,8 +258,8 @@ capact::install() {
       BUILD_IMAGES_FLAG=--build-image=""
     fi
 
-    if [ -n "${CAPACT_HELM_REPO_URL:-}" ]; then
-      CAPACT_INSTALL_ADDITIONAL_OPTS="${CAPACT_INSTALL_ADDITIONAL_OPTS} --helm-repo-url=${CAPACT_HELM_REPO_URL}"
+    if [ -n "${CAPACT_HELM_REPO:-}" ]; then
+      CAPACT_INSTALL_ADDITIONAL_OPTS="${CAPACT_INSTALL_ADDITIONAL_OPTS} --helm-repo=${CAPACT_HELM_REPO}"
     fi
 
     if [[ "${DISABLE_K3D_REGISTRY:-"false"}" == "false" && "${CLUSTER_TYPE}" == "k3d" ]]; then

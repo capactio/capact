@@ -89,7 +89,7 @@ jobs:
           GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
           CLUSTER_NAME: "dev-cluster"
           CAPACT_VERSION: "@latest"
-          CAPACT_HELM_REPO_URL: "@latest"
+          CAPACT_HELM_REPO: "@latest"
           OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
           OVERRIDE_DOCKER_REPOSITORY: ${{ github.event.inputs.overrideDockerRepository }}
         run: |

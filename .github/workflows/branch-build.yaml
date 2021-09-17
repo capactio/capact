@@ -263,7 +263,7 @@ jobs:
           ./capact upgrade \
             --action-name-prefix 'capact-upgrade-' \
             --version @latest \
-            --helm-repo-url @latest \
+            --helm-repo @latest \
             --override-capact-image-repo ${DOCKER_REPOSITORY} \
             --override-capact-image-tag ${DOCKER_TAG} \
             --enable-test-setup ${USE_TEST_SETUP} \
