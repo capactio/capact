@@ -18,7 +18,8 @@ The section contains useful links for getting started with Capact.
 
 - **Introduction:** To learn what is Capact, read the [Introduction](https://capact.io/docs/introduction) document.
 - **Installation:** To learn how to install Capact, follow the [Installation](https://capact.io/docs/installation/local) documents.
-- **Development:** To run Capact on your local machine and start contributing to Capact, read the [Development](https://capact.io/docs/development/development-guide) documents.
+- **Contribution:** To start contributing to Capact, read the [Community](https://capact.io/community/contributing) documents.
+- **Support:**  If you need any help, or you have a question for us, join our [Slack channel](https://capact.io/community/slack) and post a message. We'll do our best to get you sorted!
 
 ## Project structure
 

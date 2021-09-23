@@ -26,4 +26,4 @@ Check below documents for details how to use the tool:
 
 ## Development
 
-To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).
+To read more about development, see the [Development guide](https://capact.io/community/development/development-guide).
