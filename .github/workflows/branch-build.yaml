@@ -280,10 +280,9 @@ jobs:
     name: Slack Notification
     runs-on: ubuntu-latest
     needs: [ update-cluster, integration-tests ]
-    if: always()
+    if: failure()
     steps:
       - name: Slack Notification
-        if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_USERNAME: Capact CI Notifier
