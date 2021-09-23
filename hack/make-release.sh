@@ -60,7 +60,8 @@ main() {
   release::update_helm_charts_version "${RELEASE_VERSION}"
   release::make_prepare_release_commit "${RELEASE_VERSION}" "${SOURCE_BRANCH}"
 
-  local -r capact_image_tag=$(git rev-parse --short HEAD | sed 's/.$//')
+  local -r revision=$(git rev-parse --short=7 HEAD)  # returns at least 7 characters
+  local -r capact_image_tag="${revision:0:7}" # trim hash to exactly 7 characters
   git checkout -B "${RELEASE_BRANCH}"
 
   release::set_capact_images_in_charts "${capact_image_tag}"
