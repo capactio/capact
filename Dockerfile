@@ -34,7 +34,7 @@ LABEL app=$COMPONENT
 
 CMD ["/app"]
 
-FROM alpine:3.13.5 as generic-alpine
+FROM alpine:3.13 as generic-alpine
 ARG COMPONENT
 ARG BRANCH=main
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
@@ -68,7 +68,7 @@ COPY --from=e2e-builder /go/bin/ginkgo /ginkgo
 
 CMD ["/ginkgo", "-v", "-nodes=1", "/app.test" ]
 
-FROM alpine:3.13.5 as terraform-runner
+FROM alpine:3.13 as terraform-runner
 ARG COMPONENT
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
@@ -83,7 +83,7 @@ RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
 
 WORKDIR /bin
 
-ENV TERRAFORM_VERSION 1.0.3
+ENV TERRAFORM_VERSION 1.0.7
 RUN wget -nv https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
     unzip terraform.zip && \
     rm terraform.zip
