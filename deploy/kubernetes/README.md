@@ -59,7 +59,7 @@ To install Capact, run the following steps:
    
     > **NOTE:** This command installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
     Installed Capact components configure automatically with monitoring stack by creating ServiceMonitor and dedicated Grafana dashboards.
-    For more information check [instrumentation](https://capact.io/docs/development/development-guide#instrumentation) section.
+    For more information check [instrumentation](https://capact.io/community/development/development-guide#instrumentation) section.
 
 1. **[Optional]** Install Cert Manager:
 
