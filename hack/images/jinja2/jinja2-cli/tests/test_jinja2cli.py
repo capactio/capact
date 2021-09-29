@@ -75,6 +75,12 @@ render_testcases = [
         data={},
         result="hello",
     ),
+    TestCase(
+        name="multiple dotted values",
+        template='<@ input.key.key["foo.bar/baz"] | default("hello") @>',
+        data={},
+        result="hello",
+    ),
 ]
 
 
@@ -96,6 +102,10 @@ def test_random_password(tmp_path):
     assert contains_character_from(output, string.digits)
     assert contains_character_from(output, capact._punctuation)
     assert type(output) == cli.text_type
+
+
+def test_list_repr():
+    assert repr(capact.List(["test"])) == '["test"]'
 
 
 def contains_character_from(string, charlist):
