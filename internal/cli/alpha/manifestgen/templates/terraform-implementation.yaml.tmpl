@@ -132,10 +132,9 @@ spec:
                                 {{ end }}
                             variables: |+
                               {{ range $index, $variable := .Variables -}}
-                              <% if additionalinput.{{ $variable.Name }} -%>
-                              {{ $variable.Name }} = "<@ additionalinput.{{ $variable.Name }} @>"
-                              <%- endif %>
-
+                              <%- if additionalinput.{{ $variable.Name }} -%>
+                              {{ $variable.Name }} = <@ additionalinput.{{ $variable.Name }} @>
+                              <%- endif -%>
                               {{ end }}
 
               - - name: terraform-apply
@@ -146,7 +145,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{steps.create-module-args.outputs.artifacts.redner}}`}}"
+                        from: "{{`{{steps.create-module-args.outputs.artifacts.render}}`}}"
                       - name: runner-context
                         from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
                         {{- if eq .Provider "gcp"}}
