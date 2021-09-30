@@ -15,6 +15,7 @@ on:
       - "hub-js/**"
       - "Dockerfile"
       - "!**.md"
+      - "**.yaml.tmpl"
     branches:
       - "main"
       - "release-*"
