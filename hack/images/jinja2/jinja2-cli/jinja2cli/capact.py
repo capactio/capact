@@ -1,6 +1,7 @@
 import string
 import random
 import base64
+import json
 
 from jinja2.runtime import Undefined
 
@@ -38,6 +39,12 @@ class Undefined(Undefined):
         return Undefined(name=f'{self._undefined_name}["{attr}"]')
 
 
+# List is a custom list with custom __repr__ which makes sure that strings are in double quotes
+class List(list):
+    def __repr__(self):
+        return json.dumps(self)
+
+
 # Dict is a special type of dict which always returns an item before checking an attribute
 class Dict(dict):
     # __init__ converts all nested dictionaries {} to the Dict
@@ -55,6 +62,8 @@ class Dict(dict):
         for k, v in args[0].items():
             if isinstance(v, dict):
                 kw[k] = Dict(v)
+            elif isinstance(v, list):
+                kw[k] = List(v)
             else:
                 kw[k] = v
         super().__init__(kw)
