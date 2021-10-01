@@ -111,14 +111,12 @@ spec:
                                 random_number: "{{ .random_number }}"
                                 
                             variables: |+
-                              <% if additionalinput.count -%>
-                              count = "<@ additionalinput.count @>"
-                              <%- endif %>
-
-                              <% if additionalinput.name -%>
-                              name = "<@ additionalinput.name @>"
-                              <%- endif %>
-
+                              <%- if additionalinput.count -%>
+                              count = <@ additionalinput.count @>
+                              <%- endif -%>
+                              <%- if additionalinput.name -%>
+                              name = <@ additionalinput.name @>
+                              <%- endif -%>
                               
 
               - - name: terraform-apply
@@ -129,7 +127,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.create-module-args.outputs.artifacts.redner}}"
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 

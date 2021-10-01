@@ -17,6 +17,7 @@ on:
       - "Dockerfile"
       - "!**.md"
       - ".goreleaser.latest.yml"
+      - "**.yaml.tmpl"
     branches:
       - "main"
 
