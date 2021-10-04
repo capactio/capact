@@ -170,14 +170,14 @@ func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyP
 				return err
 			}
 		case string:
-			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default("%v") | tojson @>`, keyPathString, value)
+			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default("%v") @>`, keyPathString, value)
 		case bool:
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) | tojson @>`, keyPathString, value)
 		case float64:
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) @>`, keyPathString, value)
 		case []interface{}:
 			if value == nil {
-				values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(None | tojson) @>`, keyPathString)
+				values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(None) | tojson @>`, keyPathString)
 				break
 			}
 
