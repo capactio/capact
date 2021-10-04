@@ -81,6 +81,14 @@ render_testcases = [
         data={},
         result="hello",
     ),
+    TestCase(
+        name="multiline strings",
+        template="""<@ input.key.key["foo.bar/baz"] | default('hello
+hello') @>""",
+        data={},
+        result="""hello
+hello""",
+    ),
 ]
 
 
