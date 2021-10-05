@@ -72,7 +72,6 @@ spec:
             outputs:
               artifacts: []
             steps:
-              
 
               - - name: prepare-parameters
                   template: prepare-parameters
@@ -109,15 +108,13 @@ spec:
                               goTemplate:
                                 instance_ids: "{{ .instance_ids }}"
                                 random_number: "{{ .random_number }}"
-                                
                             variables: |+
-                              <%- if additionalinput.count -%>
-                              count = <@ additionalinput.count @>
-                              <%- endif -%>
-                              <%- if additionalinput.name -%>
-                              name = <@ additionalinput.name @>
-                              <%- endif -%>
-                              
+                              <%- if additionalinput.count %>
+                              count = <@ additionalinput.count | tojson @>
+                              <%- endif %>
+                              <%- if additionalinput.name %>
+                              name = <@ additionalinput.name | tojson @>
+                              <%- endif %>
 
               - - name: terraform-apply
                   capact-action: terraform.apply

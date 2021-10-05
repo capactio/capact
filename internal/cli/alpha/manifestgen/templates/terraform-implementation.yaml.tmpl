@@ -77,7 +77,7 @@ spec:
             outputs:
               artifacts: []
             steps:
-              {{ if eq .Provider "gcp" }}
+              {{- if eq .Provider "gcp" }}
               - - name: convert-gcp-yaml-to-json
                   template: convert-yaml-to-json
                   arguments:
@@ -127,15 +127,15 @@ spec:
                               - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
                             output:
                               goTemplate:
-                                {{ range $index, $output := .Outputs -}}
+                                {{- range $index, $output := .Outputs }}
                                 {{ $output.Name }}: "{{`{{`}} .{{ $output.Name }} {{`}}`}}"
-                                {{ end }}
+                                {{- end }}
                             variables: |+
-                              {{ range $index, $variable := .Variables -}}
-                              <%- if additionalinput.{{ $variable.Name }} -%>
-                              {{ $variable.Name }} = <@ additionalinput.{{ $variable.Name }} @>
-                              <%- endif -%>
-                              {{ end }}
+                              {{- range $index, $variable := .Variables }}
+                              <%- if additionalinput.{{ $variable.Name }} %>
+                              {{ $variable.Name }} = <@ additionalinput.{{ $variable.Name }} | tojson @>
+                              <%- endif %>
+                              {{- end }}
 
               - - name: terraform-apply
                   capact-action: terraform.apply
