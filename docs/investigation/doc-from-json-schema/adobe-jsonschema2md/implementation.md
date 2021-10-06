@@ -1,3 +1,4 @@
+<!-- markdown-link-check-disable -->
 # Untitled object in undefined Schema
 
 ```txt

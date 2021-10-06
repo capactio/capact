@@ -4,7 +4,7 @@ Created on 2021-04-01 by Mateusz Szostok ([@mszostok](https://github.com/mszosto
 
 ## Overview
 
-This document describes how Capact components can be updated via dedicated Capact [Capability](../terminology.md#capability).
+This document describes how Capact components can be updated via dedicated Capact [Capability](https://capact.io/docs/terminology#capability).
 
 <!-- toc -->
 
@@ -92,7 +92,7 @@ Cons:
 
 ### Capact upgrade Action
 
-This section describes final agreements for the upgrade [Action](../terminology.md#action).
+This section describes final agreements for the upgrade [Action](https://capact.io/docs/terminology#action).
 
 1. Interface requires multiple input TypeInstance which describe Capact and all its dependencies. 
 

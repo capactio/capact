@@ -1,3 +1,4 @@
+<!-- markdown-link-check-disable -->
 # Untitled schema Schema
 
 ```txt

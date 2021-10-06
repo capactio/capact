@@ -107,6 +107,6 @@ kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
 
 1. Navigate to [http://localhost:7474](http://localhost:7474).
 1. Change the connection URL to `neo4j://localhost:7687`.
-1. Use `neo4j` user and password configured during Helm chart installation. See the default values in [`values.yaml`](../../deploy/kubernetes/charts/neo4j/values.yaml) file.
+1. Use `neo4j` user and password configured during Helm chart installation. See the default values in [`values.yaml`](../deploy/kubernetes/charts/neo4j/values.yaml) file.
 
-To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).
+To read more about development, see the [Development guide](https://capact.io/community/development/development-guide).

@@ -23,7 +23,7 @@ You have to add some RBAC permission on for the default service account on the n
 kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default -n default
 ```
 
-Currently, there is a problem in Argo with referencing global artifacts created in nested workflows ([GitHub issue](https://github.com/argoproj/argo/issues/4772)).
+Currently, there is a problem in Argo with referencing global artifacts created in nested workflows ([GitHub issue](https://github.com/argoproj/argo-workflows/issues/4772)).
 
 To make this PoC work you need to apply the following diff to the Argo v2.11.7 repository:
 
@@ -123,7 +123,7 @@ go run main.go -och-dir=../../../och-content/ -render-input=inputs/2-jira.yml | 
 
 ### JIRA installation with embedded PostgreSQL
 
-Remove the JIRA Helm release from [JIRA install with Helm and a provided PostgreSQL TypeInstance](jira-install-with-helm-and-a-provided-postgresql-typeinstance), if you did that step before.
+Remove the JIRA Helm release from [JIRA install with Helm and a provided PostgreSQL TypeInstance](#jira-installation-with-a-provided-postgresql-typeinstance), if you did that step before.
 
 To generate and run the workflow, execute:
 ```bash

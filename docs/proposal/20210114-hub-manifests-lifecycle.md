@@ -287,7 +287,7 @@ Because of serious limitation of this solution, it is not suggested.
 - Creating new database, populating it and then switching connection for Hub.
 
   While using multiple databases is
-  a [recommended solution for Neo4j 4.x multi-tenancy implementation]([https://neo4j.com/developer/multi-tenancy-worked-example](https://neo4j.com/developer/multi-tenancy-worked-example/)
+  a [recommended solution for Neo4j 4.x multi-tenancy implementation](https://neo4j.com/developer/multi-tenancy-worked-example/)
   , it is only supported in Enterprise version. Also, we would need to update Hub component configuration to point to
   different database in runtime, which doesn't seem as efficient solution.
 
