@@ -9,7 +9,7 @@ Populates the OCF manifests into Neo4j database. It reads manifest from remote o
 
 ## Build
 
-To build the binary install required [Prerequisites](https://capact.io/docs/development/development-guide/#prerequisites) and run:
+To build the binary install required [Prerequisites](https://capact.io/community/development/development-guide/#prerequisites) and run:
 
 ```shell
 make build-tool-populator

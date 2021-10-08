@@ -44,7 +44,7 @@ Use the Dgraph only as of the database and create our own GraphQL server with de
 1.	The `interface.implementations` field uses resolver which is able to return Implementations only for the `latestResvision` property.
 2.	The input filters for `interface.implementations` were not implemented as currently not possible.  
 3.	The OCH content has additional properties and different names in manifests. By doing, so I didn't have to focus on mappers between OCF Entities and the data store model. In the normal scenario, we should read the OCF entity then convert it to the domain model, calculate edges and map to Dgraph data storage object.
-4.	The OCH content is based on the mocked versions form [`hack/mock/graphql/public`](../../../../hack/mock/graphql/public).
+4.	The OCH content is based on the mocked versions form [`hack/mock/graphql/public`](https://github.com/capactio/capact/tree/release-0.1/hack/mock/graphql/public).
 
 ### Behind the scene
 
@@ -73,7 +73,7 @@ We need to support situations when edges should always point to the latest revis
 
 It is not possible to execute conditional upsert using GraphQL mutation. You need to use DQL. You can use RDF or JSON syntax. Furthermore, you cannot use your own filter functions. Currently, supported functions are: [`eq/le/lt/ge/gt`](https://discuss.dgraph.io/t/would-like-support-of-eq-le-lt-ge-gt-in-mutation-conditional-upsert-other-than-existing-len-function-only/8846).
 
-Check the `loadInterfaceRevisions` function from the [client/internal/interface_populator.go](client/internal/interface_populator.go) file to see how the conditional upsert can be done using Dgo client.
+Check the `loadInterfaceRevisions` function from the [client/internal/interface_populator.go](app/internal/interface_populator.go) file to see how the conditional upsert can be done using Dgo client.
 
 ## Pros
 -	Dgraph support GraphQL schema and expose GraphQL API out-of-the-box.

@@ -1,0 +1,25 @@
+name: Periodic Checks on main branch
+on:
+  schedule:
+    # Triggers the workflow every day at 9:00 UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  markdown-link-check:
+    name: Check Markdown links
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check links in *.md files
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          file-extension: '.md'
+          base-branch: 'main'
+          config-file: '.mlc.config.json'
+          folder-path: '.'

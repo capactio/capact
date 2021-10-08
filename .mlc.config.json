@@ -1,0 +1,21 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http://example.com"
+    },
+    {
+      "pattern": "^https://example.com"
+    },
+    {
+      "pattern": "^http://localhost"
+    },
+    {
+      "pattern": "^https://capact.io/schemas/"
+    },
+    {
+      "pattern": "^http://capact-hub-local.capact-system/graphql$"
+    }
+  ],
+  "timeout": "20s",
+  "retryOn429": true
+}

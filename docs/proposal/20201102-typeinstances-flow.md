@@ -554,7 +554,7 @@ Actors
 
 ####  Suggested solution
 
-If Action requires input TypeInstance, the Capact Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local Hub and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
+If Action requires input TypeInstance, the Capact Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local Hub and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo-workflows/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
 
 The global Argo artifacts seem to be the only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
 

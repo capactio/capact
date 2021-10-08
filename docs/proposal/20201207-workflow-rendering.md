@@ -293,11 +293,11 @@ The proposed algorithm for including a nested workflow from a called Interface i
 
 To see example manifests, with the new workflow directives check the link below. Note that these are manifests used for the PoC and the `capact-action` contains there the full `ManifestReference`, instead of a reference to `imports` from the Implementation. This was done only to simplify the PoC.
 
-- [PostgreSQL install](../investigation/workflow-rendering/manifests/implementations/postgres-install.yaml) - uses `capact-outputTypeInstances` and `capact-action`,
-- [JIRA install](../investigation/workflow-rendering/manifests/implementations/jira-install.yaml) - uses `capact-outputTypeInstances`, `capact-when` and `capact-action`.
+- [PostgreSQL install](https://github.com/capactio/capact/tree/878d436db91d14583dbf0599dd0946741759bae4/docs/investigation/workflow-rendering/manifests/implementations/postgres-install.yaml) - uses `capact-outputTypeInstances` and `capact-action`,
+- [JIRA install](https://github.com/capactio/capact/tree/878d436db91d14583dbf0599dd0946741759bae4/docs/investigation/workflow-rendering/manifests/implementations/jira-install.yaml) - uses `capact-outputTypeInstances`, `capact-when` and `capact-action`.
 
 ## Consequences
 
 - The workflow syntax highly depend on the Argo workflow syntax
 - Add `capact-outputTypeInstances`, `capact-when`, `capact-action` directives to the workflow syntax. We will need to copy-paste the Go structs, which describe Argo workflow elements and extends them.
-- Argo has currently (2020.12.20) a bug, which must be fixed before the proposed rendering algorithm can work. Github ticket for this issue is [here](https://github.com/argoproj/argo/issues/4772).
+- Argo has currently (2020.12.20) a bug, which must be fixed before the proposed rendering algorithm can work. Github ticket for this issue is [here](https://github.com/argoproj/argo-workflows/issues/4772).

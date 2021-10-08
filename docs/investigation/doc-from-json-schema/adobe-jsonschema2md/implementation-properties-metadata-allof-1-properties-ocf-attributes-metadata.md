@@ -1,3 +1,4 @@
+<!-- markdown-link-check-disable -->
 # OCF Attributes Metadata Schema
 
 ```txt
