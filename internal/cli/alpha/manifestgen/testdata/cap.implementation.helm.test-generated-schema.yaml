@@ -107,15 +107,15 @@ spec:
                                 customCAs: <@ additionalinput.certificates.customCAs | default(None) | tojson @>
                                 customCertificate:
                                   certificateLocation: <@ additionalinput.certificates.customCertificate.certificateLocation | default("/etc/ssl/certs/ssl-cert-snakeoil.pem") @>
-                                  certificateSecret: <@ additionalinput.certificates.customCertificate.certificateSecret | default("") @>
+                                  certificateSecret: <@ additionalinput.certificates.customCertificate.certificateSecret | default("") | tojson @>
                                   chainLocation: <@ additionalinput.certificates.customCertificate.chainLocation | default("/etc/ssl/certs/mychain.pem") @>
                                   chainSecret:
-                                    key: <@ additionalinput.certificates.customCertificate.chainSecret.key | default("") @>
-                                    name: <@ additionalinput.certificates.customCertificate.chainSecret.name | default("") @>
+                                    key: <@ additionalinput.certificates.customCertificate.chainSecret.key | default("") | tojson @>
+                                    name: <@ additionalinput.certificates.customCertificate.chainSecret.name | default("") | tojson @>
                                   keyLocation: <@ additionalinput.certificates.customCertificate.keyLocation | default("/etc/ssl/private/ssl-cert-snakeoil.key") @>
                                 extraEnvVars: <@ additionalinput.certificates.extraEnvVars | default(None) | tojson @>
-                                extraEnvVarsCM: <@ additionalinput.certificates.extraEnvVarsCM | default("") @>
-                                extraEnvVarsSecret: <@ additionalinput.certificates.extraEnvVarsSecret | default("") @>
+                                extraEnvVarsCM: <@ additionalinput.certificates.extraEnvVarsCM | default("") | tojson @>
+                                extraEnvVarsSecret: <@ additionalinput.certificates.extraEnvVarsSecret | default("") | tojson @>
                                 image:
                                   pullPolicy: <@ additionalinput.certificates.image.pullPolicy | default("IfNotPresent") @>
                                   pullSecrets: <@ additionalinput.certificates.image.pullSecrets | default(None) | tojson @>
@@ -132,21 +132,21 @@ spec:
                               customReadinessProbe: {}
                               dokuwikiEmail: <@ additionalinput.dokuwikiEmail | default("user@example.com") @>
                               dokuwikiFullName: <@ additionalinput.dokuwikiFullName | default("User Name") @>
-                              dokuwikiPassword: <@ additionalinput.dokuwikiPassword | default("") @>
+                              dokuwikiPassword: <@ additionalinput.dokuwikiPassword | default("") | tojson @>
                               dokuwikiUsername: <@ additionalinput.dokuwikiUsername | default("user") @>
                               dokuwikiWikiName: <@ additionalinput.dokuwikiWikiName | default("My Wiki") @>
-                              existingSecret: <@ additionalinput.existingSecret | default("") @>
+                              existingSecret: <@ additionalinput.existingSecret | default("") | tojson @>
                               extraDeploy: <@ additionalinput.extraDeploy | default(None) | tojson @>
                               extraEnvVars: <@ additionalinput.extraEnvVars | default(None) | tojson @>
-                              extraEnvVarsCM: <@ additionalinput.extraEnvVarsCM | default("") @>
-                              extraEnvVarsSecret: <@ additionalinput.extraEnvVarsSecret | default("") @>
+                              extraEnvVarsCM: <@ additionalinput.extraEnvVarsCM | default("") | tojson @>
+                              extraEnvVarsSecret: <@ additionalinput.extraEnvVarsSecret | default("") | tojson @>
                               extraVolumeMounts: <@ additionalinput.extraVolumeMounts | default(None) | tojson @>
                               extraVolumes: <@ additionalinput.extraVolumes | default(None) | tojson @>
-                              fullnameOverride: <@ additionalinput.fullnameOverride | default("") @>
+                              fullnameOverride: <@ additionalinput.fullnameOverride | default("") | tojson @>
                               global:
                                 imagePullSecrets: <@ additionalinput.global.imagePullSecrets | default(None) | tojson @>
-                                imageRegistry: <@ additionalinput.global.imageRegistry | default("") @>
-                                storageClass: <@ additionalinput.global.storageClass | default("") @>
+                                imageRegistry: <@ additionalinput.global.imageRegistry | default("") | tojson @>
+                                storageClass: <@ additionalinput.global.storageClass | default("") | tojson @>
                               hostAliases: <@ additionalinput.hostAliases | default([{"hostnames":["status.localhost"],"ip":"127.0.0.1"}]) @>
                               image:
                                 debug: <@ additionalinput.image.debug | default(false) | tojson @>
@@ -157,7 +157,7 @@ spec:
                                 tag: <@ additionalinput.image.tag | default("20200729.0.0-debian-10-r319") @>
                               ingress:
                                 annotations: {}
-                                apiVersion: <@ additionalinput.ingress.apiVersion | default("") @>
+                                apiVersion: <@ additionalinput.ingress.apiVersion | default("") | tojson @>
                                 certManager: <@ additionalinput.ingress.certManager | default(false) | tojson @>
                                 enabled: <@ additionalinput.ingress.enabled | default(false) | tojson @>
                                 extraHosts: <@ additionalinput.ingress.extraHosts | default(None) | tojson @>
@@ -168,7 +168,7 @@ spec:
                                 pathType: <@ additionalinput.ingress.pathType | default("ImplementationSpecific") @>
                                 secrets: <@ additionalinput.ingress.secrets | default(None) | tojson @>
                                 tls: <@ additionalinput.ingress.tls | default(false) | tojson @>
-                              kubeVersion: <@ additionalinput.kubeVersion | default("") @>
+                              kubeVersion: <@ additionalinput.kubeVersion | default("") | tojson @>
                               lifecycleHooks: {}
                               livenessProbe:
                                 enabled: <@ additionalinput.livenessProbe.enabled | default(true) | tojson @>
@@ -189,19 +189,19 @@ spec:
                                   prometheus.io/port: <@ additionalinput.metrics.podAnnotations["prometheus.io/port"] | default("9117") @>
                                   prometheus.io/scrape: <@ additionalinput.metrics.podAnnotations["prometheus.io/scrape"] | default("true") @>
                                 resources: {}
-                              nameOverride: <@ additionalinput.nameOverride | default("") @>
+                              nameOverride: <@ additionalinput.nameOverride | default("") | tojson @>
                               nodeAffinityPreset:
-                                key: <@ additionalinput.nodeAffinityPreset.key | default("") @>
-                                type: <@ additionalinput.nodeAffinityPreset.type | default("") @>
+                                key: <@ additionalinput.nodeAffinityPreset.key | default("") | tojson @>
+                                type: <@ additionalinput.nodeAffinityPreset.type | default("") | tojson @>
                                 values: <@ additionalinput.nodeAffinityPreset.values | default(None) | tojson @>
                               nodeSelector: {}
                               persistence:
                                 accessMode: <@ additionalinput.persistence.accessMode | default("ReadWriteOnce") @>
                                 enabled: <@ additionalinput.persistence.enabled | default(true) | tojson @>
-                                existingClaim: <@ additionalinput.persistence.existingClaim | default("") @>
+                                existingClaim: <@ additionalinput.persistence.existingClaim | default("") | tojson @>
                                 size: <@ additionalinput.persistence.size | default("8Gi") @>
-                                storageClass: <@ additionalinput.persistence.storageClass | default("") @>
-                              podAffinityPreset: <@ additionalinput.podAffinityPreset | default("") @>
+                                storageClass: <@ additionalinput.persistence.storageClass | default("") | tojson @>
+                              podAffinityPreset: <@ additionalinput.podAffinityPreset | default("") | tojson @>
                               podAnnotations: {}
                               podAntiAffinityPreset: <@ additionalinput.podAntiAffinityPreset | default("soft") @>
                               podLabels: {}
@@ -222,10 +222,10 @@ spec:
                               service:
                                 externalTrafficPolicy: <@ additionalinput.service.externalTrafficPolicy | default("Cluster") @>
                                 httpsPort: <@ additionalinput.service.httpsPort | default(443) @>
-                                loadBalancerIP: <@ additionalinput.service.loadBalancerIP | default("") @>
+                                loadBalancerIP: <@ additionalinput.service.loadBalancerIP | default("") | tojson @>
                                 nodePorts:
-                                  http: <@ additionalinput.service.nodePorts.http | default("") @>
-                                  https: <@ additionalinput.service.nodePorts.https | default("") @>
+                                  http: <@ additionalinput.service.nodePorts.http | default("") | tojson @>
+                                  https: <@ additionalinput.service.nodePorts.https | default("") | tojson @>
                                 port: <@ additionalinput.service.port | default(80) @>
                                 type: <@ additionalinput.service.type | default("LoadBalancer") @>
                               sidecars: <@ additionalinput.sidecars | default(None) | tojson @>
@@ -251,30 +251,14 @@ spec:
                   capact-outputTypeInstances:
                     - name: helm-release
                       from: helm-release
+                    - name: config
+                      from: additional
                   arguments:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
-
-              - - name: render-config
-                  capact-outputTypeInstances:
-                    - name: config
-                      from: render
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: input-parameters
-                        from: "{{steps.helm-install.outputs.artifacts.additional}}"
-                      - name: configuration
-                        raw:
-                          data: ""
-                      - name: template
-                        raw:
-                          # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
-                          data: |
-                            property: value
 
           - name: prepare-parameters
             inputs:

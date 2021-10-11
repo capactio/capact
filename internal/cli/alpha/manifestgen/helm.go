@@ -170,7 +170,11 @@ func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyP
 				return err
 			}
 		case string:
-			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default("%v") @>`, keyPathString, value)
+			toJSON := ""
+			if len(value) == 0 {
+				toJSON = " | tojson"
+			}
+			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default("%v")%s @>`, keyPathString, value, toJSON)
 		case bool:
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) | tojson @>`, keyPathString, value)
 		case float64:
@@ -180,12 +184,10 @@ func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyP
 				values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(None) | tojson @>`, keyPathString)
 				break
 			}
-
 			sliceBytes, err := json.Marshal(value)
 			if err != nil {
 				return errors.Wrapf(err, "while marshaling slice %v", value)
 			}
-
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) @>`, keyPathString, string(sliceBytes))
 		default:
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) | tojson @>`, keyPathString, value)

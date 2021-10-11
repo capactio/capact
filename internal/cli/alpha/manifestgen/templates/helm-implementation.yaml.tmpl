@@ -109,30 +109,14 @@ spec:
                   capact-outputTypeInstances:
                     - name: helm-release
                       from: helm-release
+                    - name: config
+                      from: additional
                   arguments:
                     artifacts:
                       - name: input-parameters
                         from: "{{`{{steps.create-helm-args.outputs.artifacts.render}}`}}"
                       - name: runner-context
                         from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
-
-              - - name: render-config
-                  capact-outputTypeInstances:
-                    - name: config
-                      from: render
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: input-parameters
-                        from: "{{`{{steps.helm-install.outputs.artifacts.additional}}`}}"
-                      - name: configuration
-                        raw:
-                          data: ""
-                      - name: template
-                        raw:
-                          # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
-                          data: |
-                            property: value
 
           - name: prepare-parameters
             inputs:
