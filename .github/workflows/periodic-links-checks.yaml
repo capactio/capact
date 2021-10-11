@@ -2,7 +2,7 @@ name: Periodic Checks on main branch
 on:
   schedule:
     # Triggers the workflow weekdays at 9:00 UTC
-    - cron: '0 9 * * mon-fri'
+    - cron: '0 9 * * MON-FRI'
   workflow_dispatch:
 
 jobs:
