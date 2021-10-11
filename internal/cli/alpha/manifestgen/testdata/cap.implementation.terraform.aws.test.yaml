@@ -21,7 +21,7 @@ spec:
     parameters:
       additional-parameters:
         typeRef:
-          path: "cap.type.terraform.aws.test-input"
+          path: cap.type.terraform.aws.test-input
           revision: 0.1.0
 
   outputTypeInstanceRelations:
