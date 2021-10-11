@@ -1,8 +1,8 @@
 name: Periodic Checks on main branch
 on:
   schedule:
-    # Triggers the workflow every day at 9:00 UTC
-    - cron: '0 9 * * *'
+    # Triggers the workflow weekdays at 9:00 UTC
+    - cron: '0 9 * * mon-fri'
   workflow_dispatch:
 
 jobs:
