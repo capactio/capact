@@ -32,7 +32,19 @@ const (
 	InstallCommandType = "install"
 	// UpgradeCommandType is an operation to upgrade an Helm release.
 	UpgradeCommandType = "upgrade"
+	// MaxHistoryDefault limits the maximum number of revisions saved per release.
+	// Same value as defined by `helm upgrade` cmd: https://github.com/helm/helm/blob/a499b4b179307c267bdf3ec49b880e3dbd2a5591/pkg/cli/environment.go#L37-L38
+	MaxHistoryDefault = 10
 )
+
+// DefaultArguments returns Helm Arguments with default values.
+func DefaultArguments() Arguments {
+	return Arguments{
+		UpgradeArgs: UpgradeArgs{
+			MaxHistory: MaxHistoryDefault,
+		},
+	}
+}
 
 // Arguments stores the input arguments for the Helm runner operation.
 type Arguments struct {
@@ -61,6 +73,7 @@ type InstallArgs struct {
 type UpgradeArgs struct {
 	ReuseValues bool `json:"reuseValues"`
 	ResetValues bool `json:"resetValues"`
+	MaxHistory  int  `json:"maxHistory"`
 }
 
 // OutputArgs stores input arguments for generating the output artifacts.

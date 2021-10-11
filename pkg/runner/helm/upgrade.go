@@ -149,6 +149,7 @@ func (i *upgrader) initActionUpgradeFromInput(cfg *action.Configuration, in Inpu
 	// upgrade args
 	upgradeCli.ReuseValues = in.Args.UpgradeArgs.ReuseValues
 	upgradeCli.ResetValues = in.Args.UpgradeArgs.ResetValues
+	upgradeCli.MaxHistory = in.Args.UpgradeArgs.MaxHistory
 
 	// helm chart args
 	upgradeCli.ChartPathOptions.Version = helmChartRel.Chart.Version

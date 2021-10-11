@@ -106,7 +106,7 @@ func (r *helmRunner) getActionConfigProducer() actionConfigProducer {
 }
 
 func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
-	var args Arguments
+	args := DefaultArguments()
 	err := yaml.Unmarshal(in.Args, &args)
 	if err != nil {
 		return Input{}, errors.Wrap(err, "while unmarshaling runner arguments")
