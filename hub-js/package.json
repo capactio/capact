@@ -22,8 +22,7 @@
     "graphql-tools": "^8.1.0",
     "neo4j-driver": "^4.3.0",
     "neo4j-graphql-js": "~2.19.4",
-    "winston": "^3.3.3",
-    "object-path": ">=0.11.8"
+    "winston": "^3.3.3"
   },
   "resolutions": {
     "ws": "=7.4.6"
