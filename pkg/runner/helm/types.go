@@ -13,6 +13,7 @@ type outputter interface {
 
 // Config holds Runner related configuration.
 type Config struct {
+	OptionalKubeconfigTI string `envconfig:"optional"`
 	Command             CommandType
 	HelmReleasePath     string `envconfig:"optional"`
 	HelmDriver          string `envconfig:"default=secrets"`

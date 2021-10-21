@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/yaml"
 )
 
@@ -22,14 +21,12 @@ type helmCommand interface {
 // Runner provides functionality to run and wait for Helm operations.
 type helmRunner struct {
 	cfg    Config
-	k8sCfg *rest.Config
 	log    *zap.Logger
 }
 
-func newHelmRunner(k8sCfg *rest.Config, cfg Config) *helmRunner {
+func newHelmRunner(cfg Config) *helmRunner {
 	return &helmRunner{
 		cfg:    cfg,
-		k8sCfg: k8sCfg,
 	}
 }
 
@@ -82,12 +79,17 @@ type actionConfigProducer func(forNamespace string) (*action.Configuration, erro
 
 func (r *helmRunner) getActionConfigProducer() actionConfigProducer {
 	return func(forNamespace string) (*action.Configuration, error) {
+		k8sCfg, err := r.loadKubeconfig()
+		if err != nil {
+			return nil, err
+		}
+
 		actionConfig := new(action.Configuration)
 		helmCfg := &genericclioptions.ConfigFlags{
-			APIServer:   &r.k8sCfg.Host,
-			Insecure:    &r.k8sCfg.Insecure,
-			CAFile:      &r.k8sCfg.CAFile,
-			BearerToken: &r.k8sCfg.BearerToken,
+			APIServer:   &k8sCfg.Host,
+			Insecure:    &k8sCfg.Insecure,
+			CAFile:      &k8sCfg.CAFile,
+			BearerToken: &k8sCfg.BearerToken,
 			Namespace:   ptr.String(forNamespace),
 		}
 
@@ -95,7 +97,7 @@ func (r *helmRunner) getActionConfigProducer() actionConfigProducer {
 			r.log.Debug(fmt.Sprintf(format, v...), zap.String("source", "Helm"))
 		}
 
-		err := actionConfig.Init(helmCfg, forNamespace, r.cfg.HelmDriver, debugLog)
+		err = actionConfig.Init(helmCfg, forNamespace, r.cfg.HelmDriver, debugLog)
 
 		if err != nil {
 			return nil, errors.Wrap(err, "while initializing Helm configuration")
