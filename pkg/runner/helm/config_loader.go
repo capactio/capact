@@ -17,58 +17,46 @@ import (
 const KubeconfigTypeInstanceFieldKey = "config"
 
 func (r *helmRunner) loadKubeconfig() (*rest.Config, error) {
-	_, err := setKubeconfigEnvIfTypeInstanceExists(r.cfg.OptionalKubeconfigTI, r.log)
+	err := setKubeconfigEnvIfTypeInstanceExists(r.cfg.OptionalKubeconfigTI, r.log)
 	if err != nil {
 		return nil, errors.Wrap(err, "while setting optional kubeconfig")
 	}
-	//defer func() {
-	//	merr := multierror.Append(err, cleanup())
-	//	err = merr.ErrorOrNil()
-	//}()
 
 	return config.GetConfig()
 }
 
-func noopFunc() error {
-	return nil
-}
-
-func setKubeconfigEnvIfTypeInstanceExists(path string, log *zap.Logger) (func() error, error) {
+func setKubeconfigEnvIfTypeInstanceExists(path string, log *zap.Logger) error {
 	if path == "" {
 		log.Debug("optional Kubeconfig TI not specified")
-		return noopFunc, nil
+		return nil
 	}
 
 	f, err := os.Stat(path)
 	switch {
 	case err == nil:
 		if f.IsDir() {
-			return nil, errors.New("RUNNER_OPTIONAL_KUBECONFIG_TI cannot be dir, must be a file")
+			return errors.New("RUNNER_OPTIONAL_KUBECONFIG_TI cannot be dir, must be a file")
 		}
 	case os.IsNotExist(err):
 		log.Debug("optional Kubeconfig TI specified but file does not exist")
-		return noopFunc, nil
+		return nil
 	default:
-		return nil, err
+		return err
 	}
 
 	kcfg, err := extractKubeconfigFromTI(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	file, err := ioutil.TempFile("", "kubeconfig")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer file.Close()
 
-	cleanup := func() error {
-		return os.Remove(file.Name())
-	}
-
-	if _, err := file.Write(kcfg); err != nil {
-		return nil, err
+	if _, err = file.Write(kcfg); err != nil {
+		return err
 	}
 
 	log.Info(fmt.Sprintf("set optional kubeconfig TI by changing %s env", clientcmd.RecommendedConfigPathEnvVar),
@@ -78,10 +66,10 @@ func setKubeconfigEnvIfTypeInstanceExists(path string, log *zap.Logger) (func() 
 
 	// override the env for current process
 	if err = os.Setenv(clientcmd.RecommendedConfigPathEnvVar, file.Name()); err != nil {
-		return nil, errors.Wrapf(err, "while setting up %s env", clientcmd.RecommendedConfigPathEnvVar)
+		return errors.Wrapf(err, "while setting up %s env", clientcmd.RecommendedConfigPathEnvVar)
 	}
 
-	return cleanup, err
+	return nil
 }
 
 func extractKubeconfigFromTI(path string) ([]byte, error) {

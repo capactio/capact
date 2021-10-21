@@ -20,13 +20,13 @@ type helmCommand interface {
 
 // Runner provides functionality to run and wait for Helm operations.
 type helmRunner struct {
-	cfg    Config
-	log    *zap.Logger
+	cfg Config
+	log *zap.Logger
 }
 
 func newHelmRunner(cfg Config) *helmRunner {
 	return &helmRunner{
-		cfg:    cfg,
+		cfg: cfg,
 	}
 }
 
