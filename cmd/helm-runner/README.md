@@ -73,6 +73,7 @@ The following environment variables can be set:
 | RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory                                 |
 | RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH | no       | `/tmp/helm-release.yaml` | Defines path under which the Helm release artifacts is saved                   |
 | RUNNER_OUTPUT_ADDITIONAL_FILE_PATH   | no       | `/tmp/additional.yaml`   | Defines path under which the additional output is saved                        |
+| RUNNER_KUBECONFIG                    | no       |                          | Path to kubeconfig file used by Runner, if not set the value of KUBECONFIG will be used |
 | KUBECONFIG                           | no       | `~/.kube/config`         | Path to kubeconfig file                                                        |
 
 
