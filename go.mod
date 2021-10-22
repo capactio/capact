@@ -13,8 +13,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
-	github.com/argoproj/argo-workflows/v3 v3.1.0-rc1.0.20210811221840-88520891a037
-	github.com/argoproj/pkg v0.10.1
+	github.com/argoproj/argo-workflows/v3 v3.2.2
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
 	github.com/briandowns/spinner v1.12.0
@@ -59,7 +58,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
-	github.com/teivah/onecontext v1.3.0
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/valyala/fastjson v1.6.3
 	github.com/vektah/gqlparser/v2 v2.1.0
@@ -74,10 +72,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.6.3
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
+	k8s.io/api v0.21.5
+	k8s.io/apimachinery v0.21.5
 	k8s.io/cli-runtime v0.21.0
-	k8s.io/client-go v0.21.3
+	k8s.io/client-go v0.21.5
 	k8s.io/kubectl v0.21.0
 	k8s.io/utils v0.0.0-20210802155522-efc7438f0176
 	rsc.io/letsencrypt v0.0.3 // indirect
@@ -89,8 +87,7 @@ require (
 replace (
 	// TODO:
 	// 	- Remove when we can compile argo without static files
-	// 	- Use stable tag once new version with Kubernetes 1.21 usage is released
-	github.com/argoproj/argo-workflows/v3 => github.com/capactio/argo-workflows/v3 v3.1.0-rc1.0.20210812143110-6bc7f066ec1f
+	github.com/argoproj/argo-workflows/v3 => github.com/capactio/argo-workflows/v3 v3.2.2-for-capact
 
 	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.8
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
