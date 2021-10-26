@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path"
 	"sort"
+	"strings"
 
 	"capact.io/capact/internal/ctxutil"
 	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
@@ -610,7 +611,10 @@ func (*dedicatedRenderer) createWorkflow(implementation *hubpublicapi.Implementa
 func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition, prefix string) (WorkflowStep, Template, map[string]string) {
 	artifactPath := "/typeinstance"
 
-	stepName := fmt.Sprintf("output-%s", output.Name)
+	// ToLower as the name is used for k8s pod name:
+	//    Pod "e2e-test-1-8081-output-testUpload-3658329211" is invalid: metadata.name: Invalid value: "e2e-test-1-8081-output-testUpload-3658329211": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+	// change in Argo was introduced in: https://github.com/argoproj/argo-workflows/commit/8897fff15776f31fbd7f65bbee4f93b2101110f7
+	stepName := strings.ToLower(fmt.Sprintf("output-%s", output.Name))
 
 	var templateName string
 	var artifactGlobalName string
