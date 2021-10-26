@@ -2,6 +2,7 @@ argo-workflows:
   images:
     # imagePullPolicy to apply to all containers
     pullPolicy: IfNotPresent
+  controller:
     containerRuntimeExecutor: pns
 
   useDefaultArtifactRepo: true
