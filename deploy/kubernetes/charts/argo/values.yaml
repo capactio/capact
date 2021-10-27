@@ -3,11 +3,6 @@ argo-workflows:
     # imagePullPolicy to apply to all containers
     pullPolicy: IfNotPresent
   controller:
-    image:
-      registry: ghcr.io
-      repository: capactio/argoproj/workflow-controller
-      tag: v3.0.7-disabled-global-art-validation
-
     containerRuntimeExecutor: pns
 
   useDefaultArtifactRepo: true
