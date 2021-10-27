@@ -4,6 +4,17 @@ argo-workflows:
     pullPolicy: IfNotPresent
   controller:
     containerRuntimeExecutor: pns
+    image:
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "v3.2.2"
+  executor:
+    image:
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "v3.2.2"
+  server:
+    image:
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "v3.2.2"
 
   useDefaultArtifactRepo: true
   artifactRepository:
