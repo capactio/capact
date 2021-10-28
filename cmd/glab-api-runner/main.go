@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"capact.io/capact/pkg/runner"
 	glabapi "capact.io/capact/pkg/runner/glab-api-runner"
 	statusreporter "capact.io/capact/pkg/runner/status-reporter"
-	"log"
 
 	"github.com/vrischmann/envconfig"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
@@ -17,7 +18,7 @@ func main() {
 
 	stop := signals.SetupSignalHandler()
 
-	glabAPIRunner := glabapi.NewRunner(cfg)
+	glabAPIRunner := glabapi.NewRESTRunner(cfg)
 
 	statusReporter := statusreporter.NewNoop()
 

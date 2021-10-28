@@ -9,23 +9,23 @@ import (
 
 var _ runner.Runner = &runnerAdapter{}
 
-// TODO: Remove adapter once Runner interface changes
+// TODO: Add support for async and sync runners in Runner Manager
 
 type runnerAdapter struct {
-	underlying *GlabAPIRunner
+	underlying *RESTRunner
 	out        *runner.WaitForCompletionOutput
 }
 
-// NewRunner returns new instance of GitLab REST API runner.
-func NewRunner(cfg Config) runner.Runner {
+// NewRESTRunner returns new instance of GitLab REST API runner.
+func NewRESTRunner(cfg Config) runner.Runner {
 	return &runnerAdapter{
-		underlying: &GlabAPIRunner{
+		underlying: &RESTRunner{
 			cfg: cfg,
 		},
 	}
 }
 
-// Start the GitLab REST API runner operation.
+// Start starts the GitLab REST API runner operation.
 func (r *runnerAdapter) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	var err error
 	r.out, err = r.underlying.Do(ctx, in)
@@ -35,7 +35,7 @@ func (r *runnerAdapter) Start(ctx context.Context, in runner.StartInput) (*runne
 
 	return &runner.StartOutput{
 		Status: map[string]interface{}{
-			"phase": "Installing",
+			"phase": "Initializing",
 		},
 	}, nil
 }

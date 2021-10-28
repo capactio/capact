@@ -13,13 +13,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// GlabAPIRunner provides functionality to run and wait for Helm operations.
-type GlabAPIRunner struct {
-	cfg      Config
-	log      *zap.Logger
+// RESTRunner provides functionality to execute REST API calls.
+type RESTRunner struct {
+	cfg Config
+	log *zap.Logger
 }
 
-func (r *GlabAPIRunner) Do(ctx context.Context, in runner.StartInput) (*runner.WaitForCompletionOutput, error) {
+// Do sends an API request and renders the API response.
+func (r *RESTRunner) Do(ctx context.Context, in runner.StartInput) (*runner.WaitForCompletionOutput, error) {
 	input, err := r.readInputData(in)
 	if err != nil {
 		return nil, errors.Wrap(err, "while reading input data")
@@ -52,7 +53,7 @@ func (r *GlabAPIRunner) Do(ctx context.Context, in runner.StartInput) (*runner.W
 		return nil, errors.Wrap(err, "while executing request")
 	}
 
-	artifact, err := renderOutput(input.Args.Output.GoTemplate, rawBody)
+	artifact, err := r.renderOutput(input.Args.Output.GoTemplate, rawBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering additional data")
 	}
@@ -63,11 +64,20 @@ func (r *GlabAPIRunner) Do(ctx context.Context, in runner.StartInput) (*runner.W
 
 	return &runner.WaitForCompletionOutput{
 		Succeeded: true,
-		Message:   "",
 	}, nil
 }
 
-func (r *GlabAPIRunner) saveOutput(data []byte) error {
+// Name returns the runner name.
+func (r *RESTRunner) Name() string {
+	return "glab.rest.api.v4"
+}
+
+// InjectLogger sets the logger on the runner.
+func (r *RESTRunner) InjectLogger(logger *zap.Logger) {
+	r.log = logger
+}
+
+func (r *RESTRunner) saveOutput(data []byte) error {
 	if data == nil {
 		return nil
 	}
@@ -81,7 +91,7 @@ func (r *GlabAPIRunner) saveOutput(data []byte) error {
 	return nil
 }
 
-func (r *GlabAPIRunner) readInputData(in runner.StartInput) (Input, error) {
+func (r *RESTRunner) readInputData(in runner.StartInput) (Input, error) {
 	var args Arguments
 	err := yaml.Unmarshal(in.Args, &args)
 	if err != nil {
@@ -94,7 +104,7 @@ func (r *GlabAPIRunner) readInputData(in runner.StartInput) (Input, error) {
 	}, nil
 }
 
-func renderOutput(artifactTemplate string, data map[string]interface{}) ([]byte, error) {
+func (r *RESTRunner) renderOutput(artifactTemplate string, data map[string]interface{}) ([]byte, error) {
 	if artifactTemplate == "" {
 		return []byte{}, nil
 	}
@@ -109,12 +119,4 @@ func renderOutput(artifactTemplate string, data map[string]interface{}) ([]byte,
 		return nil, errors.Wrap(err, "while rendering output")
 	}
 	return buff.Bytes(), nil
-}
-
-func (r *GlabAPIRunner) Name() string {
-	return "glab.rest.api.v4"
-}
-
-func (r *GlabAPIRunner) InjectLogger(logger *zap.Logger) {
-	r.log = logger
 }

@@ -2,7 +2,7 @@ package glabapi
 
 import "capact.io/capact/pkg/runner"
 
-// Config holds Runner related configuration.
+// Config holds RESTRunner related configuration.
 type Config struct {
 	Output struct {
 		// Extracting resource data from response body
