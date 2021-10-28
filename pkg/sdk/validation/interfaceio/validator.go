@@ -178,10 +178,10 @@ func (c *Validator) HasRequiredProp(schemas validation.SchemaCollection) (bool, 
 	// of memory allocations.
 	var p fastjson.Parser
 
-	for _, schema := range schemas {
+	for name, schema := range schemas {
 		v, err := p.Parse(schema.Value)
 		if err != nil { // It's taken from Hub it should be already a valid JSON
-			return false, err
+			return false, errors.Wrapf(err, "cannot parse JSONSchema for %q", name)
 		}
 		requiredArr := v.GetArray(gojsonschema.KEY_REQUIRED)
 		if len(requiredArr) > 0 {
