@@ -24,7 +24,7 @@ type WorkflowRulesList []WorkflowRulesForInterface
 // The Interface can be provided either using the full path and revision
 // or using an alias from the imported Interfaces in the Implementation.
 type WorkflowInterfaceRef struct {
-	ManifestRef *types.ManifestRef
+	ManifestRef *types.ManifestRefWithOptRevision
 	Alias       *string
 }
 
@@ -63,7 +63,7 @@ func (p *WorkflowPolicy) ResolveImports(imports []*hubpublicapi.ImplementationIm
 			return errors.Wrap(err, "while resolving Action path")
 		}
 		p.Rules[i].Interface.ManifestRef.Path = actionRef.Path
-		p.Rules[i].Interface.ManifestRef.Revision = actionRef.Revision
+		p.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
 	}
 	return nil
 }
@@ -103,7 +103,7 @@ func (p WorkflowPolicy) ToPolicy() (Policy, error) {
 // UnmarshalJSON fills the WorkflowInterfaceRef properties from the provided byte slice.
 // The byte slice must be JSON encoded.
 func (i *WorkflowInterfaceRef) UnmarshalJSON(b []byte) error {
-	i.ManifestRef = &types.ManifestRef{}
+	i.ManifestRef = &types.ManifestRefWithOptRevision{}
 	err := json.Unmarshal(b, i.ManifestRef)
 	if err == nil {
 		return nil
