@@ -687,7 +687,7 @@ func workflowPolicyWithAdditionalInput(input map[string]interface{}) policy.Work
 		Rules: policy.WorkflowRulesList{
 			policy.WorkflowRulesForInterface{
 				Interface: policy.WorkflowInterfaceRef{
-					ManifestRef: &types.ManifestRef{
+					ManifestRef: &types.ManifestRefWithOptRevision{
 						Path: "cap.interface.database.postgresql.install",
 					},
 				},
