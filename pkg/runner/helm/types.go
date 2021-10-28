@@ -13,11 +13,12 @@ type outputter interface {
 
 // Config holds Runner related configuration.
 type Config struct {
-	Command             CommandType
-	HelmReleasePath     string `envconfig:"optional"`
-	HelmDriver          string `envconfig:"default=secrets"`
-	RepositoryCachePath string `envconfig:"default=/tmp/helm"`
-	Output              struct {
+	OptionalKubeconfigTI string `envconfig:"optional"`
+	Command              CommandType
+	HelmReleasePath      string `envconfig:"optional"`
+	HelmDriver           string `envconfig:"default=secrets"`
+	RepositoryCachePath  string `envconfig:"default=/tmp/helm"`
+	Output               struct {
 		HelmReleaseFilePath string `envconfig:"default=/tmp/helm-release.yaml"`
 		// Extracting resource metadata from Kubernetes as outputs
 		AdditionalFilePath string `envconfig:"default=/tmp/additional.yaml"`

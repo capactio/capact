@@ -61,20 +61,19 @@ kubectl get svc postgresql-server -o jsonpath='{.metadata.annotations}'
 ## Configuration
 
 The following environment variables can be set:
-
-| Name                                 | Required | Default                  | Description                                                                    |
-|--------------------------------------|----------|--------------------------|--------------------------------------------------------------------------------|
-| RUNNER_CONTEXT_PATH                  | yes      |                          | Path to the YAML file with runner context                                      |
-| RUNNER_ARGS_PATH                     | yes      |                          | Path to the YAML file with input arguments                                     |
-| RUNNER_COMMAND                       | yes      |                          | Selected Helm Runner's command (currently supported: `install`, `upgrade`)     |
-| RUNNER_HELM_RELEASE_PATH             | no       |                          | Path to the YAML file with Helm Release. Applicable only for `upgrade` command |
-| RUNNER_LOGGER_DEV_MODE               | no       | `false`                  | Enable additional log messages                                                 |
-| RUNNER_HELM_DRIVER                   | no       | `secrets`                | Set Helm backend storage driver                                                |
-| RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory                                 |
-| RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH | no       | `/tmp/helm-release.yaml` | Defines path under which the Helm release artifacts is saved                   |
-| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH   | no       | `/tmp/additional.yaml`   | Defines path under which the additional output is saved                        |
-| RUNNER_KUBECONFIG                    | no       |                          | Path to kubeconfig file used by Runner, if not set the value of KUBECONFIG will be used |
-| KUBECONFIG                           | no       | `~/.kube/config`         | Path to kubeconfig file                                                        |
+| Name                                 | Required | Default                  | Description                                                                                                                                                           |
+|--------------------------------------|----------|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| RUNNER_CONTEXT_PATH                  | yes      |                          | Path to the YAML file with runner context                                                                                                                             |
+| RUNNER_ARGS_PATH                     | yes      |                          | Path to the YAML file with input arguments                                                                                                                            |
+| RUNNER_COMMAND                       | yes      |                          | Selected Helm Runner's command (currently supported: `install`, `upgrade`)                                                                                            |
+| RUNNER_HELM_RELEASE_PATH             | no       |                          | Path to the YAML file with Helm Release. Applicable only for `upgrade` command                                                                                        |
+| RUNNER_LOGGER_DEV_MODE               | no       | `false`                  | Enable additional log messages                                                                                                                                        |
+| RUNNER_HELM_DRIVER                   | no       | `secrets`                | Set Helm backend storage driver                                                                                                                                       |
+| RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory                                                                                                                        |
+| RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH | no       | `/tmp/helm-release.yaml` | Defines path under which the Helm release artifacts is saved                                                                                                          |
+| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH   | no       | `/tmp/additional.yaml`   | Defines path under which the additional output is saved                                                                                                               |
+| RUNNER_OPTIONAL_KUBECONFIG_TI        | no       |                          | Path to the TypeInstance which holds kubeconfig under **config** property. Used only if set and file exists. Takes precedent over `KUBECONFIG`  environment variable. |
+| KUBECONFIG                           | no       | `~/.kube/config`         | Path to kubeconfig file                                                                                                                                               |
 
 
 

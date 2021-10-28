@@ -5,7 +5,6 @@ import (
 
 	"capact.io/capact/pkg/runner"
 	"go.uber.org/zap"
-	"k8s.io/client-go/rest"
 )
 
 var _ runner.Runner = &runnerAdapter{}
@@ -18,9 +17,9 @@ type runnerAdapter struct {
 }
 
 // NewRunner returns new instance of Helm runner.
-func NewRunner(k8sCfg *rest.Config, cfg Config) runner.Runner {
+func NewRunner(cfg Config) runner.Runner {
 	return &runnerAdapter{
-		underlying: newHelmRunner(k8sCfg, cfg),
+		underlying: newHelmRunner(cfg),
 	}
 }
 
