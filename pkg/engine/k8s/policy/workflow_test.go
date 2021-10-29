@@ -8,13 +8,14 @@ import (
 )
 
 func TestToPolicy(t *testing.T) {
-	wp := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": map[string]interface{}{"enabled": false}})
-	policy := policyWithAdditionalInput(map[string]interface{}{"a": map[string]interface{}{"enabled": false}})
-
-	convertedPolicy, err := wp.ToPolicy()
+	// given
+	givenWorkflowPolicy := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": map[string]interface{}{"enabled": false}})
+	expectedPolicy := policyWithAdditionalInput(map[string]interface{}{"a": map[string]interface{}{"enabled": false}})
+	// when
+	convertedPolicy, err := givenWorkflowPolicy.ToPolicy()
+	// then
 	assert.NoError(t, err)
-
-	assert.Equal(t, convertedPolicy, policy)
+	assert.Equal(t, expectedPolicy, convertedPolicy)
 }
 
 func workflowPolicyWithAdditionalInput(input map[string]interface{}) WorkflowPolicy {
