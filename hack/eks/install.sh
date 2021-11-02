@@ -77,7 +77,7 @@ capact::aws::install::capact() {
   shout "Deploying Capact..."
   capact install --environment eks \
     --version "${CAPACT_VERSION}" \
-    --capact-overrides "global.domainName=${CAPACT_DOMAIN_NAME}" \
+    --capact-overrides "global.domainName=${CAPACT_DOMAIN_NAME},gateway.ingress.annotations.class=capact" \
     --cert-manager-overrides "${CUSTOM_CERT_MANAGER_OVERRIDES}"
 
   shout "Capact deployed successfully!"
