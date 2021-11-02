@@ -63,6 +63,7 @@ require (
 	github.com/valyala/fastjson v1.6.3
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/vrischmann/envconfig v1.3.0
+	github.com/xanzy/go-gitlab v0.33.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/zclconf/go-cty v1.8.1
 	go.uber.org/zap v1.18.1

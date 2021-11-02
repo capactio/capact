@@ -17,7 +17,7 @@ all: generate build-all-images test-unit test-lint ## Default: generate all, bui
 # Building #
 ############
 
-APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions
+APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions gitlab-api-runner
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2 merger
 

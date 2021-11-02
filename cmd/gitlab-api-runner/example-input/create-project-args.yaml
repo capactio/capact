@@ -1,0 +1,28 @@
+method: POST
+path: projects
+
+baseURL: { BASE_URL }
+auth:
+  basic:
+    username: { USER }
+    password: { PASSWORD }
+
+body:
+  auto_devops_enabled: false
+  default_branch: "main"
+  description: "Just a test project to play with"
+  name: "My Project"
+  namespace_id: 3
+  visibility: "private"
+  merge_requests_enabled: true
+  initialize_with_readme: true
+
+output:
+  goTemplate: |
+    url: "{{ .http_url_to_repo }}"
+    branchName: "{{ .default_branch }}"
+    {{- if eq .visibility "private" }}
+    private: true
+    {{- else }}
+    private: false
+    {{- end }}

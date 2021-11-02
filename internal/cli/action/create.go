@@ -13,6 +13,7 @@ import (
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/validation/interfaceio"
+	"github.com/pkg/errors"
 
 	"github.com/fatih/color"
 )
@@ -79,7 +80,7 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 		Path: opts.InterfacePath,
 	}, public.WithInterfaceRevisionFields(public.InterfaceRevisionInputFields))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while looking for Interface definition")
 	}
 	if iface == nil {
 		return fmt.Errorf("Interface %s was not found in Hub", opts.InterfacePath)
@@ -87,16 +88,16 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 
 	opts.ifaceSchemas, err = opts.validator.LoadInputParametersSchemas(ctx, iface)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while loading input parameters JSONSchema")
 	}
 	opts.areInputParamsRequired, err = opts.validator.HasRequiredProp(opts.ifaceSchemas)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while looking for required properties in Interface schema")
 	}
 
 	opts.ifaceTypes, err = opts.validator.LoadInputTypeInstanceRefs(ctx, iface)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while loading input TypeInstances JSONSchemas")
 	}
 	opts.areInputTypeInstancesRequired = len(opts.ifaceTypes) > 0
 
