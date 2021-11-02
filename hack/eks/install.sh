@@ -127,12 +127,12 @@ capact::aws::register_dnses() {
     exit 1
   fi
 
-  local -r internal_lb_hosted_zone="$(aws elb describe-load-balancers \
+  local -r internal_lb_hosted_zone="$(aws elb describe-load-balancers --region "${CAPACT_REGION}" \
     | jq -r ".LoadBalancerDescriptions[] \
       | select(.DNSName == \"${internal_lb_fqdn}\") \
       | .CanonicalHostedZoneNameID")"
 
-  local -r external_lb_hosted_zone="$(aws elb describe-load-balancers \
+  local -r external_lb_hosted_zone="$(aws elb describe-load-balancers --region "${CAPACT_REGION}" \
     | jq -r ".LoadBalancerDescriptions[] \
       | select(.DNSName == \"${external_lb_fqdn}\") \
       | .CanonicalHostedZoneNameID")"

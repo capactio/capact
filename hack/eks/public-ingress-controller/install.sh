@@ -14,7 +14,7 @@ readonly CURRENT_DIR
 readonly REPO_ROOT_DIR
 readonly K8S_DEPLOY_DIR="${REPO_ROOT_DIR}/deploy/kubernetes"
 
-helm upgrade public-ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
+helm upgrade public-ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-controller" \
     --install \
     --namespace="capact-system" \
     --values "${CURRENT_DIR}/values.yml" \
