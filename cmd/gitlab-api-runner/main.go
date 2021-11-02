@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"capact.io/capact/pkg/runner"
-	glabapi "capact.io/capact/pkg/runner/glab-api-runner"
+	glabapi "capact.io/capact/pkg/runner/gitlab-api-runner"
 	statusreporter "capact.io/capact/pkg/runner/status-reporter"
 
 	"github.com/vrischmann/envconfig"

@@ -1,4 +1,4 @@
-package glabapi
+package gitlabapi
 
 import "capact.io/capact/pkg/runner"
 
@@ -26,7 +26,7 @@ type Arguments struct {
 	Output      OutputArgs             `json:"output"`
 }
 
-// Auth holds auth data for GitLab API
+// Auth holds auth data for GitLab API.
 // TODO: add token support
 type Auth struct {
 	Basic struct {

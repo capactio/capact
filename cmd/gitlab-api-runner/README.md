@@ -22,10 +22,10 @@ GitLab REST API runner is a [runner](https://capact.io/docs/architecture/runner)
 2. Start the runner:
 
     ```bash
-    RUNNER_CONTEXT_PATH=cmd/glab-api-runner/example-input/context.yaml \
-     RUNNER_ARGS_PATH=cmd/glab-api-runner/example-input/create-project-args.yaml \
+    RUNNER_CONTEXT_PATH=cmd/gitlab-api-runner/example-input/context.yaml \
+     RUNNER_ARGS_PATH=cmd/gitlab-api-runner/example-input/create-project-args.yaml \
      RUNNER_LOGGER_DEV_MODE=true \
-     go run cmd/glab-api-runner/main.go
+     go run cmd/gitlab-api-runner/main.go
     ```
 
 3. Get connections details:

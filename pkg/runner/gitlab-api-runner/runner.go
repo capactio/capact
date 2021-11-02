@@ -1,4 +1,4 @@
-package glabapi
+package gitlabapi
 
 import (
 	"bytes"
@@ -69,7 +69,7 @@ func (r *RESTRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 
 // Name returns the runner name.
 func (r *RESTRunner) Name() string {
-	return "glab.rest.api.v4"
+	return "gitlab.rest.api.v4"
 }
 
 // InjectLogger sets the logger on the runner.

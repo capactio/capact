@@ -181,7 +181,7 @@ func (c *Validator) HasRequiredProp(schemas validation.SchemaCollection) (bool, 
 	for name, schema := range schemas {
 		v, err := p.Parse(schema.Value)
 		if err != nil { // It's taken from Hub it should be already a valid JSON
-			return false, errors.Wrapf(err, "cannot parse JSONSchema for %q", name)
+			return false, errors.Wrapf(err, "while parsing JSONSchema for %q", name)
 		}
 		requiredArr := v.GetArray(gojsonschema.KEY_REQUIRED)
 		if len(requiredArr) > 0 {

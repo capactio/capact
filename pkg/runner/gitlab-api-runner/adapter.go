@@ -1,4 +1,4 @@
-package glabapi
+package gitlabapi
 
 import (
 	"context"
