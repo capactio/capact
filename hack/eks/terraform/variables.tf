@@ -42,7 +42,7 @@ variable "vpc_single_nat_gateway" {
 }
 
 variable "eks_cluster_version" {
-  default     = "1.18"
+  default     = "1.20"
   description = "Version of the EKS cluster"
 }
 
