@@ -3,11 +3,10 @@ package manifest
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+
 	"github.com/pkg/errors"
-	"github.com/xeipuuv/gojsonschema"
 )
 
 // TypeValidator is a validator for Type manifest.
@@ -26,21 +25,9 @@ func (v *TypeValidator) Do(_ context.Context, _ types.ManifestMetadata, jsonByte
 		return ValidationResult{}, errors.Wrap(err, "while unmarshalling JSON into Type type")
 	}
 
-	jsonSchemaStr := typeEntity.Spec.JSONSchema.Value
-	schemaLoader := gojsonschema.NewReferenceLoader("http://json-schema.org/draft-07/schema")
-	manifestLoader := gojsonschema.NewStringLoader(jsonSchemaStr)
-
-	jsonSchemaValidationResult, err := gojsonschema.Validate(schemaLoader, manifestLoader)
-	if err != nil {
-		return newValidationResult(errors.Wrap(err, "spec.jsonSchema.value")), nil
-	}
-
-	result := ValidationResult{}
-	for _, err := range jsonSchemaValidationResult.Errors() {
-		result.Errors = append(result.Errors, fmt.Errorf("%v", err.String()))
-	}
-
-	return result, nil
+	return validateJSONSchema07Definition(jsonSchemaCollection{
+		"spec.jsonSchema.value": typeEntity.Spec.JSONSchema.Value,
+	})
 }
 
 // Name returns the validator name.
