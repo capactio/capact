@@ -42,7 +42,7 @@ variable "vpc_single_nat_gateway" {
 }
 
 variable "eks_cluster_version" {
-  default     = "1.18"
+  default     = "1.20"
   description = "Version of the EKS cluster"
 }
 
@@ -82,7 +82,7 @@ variable "domain_name" {
 }
 
 variable "capact_cli_version" {
-  default     = "v0.3.0"
+  default     = "v0.5.0"
   description = "Version of the Capact CLI binary, installed on the bastion host"
 }
 

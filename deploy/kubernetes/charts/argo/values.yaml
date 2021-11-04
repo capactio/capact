@@ -15,6 +15,10 @@ argo-workflows:
     image:
       # Overrides the image tag whose default is the chart appVersion.
       tag: "v3.2.2"
+    extraArgs:
+      # https://argoproj.github.io/argo-workflows/argo-server-auth-mode/
+      # when server is exposed we don't need to provide token
+      - --auth-mode=server
 
   useDefaultArtifactRepo: true
   artifactRepository:
