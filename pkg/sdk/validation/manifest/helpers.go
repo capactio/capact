@@ -5,7 +5,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// jsonSchemaCollection defines JSONSchema collection index by the name
+// jsonSchemaCollection defines JSONSchema collection index by the name.
 type jsonSchemaCollection map[string]string
 
 // validateJSONSchema07Definition validate a given JSONSchema collection.
