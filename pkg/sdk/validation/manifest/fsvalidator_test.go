@@ -74,6 +74,13 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 				manifestRef("cap.type.productivity.mattermost.config"):        true,
 			}, nil),
 		},
+		"Invalid JSON Schema in Interface": {
+			manifestPath: "testdata/invalid-interface_json-schema.yaml",
+			expectedValidationErrorMsgs: []string{
+				"InterfaceValidator: properties.config.type: Must validate at least one schema (anyOf)",
+				`InterfaceValidator: properties.config.type: properties.config.type must be one of the following: "array", "boolean", "integer", "null", "number", "object", "string"`,
+			},
+		},
 		"Invalid JSON Schema in Type": {
 			manifestPath: "testdata/invalid-type_json-schema.yaml",
 			expectedValidationErrorMsgs: []string{
