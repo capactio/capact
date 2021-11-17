@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/printer"
@@ -27,6 +28,11 @@ func NewK3d() *cobra.Command {
 	k3d.Short = "Provision local k3d cluster"
 	// Needs to be `PersistentPreRunE` as the `PreRunE` is used by k3d to configure viper config.
 	k3d.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// 0. Configure logger for tracing
+		if cli.VerboseMode.IsTracing() {
+			logrus.SetLevel(logrus.TraceLevel)
+		}
+
 		spinnerFmt := printer.NewLogrusSpinnerFormatter(fmt.Sprintf("Creating cluster %s...", opts.Name))
 		logrus.SetFormatter(spinnerFmt)
 

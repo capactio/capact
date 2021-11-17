@@ -4,20 +4,20 @@ import (
 	"log"
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/action"
 	"capact.io/capact/cmd/cli/cmd/alpha"
+	configcmd "capact.io/capact/cmd/cli/cmd/config"
 	"capact.io/capact/cmd/cli/cmd/environment"
+	"capact.io/capact/cmd/cli/cmd/hub"
 	"capact.io/capact/cmd/cli/cmd/manifest"
 	"capact.io/capact/cmd/cli/cmd/policy"
-
-	"capact.io/capact/cmd/cli/cmd/action"
-	configcmd "capact.io/capact/cmd/cli/cmd/config"
-	"capact.io/capact/cmd/cli/cmd/hub"
 	"capact.io/capact/cmd/cli/cmd/typeinstance"
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
 
 	"github.com/common-nighthawk/go-figure"
+	k3dver "github.com/rancher/k3d/v4/version"
 	"github.com/spf13/cobra"
 )
 
@@ -101,6 +101,11 @@ func NewRoot() *cobra.Command {
 }
 
 func initConfig() {
+	// Needs to be in sync with version in `go.mod`
+	// By default is empty which results in selecting the `latest` tag
+	// for Docker images used by k3d, e.g., rancher/k3d-proxy or rancher/k3d-tools etc.
+	k3dver.Version = "v4.4.8"
+
 	err := config.Init(configPath)
 	exitOnError(err)
 }
