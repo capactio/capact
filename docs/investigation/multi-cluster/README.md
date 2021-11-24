@@ -199,6 +199,7 @@ This can be added during the render process by our [Argo Renderer](https://githu
 
 **Cons:**
 - Logs cannot be accessed from the user interface.
+- Pod dependencies (config maps and secrets) and dependents (services and ingresses) are not copied to target clusters.
 
 ### Virtual-kubelet-based approaches 
 
@@ -207,15 +208,17 @@ Admiralty, Tensile-kube, and Liqo, adopt this approach.
 
 #### Admiralty
 
+Admiralty is a multi-cluster scheduler. They have a [blog post](https://admiralty.io/blog/2019/01/17/running-argo-workflows-across-multiple-kubernetes-clusters) about integration with Argo Workflows. Unfortunately, the tutorial is out-dated. You can no longer enforce placement with the `multicluster.admiralty.io/clustername` annotation as they replaced that with a more idiomatic node selector.
+
+To support 
+
 We have a dedicate Action to register an external cluster. Thanks to that we can install the
 Action to prepare that cluster for multi-support ..
 
-The Argo Workflows tutorial is out-dated. You can no longer enforce placement with the `multicluster.admiralty.io/clustername` annotation as they replaced that with a more idiomatic node selector instead.
 
 **Cons:**
 - needs to be installed on target cluster
-- Last update was in.. **TBD**
-- It takes CPU + MEMORY **TBD**
+- Last update was on 21 Sep 2021
 - It's easy to schedule pod in **all** registered target clusters if you specify only `multicluster.admiralty.io/elect: ""` without `nodeSelector`. In our case, it can be problematic.
 - Manifests in Helm chart don't have specified the CPU and memory requests and limits. This can be easily solved.
 - Uses old Kubernetes manifest versions, which generates such warnings:
@@ -223,21 +226,22 @@ The Argo Workflows tutorial is out-dated. You can no longer enforce placement wi
   - `apiextensions.k8s.io/v1beta1 CustomResourceDefinition is deprecated in v1.16+, unavailable in v1.22+; use apiextensions.k8s.io/v1 CustomResourceDefinition`
 
 **Pros:**
-- runners don't know that they were executed on different cluster
-- as it uses the proxy Pod concept, all functionality e.g. fetching logs, checking Pod status etc. can be executed on the main cluster. 
+- Steps defined by Content Developer don't know that they were executed on different cluster. 
+- As it uses the proxy Pod concept, all functionality e.g. fetching logs, checking Pod status etc. can be executed on the main cluster and not only on the target cluster.
+- "If the Admiralty agent in the management cluster or the management cluster itself breaks or loses connectivity with workload clusters, existing pods and services in the workload clusters continue to run and serve requests—if pods are evicted in the meantime, they're even recreated locally by PodChaperons—so your applications stay available." 
+- Pod dependencies (config maps and secrets) and dependents (services and ingresses) "follow" delegate pods, i.e., they are copied as needed to target clusters.
 
- 
 ### Capact creates Capact
 
-This clearly states that the Capact doesn't support the multi-cluster, but instead it's able to create a new Kubernetes clusters with Capact installed on it.   
+Instead of adding support for the multi-cluster in Capact, we can create a dedicated Capact Action to create a new Kubernetes clusters with Capact installed on it.   
 
 In that approach, we have:
-- "Capact control plane" for bootstrapping other Capact clusters. All created clusters are described via TypeInstance. This can be visible in UI where user admin can browser all provisioned Capact clusters and executed other Actions against those instances. For example, upgrade Capact cluster or destroy it. 
-- "Capact" -
+- "Capact control plane" for bootstrapping other Capact clusters. All created clusters are described via TypeInstance. This can be visible in UI where admin can browser all provisioned Capact clusters (TypeInstances) and executed other Actions against those instances. For example, upgrade Capact cluster or destroy it.
+- "Capact workload" which is directly use by a developer. Here the proper workloads are created e.g. GitLab is installed and managed. It provides a nice separation. This cluster can have a specific Global Policy and specific manifests enabled.
 
 ![capact-to-capact](assets/capact-to-capact.svg)
 
-This is the easiest way and doesn't require any additional new functionality to be implemented or changed in Capact.
+This is the easiest way and doesn't require any new functionality to be implemented or changed in Capact.
 
 ### Consequences
 

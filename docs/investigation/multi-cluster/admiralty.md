@@ -12,18 +12,17 @@ This guide showcases how to create Capact cluster and connect it with another cl
     capact environment create kind --wait 5m
     ```
 
-1. Install Capact on kind cluster:
+2. Install Capact on kind cluster:
 
     ```bash
     capact install --helm-repo @latest
     ```
 
-1. Create workload cluster:
+3. Create workload cluster:
 
     ```bash
     kind create cluster --name eu
     ```
-
 
 ### Configuration
 
@@ -33,9 +32,9 @@ This guide showcases how to create Capact cluster and connect it with another cl
     kubectl --context kind-eu label nodes --all topology.kubernetes.io/region=eu
     ```
 
-1. Install cert-manager in workload cluster:
+2. Install cert-manager in workload cluster:
 
-   >**NOTE:** Admiralty Open Source uses cert-manager to generate a server certificate for its mutating pod admission webhook. In Capact cluster, cert-manager is already installed.
+   > **NOTE:** Admiralty Open Source uses cert-manager to generate a server certificate for its mutating pod admission webhook. In Capact cluster, cert-manager is already installed.
 
     ```bash
     helm repo add jetstack https://charts.jetstack.io
@@ -49,7 +48,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
     --version v0.16.1 \
     --wait
     ```
-1. Install Admiralty in each cluster:
+3. Install Admiralty in each cluster:
 
     ```bash
     helm repo add admiralty https://charts.admiralty.io
@@ -69,7 +68,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
     done
     ```
 
-1. Creates kubeconfigs from the ServiceAccount tokens:
+4. Creates kubeconfigs from the ServiceAccount tokens:
 
     ```bash
     # i. create a Kubernetes service account in the workload cluster for the management cluster,
@@ -98,7 +97,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
       --from-literal=config="$CONFIG"
     ```
 
-1. In the Capact cluster, create a Target for workload cluster:
+5. In the Capact cluster, create a Target for workload cluster:
 
     ```yaml
     cat <<EOF | kubectl --context kind-dev-capact apply -f -
@@ -112,7 +111,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
     EOF
     ```
 
-1. In the workload clusters, create a Source for the Capact cluster:
+7. In the workload clusters, create a Source for the Capact cluster:
 
      ```yaml
      cat <<EOF | kubectl --context kind-$CLUSTER_NAME apply -f -
@@ -125,13 +124,13 @@ This guide showcases how to create Capact cluster and connect it with another cl
      EOF
      ```
 
-1. Check that virtual nodes have been created in the Capact cluster to represent workload cluster:
+8. Check that virtual nodes have been created in the Capact cluster to represent workload cluster:
 
     ```bash
     kubectl --context kind-dev-capact get nodes
     ```
-    
-1. Label the default Namespace in the Capact cluster to enable multi-cluster scheduling at the namespace level:
+
+9. Label the default Namespace in the Capact cluster to enable multi-cluster scheduling at the namespace level:
 
     ```bash
     kubectl --context kind-dev-capact label ns default multicluster-scheduler=enabled
@@ -140,7 +139,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
 ## Demo
 
 1. Create Argo Workflow in Capact cluster, targeting the `eu` workload cluster:
-    
+
     ```yaml
     cat <<EOF | kubectl --context kind-dev-capact apply -f -
     apiVersion: batch/v1
@@ -166,7 +165,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
           restartPolicy: Never
     EOF
     ```
-   
+
 2. Watch the Argo Workflow execution:
 
     ```bash
