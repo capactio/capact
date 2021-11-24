@@ -43,7 +43,11 @@ func (r *RESTRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 
 	req.WithContext(ctx)
 
-	rawBody := map[string]interface{}{}
+	if input.Args.QueryParameters != nil {
+		req.URL.RawQuery = input.Args.QueryParameters.Encode()
+	}
+
+	var rawBody interface{}
 	_, err = git.Do(req, &rawBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "while executing request")
@@ -122,7 +126,7 @@ func (r *RESTRunner) gitlabClientForAuth(auth Auth, opts []gitlab.ClientOptionFu
 	return nil, errors.New("no token or basic credentials provided")
 }
 
-func (r *RESTRunner) renderOutput(artifactTemplate string, data map[string]interface{}) ([]byte, error) {
+func (r *RESTRunner) renderOutput(artifactTemplate string, data interface{}) ([]byte, error) {
 	if artifactTemplate == "" {
 		return []byte{}, nil
 	}
