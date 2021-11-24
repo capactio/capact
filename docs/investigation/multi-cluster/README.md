@@ -8,6 +8,8 @@ When the Implementation requires `cap.core.type.platform.kubernetes`, the defaul
 
 ### Use cluster generated in umbrella workflow 
 
+Example of the Implementation manifest that bootstraps Kubernetes cluster and installs PostgreSQL on it:
+
 ```yaml
 kind: Implementation
 metadata:
@@ -55,7 +57,24 @@ spec:
                                 - artifact: "{{steps.create-target-cluster.outputs.artifacts.kubernetes}}"
 ```
 
+Capact user or admin can provide already existing Kubernetes cluster via Policy:
+
+```yaml
+rules:
+  - interface: 
+      path: "cap.interface.database.postgresql.bootstrap-cluster"
+    oneOf:
+      - implementationConstraints: # In first place, find and use an Implementation which:
+          path: "cap.implementation.postgresql.bootstrap-cluster"
+        inject:
+          additionalTypeInstances: # Injects additional TypeInstances for the Implementation
+            - name: kubernetes # Name must match one of the parameter defined under `additionalInput.typeInstances` in the Implementation
+              id: 0b6dba9a-d111-419d-b236-357cf0e8603a
+```
+
 ### Use pre-existing (registered) cluster
+
+Example of the Implementation manifest that installs the PostgreSQL on Kubernetes platform:
 
 ```yaml
 kind: Implementation
@@ -210,11 +229,13 @@ In that approach, we have:
 - "Capact control plane" for bootstrapping other Capact clusters. All created clusters are described via TypeInstance. This can be visible in UI where user admin can browser all provisioned Capact clusters and executed other Actions against those instances. For example, upgrade Capact cluster or destroy it. 
 - "Capact" -
 
+![capact-to-capact](assets/capact-to-capact.svg)
+
 This is the easiest way and doesn't require any additional new functionality to be implemented or changed in Capact.
 
 ### Consequences
 
-1. Create a dedicated Action (Interface and Implementation) that explicitly accepts target cluster. It can be any cluster, if not specified, workflow creates own. 
+1. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster (optional) and installs Capact on it. It already existing Kubernetes cluster is not specified, workflow creates own.
 
 ## Decision
 
