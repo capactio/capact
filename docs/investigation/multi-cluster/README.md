@@ -1,10 +1,12 @@
 # Multi-cluster support
 
+This document describes possible solutions for supporting scheduling Capact workflows on external Kubernetes clusters.
+
 ## Capact manifests definition
 
-This section describes how the multi cluster can be described in Capact manifests. The idea is to use the already existing `requires` section and `additionalInput`.
+This section describes how the multi-cluster can be described in Capact manifests. The idea is to use the already existing `requires` and `additionalInput` sections.
 
-When the Implementation requires `cap.core.type.platform.kubernetes`, the default `cap.core.type.platform.kubernetes` TypeInstance is used. This means that steps are executed on Kubernetes where Capact was installed. To override that you can use [Policy](https://capact.io/docs/next/feature/policies/overview) to inject other `cap.core.type.platform.kubernetes` TypeInstance which has the `kubeconfig`. This is information is used by our engine and steps are scheduled on target cluster with provided kubeconfig permissions.   
+When the Implementation requires `cap.core.type.platform.kubernetes`, the default `cap.core.type.platform.kubernetes` TypeInstance is used. This means that steps are executed on Kubernetes where Capact was installed. To override that, you need to register new `cap.core.type.platform.kubernetes` TypeInstance which has the `kubeconfig` and inject it a given Action via [Policy](https://capact.io/docs/next/feature/policies/overview). This is information is used by our engine and steps are scheduled on a target cluster with provided kubeconfig permissions.   
 
 ### Use cluster generated in umbrella workflow 
 
@@ -24,7 +26,7 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
-  # No `requires` section - workflow doesn't depend on K8s directly.
+  # No `requires` section - this workflow doesn't depend on K8s directly.
 
   action:
     runnerInterface: argo.run
@@ -101,7 +103,8 @@ spec:
                   capact-action: helm.install
 ```
 
-If necessary we can introduce the `capact-target` property which can be used to mark a given step to be executed on a given cluster. Without `capact-target` step is not mutated and excuted where Argo was installed.
+If necessary we can introduce the `capact-target` property which can be used to mark a given step to be executed on a given cluster. Without `capact-target` step is not mutated and executed where Argo was installed.
+
 ```yaml
 # ...
   requires:
@@ -137,12 +140,13 @@ rules:
 
 ### Consequences
 
-To reduce the boilerplate and support multi-cluster in Capact, following items needs to be resolved:
-1. Remove `cap.attribute.containerization.kubernetes.kubeconfig-support` from **attributes**.
-2. Merge the `cap.type.containerization.kubernetes.kubeconfig` to `cap.core.type.platform.kubernets` as we don't have the [Type composition](https://capact.io/docs/feature/type-features#type-composition) yet.
-3. Use Policy to inject other `cap.core.type.platform.kubernets`. We already use such approach for AWS and GCP credentials.
-4. Add option to use `inject.requiredTypeInstances` via artifact name in Workflow Policy. This will solve https://github.com/capactio/capact/issues/538 as we will do that via Policy instead.
-5. Solve [Support setting relations for optional TypeInstances in workflows](https://github.com/capactio/capact/issues/537) issue but also take into account TypeInstances from the `requires` section.
+To reduce the boilerplate and support multi-cluster in Capact, the following items need to be resolved:
+
+1. Remove `cap.attribute.containerization.kubernetes.kubeconfig-support` from **attributes**,
+2. Merge the `cap.type.containerization.kubernetes.kubeconfig` to `cap.core.type.platform.kubernets` as we don't have the [Type composition](https://capact.io/docs/feature/type-features#type-composition) yet,
+3. Use Policy to inject other `cap.core.type.platform.kubernets`. We already use such approach for AWS and GCP credentials,
+4. Add option to use `inject.requiredTypeInstances` via artifact name in Workflow Policy. This will solve https://github.com/capactio/capact/issues/538 as we will do that via Policy instead,
+5. Solve [Support setting relations for optional TypeInstances in workflows](https://github.com/capactio/capact/issues/537) issue, but also take into account TypeInstances from the `requires` section.
 
 ## Possible implementations
 
@@ -150,22 +154,24 @@ This section describes possible options on how to implement logic for syntax des
 
 ### Kubernetes TypeInstance
 
-Currently, we inject the `cap.attribute.containerization.kubernetes.kubeconfig-support`. This simply can be changed to `cap.type.containerization.kubernetes.kubeconfig` and  
+Currently, we inject the `cap.type.containerization.kubernetes.kubeconfig`. This simply can be changed to `cap.core.type.platform.kubernetes`. All consequences described [here](#consequences) applies.
 
-Cons:
-- support only one cluster per workflow
-- all runners need to be aware about kubeconfig
+In this scenario we only inject a given TypeInstance. It's up to Content Developer to consume it and use. 
 
-Issues:
-- we need to be able to create relations (changes in engine)
+**Pros:**
+- Capact only provides an option to manage and pass a given Kubernetes TypeInstance to an Action. It's simple and generic, as the Content Developer is in charge of using a given kubeconfig.
 
-- k8s port-forward, helm runner impl
+**Cons:**
+- All Capact Runners need to be aware about injected `kubernetes` TypeInstance. Currently, only Helm Runner can consume it,
+- Content Developer needs to handle the `kubernetes` TypeInstance by themself. For example, use it to all executed `kubectl` commands,
+- It's up to Content Developer to create a proper relations between TypeInstance.
 
 ### Multi-cluster Workflows in Argo
 
 Argo Workflows wants to support the [multi-cluster Workflows](https://github.com/argoproj/argo-workflows/issues/3523). There is a [draft PR](https://github.com/argoproj/argo-workflows/pull/6804) but without any information when this functionality will be merged.
 
 The proposed solution adds `cluster` and `namespace` properties for container template.
+
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
@@ -183,7 +189,7 @@ spec:
         image: docker/whalesay
 ```
 
-This can be added during the render process by our [Argo Renderer](https://github.com/capactio/capact/tree/main/pkg/sdk/renderer/argo). Unfortunately, as this is still work in progress we cannot relay on it. It can be revisited in the future. 
+This can be added during the render process by our [Argo Renderer](https://github.com/capactio/capact/tree/main/pkg/sdk/renderer/argo). Unfortunately, as this is still a work in progress, we cannot relay on it. It can be revisited in the future. 
 
 **Pros:**
 - Creates workload directly on target cluster, 
@@ -196,7 +202,7 @@ This can be added during the render process by our [Argo Renderer](https://githu
 
 ### Virtual-kubelet-based approaches 
 
-[Virtual Kubelet (VK)](https://github.com/virtual-kubelet/virtual-kubelet) is a “Kubernetes kubelet implementation that masquerades as a kubelet to connect Kubernetes to other APIs” [3].
+[Virtual Kubelet (VK)](https://github.com/virtual-kubelet/virtual-kubelet) is a "Kubernetes kubelet implementation that masquerades as a kubelet to connect Kubernetes to other APIs".
 Admiralty, Tensile-kube, and Liqo, adopt this approach. 
 
 #### Admiralty
@@ -210,7 +216,7 @@ The Argo Workflows tutorial is out-dated. You can no longer enforce placement wi
 - needs to be installed on target cluster
 - Last update was in.. **TBD**
 - It takes CPU + MEMORY **TBD**
-- It's easy to schedule pod in **all** registered target clusters if you specify only `multicluster.admiralty.io/elect: ""` without `nodeSelector`. In our case it can be problematic.
+- It's easy to schedule pod in **all** registered target clusters if you specify only `multicluster.admiralty.io/elect: ""` without `nodeSelector`. In our case, it can be problematic.
 - Manifests in Helm chart don't have specified the CPU and memory requests and limits. This can be easily solved.
 - Uses old Kubernetes manifest versions, which generates such warnings:
   - `policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget`
@@ -218,7 +224,7 @@ The Argo Workflows tutorial is out-dated. You can no longer enforce placement wi
 
 **Pros:**
 - runners don't know that they were executed on different cluster
-- as it's uses the proxy Pod concept, all functionality e.g. fetching logs, checking Pod status etc. can be executed on the main cluster. 
+- as it uses the proxy Pod concept, all functionality e.g. fetching logs, checking Pod status etc. can be executed on the main cluster. 
 
  
 ### Capact creates Capact
@@ -235,7 +241,7 @@ This is the easiest way and doesn't require any additional new functionality to 
 
 ### Consequences
 
-1. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster (optional) and installs Capact on it. It already existing Kubernetes cluster is not specified, workflow creates own.
+1. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster (optional) and installs Capact on it. If already existing Kubernetes cluster is not specified, workflow creates own.
 
 ## Decision
 
