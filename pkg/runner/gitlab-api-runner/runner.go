@@ -42,10 +42,11 @@ func (r *RESTRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 	}
 
 	req, err := git.NewRequest(input.Args.Method, input.Args.Path, input.Args.RequestBody, nil)
-	req.WithContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating request")
 	}
+
+	req.WithContext(ctx)
 
 	rawBody := map[string]interface{}{}
 	_, err = git.Do(req, &rawBody)
@@ -95,7 +96,7 @@ func (r *RESTRunner) readInputData(in runner.StartInput) (Input, error) {
 	var args Arguments
 	err := yaml.Unmarshal(in.Args, &args)
 	if err != nil {
-		return Input{}, errors.Wrap(err, "while unmarshaling runner arguments")
+		return Input{}, errors.Wrap(err, "while unmarshalling runner arguments")
 	}
 
 	return Input{

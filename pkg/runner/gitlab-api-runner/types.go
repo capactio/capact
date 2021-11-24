@@ -18,12 +18,12 @@ type Input struct {
 
 // Arguments stores the input arguments for the GitLab API runner operation.
 type Arguments struct {
-	Method      string                 `json:"method"`
-	Path        string                 `json:"path"`
-	RequestBody map[string]interface{} `json:"body"`
-	BaseURL     string                 `json:"baseURL"`
-	Auth        Auth                   `json:"auth"`
-	Output      OutputArgs             `json:"output"`
+	Method      string                  `json:"method"`
+	Path        string                  `json:"path"`
+	RequestBody *map[string]interface{} `json:"body"`
+	BaseURL     string                  `json:"baseURL"`
+	Auth        Auth                    `json:"auth"`
+	Output      OutputArgs              `json:"output"`
 }
 
 // Auth holds auth data for GitLab API.
