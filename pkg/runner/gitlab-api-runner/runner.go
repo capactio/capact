@@ -31,12 +31,7 @@ func (r *RESTRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 		opts = append(opts, gitlab.WithBaseURL(input.Args.BaseURL))
 	}
 
-	// TODO: add switch based on auth type
-	git, err := gitlab.NewBasicAuthClient(
-		input.Args.Auth.Basic.Username,
-		input.Args.Auth.Basic.Password,
-		opts...,
-	)
+	git, err := r.gitlabClientForAuth(input.Args.Auth, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating GitLab API client")
 	}
@@ -103,6 +98,28 @@ func (r *RESTRunner) readInputData(in runner.StartInput) (Input, error) {
 		Args: args,
 		Ctx:  in.RunnerCtx,
 	}, nil
+}
+
+func (r *RESTRunner) gitlabClientForAuth(auth Auth, opts []gitlab.ClientOptionFunc) (*gitlab.Client, error) {
+	// access token
+	token := auth.Token
+	if token != nil {
+		return gitlab.NewClient(
+			*token,
+			opts...,
+		)
+	}
+
+	// basic credentials
+	if auth.Basic != nil {
+		return gitlab.NewBasicAuthClient(
+			auth.Basic.Username,
+			auth.Basic.Password,
+			opts...,
+		)
+	}
+
+	return nil, errors.New("no token or basic credentials provided")
 }
 
 func (r *RESTRunner) renderOutput(artifactTemplate string, data map[string]interface{}) ([]byte, error) {

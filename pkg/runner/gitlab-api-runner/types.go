@@ -27,12 +27,15 @@ type Arguments struct {
 }
 
 // Auth holds auth data for GitLab API.
-// TODO: add token support
 type Auth struct {
-	Basic struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	} `json:"basic"`
+	Basic *BasicAuth `json:"basic"`
+	Token *string    `json:"token"`
+}
+
+// BasicAuth holds basic auth data.
+type BasicAuth struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // OutputArgs stores input arguments for generating the output artifacts.
