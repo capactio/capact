@@ -1,50 +1,28 @@
 # Multi-cluster support
 
+## Capact manifests definition
 
-## Scenarios
+This section describes how the multi cluster can be described in Capact manifests. The idea is to use the already existing `requires` section and `additionalInput`.
+
+When the Implementation requires `cap.core.type.platform.kubernetes`, the default `cap.core.type.platform.kubernetes` TypeInstance is used. This means that steps are executed on Kubernetes where Capact was installed. To override that you can use [Policy](https://capact.io/docs/next/feature/policies/overview) to inject other `cap.core.type.platform.kubernetes` TypeInstance which has the `kubeconfig`. This is information is used by our engine and steps are scheduled on target cluster with provided kubeconfig permissions.   
 
 ### Use cluster generated in umbrella workflow 
-
-
-1. Remove `cap.attribute.containerization.kubernetes.kubeconfig-support` from **attributes**
-2. Merge the `cap.type.containerization.kubernetes.kubeconfig` to `cap.core.type.platform.kubernets` as we don't have Type composition yet.
-3. Use policies to inject other `cap.core.type.platform.kubernets`
-4. Add option to use `inject.requiredTypeInstances` via artifact name
-
-```yaml
-rules: # Configures the following behavior for Engine during rendering Action
-  - interface: # Rules for Interface with exact path in exact revision
-      path: "cap.interface.database.postgresql.install"
-      revision: "0.1.0"
-    oneOf: # Engine follows the order of the Implementation selection,
-      # finishing when at least one matching Implementation is found
-      - implementationConstraints: # In first place, find and use an Implementation which:
-          requires: # AND has the following Type references defined in the `spec.requires` property:
-            - path: "cap.core.type.platform.kubernetes"
-              # in any revision
-        inject:
-          requiredTypeInstances: # For such Implementation, inject the following TypeInstances if matching Type Reference is used in `Implementation.spec.requires` property along with `alias`: 
-            # Find Type Reference for the given TypeInstance ID. Then, find the alias of the Type reference in `spec.requires` property.
-            # If it is defined, inject the TypeInstance with ID `9038dcdc-e959-41c4-a690-d8ebf929ac0c` under this alias.
-            - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
-              description: "BigBang EU cluster" # optional
-```
 
 ```yaml
 kind: Implementation
 metadata:
   displayName: "Boostrap PostgreSQL cluster"
-  attributes:
-    cap.attribute.containerization.kubernetes.kubeconfig-support:
-      revision: 0.1.0
-
+  # ...
 spec:
-  requires:
-    cap.core.type.platform:
-      oneOf:
-        - name: kubernetes
-          alias: k8s
+  additionalInput:
+    typeInstances:
+      kubernetes:
+        typeRef:
+          path: cap.core.type.platform.kubernets
           revision: 0.1.0
+        verbs: [ "get" ]
+
+  # No `requires` section - workflow doesn't depend on K8s directly.
 
   action:
     runnerInterface: argo.run
@@ -56,15 +34,14 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
-                - name: k8s
+                - name: kubernetes
                   optional: true
             steps:
               - - name: create-target-cluster
-                  capact-when: k8s == nil
+                  capact-when: kubernetes == nil
                   capact-action: k8s.deploy
               - - name: postgresql-install
                   capact-action: postgresql.install
-                  # capact-target: "{{steps.create-target-cluster.outputs.artifacts.kubeconfig}}" # optional syntax sugar
                   capact-policy:
                     rules:
                       - interface:
@@ -75,63 +52,18 @@ spec:
                                 - path: "cap.core.type.platform.kubernetes"
                             inject:
                               requiredTypeInstances:
-                                - artifact: "{{steps.create-target-cluster.outputs.artifacts.kubeconfig}}"
+                                - artifact: "{{steps.create-target-cluster.outputs.artifacts.kubernetes}}"
 ```
 
-
-Action to prepare that cluster for multi-support .. 
-
-Injecting:
-```yaml
-additionalInput:
-  typeInstances:
-    kubeconfig:
-      typeRef:
-        path: cap.type.containerization.kubernetes.kubeconfig
-        revision: 0.1.0
-      verbs: [ "get" ]
-```
-
-
-What about such example:
-```yaml
-  requires: ## alternatives, doesn't make sens if we will have, but not only engine also polices needs to be done
-    # kubernetes -> sa
-    # kubernetes -> kubeconfig (how to select strategy e.g. we need add `multicluster.admiralty.io/elect: ""` with nodeSelector)
-    oneOf:
-      - name: cap.core.type.platform.kubernetes
-        revision: 0.1.0
-      - name: cap.type.containerization.kubernetes.kubeconfig
-        revision: 0.1.0
-```
-
-### Pass already registered cluster
+### Use pre-existing (registered) cluster
 
 ```yaml
 kind: Implementation
 metadata:
+  # ...
   displayName: Install PostgreSQL database
-  attributes:
-    cap.attribute.containerization.kubernetes.kubeconfig-support:
-      revision: 0.1.0
-
 spec:
-  # TODO:(https://github.com/capactio/capact/issues/539): This will be moved as an optional input on Interface
-  additionalInput:
-    typeInstances:
-      kubeconfig:
-        typeRef:
-          path: cap.type.containerization.kubernetes.kubeconfig
-          revision: 0.1.0
-        verbs: [ "get" ]
-
-  outputTypeInstanceRelations:
-    postgresql:
-      uses:
-        - psql-helm-release
-        # TODO(https://github.com/capactio/capact/issues/537): renderer doesn't support relations for additionalInput.typeInstances
-        #- kubeconfig
-
+  # ...
   requires:
     cap.core.type.platform:
       oneOf:
@@ -145,48 +77,76 @@ spec:
         entrypoint: postgres-install
         templates:
           - name: postgres-install
-            inputs:
-              artifacts:
-                - name: kubeconfig
-                  optional: true
             steps:
               - - name: helm-install
                   capact-action: helm.install
-                  arguments:
-                    artifacts:
-                      # TODO(hack): here we cannot pass optional TI, see: https://github.com/capactio/capact/issues/538
-                      # it works only because we test in Helm runner in file exists under given artifact path
-                      # and we don't create relations to this kubeconfig.
-                      - name: kubeconfig
-                        from: "{{inputs.artifacts.kubeconfig}}"
-                        optional: true
 ```
 
-#### To all
+If necessary we can introduce the `capact-target` property which can be used to mark a given step to be executed on a given cluster. Without `capact-target` step is not mutated and excuted where Argo was installed.
+```yaml
+# ...
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          alias: k8s
+          revision: 0.1.0
 
-via policy with `cap.*`
+# ...
+            steps:
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-target: k8s # based on alias in requires section 
+# ...
+```
 
-### To single step
+Capact user or admin can override the default Kubernetes cluster used in Implementation via Policy:
 
-via policy with `cap.interface.specific.name`
+```yaml
+rules:
+  - interface: 
+      path: "cap.interface.database.postgresql.install"
+    oneOf:
+      - implementationConstraints: # In first place, find and use an Implementation which:
+          requires: # has the following Type references defined in the `spec.requires` property:
+            - path: "cap.core.type.platform.kubernetes"
+        inject:
+          requiredTypeInstances: # For such Implementation, inject the following TypeInstance. 
+            - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
+              description: "BigBang EU cluster"
+```
 
-### Kubeconfig
+### Consequences
 
-1. Inject via `requires`
-2. 
+To reduce the boilerplate and support multi-cluster in Capact, following items needs to be resolved:
+1. Remove `cap.attribute.containerization.kubernetes.kubeconfig-support` from **attributes**.
+2. Merge the `cap.type.containerization.kubernetes.kubeconfig` to `cap.core.type.platform.kubernets` as we don't have the [Type composition](https://capact.io/docs/feature/type-features#type-composition) yet.
+3. Use Policy to inject other `cap.core.type.platform.kubernets`. We already use such approach for AWS and GCP credentials.
+4. Add option to use `inject.requiredTypeInstances` via artifact name in Workflow Policy. This will solve https://github.com/capactio/capact/issues/538 as we will do that via Policy instead.
+5. Solve [Support setting relations for optional TypeInstances in workflows](https://github.com/capactio/capact/issues/537) issue but also take into account TypeInstances from the `requires` section.
+
+## Possible implementations
+
+This section describes possible options on how to implement logic for syntax described in the [Capact manifests definition](#capact-manifests-definition) section.
+
+### Kubernetes TypeInstance
+
+Currently, we inject the `cap.attribute.containerization.kubernetes.kubeconfig-support`. This simply can be changed to `cap.type.containerization.kubernetes.kubeconfig` and  
 
 Cons:
-- it's hidden from API
-- support only one cluster per workflow?
+- support only one cluster per workflow
 - all runners need to be aware about kubeconfig
 
 Issues:
 - we need to be able to create relations (changes in engine)
 
-### Multic-dev (argo)
+- k8s port-forward, helm runner impl
 
-It uses the kubeconfig. 
+### Multi-cluster Workflows in Argo
 
+Argo Workflows wants to support the [multi-cluster Workflows](https://github.com/argoproj/argo-workflows/issues/3523). There is a [draft PR](https://github.com/argoproj/argo-workflows/pull/6804) but without any information when this functionality will be merged.
+
+The proposed solution adds `cluster` and `namespace` properties for container template.
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
@@ -204,59 +164,58 @@ spec:
         image: docker/whalesay
 ```
 
-Cons:
-- how to create relations?? some changes in engine + info about target cluster, still via kubeconfig?
+This can be added during the render process by our [Argo Renderer](https://github.com/capactio/capact/tree/main/pkg/sdk/renderer/argo). Unfortunately, as this is still work in progress we cannot relay on it. It can be revisited in the future. 
 
-- Pros:
-- second SA on target cluster
-- runners don't know that they were executed on different cluster
+**Pros:**
+- Creates workload directly on target cluster, 
+- No need to install agents on target cluster,
+- Uses dedicated ServiceAccount to create and managed created resources on target cluster,
+- Capact Runners don't know that they were executed on different cluster.
 
-
-## Questions
-- Do we need to support multiple cluster installation in the same workflow? 
-- 
+**Cons:**
+- Logs cannot be accessed from the user interface.
 
 ### Virtual-kubelet-based approaches 
-
-####
 
 [Virtual Kubelet (VK)](https://github.com/virtual-kubelet/virtual-kubelet) is a “Kubernetes kubelet implementation that masquerades as a kubelet to connect Kubernetes to other APIs” [3].
 Admiralty, Tensile-kube, and Liqo, adopt this approach. 
 
-
 #### Admiralty
+
+We have a dedicate Action to register an external cluster. Thanks to that we can install the
+Action to prepare that cluster for multi-support ..
 
 The Argo Workflows tutorial is out-dated. You can no longer enforce placement with the `multicluster.admiralty.io/clustername` annotation as they replaced that with a more idiomatic node selector instead.
 
-- https://github.com/cwdsuzhou/super-scheduling based on https://github.com/virtual-kubelet/tensile-kube
-- 
-
-Cons:
-- kubeconfig on cluster or user via CA
-- needs to be installed on target cluster too
-- don't have `CPU Requests  CPU Limits  Memory Requests  Memory Limits`
-- uses old CRDs 
-  - policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
-  - apiextensions.k8s.io/v1beta1 CustomResourceDefinition is deprecated in v1.16+, unavailable in v1.22+; use apiextensions.k8s.io/v1 CustomResourceDefinition
+**Cons:**
+- needs to be installed on target cluster
 - Last update was in.. **TBD**
 - It takes CPU + MEMORY **TBD**
-- It's easy to schedule pod in all workloads cluster if you specify only `multicluster.admiralty.io/elect: ""` without `nodeSelector`. In our case it can be problematic.
+- It's easy to schedule pod in **all** registered target clusters if you specify only `multicluster.admiralty.io/elect: ""` without `nodeSelector`. In our case it can be problematic.
+- Manifests in Helm chart don't have specified the CPU and memory requests and limits. This can be easily solved.
+- Uses old Kubernetes manifest versions, which generates such warnings:
+  - `policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget`
+  - `apiextensions.k8s.io/v1beta1 CustomResourceDefinition is deprecated in v1.16+, unavailable in v1.22+; use apiextensions.k8s.io/v1 CustomResourceDefinition`
 
-
-- Pros:
+**Pros:**
 - runners don't know that they were executed on different cluster
-
+- as it's uses the proxy Pod concept, all functionality e.g. fetching logs, checking Pod status etc. can be executed on the main cluster. 
 
  
 ### Capact creates Capact
 
-A dedicated Action (interface and implementation) that explicity accepts target, it can be any cluster, if not then create own. The easiest way and doens't require any additional new functionality.
+This clearly states that the Capact doesn't support the multi-cluster, but instead it's able to create a new Kubernetes clusters with Capact installed on it.   
 
+In that approach, we have:
+- "Capact control plane" for bootstrapping other Capact clusters. All created clusters are described via TypeInstance. This can be visible in UI where user admin can browser all provisioned Capact clusters and executed other Actions against those instances. For example, upgrade Capact cluster or destroy it. 
+- "Capact" -
 
-diagram
-1. Capact - "control plane for bootstrapping" one action is essentialy used, and the UI shows created TI (also can destroy/upgrade those cluster)
-2. 
+This is the easiest way and doesn't require any additional new functionality to be implemented or changed in Capact.
 
-### Conclusion 
+### Consequences
 
-It's not solution for the long future, it's for now, later we can revisit that.  
+1. Create a dedicated Action (Interface and Implementation) that explicitly accepts target cluster. It can be any cluster, if not specified, workflow creates own. 
+
+## Decision
+
+**TBD**

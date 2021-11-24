@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: external-cluster
+spec:
+  entrypoint: hello-hello-hello
+  arguments:
+    parameters:
+      - name: region
+        value: eu
+
+  templates:
+    - name: hello-hello-hello
+      steps:
+        - - name: hello1
+            template: whalesay
+            arguments:
+              parameters:
+                - name: message
+                  value: "hello1"
+
+
+    - name: whalesay
+      inputs:
+        parameters:
+          - name: message
+      nodeSelector:
+        topology.kubernetes.io/region: "{{workflow.parameters.region}}"
+      metadata:
+        annotations:
+          multicluster.admiralty.io/elect: ""
+      container:
+        image: docker/whalesay
+        command: [cowsay]
+        args: ["{{inputs.parameters.message}}"]

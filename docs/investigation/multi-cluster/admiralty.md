@@ -1,131 +1,187 @@
-```bash
-capact environment create k3d --wait 5m
-```
+# Admiralty with Capact showcase
 
-```bash
-capact install --helm-repo @latest
-```
+This guide showcases how to create Capact cluster and connect it with another cluster via Admiralty. To simplify the tutorial, the direct Argo Workflow is used.
 
-```bash
-for CLUSTER_NAME in us eu
-do
-  kind create cluster --name $CLUSTER_NAME
-done
-```
+## Steps
 
-```bash
-kubectl --context k3d-dev-capact create namespace admiralty
+### Bootstrapping
 
-helm install admiralty admiralty/multicluster-scheduler \
---kube-context k3d-dev-capact \
---namespace admiralty \
---version 0.14.1 \
---wait --debug
-```
+1. Create kind cluster for Capact:
+
+    ```bash
+    capact environment create kind --wait 5m
+    ```
+
+1. Install Capact on kind cluster:
+
+    ```bash
+    capact install --helm-repo @latest
+    ```
+
+1. Create workload cluster:
+
+    ```bash
+    kind create cluster --name eu
+    ```
 
 
-```bash
-for CLUSTER_NAME in us eu
-do
-  # i. create a Kubernetes service account in the workload cluster for the management cluster,
-  kubectl --context kind-$CLUSTER_NAME create serviceaccount cd
+### Configuration
 
-  # ii. extract its default token,
-  SECRET_NAME=$(kubectl --context kind-$CLUSTER_NAME get serviceaccount cd \
-    --output json | \
-    jq -r '.secrets[0].name')
-  TOKEN=$(kubectl --context kind-$CLUSTER_NAME get secret $SECRET_NAME \
-    --output json | \
-    jq -r '.data.token' | \
-    base64 --decode)
+1. Label the workload cluster nodes (we'll use this label as node selectors):
 
-  # iii. get a Kubernetes API address that is routable from the management cluster—here, the IP address of the kind workload cluster's only (master) node container in your machine's shared Docker network,
-  IP=$(docker inspect $CLUSTER_NAME-control-plane \
-    --format "{{ .NetworkSettings.Networks.kind.IPAddress }}")
+    ```bash
+    kubectl --context kind-eu label nodes --all topology.kubernetes.io/region=eu
+    ```
 
-  # iv. prepare a kubeconfig using the token and address found above, and the server certificate from your kubeconfig (luckily also valid for this address, not just the address in your kubeconfig),
-  CONFIG=$(kubectl --context kind-$CLUSTER_NAME config view \
-    --minify --raw --output json | \
-    jq '.users[0].user={token:"'$TOKEN'"} | .clusters[0].cluster.server="https://'$IP':6443"')
+1. Install cert-manager in workload cluster:
 
-  # v. save the prepared kubeconfig in a secret in the management cluster:
-  kubectl --context k3d-dev-capact create secret generic $CLUSTER_NAME \
-    --from-literal=config="$CONFIG"
-done
-```
+   >**NOTE:** Admiralty Open Source uses cert-manager to generate a server certificate for its mutating pod admission webhook. In Capact cluster, cert-manager is already installed.
 
-```bash
-for CLUSTER_NAME in us eu
-do
-  cat <<EOF | kubectl --context k3d-dev-capact apply -f -
-apiVersion: multicluster.admiralty.io/v1alpha1
-kind: Target
-metadata:
-  name: $CLUSTER_NAME
-spec:
-  kubeconfigSecret:
-    name: $CLUSTER_NAME
-EOF
-done
-```
+    ```bash
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    
+    kubectl --context kind-eu create namespace cert-manager
+    kubectl --context kind-eu apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.16.1/cert-manager.crds.yaml
+    helm install cert-manager jetstack/cert-manager \
+    --kube-context kind-eu \
+    --namespace cert-manager \
+    --version v0.16.1 \
+    --wait
+    ```
+1. Install Admiralty in each cluster:
 
-```bash
-for CLUSTER_NAME in us eu
-do
-  cat <<EOF | kubectl --context kind-$CLUSTER_NAME apply -f -
-apiVersion: multicluster.admiralty.io/v1alpha1
-kind: Source
-metadata:
-  name: cd
-spec:
-  serviceAccountName: cd
-EOF
-done
-```
+    ```bash
+    helm repo add admiralty https://charts.admiralty.io
+    helm repo update
+    
+    for CLUSTER_NAME in dev-capact eu
+    do
+      kubectl --context kind-$CLUSTER_NAME create namespace admiralty
+      helm install admiralty admiralty/multicluster-scheduler \
+        --kube-context kind-$CLUSTER_NAME \
+        --namespace admiralty \
+        --version 0.14.1 \
+        --wait --debug
+      # --wait to ensure release is ready before next steps
+      # --debug to show progress, for lack of a better way,
+      # as this may take a few minutes
+    done
+    ```
 
-```bash
-kubectl --context k3d-dev-capact get nodes --watch
-# --watch until virtual nodes are created,
-# this may take a few minutes, then control-C
-```
+1. Creates kubeconfigs from the ServiceAccount tokens:
 
-```bash
-kubectl --context k3d-dev-capact label ns default multicluster-scheduler=enabled
-```
+    ```bash
+    # i. create a Kubernetes service account in the workload cluster for the management cluster,
+    kubectl --context kind-eu create serviceaccount cd
+    
+    # ii. extract its default token,
+    SECRET_NAME=$(kubectl --context kind-eu get serviceaccount cd \
+      --output json | \
+      jq -r '.secrets[0].name')
+    TOKEN=$(kubectl --context kind-eu get secret $SECRET_NAME \
+      --output json | \
+      jq -r '.data.token' | \
+      base64 --decode)
+    
+    # iii. get a Kubernetes API address that is routable from the management cluster—here, the IP address of the kind workload cluster's only (master) node container in your machine's shared Docker network,
+    IP=$(docker inspect eu-control-plane \
+      --format "{{ .NetworkSettings.Networks.kind.IPAddress }}")
+    
+    # iv. prepare a kubeconfig using the token and address found above, and the server certificate from your kubeconfig (luckily also valid for this address, not just the address in your kubeconfig),
+    CONFIG=$(kubectl --context kind-eu config view \
+      --minify --raw --output json | \
+      jq '.users[0].user={token:"'$TOKEN'"} | .clusters[0].cluster.server="https://'$IP':6443"')
+    
+    # v. save the prepared kubeconfig in a secret in the management cluster:
+    kubectl --context kind-dev-capact create secret generic eu \
+      --from-literal=config="$CONFIG"
+    ```
 
-```bash
-cat <<EOF | kubectl --context k3d-dev-capact apply -f -
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: eu-foo
-  namespace: default
-spec:
-  template:
+1. In the Capact cluster, create a Target for workload cluster:
+
+    ```yaml
+    cat <<EOF | kubectl --context kind-dev-capact apply -f -
+    apiVersion: multicluster.admiralty.io/v1alpha1
+    kind: Target
     metadata:
-      annotations:
-        multicluster.admiralty.io/elect: ""
+      name: eu
     spec:
-      nodeSelector:
-        topology.kubernetes.io/region: eu
-      containers:
-      - name: c
-        image: busybox
-        command: ["sh", "-c", "echo Processing item foo && sleep 5"]
-        resources:
-          requests:
-            cpu: 100m
-      restartPolicy: Never
-EOF
-```
+      kubeconfigSecret:
+        name: eu
+    EOF
+    ```
 
-while true
-do
-clear
-for CLUSTER_NAME in cd us eu
-do
-kubectl --context kind-$CLUSTER_NAME get pods -o wide
-done
-sleep 2
-done
-# control-C when all pods have Completed
+1. In the workload clusters, create a Source for the Capact cluster:
+
+     ```yaml
+     cat <<EOF | kubectl --context kind-$CLUSTER_NAME apply -f -
+     apiVersion: multicluster.admiralty.io/v1alpha1
+     kind: Source
+     metadata:
+       name: cd
+     spec:
+       serviceAccountName: cd
+     EOF
+     ```
+
+1. Check that virtual nodes have been created in the Capact cluster to represent workload cluster:
+
+    ```bash
+    kubectl --context kind-dev-capact get nodes
+    ```
+    
+1. Label the default Namespace in the Capact cluster to enable multi-cluster scheduling at the namespace level:
+
+    ```bash
+    kubectl --context kind-dev-capact label ns default multicluster-scheduler=enabled
+    ```
+
+## Demo
+
+1. Create Argo Workflow in Capact cluster, targeting the `eu` workload cluster:
+    
+    ```yaml
+    cat <<EOF | kubectl --context kind-dev-capact apply -f -
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: eu-foo
+      namespace: default
+    spec:
+      template:
+        metadata:
+          annotations:
+            multicluster.admiralty.io/elect: ""
+        spec:
+          nodeSelector:
+            topology.kubernetes.io/region: eu
+          containers:
+          - name: c
+            image: busybox
+            command: ["sh", "-c", "echo Processing item foo && sleep 5"]
+            resources:
+              requests:
+                cpu: 100m
+          restartPolicy: Never
+    EOF
+    ```
+   
+2. Watch the Argo Workflow execution:
+
+    ```bash
+    argo watch eu-foo
+    ```
+
+3. Check Argo Workflow logs:
+
+    ```bash
+    argo log eu-foo
+    ```
+
+4. Check that the pod was scheduled on `eu` workload node:
+
+    ```bash
+    kubectl --context kind-eu get pods -o wide -n default
+    ```
+
