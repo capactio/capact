@@ -216,16 +216,22 @@ Admiralty, Tensile-kube, and Liqo, adopt this approach.
 
 Admiralty is a multi-cluster scheduler. They have a [blog post](https://admiralty.io/blog/2019/01/17/running-argo-workflows-across-multiple-kubernetes-clusters) about integration with Argo Workflows. Unfortunately, the tutorial is out-dated. You can no longer enforce placement with the `multicluster.admiralty.io/clustername` annotation, as they replaced that with a more idiomatic node selector.
 
-The Admiralty needs to be installed both on the "control plane" and "target" Kubernetes clusters. To make it easier we 
+The Admiralty needs to be installed both on the "control plane" and "target" Kubernetes clusters. To make it easier, we have to have a dedicate Action to register an external cluster. Such approach is good also for the future as we can easily swap out the Admiralty with other project as the setup is hidden from the user point of view.  Additionally, we need to adjust the Argo renderer. When renderer sees the required `cap.core.type.platform.kubernetes`, it should add `multicluster.admiralty.io/elect: ""` annotation and **nodeSelector** to all containers definitions. To simplify the rendering we can always add it. The default `cap.core.type.platform.kubernetes` TypeInstance will refer to Targets which targets local cluster:
 
-We have a dedicate Action to register an external cluster. Thanks to that, we can install the
-Action to prepare that cluster for multi-support ..
-
+```yaml
+apiVersion: multicluster.admiralty.io/v1alpha1
+kind: Target
+metadata:
+  name: this-cluster
+  namespace: namespace-a
+spec:
+  self: true
+```
 
 **Cons:**
 - needs to be installed on target cluster
 - Last update was on 21 Sep 2021
-- It's easy to schedule pod in **all** registered target clusters if you specify only `multicluster.admiralty.io/elect: ""` without `nodeSelector`. In our case, it can be problematic.
+- It's easy to schedule pod in **all** registered target clusters if you specify only `multicluster.admiralty.io/elect: ""` without **nodeSelector**. In our case, it can be problematic.
 - Manifests in Helm chart don't have specified the CPU and memory requests and limits. This can be easily solved.
 - Uses old Kubernetes manifest versions, which generates such warnings:
   - `policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget`
@@ -242,7 +248,8 @@ Action to prepare that cluster for multi-support ..
 All consequences described [here](#consequences) applies. Additionally:
 
 - Create dedicated Action to register an external cluster,
-- Add  
+- Adjust the Argo render logic to add proper annotations and node selectors when `cap.core.type.platform.kubernetes` is specified,
+- Add necessary properties to the `cap.core.type.platform.kubernetes` Type, so during render process we know which label used for node selector to target a given Kubernetes cluster.
 
 ### Capact creates Capact
 
