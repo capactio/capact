@@ -100,6 +100,8 @@ spec:
           - name: postgres-install
             steps:
               - - name: helm-install
+                  # Argo renderer mutates the container definition to ensure that it's created on a given target cluster. 
+                  # It's done based on injected `cap.core.type.platform.kubernetes` TypeInstance
                   capact-action: helm.install
 ```
 
@@ -154,7 +156,7 @@ This section describes possible options on how to implement logic for syntax des
 
 ### Kubernetes TypeInstance
 
-Currently, we inject the `cap.type.containerization.kubernetes.kubeconfig`. This simply can be changed to `cap.core.type.platform.kubernetes`. All consequences described [here](#consequences) applies.
+Currently, we inject the `cap.type.containerization.kubernetes.kubeconfig`. This simply can be changed to `cap.core.type.platform.kubernetes`.
 
 In this scenario we only inject a given TypeInstance. It's up to Content Developer to consume it and use. 
 
@@ -165,6 +167,10 @@ In this scenario we only inject a given TypeInstance. It's up to Content Develop
 - All Capact Runners need to be aware about injected `kubernetes` TypeInstance. Currently, only Helm Runner can consume it,
 - Content Developer needs to handle the `kubernetes` TypeInstance by themself. For example, use it to all executed `kubectl` commands,
 - It's up to Content Developer to create a proper relations between TypeInstance.
+
+#### Consequences
+
+All consequences described [here](#consequences) applies.
 
 ### Multi-cluster Workflows in Argo
 
@@ -208,11 +214,11 @@ Admiralty, Tensile-kube, and Liqo, adopt this approach.
 
 #### Admiralty
 
-Admiralty is a multi-cluster scheduler. They have a [blog post](https://admiralty.io/blog/2019/01/17/running-argo-workflows-across-multiple-kubernetes-clusters) about integration with Argo Workflows. Unfortunately, the tutorial is out-dated. You can no longer enforce placement with the `multicluster.admiralty.io/clustername` annotation as they replaced that with a more idiomatic node selector.
+Admiralty is a multi-cluster scheduler. They have a [blog post](https://admiralty.io/blog/2019/01/17/running-argo-workflows-across-multiple-kubernetes-clusters) about integration with Argo Workflows. Unfortunately, the tutorial is out-dated. You can no longer enforce placement with the `multicluster.admiralty.io/clustername` annotation, as they replaced that with a more idiomatic node selector.
 
-To support 
+The Admiralty needs to be installed both on the "control plane" and "target" Kubernetes clusters. To make it easier we 
 
-We have a dedicate Action to register an external cluster. Thanks to that we can install the
+We have a dedicate Action to register an external cluster. Thanks to that, we can install the
 Action to prepare that cluster for multi-support ..
 
 
@@ -226,26 +232,34 @@ Action to prepare that cluster for multi-support ..
   - `apiextensions.k8s.io/v1beta1 CustomResourceDefinition is deprecated in v1.16+, unavailable in v1.22+; use apiextensions.k8s.io/v1 CustomResourceDefinition`
 
 **Pros:**
-- Steps defined by Content Developer don't know that they were executed on different cluster. 
+- Steps defined by Content Developer don't know that they were executed on different cluster.
 - As it uses the proxy Pod concept, all functionality e.g. fetching logs, checking Pod status etc. can be executed on the main cluster and not only on the target cluster.
-- "If the Admiralty agent in the management cluster or the management cluster itself breaks or loses connectivity with workload clusters, existing pods and services in the workload clusters continue to run and serve requests—if pods are evicted in the meantime, they're even recreated locally by PodChaperons—so your applications stay available." 
+- "If the Admiralty agent in the management cluster or the management cluster itself breaks or loses connectivity with workload clusters, existing pods and services in the workload clusters continue to run and serve requests—if pods are evicted in the meantime, they're even recreated locally by PodChaperons—so your applications stay available."
 - Pod dependencies (config maps and secrets) and dependents (services and ingresses) "follow" delegate pods, i.e., they are copied as needed to target clusters.
+
+#### Consequences
+
+All consequences described [here](#consequences) applies. Additionally:
+
+- Create dedicated Action to register an external cluster,
+- Add  
 
 ### Capact creates Capact
 
-Instead of adding support for the multi-cluster in Capact, we can create a dedicated Capact Action to create a new Kubernetes clusters with Capact installed on it.   
+Instead of adding support for the multi-cluster in Capact, we can create a dedicated Capact Action to create a new Kubernetes clusters with Capact installed on it.
 
 In that approach, we have:
 - "Capact control plane" for bootstrapping other Capact clusters. All created clusters are described via TypeInstance. This can be visible in UI where admin can browser all provisioned Capact clusters (TypeInstances) and executed other Actions against those instances. For example, upgrade Capact cluster or destroy it.
-- "Capact workload" which is directly use by a developer. Here the proper workloads are created e.g. GitLab is installed and managed. It provides a nice separation. This cluster can have a specific Global Policy and specific manifests enabled.
+- "Capact workload" which is directly use by a developer. Here the proper workloads are created, e.g. GitLab is installed and managed. It provides a nice separation. This cluster can have a specific Global Policy and specific manifests enabled.
 
 ![capact-to-capact](assets/capact-to-capact.svg)
 
-This is the easiest way and doesn't require any new functionality to be implemented or changed in Capact.
+This is the easiest way and doesn't require any new functionality to be implemented or changed in Capact. For now, we can also skip introducing changes described [here](#consequences) applies.
+
 
 ### Consequences
 
-1. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster (optional) and installs Capact on it. If already existing Kubernetes cluster is not specified, workflow creates own.
+1. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster (optional) and installs Capact on it. If an already existing Kubernetes cluster is not specified, workflow creates the own.
 
 ## Decision
 
