@@ -105,8 +105,14 @@ func (r *RESTRunner) readInputData(in runner.StartInput) (Input, error) {
 }
 
 func (r *RESTRunner) gitlabClientForAuth(auth Auth, opts []gitlab.ClientOptionFunc) (*gitlab.Client, error) {
-	// access token
 	token := auth.Token
+	basic := auth.Basic
+
+	if token != nil && basic != nil {
+		return nil, errors.New("both token and basic credentials must not be provided")
+	}
+
+	// access token
 	if token != nil {
 		return gitlab.NewClient(
 			*token,
@@ -115,10 +121,10 @@ func (r *RESTRunner) gitlabClientForAuth(auth Auth, opts []gitlab.ClientOptionFu
 	}
 
 	// basic credentials
-	if auth.Basic != nil {
+	if basic != nil {
 		return gitlab.NewBasicAuthClient(
-			auth.Basic.Username,
-			auth.Basic.Password,
+			basic.Username,
+			basic.Password,
 			opts...,
 		)
 	}
