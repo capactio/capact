@@ -62,6 +62,10 @@ ingress:
     class: "nginx"
     issuer: "letsencrypt"
     acmechallengetype: "http01"
+    cors:
+      enable: "true"
+      allowMethods: "HEAD, GET, POST, OPTIONS"
+      allowOrigins: "*"
 
   host: "gateway"
 
