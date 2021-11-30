@@ -114,7 +114,7 @@ This guide showcases how to create Capact cluster and connect it with another cl
 7. In the workload clusters, create a Source for the Capact cluster:
 
      ```yaml
-     cat <<EOF | kubectl --context kind-$CLUSTER_NAME apply -f -
+     cat <<EOF | kubectl --context kind-eu apply -f -
      apiVersion: multicluster.admiralty.io/v1alpha1
      kind: Source
      metadata:
@@ -140,45 +140,23 @@ This guide showcases how to create Capact cluster and connect it with another cl
 
 1. Create Argo Workflow in Capact cluster, targeting the `eu` workload cluster:
 
-    ```yaml
-    cat <<EOF | kubectl --context kind-dev-capact apply -f -
-    apiVersion: batch/v1
-    kind: Job
-    metadata:
-      name: eu-foo
-      namespace: default
-    spec:
-      template:
-        metadata:
-          annotations:
-            multicluster.admiralty.io/elect: ""
-        spec:
-          nodeSelector:
-            topology.kubernetes.io/region: eu
-          containers:
-          - name: c
-            image: busybox
-            command: ["sh", "-c", "echo Processing item foo && sleep 5"]
-            resources:
-              requests:
-                cpu: 100m
-          restartPolicy: Never
-    EOF
-    ```
+   ```bash
+   kubectl --context kind-dev-capact apply -f ./docs/investigation/multi-cluster/assets/eu-foo.yaml
+   ```
 
-2. Watch the Argo Workflow execution:
+3. Watch the Argo Workflow execution:
 
     ```bash
     argo watch eu-foo
     ```
 
-3. Check Argo Workflow logs:
+4. Check Argo Workflow logs:
 
     ```bash
     argo log eu-foo
     ```
 
-4. Check that the pod was scheduled on `eu` workload node:
+5. Check that the pod was scheduled on `eu` workload node:
 
     ```bash
     kubectl --context kind-eu get pods -o wide -n default

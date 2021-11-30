@@ -145,10 +145,14 @@ rules:
 To reduce the boilerplate and support multi-cluster in Capact, the following items need to be resolved:
 
 1. Remove `cap.attribute.containerization.kubernetes.kubeconfig-support` from **attributes**.
+
 2. Merge the `cap.type.containerization.kubernetes.kubeconfig` to `cap.core.type.platform.kubernets` as we don't have the [Type composition](https://capact.io/docs/feature/type-features#type-composition) yet.
-3. Allow injecting `cap.core.type.platform.kubernets` via Policy. We already use such approach for AWS and GCP credentials.
+
+3. Allow injecting `cap.core.type.platform.kubernets` via Policy. We already use such approach for AWS and GCP credentials. 
+
 4. Add option to use `inject.requiredTypeInstances` via artifact name in Workflow Policy. This will solve https://github.com/capactio/capact/issues/538 as we will do that via Policy instead.
-5. Solve [Support setting relations for optional TypeInstances in workflows](https://github.com/capactio/capact/issues/537) issue, but also take into account TypeInstances from the `requires` section.
+
+6. Solve [Support setting relations for optional TypeInstances in workflows](https://github.com/capactio/capact/issues/537) issue, but also take into account TypeInstances from the `requires` section.
 
 ## Possible implementations
 
@@ -272,8 +276,9 @@ This is the easiest way and doesn't require any new functionality to be implemen
 
 #### Consequences
 
-1. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster (optional) and installs Capact on it. If an already existing Kubernetes cluster is not specified, workflow creates a new Kubernetes cluster.
+1. **(optionally)** Solves issues described in [consequences](#consequences) subsection of **Capact manifests definition**.
+2. Create a dedicated Action (Interface and Implementation) that provision Kubernetes cluster and installs Capact on it. If an already existing Kubernetes cluster is not specified, workflow creates a new Kubernetes cluster. Includes:
+   - Action to bootstrap Kubernetes cluster.
+   - Action to install Capact on a given Kubernetes cluster. When the first point will be skipped, we need to adjust the Helm Runner interface.
 
-## Decision
-
-**TBD**
+   > **NOTE:** consider using the Capact CLI in Capact installation manifests.
