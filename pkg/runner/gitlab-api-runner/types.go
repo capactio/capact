@@ -1,6 +1,10 @@
 package gitlabapi
 
-import "capact.io/capact/pkg/runner"
+import (
+	"net/url"
+
+	"capact.io/capact/pkg/runner"
+)
 
 // Config holds RESTRunner related configuration.
 type Config struct {
@@ -18,21 +22,25 @@ type Input struct {
 
 // Arguments stores the input arguments for the GitLab API runner operation.
 type Arguments struct {
-	Method      string                 `json:"method"`
-	Path        string                 `json:"path"`
-	RequestBody map[string]interface{} `json:"body"`
-	BaseURL     string                 `json:"baseURL"`
-	Auth        Auth                   `json:"auth"`
-	Output      OutputArgs             `json:"output"`
+	Method          string                  `json:"method"`
+	Path            string                  `json:"path"`
+	RequestBody     *map[string]interface{} `json:"body"`
+	QueryParameters *url.Values             `json:"queryParameters"`
+	BaseURL         string                  `json:"baseURL"`
+	Auth            Auth                    `json:"auth"`
+	Output          OutputArgs              `json:"output"`
 }
 
 // Auth holds auth data for GitLab API.
-// TODO: add token support
 type Auth struct {
-	Basic struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	} `json:"basic"`
+	Basic *BasicAuth `json:"basic"`
+	Token *string    `json:"token"`
+}
+
+// BasicAuth holds basic auth data.
+type BasicAuth struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // OutputArgs stores input arguments for generating the output artifacts.

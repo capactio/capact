@@ -31,23 +31,23 @@ func (r *RESTRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 		opts = append(opts, gitlab.WithBaseURL(input.Args.BaseURL))
 	}
 
-	// TODO: add switch based on auth type
-	git, err := gitlab.NewBasicAuthClient(
-		input.Args.Auth.Basic.Username,
-		input.Args.Auth.Basic.Password,
-		opts...,
-	)
+	git, err := r.gitlabClientForAuth(input.Args.Auth, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating GitLab API client")
 	}
 
 	req, err := git.NewRequest(input.Args.Method, input.Args.Path, input.Args.RequestBody, nil)
-	req.WithContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating request")
 	}
 
-	rawBody := map[string]interface{}{}
+	req.WithContext(ctx)
+
+	if input.Args.QueryParameters != nil {
+		req.URL.RawQuery = input.Args.QueryParameters.Encode()
+	}
+
+	var rawBody interface{}
 	_, err = git.Do(req, &rawBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "while executing request")
@@ -95,7 +95,7 @@ func (r *RESTRunner) readInputData(in runner.StartInput) (Input, error) {
 	var args Arguments
 	err := yaml.Unmarshal(in.Args, &args)
 	if err != nil {
-		return Input{}, errors.Wrap(err, "while unmarshaling runner arguments")
+		return Input{}, errors.Wrap(err, "while unmarshalling runner arguments")
 	}
 
 	return Input{
@@ -104,7 +104,35 @@ func (r *RESTRunner) readInputData(in runner.StartInput) (Input, error) {
 	}, nil
 }
 
-func (r *RESTRunner) renderOutput(artifactTemplate string, data map[string]interface{}) ([]byte, error) {
+func (r *RESTRunner) gitlabClientForAuth(auth Auth, opts []gitlab.ClientOptionFunc) (*gitlab.Client, error) {
+	token := auth.Token
+	basic := auth.Basic
+
+	if token != nil && basic != nil {
+		return nil, errors.New("both token and basic credentials must not be provided")
+	}
+
+	// access token
+	if token != nil {
+		return gitlab.NewClient(
+			*token,
+			opts...,
+		)
+	}
+
+	// basic credentials
+	if basic != nil {
+		return gitlab.NewBasicAuthClient(
+			basic.Username,
+			basic.Password,
+			opts...,
+		)
+	}
+
+	return nil, errors.New("no token or basic credentials provided")
+}
+
+func (r *RESTRunner) renderOutput(artifactTemplate string, data interface{}) ([]byte, error) {
 	if artifactTemplate == "" {
 		return []byte{}, nil
 	}
