@@ -10,9 +10,11 @@ metadata:
     kubernetes.io/tls-acme: "{{ .Values.ingress.annotations.tls_acme }}"
     cert-manager.io/cluster-issuer: "{{ .Values.ingress.annotations.issuer }}"
     acmechallengetype: "{{ .Values.ingress.annotations.acmechallengetype }}"
-    nginx.ingress.kubernetes.io/enable-cors: "{{ .Values.ingress.annotations.cors.enable }}"
+    {{- if .Values.ingress.annotations.cors.enabled }}
+    nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "{{ .Values.ingress.annotations.cors.allowMethods }}"
     nginx.ingress.kubernetes.io/cors-allow-origin: "{{ .Values.ingress.annotations.cors.allowOrigins }}"
+    {{- end }}
 spec:
   {{- if .Values.ingress.tls.enabled }}
   tls:
