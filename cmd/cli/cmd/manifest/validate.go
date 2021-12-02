@@ -24,10 +24,10 @@ func NewValidate() *cobra.Command {
 			<cli> manifest validate ocf-spec/0.0.1/examples/interface-group.yaml
 
 			# Validate multiple files inside test_manifests directory with additional server-side checks
-			<cli> manifest validate --server-side pkg/cli/test_manifests/*.yaml
+			<cli> manifest validate --server-side pkg/cli/test_manifests/
 
 			# Validate all Hub manifests with additional server-side checks
-			<cli> manifest validate --server-side ./manifests/**/*.yaml
+			<cli> manifest validate --server-side ./manifests/ --recursive
 			
 			# Validate interface-group.yaml file with custom OCF specification location 
 			<cli> manifest validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml`, cli.Name),
@@ -37,13 +37,13 @@ func NewValidate() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			return validation.Run(cmd.Context(), args)
 		},
 	}
 
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.SchemaLocation, "schemas", "s", "", "Path to the local directory with OCF JSONSchemas. If not provided, built-in JSONSchemas are used.")
+	flags.BoolVarP(&opts.RecursiveSearch, "recursive", "r", false, "Search files under each directory, recursively.")
 	flags.BoolVar(&opts.ServerSide, "server-side", false, "Executes additional manifests checks against Capact Hub.")
 	flags.IntVar(&opts.MaxConcurrency, "concurrency", defaultMaxConcurrency, "Maximum number of concurrent workers.")
 

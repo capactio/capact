@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -20,9 +22,10 @@ import (
 
 // Options struct defines validation options for OCF manifest validation.
 type Options struct {
-	SchemaLocation string
-	ServerSide     bool
-	MaxConcurrency int
+	SchemaLocation  string
+	ServerSide      bool
+	RecursiveSearch bool
+	MaxConcurrency  int
 }
 
 // Validate validates the Options struct fields.
@@ -61,10 +64,11 @@ func (r *ValidationResult) Error() string {
 
 // Validation provides functionality to validate OCF manifests.
 type Validation struct {
-	hubCli      client.Hub
-	writer      io.Writer
-	maxWorkers  int
-	validatorFn func() manifest.FileSystemValidator
+	hubCli          client.Hub
+	writer          io.Writer
+	maxWorkers      int
+	recursiveSearch bool
+	validatorFn     func() manifest.FileSystemValidator
 }
 
 // New creates new Validation.
@@ -98,14 +102,20 @@ func New(writer io.Writer, opts Options) (*Validation, error) {
 		validatorFn: func() manifest.FileSystemValidator {
 			return manifest.NewDefaultFilesystemValidator(fs, ocfSchemaRootPath, validatorOpts...)
 		},
-		hubCli:     hubCli,
-		writer:     writer,
-		maxWorkers: opts.MaxConcurrency,
+		hubCli:          hubCli,
+		writer:          writer,
+		recursiveSearch: opts.RecursiveSearch,
+		maxWorkers:      opts.MaxConcurrency,
 	}, nil
 }
 
 // Run runs validation across all JSON validators.
-func (v *Validation) Run(ctx context.Context, filePaths []string) error {
+func (v *Validation) Run(ctx context.Context, paths []string) error {
+	filePaths, err := v.getFilesToParse(paths)
+	if err != nil {
+		return fmt.Errorf("detected error during validation: %s", err.Error())
+	}
+
 	var workersCount = v.maxWorkers
 	if len(filePaths) < workersCount {
 		workersCount = len(filePaths)
@@ -172,6 +182,97 @@ func (v *Validation) printPartialResult(res ValidationResult) {
 		return
 	}
 	fmt.Fprintf(v.writer, "- %s %q\n", color.GreenString("✓"), res.Path)
+}
+
+func (v *Validation) getFilesToParse(paths []string) ([]string, error) {
+	var files []string
+
+	for _, path := range paths {
+		if !isDir(path) {
+			files = append(files, path)
+			continue
+		}
+
+		var fileList []string
+		var err error
+		if v.recursiveSearch {
+			fileList, err = getListOfFilesRecursive(path, isCorrectExtension)
+		} else {
+			fileList, err = getListOfFilesFromSingleDir(path, isCorrectExtension)
+		}
+		if err != nil {
+			return files, err
+		}
+		files = append(files, fileList...)
+	}
+	return removeDuplicatePaths(files), nil
+}
+
+type filterFun func(string) bool
+
+func getListOfFilesRecursive(root string, filterFn filterFun) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && filterFn(path) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
+}
+
+func getListOfFilesFromSingleDir(path string, filterFn filterFun) ([]string, error) {
+	var files []string
+	file, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return files, err
+	}
+	defer file.Close()
+
+	fileNames, err := file.Readdirnames(0)
+	if err != nil {
+		return files, err
+	}
+
+	for _, name := range fileNames {
+		fullPath := filepath.Join(path, name)
+		if isDir(fullPath) || !filterFn(fullPath) {
+			continue
+		}
+		files = append(files, fullPath)
+	}
+	return files, nil
+}
+
+func removeDuplicatePaths(paths []string) []string {
+	var result []string
+	allPaths := make(map[string]bool)
+	for _, item := range paths {
+		if _, value := allPaths[item]; !value {
+			allPaths[item] = true
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+func isDir(in string) bool {
+	f, err := os.Stat(in)
+	return err == nil && f.IsDir()
+}
+
+func isCorrectExtension(path string) bool {
+	extensions := []string{".yaml", ".yml"}
+	extension := filepath.Ext(path)
+	for _, allowedExtension := range extensions {
+		if extension == allowedExtension {
+			return true
+		}
+	}
+	return false
 }
 
 type validationWorker struct {

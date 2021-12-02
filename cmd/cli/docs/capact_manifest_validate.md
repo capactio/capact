@@ -17,10 +17,10 @@ capact manifest validate [flags]
 capact manifest validate ocf-spec/0.0.1/examples/interface-group.yaml
 
 # Validate multiple files inside test_manifests directory with additional server-side checks
-capact manifest validate --server-side pkg/cli/test_manifests/*.yaml
+capact manifest validate --server-side pkg/cli/test_manifests/
 
 # Validate all Hub manifests with additional server-side checks
-capact manifest validate --server-side ./manifests/**/*.yaml
+capact manifest validate --server-side ./manifests/ --recursive
 
 # Validate interface-group.yaml file with custom OCF specification location 
 capact manifest validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
@@ -31,6 +31,7 @@ capact manifest validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interf
 ```
       --concurrency int   Maximum number of concurrent workers. (default 5)
   -h, --help              help for validate
+  -r, --recursive         Search files under each directory, recursively.
   -s, --schemas string    Path to the local directory with OCF JSONSchemas. If not provided, built-in JSONSchemas are used.
       --server-side       Executes additional manifests checks against Capact Hub.
 ```
