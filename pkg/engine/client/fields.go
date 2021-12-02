@@ -10,11 +10,6 @@ var actionFields = fmt.Sprintf(`
 		typeInstances {
 			id
 			name
-			optional
-			typeRef {
-				path
-				revision
-			}
 		}
 		actionPolicy {
 			%s
@@ -22,13 +17,11 @@ var actionFields = fmt.Sprintf(`
 	}
 	output {
 		typeInstances {
-			name
+			id
 			typeRef {
 				path
 				revision
 			}
-			id
-			name
 		}
 	}
 	actionRef {

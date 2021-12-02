@@ -235,20 +235,12 @@ type ActionOutput {
   typeInstances: [OutputTypeInstanceDetails!]!
 }
 
-interface TypeInstanceDetails {
-  id: ID!
-  name: String!
-  typeRef: ManifestReference!
-}
-
 """
 Describes input TypeInstance of an Action
 """
-type InputTypeInstanceDetails implements TypeInstanceDetails {
+type InputTypeInstanceDetails {
   id: ID!
   name: String!
-  typeRef: ManifestReference!
-  optional: Boolean!
 }
 
 """
@@ -262,9 +254,8 @@ type InputTypeInstanceToProvide {
 """
 Describes output TypeInstance of an Action
 """
-type OutputTypeInstanceDetails implements TypeInstanceDetails {
+type OutputTypeInstanceDetails {
   id: ID!
-  name: String!
   typeRef: ManifestReference!
 }
 

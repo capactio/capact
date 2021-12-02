@@ -283,10 +283,8 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) (*gra
 		var gqlTypeInstances []*graphql.InputTypeInstanceDetails
 		for _, item := range *in.TypeInstances {
 			gqlTypeInstances = append(gqlTypeInstances, &graphql.InputTypeInstanceDetails{
-				Name:     item.Name,
-				TypeRef:  c.manifestRefToGraphQL(item.TypeRef),
-				ID:       item.ID,
-				Optional: item.Optional,
+				Name: item.Name,
+				ID:   item.ID,
 			})
 		}
 		result.TypeInstances = gqlTypeInstances
@@ -313,7 +311,6 @@ func (c *Converter) actionOutputToGraphQL(in *v1alpha1.ActionOutput) *graphql.Ac
 	var gqlTypeInstances []*graphql.OutputTypeInstanceDetails
 	for _, item := range *in.TypeInstances {
 		gqlTypeInstances = append(gqlTypeInstances, &graphql.OutputTypeInstanceDetails{
-			Name:    item.Name,
 			ID:      item.ID,
 			TypeRef: c.manifestRefToGraphQL(item.TypeRef),
 		})

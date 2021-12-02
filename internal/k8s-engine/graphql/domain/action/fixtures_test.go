@@ -38,36 +38,24 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 				{
 					Name: "in1",
 					ID:   "in-id1",
-					TypeRef: &graphql.ManifestReference{
-						Path:     "path1",
-						Revision: "0.1.0",
-					},
-					Optional: false,
 				},
 				{
 					Name: "in2",
 					ID:   "in-id2",
-					TypeRef: &graphql.ManifestReference{
-						Path:     "path2",
-						Revision: "0.1.0",
-					},
-					Optional: true,
 				},
 			},
 		},
 		Output: &graphql.ActionOutput{
 			TypeInstances: []*graphql.OutputTypeInstanceDetails{
 				{
-					Name: "out1",
-					ID:   "id1",
+					ID: "id1",
 					TypeRef: &graphql.ManifestReference{
 						Path:     "path1",
 						Revision: "0.1.0",
 					},
 				},
 				{
-					Name: "out2",
-					ID:   "id2",
+					ID: "id2",
 					TypeRef: &graphql.ManifestReference{
 						Path:     "path2",
 						Revision: "0.1.0",
@@ -174,23 +162,17 @@ func fixK8sAction(t *testing.T, name, namespace string) v1alpha1.Action {
 			Output: &v1alpha1.ActionOutput{
 				TypeInstances: &[]v1alpha1.OutputTypeInstanceDetails{
 					{
-						CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
-							Name: "out1",
-							ID:   "id1",
-							TypeRef: &v1alpha1.ManifestReference{
-								Path:     "path1",
-								Revision: ptr.String("0.1.0"),
-							},
+						ID: "id1",
+						TypeRef: &v1alpha1.ManifestReference{
+							Path:     "path1",
+							Revision: ptr.String("0.1.0"),
 						},
 					},
 					{
-						CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
-							Name: "out2",
-							ID:   "id2",
-							TypeRef: &v1alpha1.ManifestReference{
-								Path:     "path2",
-								Revision: ptr.String("0.1.0"),
-							},
+						ID: "id2",
+						TypeRef: &v1alpha1.ManifestReference{
+							Path:     "path2",
+							Revision: ptr.String("0.1.0"),
 						},
 					},
 				},
@@ -199,28 +181,14 @@ func fixK8sAction(t *testing.T, name, namespace string) v1alpha1.Action {
 				Action: &runtime.RawExtension{Raw: []byte(`{"foo":"bar","baz":3}`)},
 				Input: &v1alpha1.ResolvedActionInput{
 					Parameters: &runtime.RawExtension{Raw: []byte(`{"param":"one"}`)},
-					TypeInstances: &[]v1alpha1.InputTypeInstanceDetails{
+					TypeInstances: &[]v1alpha1.InputTypeInstance{
 						{
-							CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
-								Name: "in1",
-								ID:   "in-id1",
-								TypeRef: &v1alpha1.ManifestReference{
-									Path:     "path1",
-									Revision: ptr.String("0.1.0"),
-								},
-							},
-							Optional: false,
+							Name: "in1",
+							ID:   "in-id1",
 						},
 						{
-							CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
-								Name: "in2",
-								ID:   "in-id2",
-								TypeRef: &v1alpha1.ManifestReference{
-									Path:     "path2",
-									Revision: ptr.String("0.1.0"),
-								},
-							},
-							Optional: true,
+							Name: "in2",
+							ID:   "in-id2",
 						},
 					},
 				},

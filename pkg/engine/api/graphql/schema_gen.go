@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -94,10 +93,8 @@ type ComplexityRoot struct {
 	}
 
 	InputTypeInstanceDetails struct {
-		ID       func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Optional func(childComplexity int) int
-		TypeRef  func(childComplexity int) int
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 
 	InputTypeInstanceToProvide struct {
@@ -127,7 +124,6 @@ type ComplexityRoot struct {
 
 	OutputTypeInstanceDetails struct {
 		ID      func(childComplexity int) int
-		Name    func(childComplexity int) int
 		TypeRef func(childComplexity int) int
 	}
 
@@ -426,20 +422,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InputTypeInstanceDetails.Name(childComplexity), true
 
-	case "InputTypeInstanceDetails.optional":
-		if e.complexity.InputTypeInstanceDetails.Optional == nil {
-			break
-		}
-
-		return e.complexity.InputTypeInstanceDetails.Optional(childComplexity), true
-
-	case "InputTypeInstanceDetails.typeRef":
-		if e.complexity.InputTypeInstanceDetails.TypeRef == nil {
-			break
-		}
-
-		return e.complexity.InputTypeInstanceDetails.TypeRef(childComplexity), true
-
 	case "InputTypeInstanceToProvide.name":
 		if e.complexity.InputTypeInstanceToProvide.Name == nil {
 			break
@@ -572,13 +554,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OutputTypeInstanceDetails.ID(childComplexity), true
-
-	case "OutputTypeInstanceDetails.name":
-		if e.complexity.OutputTypeInstanceDetails.Name == nil {
-			break
-		}
-
-		return e.complexity.OutputTypeInstanceDetails.Name(childComplexity), true
 
 	case "OutputTypeInstanceDetails.typeRef":
 		if e.complexity.OutputTypeInstanceDetails.TypeRef == nil {
@@ -1038,20 +1013,12 @@ type ActionOutput {
   typeInstances: [OutputTypeInstanceDetails!]!
 }
 
-interface TypeInstanceDetails {
-  id: ID!
-  name: String!
-  typeRef: ManifestReference!
-}
-
 """
 Describes input TypeInstance of an Action
 """
-type InputTypeInstanceDetails implements TypeInstanceDetails {
+type InputTypeInstanceDetails {
   id: ID!
   name: String!
-  typeRef: ManifestReference!
-  optional: Boolean!
 }
 
 """
@@ -1065,9 +1032,8 @@ type InputTypeInstanceToProvide {
 """
 Describes output TypeInstance of an Action
 """
-type OutputTypeInstanceDetails implements TypeInstanceDetails {
+type OutputTypeInstanceDetails {
   id: ID!
-  name: String!
   typeRef: ManifestReference!
 }
 
@@ -2487,76 +2453,6 @@ func (ec *executionContext) _InputTypeInstanceDetails_name(ctx context.Context, 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InputTypeInstanceDetails_typeRef(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceDetails) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InputTypeInstanceDetails",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeRef, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*ManifestReference)
-	fc.Result = res
-	return ec.marshalNManifestReference2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _InputTypeInstanceDetails_optional(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceDetails) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InputTypeInstanceDetails",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Optional, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _InputTypeInstanceToProvide_name(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceToProvide) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3091,41 +2987,6 @@ func (ec *executionContext) _OutputTypeInstanceDetails_id(ctx context.Context, f
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _OutputTypeInstanceDetails_name(ctx context.Context, field graphql.CollectedField, obj *OutputTypeInstanceDetails) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "OutputTypeInstanceDetails",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OutputTypeInstanceDetails_typeRef(ctx context.Context, field graphql.CollectedField, obj *OutputTypeInstanceDetails) (ret graphql.Marshaler) {
@@ -5443,29 +5304,6 @@ func (ec *executionContext) unmarshalInputRulesForInterfaceInput(ctx context.Con
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _TypeInstanceDetails(ctx context.Context, sel ast.SelectionSet, obj TypeInstanceDetails) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case InputTypeInstanceDetails:
-		return ec._InputTypeInstanceDetails(ctx, sel, &obj)
-	case *InputTypeInstanceDetails:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InputTypeInstanceDetails(ctx, sel, obj)
-	case OutputTypeInstanceDetails:
-		return ec._OutputTypeInstanceDetails(ctx, sel, &obj)
-	case *OutputTypeInstanceDetails:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._OutputTypeInstanceDetails(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -5730,7 +5568,7 @@ func (ec *executionContext) _AdditionalTypeInstanceReference(ctx context.Context
 	return out
 }
 
-var inputTypeInstanceDetailsImplementors = []string{"InputTypeInstanceDetails", "TypeInstanceDetails"}
+var inputTypeInstanceDetailsImplementors = []string{"InputTypeInstanceDetails"}
 
 func (ec *executionContext) _InputTypeInstanceDetails(ctx context.Context, sel ast.SelectionSet, obj *InputTypeInstanceDetails) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, inputTypeInstanceDetailsImplementors)
@@ -5748,16 +5586,6 @@ func (ec *executionContext) _InputTypeInstanceDetails(ctx context.Context, sel a
 			}
 		case "name":
 			out.Values[i] = ec._InputTypeInstanceDetails_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "typeRef":
-			out.Values[i] = ec._InputTypeInstanceDetails_typeRef(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "optional":
-			out.Values[i] = ec._InputTypeInstanceDetails_optional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -5926,7 +5754,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
-var outputTypeInstanceDetailsImplementors = []string{"OutputTypeInstanceDetails", "TypeInstanceDetails"}
+var outputTypeInstanceDetailsImplementors = []string{"OutputTypeInstanceDetails"}
 
 func (ec *executionContext) _OutputTypeInstanceDetails(ctx context.Context, sel ast.SelectionSet, obj *OutputTypeInstanceDetails) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, outputTypeInstanceDetailsImplementors)
@@ -5939,11 +5767,6 @@ func (ec *executionContext) _OutputTypeInstanceDetails(ctx context.Context, sel 
 			out.Values[i] = graphql.MarshalString("OutputTypeInstanceDetails")
 		case "id":
 			out.Values[i] = ec._OutputTypeInstanceDetails_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "name":
-			out.Values[i] = ec._OutputTypeInstanceDetails_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

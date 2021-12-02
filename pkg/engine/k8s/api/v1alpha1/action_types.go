@@ -320,6 +320,18 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 	r.Input.SetParameters(params)
 }
 
+// SetInputTypInstances sets the Action input TypeInstances.
+func (r *RenderingStatus) SetInputTypInstances(typeInstances []InputTypeInstance) {
+	if len(typeInstances) == 0 {
+		return
+	}
+
+	if r.Input == nil {
+		r.Input = &ResolvedActionInput{}
+	}
+	r.Input.SetTypeInstances(typeInstances)
+}
+
 // SetActionPolicy sets the Action Policy to a given input.
 // It handles nil slices properly.
 func (r *RenderingStatus) SetActionPolicy(policy []byte) {
@@ -341,9 +353,8 @@ func (r *RenderingStatus) SetTypeInstancesToLock(typeInstances []string) {
 // ResolvedActionInput contains resolved details of Action input.
 type ResolvedActionInput struct {
 	// TypeInstances contains input TypeInstances passed for Action rendering.
-	// It contains both required and optional input TypeInstances.
 	// +optional
-	TypeInstances *[]InputTypeInstanceDetails `json:"typeInstances,omitempty"`
+	TypeInstances *[]InputTypeInstance `json:"typeInstances,omitempty"`
 
 	// Parameters holds value of the User input parameters.
 	// +optional
@@ -361,38 +372,18 @@ func (r *ResolvedActionInput) SetParameters(params []byte) {
 	r.Parameters = &runtime.RawExtension{Raw: params}
 }
 
+// SetTypeInstances sets resolved Action input TypeInstances to a given input.
+func (r *ResolvedActionInput) SetTypeInstances(typeInstances []InputTypeInstance) {
+	r.TypeInstances = &typeInstances
+}
+
 // SetActionPolicy sets resolved Action Policy to a given input.
 func (r *ResolvedActionInput) SetActionPolicy(params []byte) {
 	r.ActionPolicy = &runtime.RawExtension{Raw: params}
 }
 
-// InputTypeInstanceDetails describes input TypeInstance.
-type InputTypeInstanceDetails struct {
-
-	// TODO: After first implementation of rendering workflow, make Input TypeInstance unique.
-	// Possible options:
-	// - name prefix is added manually by User during advanced rendering
-	// - introduce additional field `prefix` or `location`, `source`, etc. with path to the nested step
-	// - similarly to Argo, add special steps with children data
-
-	CommonTypeInstanceDetails `json:",inline"`
-
-	// Optional highlights that the input TypeInstance is optional.
-	// +kubebuilder:default=false
-	Optional bool `json:"optional,omitempty"`
-}
-
 // OutputTypeInstanceDetails describes the output TypeInstance.
 type OutputTypeInstanceDetails struct {
-	CommonTypeInstanceDetails `json:",inline"`
-}
-
-// CommonTypeInstanceDetails contains common details of TypeInstance, regardless if it is input or output one.
-type CommonTypeInstanceDetails struct {
-
-	// Name refers to TypeInstance name.
-	Name string `json:"name"`
-
 	// ID is a unique identifier of the TypeInstance.
 	ID string `json:"id"`
 
