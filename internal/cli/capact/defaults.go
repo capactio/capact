@@ -58,6 +58,11 @@ cert-manager:
 	capactLocalClusterOverridesYAML = `
 global:
   domainName: "capact.local"
+gateway:
+  ingress:
+    annotations:
+      cors:
+        enabled: true
 `
 )
 
