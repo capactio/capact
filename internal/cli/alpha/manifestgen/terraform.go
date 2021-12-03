@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
+	"github.com/fatih/camelcase"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/iancoleman/orderedmap"
+	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 )
 
@@ -138,10 +140,13 @@ func getTerraformInputTypeJSONSchema(variables map[string]*tfconfig.Variable) ([
 	}
 
 	for _, value := range variables {
+		title := strcase.ToCamel(value.Name)              // from snake to camel
+		title = strings.Join(camelcase.Split(title), " ") // separate with spaces
 		propSchema := &jsonschema.Type{
-			Title:       value.Name,
+			Title:       title,
 			Type:        getTypeFromTerraformType(value.Type),
 			Description: value.Description,
+			Default:     value.Default,
 		}
 		schema.Properties.Set(value.Name, propSchema)
 	}

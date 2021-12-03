@@ -20,13 +20,15 @@ spec:
         "properties": {
           "count": {
             "type": "number",
-            "title": "count",
-            "description": "Number of instances"
+            "title": "Count",
+            "description": "Number of instances",
+            "default": 3
           },
           "name": {
             "type": "string",
-            "title": "name",
-            "description": "Name of environment"
+            "title": "Name",
+            "description": "Name of environment",
+            "default": "test"
           }
         }
       }
