@@ -61,13 +61,19 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		return err
 	}
 
-	helm := capact.NewHelm(configuration, opts)
-
-	status.Step("Applying Capact CRDs")
-	err = helm.InstallCRD()
+	status.Step("Loading Capact CRDs")
+	crd, err := capact.LoadCRDDefinition(opts.Parameters.ActionCRDLocation)
 	if err != nil {
 		return err
 	}
+
+	status.Step("Applying Capact CRDs")
+	err = capact.ApplyCRD(ctx, k8sCfg, crd)
+	if err != nil {
+		return err
+	}
+
+	helm := capact.NewHelm(configuration, opts)
 
 	status.Step("Creating namespace %s", opts.Namespace)
 	err = capact.CreateNamespace(ctx, k8sCfg, opts.Namespace)

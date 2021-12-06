@@ -67,15 +67,6 @@ gateway:
 )
 
 const (
-	issuerTemplate = `
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: %s
-spec:
-  ca:
-    secretName: %s
-`
 	// cert-manager
 	// #nosec G101
 	certManagerSecretName = "ca-key-pair"
