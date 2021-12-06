@@ -275,7 +275,6 @@ type ActionStatus struct {
 // ActionOutput describes Action output.
 type ActionOutput struct {
 
-	// TypeInstances contains output TypeInstances data. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	TypeInstances *[]OutputTypeInstanceDetails `json:"typeInstances,omitempty"`
 }
@@ -320,8 +319,8 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 	r.Input.SetParameters(params)
 }
 
-// SetInputTypInstances sets the Action input TypeInstances.
-func (r *RenderingStatus) SetInputTypInstances(typeInstances []InputTypeInstance) {
+// SetInputTypeInstances sets the Action input TypeInstances.
+func (r *RenderingStatus) SetInputTypeInstances(typeInstances []InputTypeInstance) {
 	if len(typeInstances) == 0 {
 		return
 	}

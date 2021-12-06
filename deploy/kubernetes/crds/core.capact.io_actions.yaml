@@ -268,8 +268,6 @@ spec:
                 description: Output describes Action output.
                 properties:
                   typeInstances:
-                    description: TypeInstances contains output TypeInstances data.
-                      CURRENTLY NOT IMPLEMENTED.
                     items:
                       description: OutputTypeInstanceDetails describes the output
                         TypeInstance.

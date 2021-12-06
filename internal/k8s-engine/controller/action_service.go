@@ -425,7 +425,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	}
 
 	if len(typeInstancesData) > 0 {
-		status.SetInputTypInstances(typeInstancesData)
+		status.SetInputTypeInstances(typeInstancesData)
 	}
 
 	status.SetAction(actionBytes)
