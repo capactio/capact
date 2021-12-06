@@ -229,22 +229,18 @@ fragment ActionFields on Action {
         typeInstances {
             id
             name
-            optional
-            typeRef {
-                path
-                revision
-            }
+        }
+        actionPolicy {
+            ...PolicyFields
         }
     }
     output {
         typeInstances {
-            name
+            id
             typeRef {
                 path
                 revision
             }
-            id
-            name
         }
     }
     actionRef {

@@ -8,10 +8,6 @@ import (
 	"strconv"
 )
 
-type TypeInstanceDetails interface {
-	IsTypeInstanceDetails()
-}
-
 // Action describes user intention to resolve & execute a given Interface or Implementation.
 type Action struct {
 	Name      string        `json:"name"`
@@ -131,13 +127,9 @@ type InputTypeInstanceData struct {
 
 // Describes input TypeInstance of an Action
 type InputTypeInstanceDetails struct {
-	ID       string             `json:"id"`
-	Name     string             `json:"name"`
-	TypeRef  *ManifestReference `json:"typeRef"`
-	Optional bool               `json:"optional"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
-
-func (InputTypeInstanceDetails) IsTypeInstanceDetails() {}
 
 // Describes optional input TypeInstance of advanced rendering iteration
 type InputTypeInstanceToProvide struct {
@@ -160,11 +152,8 @@ type ManifestReferenceInput struct {
 // Describes output TypeInstance of an Action
 type OutputTypeInstanceDetails struct {
 	ID      string             `json:"id"`
-	Name    string             `json:"name"`
 	TypeRef *ManifestReference `json:"typeRef"`
 }
-
-func (OutputTypeInstanceDetails) IsTypeInstanceDetails() {}
 
 type Policy struct {
 	Rules []*RulesForInterface `json:"rules"`

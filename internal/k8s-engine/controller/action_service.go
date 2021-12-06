@@ -367,7 +367,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	typeInstances := a.getUserInputTypeInstances(action)
+	typeInstancesRefs, typeInstancesData := a.getUserInputTypeInstances(action)
 
 	runnerCtxSecretRef := argo.RunnerContextSecretRef{
 		Name: action.Name,
@@ -388,7 +388,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		argo.WithSecretUserInput(ref, parametersCollection),
 		argo.WithPolicyOrder(a.policyOrder),
 		argo.WithGlobalPolicy(policy),
-		argo.WithTypeInstances(typeInstances),
+		argo.WithTypeInstances(typeInstancesRefs),
 		argo.WithOwnerID(ownerID),
 	}
 
@@ -422,6 +422,10 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		}
 
 		status.SetInputParameters(parametersBytes)
+	}
+
+	if len(typeInstancesData) > 0 {
+		status.SetInputTypeInstances(typeInstancesData)
 	}
 
 	status.SetAction(actionBytes)
@@ -479,9 +483,9 @@ func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha
 	return policy, policyData, nil
 }
 
-func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []types.InputTypeInstanceRef {
+func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) ([]types.InputTypeInstanceRef, []v1alpha1.InputTypeInstance) {
 	if action.Spec.Input == nil || action.Spec.Input.TypeInstances == nil {
-		return nil
+		return nil, nil
 	}
 
 	var refs []types.InputTypeInstanceRef
@@ -489,7 +493,7 @@ func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []typ
 		refs = append(refs, types.InputTypeInstanceRef{Name: ti.Name, ID: ti.ID})
 	}
 
-	return refs
+	return refs, *action.Spec.Input.TypeInstances
 }
 
 func (a *ActionService) getPolicyWithFallbackToEmpty(ctx context.Context) (policy.Policy, error) {
@@ -585,12 +589,10 @@ func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *
 	var res []v1alpha1.OutputTypeInstanceDetails
 	for _, ti := range typeInstances {
 		res = append(res, v1alpha1.OutputTypeInstanceDetails{
-			CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
-				ID: ti.ID,
-				TypeRef: &v1alpha1.ManifestReference{
-					Path:     v1alpha1.NodePath(ti.TypeRef.Path),
-					Revision: &ti.TypeRef.Revision,
-				},
+			ID: ti.ID,
+			TypeRef: &v1alpha1.ManifestReference{
+				Path:     v1alpha1.NodePath(ti.TypeRef.Path),
+				Revision: &ti.TypeRef.Revision,
 			},
 		})
 	}

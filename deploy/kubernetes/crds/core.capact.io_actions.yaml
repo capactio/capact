@@ -268,17 +268,12 @@ spec:
                 description: Output describes Action output.
                 properties:
                   typeInstances:
-                    description: TypeInstances contains output TypeInstances data.
-                      CURRENTLY NOT IMPLEMENTED.
                     items:
                       description: OutputTypeInstanceDetails describes the output
                         TypeInstance.
                       properties:
                         id:
                           description: ID is a unique identifier of the TypeInstance.
-                          type: string
-                        name:
-                          description: Name refers to TypeInstance name.
                           type: string
                         typeReference:
                           description: TypeRef contains data needed to resolve Type
@@ -297,7 +292,6 @@ spec:
                           type: object
                       required:
                       - id
-                      - name
                       - typeReference
                       type: object
                     type: array
@@ -386,42 +380,24 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       typeInstances:
                         description: TypeInstances contains input TypeInstances passed
-                          for Action rendering. It contains both required and optional
-                          input TypeInstances.
+                          for Action rendering.
                         items:
-                          description: InputTypeInstanceDetails describes input TypeInstance.
+                          description: InputTypeInstance holds input TypeInstance
+                            reference.
                           properties:
                             id:
-                              description: ID is a unique identifier of the TypeInstance.
+                              description: ID is a unique identifier for the input
+                                TypeInstance.
                               type: string
                             name:
-                              description: Name refers to TypeInstance name.
+                              description: Name refers to input TypeInstance name
+                                used in rendered Action. Name is not unique as there
+                                may be multiple TypeInstances with the same name on
+                                different levels of Action workflow.
                               type: string
-                            optional:
-                              default: false
-                              description: Optional highlights that the input TypeInstance
-                                is optional.
-                              type: boolean
-                            typeReference:
-                              description: TypeRef contains data needed to resolve
-                                Type manifest.
-                              properties:
-                                path:
-                                  description: Path is full path for the manifest.
-                                  minLength: 3
-                                  type: string
-                                revision:
-                                  description: Revision is a semantic version of the
-                                    manifest. If not provided, the latest revision
-                                    is used.
-                                  type: string
-                              required:
-                              - path
-                              type: object
                           required:
                           - id
                           - name
-                          - typeReference
                           type: object
                         type: array
                     type: object
