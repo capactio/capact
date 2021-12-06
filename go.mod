@@ -23,9 +23,10 @@ require (
 	github.com/docker/docker v20.10.9+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
+	github.com/fatih/camelcase v1.0.0
 	github.com/fatih/color v1.12.0
 	github.com/fatih/structs v1.1.0
-	github.com/gitchander/permutation v0.0.0-20210302120832-6ab79d7de174
+	github.com/gitchander/permutation v0.0.0-20210517125447-a5d73722e1b1
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/google/uuid v1.1.2

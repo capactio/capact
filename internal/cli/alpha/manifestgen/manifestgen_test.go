@@ -1,3 +1,9 @@
+// Package manifestgen_test is based on golden file pattern.
+// If the `-test.update-golden` flag is set then the actual content is written
+// to the golden file.
+//
+// To update golden files, run:
+//   go test ./internal/cli/alpha/manifestgen/... -test.update-golden
 package manifestgen_test
 
 import (
