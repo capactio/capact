@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/printer"
@@ -54,6 +56,10 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 				return err
 			}
 		}
+	}
+
+	if cli.VerboseMode.IsEnabled() {
+		status.InfoWithBody("Installation details:", installDetails(opts))
 	}
 
 	configuration, err := capact.GetActionConfiguration(k8sCfg, opts.Namespace)
@@ -119,4 +125,13 @@ To begin working with Capact, use 'capact login' command.
 To read more how to use CLI, check out the documentation on https://capact.io/docs/cli/getting-started#first-use.
 `
 	fmt.Fprintln(w, msg)
+}
+
+func installDetails(opts capact.Options) string {
+	out := &strings.Builder{}
+	fmt.Fprintf(out, "\tVersion: %s\n", opts.Parameters.Version)
+	fmt.Fprintf(out, "\tHelm repository: %s\n", opts.Parameters.Override.HelmRepo)
+	fmt.Fprintf(out, "\tCRD location: %s\n\n", opts.Parameters.ActionCRDLocation)
+
+	return out.String()
 }

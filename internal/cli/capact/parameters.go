@@ -166,7 +166,7 @@ func (i *InputParameters) ResolveVersion() error {
 		}
 	}
 
-	// if not already set via flags, resolve based on our logic
+	// if not already set via flags, resolve base on our logic
 	if i.ActionCRDLocation == "" {
 		if err := i.resolveCRDLocationFromVersion(); err != nil {
 			return err
@@ -194,7 +194,8 @@ func (i *InputParameters) resolveCRDLocationFromVersion() error {
 	if decoded.Prerelease() != "" { // version in format {tag-commit}
 		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, decoded.Prerelease())
 	} else { // version in format {tag}
-		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, decoded.String())
+		ghTag := fmt.Sprintf("v%s", decoded.String())
+		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, ghTag)
 	}
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"strings"
 	"time"
 
 	"capact.io/capact/internal/cli"
@@ -220,14 +219,6 @@ func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 	fmt.Fprintf(out, "\tSTATUS: %s\n", r.Info.Status.String())
 	fmt.Fprintf(out, "\tREVISION: %d\n", r.Version)
 	fmt.Fprintf(out, "\tDESCRIPTION: %s\n", r.Info.Description)
-}
-
-func (h Helm) helmInstallDetails() string {
-	out := &strings.Builder{}
-	fmt.Fprintf(out, "\tVersion: %s\n", h.opts.Parameters.Version)
-	fmt.Fprintf(out, "\tHelm repository: %s\n\n", h.opts.Parameters.Override.HelmRepo)
-
-	return out.String()
 }
 
 // Components is a list of all Capact components available to install.
@@ -608,10 +599,6 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printer.Status) error {
-	if cli.VerboseMode.IsEnabled() {
-		status.InfoWithBody("Installation details:", h.helmInstallDetails())
-	}
-
 	for _, component := range Components {
 		if !slices.Contains(h.opts.InstallComponents, component.Name()) {
 			continue

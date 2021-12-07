@@ -19,7 +19,7 @@ func TestResolveCRDLocationFromVersion(t *testing.T) {
 		},
 		"stable version": {
 			givenParams:    &InputParameters{Version: "0.5.0"},
-			expCRDLocation: fmt.Sprintf(CRDUrlFormat, "0.5.0"),
+			expCRDLocation: fmt.Sprintf(CRDUrlFormat, "v0.5.0"),
 		},
 		"latest version": {
 			givenParams:    &InputParameters{Version: "0.5.0-67e2484"},
