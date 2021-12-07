@@ -195,13 +195,16 @@ func (v *Validation) getFilesToParse(paths []string) ([]string, error) {
 	var files []string
 
 	for _, path := range paths {
-		if !isDir(path) {
+		fileInfo, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+		if !fileInfo.IsDir() {
 			files = append(files, path)
 			continue
 		}
 
 		var fileList []string
-		var err error
 		if v.recursiveSearch {
 			fileList, err = getListOfFilesRecursive(path, isCorrectExtension)
 		} else {
@@ -246,7 +249,11 @@ func getListOfFilesFromSingleDir(path string, filterFn filterFun) ([]string, err
 
 	for _, name := range fileNames {
 		fullPath := filepath.Join(path, name)
-		if isDir(fullPath) || !filterFn(fullPath) {
+		fileInfo, err := os.Stat(fullPath)
+		if err != nil {
+			return nil, err
+		}
+		if fileInfo.IsDir() || !filterFn(fullPath) {
 			continue
 		}
 		files = append(files, fullPath)
@@ -265,11 +272,6 @@ func removeDuplicatePaths(paths []string) []string {
 		result = append(result, path)
 	}
 	return result
-}
-
-func isDir(in string) bool {
-	f, err := os.Stat(in)
-	return err == nil && f.IsDir()
 }
 
 func isCorrectExtension(path string) bool {

@@ -37,7 +37,7 @@ func TestValidation_NoFiles(t *testing.T) {
 
 	// then
 	assert.Error(t, err)
-	assert.EqualError(t, err, "detected 2 validation errors")
+	assert.Contains(t, err.Error(), "no such file or directory")
 }
 
 func TestValidation_NoRecursive(t *testing.T) {
