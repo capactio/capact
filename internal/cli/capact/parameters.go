@@ -1,6 +1,9 @@
 package capact
 
 import (
+	"fmt"
+
+	"github.com/Masterminds/semver/v3"
 	"github.com/fatih/structs"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/strvals"
@@ -143,15 +146,17 @@ func (i *InputParameters) ResolveVersion() error {
 	if i.Override.HelmRepo == LatestVersionTag {
 		i.Override.HelmRepo = HelmRepoLatest
 	}
-	if i.Version == LatestVersionTag {
+
+	switch i.Version {
+	case LatestVersionTag:
 		ver, err := NewHelmHelper().GetLatestVersion(i.Override.HelmRepo, Name)
 		if err != nil {
 			return err
 		}
 		i.Version = ver
-	} else if i.Version == LocalVersionTag {
+
+	case LocalVersionTag:
 		i.Override.HelmRepo = LocalChartsPath
-		i.ActionCRDLocation = LocalCRDPath
 
 		if i.Override.CapactValues.Global.ContainerRegistry.Path == "" {
 			i.Override.CapactValues.Global.ContainerRegistry.Path = LocalDockerPath
@@ -160,6 +165,39 @@ func (i *InputParameters) ResolveVersion() error {
 			i.Override.CapactValues.Global.ContainerRegistry.Tag = LocalDockerTag
 		}
 	}
+
+	// if not already set via flags, resolve base on our logic
+	if i.ActionCRDLocation == "" {
+		if err := i.resolveCRDLocationFromVersion(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// resolveCRDLocationFromVersion sets the CRD location.
+// If version was:
+// - local tag, use the relative local CRD path
+// - stable release (tag), use tag
+// - the latest release from main (tag-commit), use the commit sha
+func (i *InputParameters) resolveCRDLocationFromVersion() error {
+	if i.Version == LocalVersionTag {
+		i.ActionCRDLocation = LocalCRDPath
+		return nil
+	}
+
+	decoded, err := semver.NewVersion(i.Version)
+	if err != nil {
+		return errors.Wrap(err, "while parsing SemVer version")
+	}
+	if decoded.Prerelease() != "" { // version in format {tag-commit}
+		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, decoded.Prerelease())
+	} else { // version in format {tag}
+		ghTag := fmt.Sprintf("v%s", decoded.String())
+		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, ghTag)
+	}
+
 	return nil
 }
 

@@ -40,6 +40,7 @@ require (
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0
 	github.com/iancoleman/strcase v0.1.2
+	github.com/jetstack/cert-manager v1.4.4
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.13
@@ -77,6 +78,7 @@ require (
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.6.3
 	k8s.io/api v0.21.5
+	k8s.io/apiextensions-apiserver v0.21.3
 	k8s.io/apimachinery v0.21.5
 	k8s.io/cli-runtime v0.21.0
 	k8s.io/client-go v0.21.5

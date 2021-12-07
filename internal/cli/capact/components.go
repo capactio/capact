@@ -1,15 +1,11 @@
 package capact
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
-	"strings"
 	"time"
 
 	"capact.io/capact/internal/cli"
@@ -19,6 +15,7 @@ import (
 
 	util "github.com/Masterminds/goutils"
 	"github.com/avast/retry-go"
+	certv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -27,7 +24,6 @@ import (
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/strvals"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -223,14 +219,6 @@ func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 	fmt.Fprintf(out, "\tSTATUS: %s\n", r.Info.Status.String())
 	fmt.Fprintf(out, "\tREVISION: %d\n", r.Version)
 	fmt.Fprintf(out, "\tDESCRIPTION: %s\n", r.Info.Description)
-}
-
-func (h Helm) helmInstallDetails() string {
-	out := &strings.Builder{}
-	fmt.Fprintf(out, "\tVersion: %s\n", h.opts.Parameters.Version)
-	fmt.Fprintf(out, "\tHelm repository: %s\n\n", h.opts.Parameters.Override.HelmRepo)
-
-	return out.String()
 }
 
 // Components is a list of all Capact components available to install.
@@ -493,14 +481,25 @@ func (c *CertManager) InstallUpgrade(ctx context.Context, version string) (*rele
 			"tls.key": []byte(tlsKey),
 		},
 	}
-	err = CreateUpdateSecret(ctx, restConfig, secret, c.opts.Namespace)
+	err = ApplySecret(ctx, restConfig, secret, c.opts.Namespace)
 	if err != nil {
 		return nil, errors.Wrapf(err, "while creating %s Secret", certManagerSecretName)
 	}
 
-	// Not using cert-manager types as it's conflicting with argo deps
-	issuer := fmt.Sprintf(issuerTemplate, clusterIssuerName, certManagerSecretName)
-	err = createObject(c.configuration, []byte(issuer))
+	issuer := &certv1.ClusterIssuer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterIssuerName,
+		},
+		Spec: certv1.IssuerSpec{
+			IssuerConfig: certv1.IssuerConfig{
+				CA: &certv1.CAIssuer{
+					SecretName: certManagerSecretName,
+				},
+			},
+		},
+	}
+
+	err = ApplyClusterIssuer(ctx, restConfig, issuer)
 	if err != nil {
 		return nil, errors.Wrapf(err, "while creating %s ClusterIssuer", clusterIssuerName)
 	}
@@ -600,10 +599,6 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printer.Status) error {
-	if cli.VerboseMode.IsEnabled() {
-		status.InfoWithBody("Installation details:", h.helmInstallDetails())
-	}
-
 	for _, component := range Components {
 		if !slices.Contains(h.opts.InstallComponents, component.Name()) {
 			continue
@@ -626,68 +621,7 @@ func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printe
 	return nil
 }
 
-// InstallCRD installs Capact CRD
-func (h *Helm) InstallCRD() error {
-	var reader io.Reader
-	if isLocalFile(h.opts.Parameters.ActionCRDLocation) {
-		f, err := os.Open(h.opts.Parameters.ActionCRDLocation)
-		if err != nil {
-			return errors.Wrapf(err, "while opening local CRD file%s", h.opts.Parameters.ActionCRDLocation)
-		}
-		defer f.Close()
-		reader = f
-	} else {
-		resp, err := http.Get(h.opts.Parameters.ActionCRDLocation)
-		if err != nil {
-			return errors.Wrapf(err, "while getting CRD %s", h.opts.Parameters.ActionCRDLocation)
-		}
-		defer resp.Body.Close()
-		reader = resp.Body
-	}
-
-	content, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.Wrapf(err, "while reading CRD %s", h.opts.Parameters.ActionCRDLocation)
-	}
-	return createObject(h.configuration, content)
-}
-
-func createObject(configuration *action.Configuration, content []byte) error {
-	res, err := configuration.KubeClient.Build(bytes.NewBuffer(content), true)
-	if err != nil {
-		return errors.Wrap(err, "while validating the object")
-	}
-
-	// 4 exponential retries: ~102ms ~302ms ~700ms 1.5s
-	err = retry.Do(
-		func() error {
-			_, err = configuration.KubeClient.Create(res)
-			return ignoreAlreadyExistError(err)
-		},
-		retry.Attempts(5),
-		retry.DelayType(retry.BackOffDelay),
-	)
-	if err != nil {
-		// May be conflict if max retries were hit, or may be something unrelated like permissions error
-		return err
-	}
-
-	return nil
-}
-
-func ignoreAlreadyExistError(err error) error {
-	if apierrors.IsAlreadyExists(err) {
-		return nil
-	}
-	return err
-}
-
 func isLocalDir(in string) bool {
 	f, err := os.Stat(in)
 	return err == nil && f.IsDir()
-}
-
-func isLocalFile(in string) bool {
-	f, err := os.Stat(in)
-	return err == nil && !f.IsDir()
 }
