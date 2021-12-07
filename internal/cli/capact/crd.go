@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	goretry "github.com/avast/retry-go"
 	"github.com/pkg/errors"
 	"k8s.io/apiextensions-apiserver/pkg/apihelpers"
 	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -92,32 +91,22 @@ func ApplyCRD(ctx context.Context, config *rest.Config, new *apiextensionv1.Cust
 }
 
 func waitForCRD(ctx context.Context, crdClient v1.CustomResourceDefinitionInterface, name string) error {
-	// 4 exponential retries: ~102ms ~302ms ~700ms 1.5s
-	err := goretry.Do(
-		func() error {
-			crd, err := crdClient.Get(ctx, name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
+	return retryForFn(func() error {
+		crd, err := crdClient.Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
 
-			if !apihelpers.IsCRDConditionTrue(crd, apiextensionv1.Established) {
-				return errors.New("CRD is not active")
-			}
+		if !apihelpers.IsCRDConditionTrue(crd, apiextensionv1.Established) {
+			return errors.New("CRD is not active")
+		}
 
-			if !apihelpers.IsCRDConditionTrue(crd, apiextensionv1.NamesAccepted) {
-				return errors.New("the CRD names were not accepted")
-			}
+		if !apihelpers.IsCRDConditionTrue(crd, apiextensionv1.NamesAccepted) {
+			return errors.New("the CRD names were not accepted")
+		}
 
-			return nil
-		},
-		goretry.Attempts(5),
-		goretry.DelayType(goretry.BackOffDelay),
-	)
-	if err != nil {
-		return errors.Wrap(err, "while waiting for the CRD")
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func isLocalFile(in string) bool {
