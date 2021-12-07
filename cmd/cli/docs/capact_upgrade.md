@@ -28,7 +28,7 @@ capact upgrade --version 0.1.0
 
 ```
       --action-name-prefix string           Specifies Capact upgrade Action name prefix. (default "capact-upgrade-")
-      --crd string                          Capact Action CRD location. (default "https://raw.githubusercontent.com/capactio/capact/main/deploy/kubernetes/crds/core.capact.io_actions.yaml")
+      --crd string                          Overrides the Capact Action CRD location.
       --enable-test-setup                   Enables test setup for the Capact E2E validation scenarios.
       --helm-repo string                    Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
   -h, --help                                help for upgrade
