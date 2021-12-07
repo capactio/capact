@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestResolveCRDLocationFromVersion(t *testing.T) {
+func TestResolveCRDLocationFromVersionSuccess(t *testing.T) {
 	tests := map[string]struct {
 		givenParams    *InputParameters
 		expCRDLocation string
@@ -36,4 +36,15 @@ func TestResolveCRDLocationFromVersion(t *testing.T) {
 			assert.Equal(t, tc.expCRDLocation, tc.givenParams.ActionCRDLocation)
 		})
 	}
+}
+
+func TestResolveCRDLocationFromVersionFailure(t *testing.T) {
+	// given
+	wrongVersion := &InputParameters{Version: "@wrong"}
+
+	// when
+	err := wrongVersion.resolveCRDLocationFromVersion()
+
+	// then
+	require.EqualError(t, err, "while parsing SemVer version: Invalid Semantic Version")
 }

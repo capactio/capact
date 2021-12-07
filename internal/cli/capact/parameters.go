@@ -189,7 +189,7 @@ func (i *InputParameters) resolveCRDLocationFromVersion() error {
 
 	decoded, err := semver.NewVersion(i.Version)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while parsing SemVer version")
 	}
 	if decoded.Prerelease() != "" { // version in format {tag-commit}
 		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, decoded.Prerelease())
@@ -197,6 +197,7 @@ func (i *InputParameters) resolveCRDLocationFromVersion() error {
 		ghTag := fmt.Sprintf("v%s", decoded.String())
 		i.ActionCRDLocation = fmt.Sprintf(CRDUrlFormat, ghTag)
 	}
+
 	return nil
 }
 
