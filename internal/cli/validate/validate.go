@@ -62,6 +62,13 @@ func (r *ValidationResult) Error() string {
 	return fmt.Sprintf("%q:\n    * %s\n", r.Path, strings.Join(errMsgs, "\n    * "))
 }
 
+// respectedManifestsExt defines valid extensions for OCF manifest files.
+// Manifests with different extensions are ignored during validation process.
+var respectedManifestsExt = map[string]struct{}{
+	".yaml": {},
+	".yml":  {},
+}
+
 // Validation provides functionality to validate OCF manifests.
 type Validation struct {
 	hubCli          client.Hub
@@ -113,7 +120,7 @@ func New(writer io.Writer, opts Options) (*Validation, error) {
 func (v *Validation) Run(ctx context.Context, paths []string) error {
 	filePaths, err := v.getFilesToParse(paths)
 	if err != nil {
-		return fmt.Errorf("detected error during validation: %s", err.Error())
+		return errors.Wrap(err, "while collecting files for validation")
 	}
 
 	var workersCount = v.maxWorkers
@@ -201,7 +208,7 @@ func (v *Validation) getFilesToParse(paths []string) ([]string, error) {
 			fileList, err = getListOfFilesFromSingleDir(path, isCorrectExtension)
 		}
 		if err != nil {
-			return files, err
+			return nil, err
 		}
 		files = append(files, fileList...)
 	}
@@ -234,7 +241,7 @@ func getListOfFilesFromSingleDir(path string, filterFn filterFun) ([]string, err
 
 	fileNames, err := file.Readdirnames(0)
 	if err != nil {
-		return files, err
+		return nil, err
 	}
 
 	for _, name := range fileNames {
@@ -249,12 +256,13 @@ func getListOfFilesFromSingleDir(path string, filterFn filterFun) ([]string, err
 
 func removeDuplicatePaths(paths []string) []string {
 	var result []string
-	allPaths := make(map[string]bool)
-	for _, item := range paths {
-		if _, value := allPaths[item]; !value {
-			allPaths[item] = true
-			result = append(result, item)
+	allPaths := make(map[string]struct{})
+	for _, path := range paths {
+		if _, ok := allPaths[path]; ok {
+			continue
 		}
+		allPaths[path] = struct{}{}
+		result = append(result, path)
 	}
 	return result
 }
@@ -265,14 +273,8 @@ func isDir(in string) bool {
 }
 
 func isCorrectExtension(path string) bool {
-	extensions := []string{".yaml", ".yml"}
-	extension := filepath.Ext(path)
-	for _, allowedExtension := range extensions {
-		if extension == allowedExtension {
-			return true
-		}
-	}
-	return false
+	_, found := respectedManifestsExt[filepath.Ext(path)]
+	return found
 }
 
 type validationWorker struct {

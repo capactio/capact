@@ -1,6 +1,7 @@
 package validate_test
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 	"testing"
@@ -37,4 +38,36 @@ func TestValidation_NoFiles(t *testing.T) {
 	// then
 	assert.Error(t, err)
 	assert.EqualError(t, err, "detected 2 validation errors")
+}
+
+func TestValidation_NoRecursive(t *testing.T) {
+	// given
+	var buff = &bytes.Buffer{}
+	validation, err := validate.New(buff, validate.Options{MaxConcurrency: 5, RecursiveSearch: false})
+	require.NoError(t, err)
+
+	pathToExamples := "../../../ocf-spec/0.0.1"
+
+	// when
+	err = validation.Run(context.Background(), []string{pathToExamples})
+
+	// then
+	assert.NoError(t, err)
+	assert.Contains(t, buff.String(), "Validated 0 files in total")
+}
+
+func TestValidation_Recursive(t *testing.T) {
+	// given
+	var buff = &bytes.Buffer{}
+	validation, err := validate.New(buff, validate.Options{MaxConcurrency: 5, RecursiveSearch: true})
+	require.NoError(t, err)
+
+	pathToExamples := "../../../ocf-spec/0.0.1/"
+
+	// when
+	err = validation.Run(context.Background(), []string{pathToExamples})
+
+	// then
+	assert.NoError(t, err)
+	assert.Contains(t, buff.String(), "Validated 7 files in total")
 }
