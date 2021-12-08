@@ -1,10 +1,9 @@
 package validate_test
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
-	"path"
-	"strings"
 	"testing"
 
 	"capact.io/capact/internal/cli/validate"
@@ -18,22 +17,9 @@ func TestValidation_Run_SmokeTest(t *testing.T) {
 	require.NoError(t, err)
 
 	pathToExamples := "../../../ocf-spec/0.0.1/examples"
-	files, err := ioutil.ReadDir(pathToExamples)
-	require.NoError(t, err)
-
-	var filePaths []string
-	for _, file := range files {
-		if file.IsDir() || !strings.HasSuffix(file.Name(), ".yaml") {
-			continue
-		}
-
-		filePaths = append(filePaths, path.Join(pathToExamples, file.Name()))
-	}
-
-	require.True(t, len(filePaths) > 0)
 
 	// when
-	err = validation.Run(context.Background(), filePaths)
+	err = validation.Run(context.Background(), []string{pathToExamples})
 
 	// then
 	assert.NoError(t, err)
@@ -46,12 +32,42 @@ func TestValidation_NoFiles(t *testing.T) {
 
 	filePaths := []string{"/this/file/doesnt/exist", "/same/here"}
 
-	require.True(t, len(filePaths) > 0)
-
 	// when
 	err = validation.Run(context.Background(), filePaths)
 
 	// then
 	assert.Error(t, err)
-	assert.EqualError(t, err, "detected 2 validation errors")
+	assert.Contains(t, err.Error(), "no such file or directory")
+}
+
+func TestValidation_NoRecursive(t *testing.T) {
+	// given
+	var buff = &bytes.Buffer{}
+	validation, err := validate.New(buff, validate.Options{MaxConcurrency: 5, RecursiveSearch: false})
+	require.NoError(t, err)
+
+	pathToExamples := "../../../ocf-spec/0.0.1"
+
+	// when
+	err = validation.Run(context.Background(), []string{pathToExamples})
+
+	// then
+	assert.NoError(t, err)
+	assert.Contains(t, buff.String(), "Validated 0 files in total")
+}
+
+func TestValidation_Recursive(t *testing.T) {
+	// given
+	var buff = &bytes.Buffer{}
+	validation, err := validate.New(buff, validate.Options{MaxConcurrency: 5, RecursiveSearch: true})
+	require.NoError(t, err)
+
+	pathToExamples := "../../../ocf-spec/0.0.1/"
+
+	// when
+	err = validation.Run(context.Background(), []string{pathToExamples})
+
+	// then
+	assert.NoError(t, err)
+	assert.Contains(t, buff.String(), "Validated 7 files in total")
 }

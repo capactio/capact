@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -20,9 +22,10 @@ import (
 
 // Options struct defines validation options for OCF manifest validation.
 type Options struct {
-	SchemaLocation string
-	ServerSide     bool
-	MaxConcurrency int
+	SchemaLocation  string
+	ServerSide      bool
+	RecursiveSearch bool
+	MaxConcurrency  int
 }
 
 // Validate validates the Options struct fields.
@@ -59,12 +62,20 @@ func (r *ValidationResult) Error() string {
 	return fmt.Sprintf("%q:\n    * %s\n", r.Path, strings.Join(errMsgs, "\n    * "))
 }
 
+// respectedManifestsExt defines valid extensions for OCF manifest files.
+// Manifests with different extensions are ignored during validation process.
+var respectedManifestsExt = map[string]struct{}{
+	".yaml": {},
+	".yml":  {},
+}
+
 // Validation provides functionality to validate OCF manifests.
 type Validation struct {
-	hubCli      client.Hub
-	writer      io.Writer
-	maxWorkers  int
-	validatorFn func() manifest.FileSystemValidator
+	hubCli          client.Hub
+	writer          io.Writer
+	maxWorkers      int
+	recursiveSearch bool
+	validatorFn     func() manifest.FileSystemValidator
 }
 
 // New creates new Validation.
@@ -98,14 +109,20 @@ func New(writer io.Writer, opts Options) (*Validation, error) {
 		validatorFn: func() manifest.FileSystemValidator {
 			return manifest.NewDefaultFilesystemValidator(fs, ocfSchemaRootPath, validatorOpts...)
 		},
-		hubCli:     hubCli,
-		writer:     writer,
-		maxWorkers: opts.MaxConcurrency,
+		hubCli:          hubCli,
+		writer:          writer,
+		recursiveSearch: opts.RecursiveSearch,
+		maxWorkers:      opts.MaxConcurrency,
 	}, nil
 }
 
 // Run runs validation across all JSON validators.
-func (v *Validation) Run(ctx context.Context, filePaths []string) error {
+func (v *Validation) Run(ctx context.Context, paths []string) error {
+	filePaths, err := v.getFilesToParse(paths)
+	if err != nil {
+		return errors.Wrap(err, "while collecting files for validation")
+	}
+
 	var workersCount = v.maxWorkers
 	if len(filePaths) < workersCount {
 		workersCount = len(filePaths)
@@ -172,6 +189,94 @@ func (v *Validation) printPartialResult(res ValidationResult) {
 		return
 	}
 	fmt.Fprintf(v.writer, "- %s %q\n", color.GreenString("✓"), res.Path)
+}
+
+func (v *Validation) getFilesToParse(paths []string) ([]string, error) {
+	var files []string
+
+	for _, path := range paths {
+		fileInfo, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+		if !fileInfo.IsDir() {
+			files = append(files, path)
+			continue
+		}
+
+		var fileList []string
+		if v.recursiveSearch {
+			fileList, err = getListOfFilesRecursive(path, isCorrectExtension)
+		} else {
+			fileList, err = getListOfFilesFromSingleDir(path, isCorrectExtension)
+		}
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, fileList...)
+	}
+	return removeDuplicatePaths(files), nil
+}
+
+type filterFun func(string) bool
+
+func getListOfFilesRecursive(root string, filterFn filterFun) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && filterFn(path) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
+}
+
+func getListOfFilesFromSingleDir(path string, filterFn filterFun) ([]string, error) {
+	var files []string
+	file, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return files, err
+	}
+	defer file.Close()
+
+	fileNames, err := file.Readdirnames(0)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, name := range fileNames {
+		fullPath := filepath.Join(path, name)
+		fileInfo, err := os.Stat(fullPath)
+		if err != nil {
+			return nil, err
+		}
+		if fileInfo.IsDir() || !filterFn(fullPath) {
+			continue
+		}
+		files = append(files, fullPath)
+	}
+	return files, nil
+}
+
+func removeDuplicatePaths(paths []string) []string {
+	var result []string
+	allPaths := make(map[string]struct{})
+	for _, path := range paths {
+		if _, ok := allPaths[path]; ok {
+			continue
+		}
+		allPaths[path] = struct{}{}
+		result = append(result, path)
+	}
+	return result
+}
+
+func isCorrectExtension(path string) bool {
+	_, found := respectedManifestsExt[filepath.Ext(path)]
+	return found
 }
 
 type validationWorker struct {
