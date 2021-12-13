@@ -65,7 +65,7 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 
 	sourcesInfo, err := getSourcesInfo(ctx, cfg, log, sources)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while getting sources info")
 	}
 
 	// run server with merge hosts file list
@@ -96,7 +96,7 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 
 	dataInDB, err := dbpopulator.IsDataInDB(session, log, commits)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while verifying commits in db")
 	}
 	if dataInDB {
 		return nil
@@ -107,12 +107,12 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 			err = multierror.Append(err, rErr)
 		}
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while populating db")
 		}
 	}
 	err = dbpopulator.SaveCommitsMetadata(session, commits)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while saving metadata into db")
 	}
 
 	return nil
