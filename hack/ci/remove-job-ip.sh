@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2154
 
-sudo snap install yq --channel=v3/stable
+sudo snap install yq --channel=v4/stable
 gcloud config set project "${PROJECT_ID}"
 AUTHORIZED=$(gcloud container clusters describe "${TF_VAR_cluster_name}" --zone "${TF_VAR_region}" \
-| yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' | grep -v "${IP_ADDED_JOB}") || true
+| yq e '.masterAuthorizedNetworksConfig.cidrBlocks[].cidrBlock' - | grep -v "${IP_ADDED_JOB}") || true
 AUTHORIZED=$(echo "${AUTHORIZED}" | tr '\n' ',' | sed 's/,$//') || true
 
 if [ -z "${AUTHORIZED}" ]
