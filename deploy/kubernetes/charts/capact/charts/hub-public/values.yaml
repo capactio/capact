@@ -79,11 +79,11 @@ populator:
     pullPolicy: IfNotPresent
   port: 8081
   updateOnGitCommit: true
-  manifestsLocation:
-    local: false
-    # It's public repository
-    repository: github.com/capactio/hub-manifests
-    branch: main
-    # sshKey is a base64 encoded private key used by populator to download manifests. It has read only access
-    #sshKey:
-  args: ["while true; do /app register ocf-manifests $MANIFESTS_PATH; sleep 600;done"]
+  manifestsLocations:
+    - local: false
+      # It's public repository
+      repository: github.com/capactio/hub-manifests
+      branch: main
+      # sshKey is a base64 encoded private key used by populator to download manifests. It has read only access
+      #sshKey:
+  args: ["while true; do /app register ocf-manifests --source $MANIFESTS_PATHS; sleep 600;done"]

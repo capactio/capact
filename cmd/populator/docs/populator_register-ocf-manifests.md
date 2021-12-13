@@ -35,14 +35,14 @@ kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
 To run it and use manifests, for example from the [`hub-manifests`](https://github.com/capactio/hub-manifests) repo, run:
 
 ```shell
-./bin/populator-linux-amd64 register ocf-manifests {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_REPO}
+./bin/populator-linux-amd64 register ocf-manifests --source {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_REPO}
 ```
 
 To use manifests from private git repo, private key, encoded in base64 format, is needed.
 For example command to download manifests from Capact repo would look like this:
 ```shell
 export SSHKEY=`base64 -w0 ~/.ssh/id_rsa`
-./populator register ocf-manifests git@github.com:capactio/capact.git?sshkey=$SSHKEY
+./populator register ocf-manifests --source git@github.com:capactio/capact.git?sshkey=$SSHKEY
 ```
 
 For better performance populator starts HTTP server to serve manifests converted to JSON files.
@@ -50,7 +50,7 @@ Neo4j needs access to this JSON files. `APP_JSON_PUBLISH_ADDR` environment varia
 so populator can send a correct link to a Neo4j:
 
 ```shell
-APP_JSON_PUBLISH_ADDR=http://{HOST_IP} ./populator register ocf-manifests .
+APP_JSON_PUBLISH_ADDR=http://{HOST_IP} ./populator register ocf-manifests --source .
 ```
 Replace `HOST_IP` with your computer IP
 

@@ -456,21 +456,8 @@ yield batches, total return batches, total
 `
 
 // Populate imports Public Hub manifests into a Neo4j database.
-func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) (bool, error) {
-	currentCommit, err := currentCommit(session)
-	if err != nil {
-		return false, errors.Wrap(err, "while getting commit hash of populated data")
-	}
-
-	if commit != "" {
-		if currentCommit == commit {
-			log.Info("git commit did not change. Finishing")
-			return false, nil
-		}
-		log.Info("git commit changed", zap.String("current hash", currentCommit), zap.String("new hash", commit))
-	}
-
-	err = populate(ctx, log, session, paths, rootDir, publishPath, commit)
+func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string) (bool, error) {
+	err := populate(ctx, log, session, paths, rootDir, publishPath)
 	if err != nil {
 		return false, errors.Wrap(err, "while adding new manifests")
 	}
@@ -489,7 +476,53 @@ func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 	return true, err
 }
 
-func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) error {
+// IsDataInDB checks whether the commits have existed already in the DB
+func IsDataInDB(session neo4j.Session, log *zap.Logger, commits []string) (bool, error) {
+	if len(commits) == 0 {
+		return false, nil
+	}
+
+	currentCommits, err := currentCommits(session)
+	if err != nil {
+		return false, errors.Wrap(err, "while getting commit hash of populated data")
+	}
+
+	commitsExistInDB := true
+	newCommit := ""
+	for _, commit := range commits {
+		if !strings.Contains(currentCommits, commit) {
+			commitsExistInDB = false
+			newCommit = commit
+		}
+	}
+	if commitsExistInDB {
+		log.Info("git commit did not change. Finishing")
+		return true, nil
+	}
+	log.Info("git commit changed", zap.String("current hash", currentCommits), zap.String("new hash", newCommit))
+	return false, nil
+}
+
+// SaveCommitsMetadata saves the commits from the repository in the DB
+// TODO: gather commits per repository, now only repositories from the last run are cached
+func SaveCommitsMetadata(session neo4j.Session, commits []string) error {
+	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		contentMetadata := "CREATE (n:ContentMetadata:published { commits: '%s', timestamp: '%s'}) RETURN *"
+		q := fmt.Sprintf(contentMetadata, strings.Join(commits, " "), time.Now())
+		result, err := transaction.Run(q, nil)
+		if err != nil {
+			return nil, errors.Wrapf(err, "when running query %s", q)
+		}
+		err = result.Err()
+		if err != nil {
+			return nil, errors.Wrapf(err, "when running query %s", q)
+		}
+		return nil, nil
+	})
+	return errors.Wrap(err, "while executing neo4j transaction")
+}
+
+func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string) error {
 	var queries = map[string]string{
 		"RepoMetadata":   repoMetadataQuery,
 		"Attribute":      attributeQuery,
@@ -529,16 +562,6 @@ func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 				}
 			}
 		}
-		contentMetadata := "CREATE (n:ContentMetadata:unpublished { commit: '%s', timestamp: '%s'}) RETURN *"
-		q := fmt.Sprintf(contentMetadata, commit, time.Now())
-		result, err := transaction.Run(q, nil)
-		if err != nil {
-			return nil, errors.Wrapf(err, "when running query %s", q)
-		}
-		err = result.Err()
-		if err != nil {
-			return nil, errors.Wrapf(err, "when running query %s", q)
-		}
 		return nil, nil
 	})
 	return errors.Wrap(err, "while executing neo4j transaction")
@@ -560,10 +583,10 @@ func cleanOld(session neo4j.Session) error {
 	return errors.Wrap(err, "while executing neo4j transaction")
 }
 
-func currentCommit(session neo4j.Session) (string, error) {
-	result, err := session.Run("MATCH (c:ContentMetadata:published) RETURN c.commit", map[string]interface{}{})
+func currentCommits(session neo4j.Session) (string, error) {
+	result, err := session.Run("MATCH (c:ContentMetadata:published) RETURN c.commits", map[string]interface{}{})
 	if err != nil {
-		return "", errors.Wrap(err, "while querying ContextMetadada")
+		return "", errors.Wrap(err, "while querying ContentMetadata")
 	}
 
 	var record *neo4j.Record
