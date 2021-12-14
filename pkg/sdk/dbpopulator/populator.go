@@ -476,7 +476,7 @@ func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 	return true, err
 }
 
-// IsDataInDB checks whether the commits have existed already in the DB
+// IsDataInDB checks whether the commits have already existed in the DB
 func IsDataInDB(session neo4j.Session, log *zap.Logger, commits []string) (bool, error) {
 	if len(commits) == 0 {
 		return false, nil
@@ -503,7 +503,7 @@ func IsDataInDB(session neo4j.Session, log *zap.Logger, commits []string) (bool,
 	return false, nil
 }
 
-// SaveCommitsMetadata saves the commits from the repository in the DB
+// SaveCommitsMetadata saves the commits from the repositories in the DB
 // TODO: gather commits per repository, now only repositories from the last run are cached
 func SaveCommitsMetadata(session neo4j.Session, commits []string) error {
 	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {

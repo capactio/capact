@@ -68,7 +68,7 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 		return errors.Wrap(err, "while getting sources info")
 	}
 
-	// run server with merge hosts file list
+	// run server with merge file list from various sources
 	var fileList []string
 	var commits []string
 	for _, src := range sourcesInfo {
