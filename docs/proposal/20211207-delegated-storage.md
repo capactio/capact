@@ -16,7 +16,7 @@ This document describes the way how we will approach dynamic, external data for 
 - [Registering storage backends](#registering-storage-backends)
 - [Workflow syntax - Create](#workflow-syntax---create)
 - [Workflow syntax - Update](#workflow-syntax---update)
-- [storage backend service implementation](#storage-backend-service-implementation)
+- [Storage backend service implementation](#storage-backend-service-implementation)
 - [Uninstalling storage backends](#uninstalling-storage-backends)
 - [GraphQL API](#graphql-api)
   * [List storage backends](#list-storage-backends)
@@ -27,7 +27,7 @@ This document describes the way how we will approach dynamic, external data for 
 - [Rejected ideas](#rejected-ideas)
     + [Registering storage backends](#registering-storage-backends-1)
     + [Workflow syntax](#workflow-syntax)
-    + [Backends implementation](#backends-implementation)
+    + [Storage backend service implementation](#storage-backend-service-implementation-1)
 - [Consequences](#consequences)
 
 <!-- tocstop -->
@@ -348,7 +348,9 @@ Also, the additional, nice-to-have goals are:
         additionalParameters:
           name: release-name
           namespace: release-namespace
-    usesRelations: []
+    usesRelations: # automatically create relation between TypeInstance using a given backend
+    - from: helm-release
+      to: 3ef2e4ac-9070-4093-a3ce-142139fd4a16
     ```
 
 1. Hub receives the following GraphQL mutation based on the payload fields from point above:
@@ -411,7 +413,7 @@ where the `update` Argo artifact can contain `value` and / or `additionalParamet
 
 For additions in GraphQL API, see the [GraphQL API](#graphql-api) section.
 
-## storage backend service implementation
+## Storage backend service implementation
 
 Capact Local Hub calls proper storage backend service while accessing the TypeInstance value or lock state.
 
@@ -463,11 +465,21 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
 
 ## Uninstalling storage backends
 
-TODO:
-<!-- What if someone will delete such TypeInstance e.g. want's to uninstall such storage?
+As described in the [Workflow syntax - Create](#workflow-syntax---create) section, every TypeInstance that uses a given storage backend, will use the `uses` property set:
 
-Deletion is blocked if there are other TypeInstances that uses this backend?
-My suggestion: If yes, probably it will be good to use the uses section for that. If there is a new TI for this backend add relation. It would be good to also tight that with lockedBy property, e.g. some part of our system will lock that TI when it sees that the uses is not empty. -->
+```yaml
+usesRelations: # automatically create relation between TypeInstance using a given backend
+  - from: helm-release
+    to: 3ef2e4ac-9070-4093-a3ce-142139fd4a16 # Helm storage backend
+```
+
+In that way, a given storage backend will contain `usedBy` relations.
+
+According to the accepted [Rollback](./20201209-action-rollback.md) proposal:
+- User won't be able to delete TypeInstance manually, but will run Rollback procedure instead.
+- A given TypeInstance which contain any `usedBy` reference, cannot be deleted unless all related TypeInstances are deleted.
+
+In that way, we prevent removal of any storage backend that is used.
 
 ## GraphQL API
 
@@ -702,7 +714,7 @@ Unfortunately, it will be on Content Developer side to create a proper pattern f
 
     **Reason:** More complex usage in the workflow, and more complex implementation as well
 
-#### Backends implementation
+#### Storage backend service implementation
 
 1. Using Actions as a way to do CRUD operations (separate Interface/Implementation per Create/Update/Get/Delete operation)
  
