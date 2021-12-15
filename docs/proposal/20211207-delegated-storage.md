@@ -13,15 +13,19 @@ This document describes the way how we will approach dynamic, external data for 
   * [Non-goal](#non-goal)
 - [Assumptions](#assumptions)
 - [Prerequisites](#prerequisites)
-- [Registering Storage Backends](#registering-storage-backends)
+- [Registering storage backends](#registering-storage-backends)
 - [Workflow syntax - Create](#workflow-syntax---create)
 - [Workflow syntax - Update](#workflow-syntax---update)
-- [Storage Backend service implementation](#storage-backend-service-implementation)
+- [storage backend service implementation](#storage-backend-service-implementation)
+- [Uninstalling storage backends](#uninstalling-storage-backends)
 - [GraphQL API](#graphql-api)
+  * [List storage backends](#list-storage-backends)
+  * [Get TypeInstance details](#get-typeinstance-details)
+  * [TypeInstance create](#typeinstance-create)
+  * [TypeInstance update](#typeinstance-update)
 - [Dynamic TypeInstance projections](#dynamic-typeinstance-projections)
-- [Examples](#examples)
 - [Rejected ideas](#rejected-ideas)
-    + [Registering Storage Backends](#registering-storage-backends-1)
+    + [Registering storage backends](#registering-storage-backends-1)
     + [Workflow syntax](#workflow-syntax)
     + [Backends implementation](#backends-implementation)
 - [Consequences](#consequences)
@@ -34,7 +38,7 @@ Capact stores the state in a form of TypeInstances with static data. That is pro
 
 Also, we should be able to provide a way to store sensitive data, such as credentials, securely. Currently, we store them as plaintext inside our database.
 
-The last reason, is that long-term we should replace Neo4j database for a more lightweight solution (like sqlite or PostgreSQL). Apart from being resource-hungry, Neo4j can be problematic also when it comes to licensing (GPL3). We believe that the pluggable back-ends concept could be a first step to abstract Neo4j and plug-in different storage backend.
+The last reason, is that long-term we should replace Neo4j database for a more lightweight solution (like sqlite or PostgreSQL). Apart from being resource-hungry, Neo4j can be problematic also when it comes to licensing (GPL3). We believe that the pluggable back-ends concept could be a first step to abstract Neo4j and plug-in different storage backend. However, this should be treated as an additional, nice-to-have goal, or side effect of the Delegated Storage proposal.
 
 ### Goal
 
@@ -87,11 +91,12 @@ Also, the additional, nice-to-have goals are:
 ## Assumptions
 
 1. Content Developer should be able to:
-    1. Write manifests without specifying a storage backend (use default one configured by Cluster Admin).
-    1. Specify a specific storage backend as a part of a given Implementation.
+    1. Write manifests without specifying a storage backend (use default one configured by Cluster Admin). In this case, a static TypeInstance value is stored in the default storage backend.
+    1. Specify a specific storage backend as a part of a given Implementation. This case supports both static and dynamic TypeInstance values.
+1. Cluster Admin can configure default backend storage for static values.
 1. There are two different cases when it comes CRUD operations on TypeInstances:
-    1. CRUD operations on TypeInstance actually manages external resource (e.g. Vault) -> CRUD operations on TI in Local Hub actually creates, updates and deletes a given resource.
-    1. CRUD operations on TypeInstance represents external resources managed in different way (e.g. by running Helm.install). CRUD operations on TI in Local Hub actually registers, unregisters and updates references for external state without changing them.
+    1. CRUD operations on TypeInstance actually manages external resource (e.g. Vault). That is, CRUD operations on TypeInstances in Local Hub actually creates, updates and deletes a given resource.
+    1. CRUD operations on TypeInstance represents external resources managed in different way (e.g. by running Helm.install). That is, CRUD operations on TypeInstances in Local Hub actually registers, unregisters and updates references for external state without changing them.
 
 ## Prerequisites
 
@@ -101,9 +106,9 @@ Also, the additional, nice-to-have goals are:
 1. We add `TypeInstance.spec.backend` field (string)
 1. **Optional:** [Add TypeInstance `alias`/`description` metadata field](https://github.com/capactio/capact/issues/579)
 
-## Registering Storage Backends
+## Registering storage backends
 
-1. For every Storage Backend, we create a dedicated Type:
+1. For every storage backend, we create a dedicated Type:
 
     ```yaml
     ocfVersion: 0.0.1
@@ -114,53 +119,61 @@ Also, the additional, nice-to-have goals are:
     spec:
       additionalRefs:
         - "cap.core.hub.storage" 
-      value: # JSON schema with:
-        {
-        "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "http://example.com/example.json",
-        "type": "object",
-        "title": "The root schema",
-        "required": [
-          "url",
-          "additionalParametersSchema"
-        ],
-        "properties": {
-          "url": { # url of hosted app, which implements `BackendStorage` ProtocolBuffers interface.
-            "$id": "#/properties/url",
-            "type": "string",
-            "format": "uri"
-          },
-          "additionalParametersSchema": { # JSON schema which describes additional properties passed in Capact workflow
-            "const": { # see http://json-schema.org/draft/2019-09/json-schema-validation.html#rfc.section.6.1.3
-              "$id": "#/properties/additionalParameters",
-              "type": "object",
-              "required": [
-                "name",
-                "namespace"
-              ],
-              "properties": {
-                "name": {
-                  "$id": "#/properties/additionalParameters/properties/name",
-                  "type": "string"
+      jsonSchema:
+        value: # JSON schema with:
+          {
+          "$schema": "http://json-schema.org/draft-07/schema",
+          "$id": "http://example.com/example.json",
+          "type": "object",
+          "title": "The root schema",
+          "required": [
+            "url",
+            "additionalParametersSchema"
+          ],
+          "properties": {
+            "url": { # url of hosted app, which implements storage backend ProtocolBuffers interface.
+              "$id": "#/properties/url",
+              "type": "string",
+              "format": "uri"
+            },
+            "additionalParametersSchema": { # JSON schema which describes additional properties passed in Capact workflow
+              "const": { # see http://json-schema.org/draft/2019-09/json-schema-validation.html#rfc.section.6.1.3
+                "$id": "#/properties/additionalParameters",
+                "type": "object",
+                "required": [
+                  "name",
+                  "namespace"
+                ],
+                "properties": {
+                  "name": {
+                    "$id": "#/properties/additionalParameters/properties/name",
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "$id": "#/properties/additionalParameters/properties/namespace",
+                    "type": "string"
+                  }
                 },
-                "namespace": {
-                  "$id": "#/properties/additionalParameters/properties/namespace",
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        "additionalProperties": false
-      }
+                "additionalProperties": false
+              }
+            },
+            "acceptValue": { # specifies if a given storage backend (app) accepts TypeInstance value while creating/updating TypeInstance, or just additionalParameters
+              "$id": "#/properties/acceptValue",
+              "type": "boolean",
+              "const": false # in this case - no
+            },
+          },
+          "additionalProperties": false
+        }
     ```
 
-    It should follow the convention of having `url` and `additionalParametersSchema` fields. As `additionalParameters` are optional, the `additionalParametersSchema` field is nullable.
+    It should follow the convention of having `url`, `acceptValue`, and `additionalParametersSchema` fields. As `additionalParameters` are optional, the `additionalParametersSchema` field is nullable.
 
-    > **NOTE:** In the nearest future, such convention won't be enforced by any validation around that. See the [Rejected ideas](#rejected-ideas) section to learn why such validation idea was rejected.
+    We can validate such convention using custom logic for Type validation. In case of the `cap.core.hub.storage` additional reference, we could prevent uploading such Type if the JSON schema don't meet our conditions.
 
-1. To install new Storage Backend, Cluster Admin has two options:
+    > **NOTE:** See also the [Rejected ideas](#rejected-ideas) section to learn why a generic validation idea was rejected.
+
+1. To install new storage backend, Cluster Admin has two options:
 
     - use Capact Actions (e.g. `cap.interface.capactio.capact.hub.storage.helm-release.install`).
     - Register a storage backend by creating such TypeInstance.
@@ -174,12 +187,13 @@ Also, the additional, nice-to-have goals are:
         revision: 0.1.0
       latestResourceVersion:
         metadata:
-          alias: helm-storage
+          alias: helm-storage # new field, more user-friendly description of such TypeInstance
           attributes:
-          - path: cap.core.attribute.hub.storage.backend # related to GrapHQL implementation
+          - path: "cap.core.attribute.hub.storage.backend" # related to GraphQL implementation
             revision: 0.1.0
         value:
           url: "helm-release.default:50051"
+          acceptValue: false
           additionalParametersSchema: {
             "$id": "#/properties/additionalParametersSchema",
             "type": "object",
@@ -199,8 +213,9 @@ Also, the additional, nice-to-have goals are:
             },
             "additionalProperties": false
           }
-      backend: a36ed738-dfe7-45ec-acd1-8e44e8db893b # immutable - contains TypeInstance ID
-      # if not provided during TypeInstance creation, fallback to default one 
+      backend:
+        id: "a36ed738-dfe7-45ec-acd1-8e44e8db893b" # new immutable property - contains TypeInstance ID
+          # if not provided during TypeInstance creation, fallback to default one (get TypeInstance with proper Attribute and write its ID in this property)
       ```
 
 1. In fresh Capact installation, there is one TypeInstance already preregistered:
@@ -214,18 +229,22 @@ Also, the additional, nice-to-have goals are:
       metadata:
         alias: capact-postgresql
         attributes:
-        - path: cap.core.attribute.default # if more such Typeinstances with default Attribute, select first one
+        - path: cap.core.attribute.hub.storage.default # if more such Typeinstances with default Attribute, select first one
           revision: 0.1.0 
         - path: cap.core.attribute.hub.storage.backend
           revision: 0.1.0
       value:
         url: "storagebackend-handlers.capact-system:50051"
-        additionalParameters: null
-    backend: builtin # Special keyword which specifies the storage option which stores already all other metadata. Effectively, it would be the same database as the PostgreSQL accessed via Capact Storage Backend service (`storagebackend-handlers.capact-system:50051`), but accessed directly.
+        acceptValue: true
+        additionalParametersSchema: null
+    backend: 
+      abstract: true # Special keyword which specifies the built-in storage option which stores already all other metadata. Effectively, it would be the same database as the PostgreSQL accessed via Capact storage backend service (`storagebackend-handlers.capact-system:50051`), but accessed directly.
     ```
 
-    - The one preregistered Storage Backend is Capact PostgreSQL. It uses special value of the `backend` property: `builtin`. This is a reserved system keyword and user cannot create a TypeInstance with such. To use Capact PostgreSQL, the `capact-postgresql` TypeInstance ID has to be referenced as a backend.
+    - The one preregistered storage backend is Capact PostgreSQL. It uses special `backend` property: `abstract: true`. This is a reserved system keyword and user cannot create a TypeInstance with such. To use Capact PostgreSQL, the `capact-postgresql` TypeInstance ID has to be referenced as a backend.
     - Default storage backend should have `additionalParameters` empty (`null`) or optional, in order to work properly.
+      
+      We can validate that using custom logic in TypeInstance validation. When User wants to add the `cap.core.attribute.hub.storage.default` Attribute we can see if the `additionalParameters` meet our conditions and if not, prevent such change.
 
 ## Workflow syntax - Create
 
@@ -233,7 +252,7 @@ Also, the additional, nice-to-have goals are:
 
     ```yaml
     requires:
-      cap.core.type.hub.storage: # Content Dev specifies such requirement only if he/she wants to force use a given backend
+      cap.core.type.hub.storage: # Optional - Content Dev specifies such requirement to force use a given backend
         allOf:
           - typeRef:
               path: cap.type.helm.storage
@@ -241,44 +260,58 @@ Also, the additional, nice-to-have goals are:
               alias: helm-storage
     ```
 
-    - This workflow cannot be run unless there is a `helm-release` StorageBackend installed (where `helm-release` is only workflow alias).
+    - This workflow cannot be run unless there is a `helm-release` storage backend installed (where `helm-release` is only workflow alias).
     - If there are no specific storage backend requirements set, the default backend will be used.
 
-1. Content Developer outputs the following Argo workflow artifact:
+1. Content Developer outputs one of the following Argo workflow artifacts:
 
     > **NOTE:** Before this proposal, the whole Argo workflow artifact was treated as a value. Now we would need to change that.
 
-    As value (if he/she uses default backend or backend without any required additional params):
+    1. To store a given value on default backend or backend without any required additional parameters, which also accepts TypeInstance value:
 
-    ```yaml
-    value: foo # option 1: save a specific value on an external backend
-    ```
+        ```yaml
+        # option 1: save a specific value on a storage backend
+        # a given backend
+        value: foo
+        ```
 
-    or
+    1. To point to some external data for a given storage backend:
 
-    ```yaml
-    additionalParameters: # option 2: register something which already exist as external TypeInstance - based on additionalParameters
-      # however, additionalParameters are backend-specific properties, which means Content Dev need to explicitly specify the backend as described later.
-      name: release-name
-      namespace: release-namespace
-    ```
+        ```yaml
+        # option 2: register something which already exist as external TypeInstance - based on `backend.additionalParameters`
+        backend:
+          additionalParameters:
+            name: release-name
+            namespace: release-namespace
+        ```
 
-    or both:
+        However, the `additionalParameters` are backend-specific properties, which means Content Developer need to explicitly specify the backend as described later.
 
-    ```yaml
-    value: foo # option 3: save a specific value on an external backend with some additional parameters
-    additionalParameters:
-      key: bar
-      value: baz
-    ```
+    1. To save a specific value with additional parameters:
+    
+        For example, for an implementation of Kubernetes secrets storage backend, which actually creates and updates these secrets during TypeInstance creation:
+
+        ```yaml
+        # option 3: save a specific value on an external backend with some additional parameters
+        value: foo
+        backend:
+          additionalParameters:
+            key: bar
+            value: baz
+        ```
+
+        The storage backend has to have `additionalParametersSchema` specified, as well as the `acceptValue` property set to `true`.
 
     In that way, someday we will be able to extend such approach with additional properties:
+    
     ```yaml    
     instrumentation: # someday - if we want to unify the approach
       health:
         endpoint: foo.bar/healthz
       # (...)
     ```
+
+    Such `instrumentation` data would be also stored in the same storage backend as the `value`. If Content Developer wants to store it somewhere else, then an additional Argo artifact to produce is needed.
 
 1. Then, Content Developer specifies the Argo workflow artifact as output TypeInstance with familiar syntax:
 
@@ -287,9 +320,9 @@ Also, the additional, nice-to-have goals are:
     capact-outputTypeInstances:
       - name: mattermost-config
         from: additional
-        # no backend definition -> used default (default storage backend (TypeInstance) is annotated with `cap.core.attribute.default`)
+        # no backend definition -> use default (default storage backend (TypeInstance) is annotated with `cap.core.attribute.hub.storage.default`)
 
-    # option 2 - specific backend (referred in requires)
+    # option 2 - specific backend (defined in `Implementation.spec.requires` property)
     capact-outputTypeInstances:
       - name: helm-release
         from: helm-release
@@ -306,11 +339,15 @@ Also, the additional, nice-to-have goals are:
       typeRef:
         path: cap.type.helm.chart.release
         revision: 0.1.0
-      value: null
-      additionalParameters:
-        name: release-name
-        namespace: release-namespace 
-      backend: 3ef2e4ac-9070-4093-a3ce-142139fd4a16 # helm-release backend - resolved UUID based on the injected TypeInstance
+      value: null 
+      backend:
+        # Fields which are a part of TypeInstance
+        id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16 # helm-release backend - resolved UUID based on the injected TypeInstance
+
+        # Fields which are a part of TypeInstanceResourceVersion (can be changed later via TypeInstance Update):
+        additionalParameters:
+          name: release-name
+          namespace: release-namespace
     usesRelations: []
     ```
 
@@ -331,8 +368,9 @@ Also, the additional, nice-to-have goals are:
 
 1. Based on the `backend` data:
 
-    1. Hub resolves details (URL) about the service
-    1. Calls the registered storage backend service `onCreate` hook:
+    1. Hub resolves details about the service (TypeInstance details)
+    1. Hub validates whether the storage backend accepts TypeInstance value (`acceptValue` property). If not, and the value has been provided, it returns error.
+    1. Hub calls the registered storage backend service `onCreate` hook:
 
         ```javascript
         // TODO: Pseudocode, change to actual HTTP requests / ProtoBuf definition
@@ -341,7 +379,7 @@ Also, the additional, nice-to-have goals are:
 
         This hook can mutate `additionalParameters`.
 
-    1. Validate `additionalParameters` against JSON schema saved in the Backend Storage TypeInstance.
+    1. Hub validates `additionalParameters` against JSON schema saved in the storage backend TypeInstance.
     1. Saves TypeInstance metadata in the core Hub storage backend, which contains all metadata of the TypeInstances and  theirs relations.
 
       ``` yaml
@@ -351,10 +389,12 @@ Also, the additional, nice-to-have goals are:
         revision: 0.1.0
       latestResourceVersion:
         resourceVersion: 1
-        additionalParameters: # additional parameters that might be modified via the service handling `onCreate` hook
-          name: release-name
-          namespace: release-namespace 
-      backend: 3ef2e4ac-9070-4093-a3ce-142139fd4a16 # helm-release backend - resolved UUID based on the injected TypeInstance
+        backend:
+          additionalParameters: # additional parameters that might be modified via the service handling `onCreate` hook
+            name: release-name
+            namespace: release-namespace 
+      backend: 
+        id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16 # helm-release backend - resolved UUID based on the injected TypeInstance
       ```
 
 ## Workflow syntax - Update
@@ -369,15 +409,23 @@ capact-updateTypeInstances:
 
 where the `update` Argo artifact can contain `value` and / or `additionalParameters`.
 
-As backend is immutable, we don't need to provide any additional syntax around TypeInstance update
+For additions in GraphQL API, see the [GraphQL API](#graphql-api) section.
 
-## Storage Backend service implementation
+## storage backend service implementation
 
-1. The registered service will be called by Capact Hub and needs to handle following methods:
+Capact Local Hub calls proper storage backend service while accessing the TypeInstance value or lock state.
+
+1.  The registered storage backend service needs to implement the following gRPC + Protocol Buffers API:
 
     TODO: Pseudocode, change to actual HTTP requests / ProtoBuf definition
 
-    ```go
+    ```proto
+    syntax = "proto3";
+
+    service StorageBackendService {
+    rpc Search(SearchRequest) returns (SearchResponse);
+    }
+
     // TypeInstance ResourceVersion value
     getValue(typeInstanceID, additionalParameters?, resourceVersion): (value, error)
 
@@ -404,16 +452,28 @@ As backend is immutable, we don't need to provide any additional syntax around T
 
       - The service can also implement watch for external resources (e.g. Kubernetes secrets) and call `createTypeInstances` and `deleteTypeInstances` Hub mutations. We may provide Go framework to speed up such development, similarly as we have with Runner concept.
 
-1. The service could be implemented using one of the following solutions (but it is not limited to):
+1. The service could be implemented using one of the following solutions, or other alternatives:
 
   - [Dapr secrets](https://docs.dapr.io/developing-applications/building-blocks/secrets/secrets-overview/)
   - [Kubernetes external secrets](https://github.com/external-secrets/kubernetes-external-secrets)
   - [vault-k8s](https://github.com/hashicorp/vault-k8s)
   - [db](https://upper.io/v4/getting-started/)
+  - [go-cloud](https://github.com/google/go-cloud)
+  - [stow](https://github.com/graymeta/stow)
+
+## Uninstalling storage backends
+
+TODO:
+<!-- What if someone will delete such TypeInstance e.g. want's to uninstall such storage?
+
+Deletion is blocked if there are other TypeInstances that uses this backend?
+My suggestion: If yes, probably it will be good to use the uses section for that. If there is a new TI for this backend add relation. It would be good to also tight that with lockedBy property, e.g. some part of our system will lock that TI when it sees that the uses is not empty. -->
 
 ## GraphQL API
 
 The new GraphQL API can be used both on CLI and UI.
+
+### List storage backends
 
 To list all available StorageBackends in Hub:
 
@@ -454,7 +514,9 @@ query ListTypeInstancesWithAttributesAndTypeRefFilter {
 }
 ```
 
-To see the value for all TypeInstances, query:
+### Get TypeInstance details
+
+To see the value for all TypeInstances, we can use the following query:
 
 ```graphql
 query ListTypeInstances {
@@ -464,7 +526,7 @@ query ListTypeInstances {
       path
       revision
     }
-    lockedBy # resolver which calls proper backend storage service to ask for lock status
+    lockedBy # resolver which calls proper storage backend service to ask for lock status
     latestResourceVersion {
       resourceVersion
       createdBy
@@ -475,12 +537,87 @@ query ListTypeInstances {
         }
       }
       spec {
-        value # resolver which calls proper backend storage service to ask for a given ResourceVersion value
+        value # resolver which calls proper storage backend service to ask for a given ResourceVersion value
+      }
+      backend { # new property
         additionalParameters
       }
     }
-    backend
+    backend { # new property
+      # Initially, we can return only TypeInstance ID
+      """TypeInstance ID"""
+      id
+
+      # Later, we can resolve full details here based on the ID
+      latestResourceVersion {
+        metadata {
+          alias # new field
+        }
+        value # url + additionalParametersSchema
+      }
+      
+    }
   }
+}
+```
+
+### TypeInstance create
+
+```graphql
+input CreateTypeInstanceBackendInput { # New input
+  id: ID # storage backend TypeInstance ID. Optional, as it will fallback to default one if not provided
+
+  additionalParameters: Any # Properties which will be populated into the first Resource Version of the newly created TypeInstance
+}
+
+input CreateTypeInstanceInput {
+  # (...)
+  alias: String
+  value: Any
+
+  backend: CreateTypeInstanceBackendInput # new property
+}
+
+input CreateTypeInstancesInput {
+  typeInstances: [CreateTypeInstanceInput!]!
+  usesRelations: [TypeInstanceUsesRelationInput!]!
+}
+
+type Mutation {
+  createTypeInstances(
+      in: CreateTypeInstancesInput!
+    ): [CreateTypeInstanceOutput!]!
+}
+```
+
+### TypeInstance update
+
+To properly handle TypeInstance update, the following additions to the API need to be made:
+
+```graphql
+input UpdateTypeInstanceBackendInput { # New input
+  additionalParameters: Any
+}
+
+"""
+At least one property needs to be specified.
+"""
+input UpdateTypeInstanceInput {
+  # (...)
+  value: Any
+
+  backend: UpdateTypeInstanceBackendInput # New property
+}
+
+input UpdateTypeInstancesInput {
+  # ...
+
+  id: ID!
+  typeInstance: UpdateTypeInstanceInput!
+}
+
+type Mutation {
+  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
 }
 ```
 
@@ -490,27 +627,29 @@ query ListTypeInstances {
   - Support multiple different TypeInstances for a given projection
   - TypeInstance composition?
 
-## Examples
+<!-- In the first approach IMO we can skip support for multiple different TypeInstances
 
-**TODO:** Add some examples (apart from the one described above)
+Maybe we will need to have sth like Porter has? Mixins for each "backend", e.g. option to https://github.com/MChorfa/porter-helm3#outputs. I saw that they have this pattern also for other "platforms" https://porter.sh/mixins/, maybe we could even reuse it without implementing that on our side.
+
+Unfortunately, it will be on Content Developer side to create a proper pattern for resolution. -->
 
 ## Rejected ideas
 
-#### Registering Storage Backends
+#### Registering storage backends
 
-1. Enforcing convention of having Storage Backend defined as Type with `uri` and `additionalParametersSchema`.
+1. Enforcing convention of having storage backend defined as Type with `uri` and `additionalParametersSchema`.
 
     Initially, we can't enforce such convention. That could be possible if we implement an ability to define validating JSON schema for Type nodes, and use such schemas to validate Type values which define `additionalRefs`. For example, the `cap.core.hub.storage` node could have JSON Schema defined, which validates Type values (JSON schema) attached to such node. In the end, that would be JSON schema validating another JSON schema.
     
     **Reason:** It is possible, but it's complex and brings too little benefits for now to implement it.
 
-1. Using Global / Action Policy to specify the default Storage Backend.
+1. Using Global / Action Policy to specify the default storage backend.
 
-    The benefit is that we could enforce empty or optional `additionalParameters` for such default Storage Backend.
+    The benefit is that we could enforce empty or optional `additionalParameters` for such default storage backend.
 
     **Reason:** The Policy is already too big.
 
-1. Adding optional `TypeInstance.metadata.name` or `alias`, which is unique across all TypeInstances and immutable regardless resourceVersion. It would allow easier referencing Storage Backends in the `TypeInstance.spec.backend` field:
+1. Adding optional `TypeInstance.metadata.name` or `alias`, which is unique across all TypeInstances and immutable regardless resourceVersion. It would allow easier referencing storage backends in the `TypeInstance.spec.backend` field:
 
     ```yaml
     id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16
@@ -522,17 +661,17 @@ query ListTypeInstances {
     latestResourceVersion:
        #...
     backend: capact-postgresql # immutable - contains TypeInstance ID or unique alias
-      # if not provided, fallback to default one 
+      # if not provided, fallback to default one during TypeInstance creation
     ```
 
-    **Reason:** It is not really needed as we can use unique IDs to reference such backends. Also, we can expose GraphQL API which resolves details of a given Storage Backend based on the ID.
+    **Reason:** It is not really needed as we can use unique IDs to reference such backends. Also, we can expose GraphQL API which resolves details of a given storage backend based on the ID.
 
-1. Dedicated entity of BackendStorage
+1. Dedicated entity of StorageBackend
 
     Such resource could reside in Local Hub, but it wouldn't be an OCF manifest. Cluster Admin should be able to manage them via GraphQL API, CLI and UI.
 
     **Reasons:**
-    - We would still need some kind of BackendStorage templates (with `additionalParametersSchema` JSON schema) in public Hub
+    - We would still need some kind of StorageBackend templates (with `additionalParametersSchema` JSON schema) in public Hub
     - How we would be able to output such as a result of an Action? It could be done in a hacky way to output it as a side effect of running Action (not explicitly), but that would be definitely not elegant
     - We would need to have additional API
 
