@@ -8,6 +8,6 @@ version: 0.5.0
 
 dependencies:
   - name: neo4j
-    version: "v4.2.0-1"
+    version: "v4.4.0"
     repository: https://neo4j-contrib.github.io/neo4j-helm/
     condition: neo4j.enabled

@@ -8,8 +8,8 @@ neo4j:
       limits:
         cpu: 400m
         memory: 2048Mi
-  image: ghcr.io/capactio/neo4j
-  imageTag: 4.2.8-apoc
+  image: neo4j
+  imageTag: 4.4.1-community
   neo4jPassword: okon
   readinessProbe:
     initialDelaySeconds: 10
