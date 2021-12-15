@@ -2,19 +2,18 @@ package capact
 
 import (
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 )
 
-// retryForFn retries failed function 4 times. The exponential retries are used: ~102ms ~302ms ~700ms 1.5s
-func retryForFn(fn retry.RetryableFunc) error {
-	err := retry.Do(
-		fn,
-		retry.Attempts(5),
+// retryForFn retries failed function 5 times. The exponential retries are used: ~102ms ~302ms ~700ms 1.5s
+func retryForFn(fn retry.RetryableFunc, customOpts ...retry.Option) error {
+	opts := []retry.Option{
+		retry.Attempts(10),
 		retry.DelayType(retry.BackOffDelay),
-	)
-	if err != nil {
-		return errors.Wrap(err, "while waiting")
 	}
+	opts = append(opts, customOpts...)
 
-	return nil
+	return retry.Do(
+		fn,
+		opts...,
+	)
 }
