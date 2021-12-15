@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/avast/retry-go"
 	"github.com/jetstack/cert-manager/pkg/api/util"
 	certv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	certmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
@@ -12,7 +13,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/retry"
+	k8sretry "k8s.io/client-go/util/retry"
 )
 
 // ApplyClusterIssuer creates or, if it already exists, updates a ClusterIssuer for cert-manager.
@@ -23,12 +24,36 @@ func ApplyClusterIssuer(ctx context.Context, config *rest.Config, new *certv1.Cl
 	}
 
 	cli := clientset.ClusterIssuers()
-	_, err = cli.Create(ctx, new, metav1.CreateOptions{})
-	if !apierrors.IsAlreadyExists(err) {
-		return err
+	err = retryCreatingClusterIssuer(ctx, cli, new)
+	if err != nil {
+		if !apierrors.IsAlreadyExists(err) {
+			return err
+		}
+
+		err = retryUpdatingClusterIssuer(ctx, cli, new)
+		if err != nil {
+			return errors.Wrapf(err, "while updating the ClusterIssuer %s", new.Name)
+		}
 	}
 
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	return waitForClusterIssuer(ctx, cli, new.Name)
+}
+
+func retryCreatingClusterIssuer(ctx context.Context, cli certmanager.ClusterIssuerInterface, new *certv1.ClusterIssuer) error {
+	return retryForFn(
+		func() error {
+			_, err := cli.Create(ctx, new, metav1.CreateOptions{})
+			return err
+		},
+		retry.RetryIf(func(err error) bool {
+			return !apierrors.IsAlreadyExists(err)
+		}),
+		retry.LastErrorOnly(true),
+	)
+}
+
+func retryUpdatingClusterIssuer(ctx context.Context, cli certmanager.ClusterIssuerInterface, new *certv1.ClusterIssuer) error {
+	return k8sretry.RetryOnConflict(k8sretry.DefaultRetry, func() error {
 		old, err := cli.Get(ctx, new.Name, metav1.GetOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "while getting the ClusterIssuer %s", old.Name)
@@ -38,11 +63,6 @@ func ApplyClusterIssuer(ctx context.Context, config *rest.Config, new *certv1.Cl
 		_, updateErr := cli.Update(ctx, old, metav1.UpdateOptions{})
 		return updateErr
 	})
-	if retryErr != nil {
-		return errors.Wrapf(retryErr, "while updating the ClusterIssuer %s", new.Name)
-	}
-
-	return waitForClusterIssuer(ctx, cli, new.Name)
 }
 
 func waitForClusterIssuer(ctx context.Context, cli certmanager.ClusterIssuerInterface, name string) error {
