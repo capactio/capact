@@ -10,6 +10,7 @@ neo4j:
         memory: 2048Mi
   image: neo4j
   imageTag: 4.4.1-community
+  plugins: "[\"apoc\"]"
   neo4jPassword: okon
   readinessProbe:
     initialDelaySeconds: 10
