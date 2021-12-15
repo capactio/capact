@@ -374,9 +374,24 @@ Also, the additional, nice-to-have goals are:
     1. Hub validates whether the storage backend accepts TypeInstance value (`acceptValue` property). If not, and the value has been provided, it returns error.
     1. Hub calls the registered storage backend service `onCreate` hook:
 
-        ```javascript
-        // TODO: Pseudocode, change to actual HTTP requests / ProtoBuf definition
-        onCreate(typeInstanceID, additionalParameters?, value?): (additionalParameters?, error)
+        ```proto
+        message TypeInstanceData {
+          string id = 1;
+          google.protobuf.Any value = 2;
+        }
+
+        message OnCreateRequest {
+          TypeInstanceData typeinstance = 1;
+          google.protobuf.Any additional_parameters = 2;
+        }
+
+        message OnCreateResponse {
+          google.protobuf.Any additional_parameters = 1;
+        }
+
+        service SearchService {
+          rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
+        }
         ```
 
         This hook can mutate `additionalParameters`.
@@ -419,40 +434,112 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
 
 1.  The registered storage backend service needs to implement the following gRPC + Protocol Buffers API:
 
-    TODO: Pseudocode, change to actual HTTP requests / ProtoBuf definition
+    <details> <summary>Protocol Buffers definition</summary>
 
     ```proto
     syntax = "proto3";
+    option go_package = "./";
+    package storagebackend;
 
-    service StorageBackendService {
-    rpc Search(SearchRequest) returns (SearchResponse);
+    import "google/protobuf/any.proto";
+
+    message TypeInstanceResourceVersion {
+      uint32 resource_version = 1;
+      google.protobuf.Any value = 2;
     }
 
-    // TypeInstance ResourceVersion value
-    getValue(typeInstanceID, additionalParameters?, resourceVersion): (value, error)
+    message TypeInstance {
+      string id = 1;
 
-    onCreate(typeInstanceID, additionalParameters?, value?): (additionalParameters?, error)
+      TypeInstanceResourceVersion resource_version = 2;
+    }
 
-    onUpdate(
-      typeInstanceID,
-      old: {additionalParameters?, resourceVersion},
-      new: {additionalParameters?, resourceVersion},
-      ): (additionalParameters?, error)
+    message OnCreateRequest {
+      TypeInstance typeinstance = 1;
+      google.protobuf.Any additional_parameters = 2;
+    }
 
-    onDelete(typeInstanceID, additionalParameters?) error
+    message OnCreateResponse {
+      google.protobuf.Any additional_parameters = 1;
+    }
 
-    // TypeInstance locking 
-    lockedBy(typeInstanceID, additionalParameters?) (string, error)
-    onLock(typeInstanceID, additionalParameters?) error
-    onUnlock(typeInstanceID, additionalParameters?) error
+    message OnUpdateData {
+      TypeInstanceResourceVersion resource_version = 1;
+      google.protobuf.Any additional_parameters = 2;
+    }
+
+    message OnUpdateRequest {
+      string typeinstance_id = 1;
+      
+      OnUpdateData old_data = 2;
+      OnUpdateData new_data = 3;
+    }
+
+    message OnUpdateResponse {
+      google.protobuf.Any additional_parameters = 1;
+    }
+
+    message OnDeleteRequest {
+      string typeinstance_id = 1;
+      google.protobuf.Any additional_parameters = 2;
+    }
+
+    message OnDeleteResponse {}
+
+    message GetValueRequest {
+      string typeinstance_id = 1;
+      string resource_version_id = 2;
+      google.protobuf.Any additional_parameters = 3;
+    }
+
+    message GetValueResponse {
+      google.protobuf.Any value = 1;
+    }
+
+
+    // lock messages
+
+    message GetLockedByRequest {
+      string typeinstance_id = 1;
+      google.protobuf.Any additional_parameters = 2;
+    }
+
+    message GetLockedByResponse {
+      string locked_by = 1;
+    }
+
+    message OnLockUnlockRequest {
+      string typeinstance_id = 1;
+      google.protobuf.Any additional_parameters = 2;
+      string locked_by = 3;
+    }
+
+    message OnLockUnlockResponse {}
+
+    // services
+
+    service StorageBackend {
+      // value
+      rpc GetValue(GetValueRequest) returns (GetValueResponse);
+      rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
+      rpc OnUpdate(OnUpdateRequest) returns (OnUpdateResponse);
+      rpc OnDelete(OnDeleteRequest) returns (OnDeleteResponse);
+
+      // lock
+      rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
+      rpc OnLock(OnLockUnlockRequest) returns (OnLockUnlockResponse);
+      rpc OnUnlock(OnLockUnlockRequest) returns (OnLockUnlockResponse);
+    } 
     ```
 
-  An implementation of such service may vary between two use cases:
+    </details>
 
-  1. CRUD operations on output TypeInstance actually manages external resource (e.g. Vault) -> onCreate, onUpdate, and onDelete actually creates, updates and deletes a given resource.
-  1. output TypeInstance represents external resources managed in different way (e.g. via Capact actions - like Helm Runner). IMO we shouldn't move actual Helm release installation to TypeInstance "constructor").
+    An implementation of such service may vary between two use cases:
 
-      - The service can also implement watch for external resources (e.g. Kubernetes secrets) and call `createTypeInstances` and `deleteTypeInstances` Hub mutations. We may provide Go framework to speed up such development, similarly as we have with Runner concept.
+    1. CRUD operations on output TypeInstance actually manages external resource (e.g. Vault) -> onCreate, onUpdate, and onDelete actually creates, updates and deletes a given resource.
+    1. output TypeInstance represents external resources managed in different way (e.g. via Capact actions - like Helm Runner). IMO we shouldn't move actual Helm release installation to TypeInstance "constructor").
+
+        - The service can also implement watch for external resources (e.g. Kubernetes secrets) and call `createTypeInstances` and `deleteTypeInstances` Hub mutations. We may provide Go framework to speed up such development, similarly as we have with Runner concept.
 
 1. The service could be implemented using one of the following solutions, or other alternatives:
 
