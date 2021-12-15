@@ -98,15 +98,12 @@ Also, the additional, nice-to-have goals are:
 1. We implement these two Type features:
     - https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes
     - https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes
-
-1. (Optional) We add optional `TypeInstance.metadata.name`, which is **unique across all TypeInstances** and immutable regardless resourceVersion. See similar issue: [#579](https://github.com/capactio/capact/issues/579)
 1. We add `TypeInstance.spec.backend` field (string)
+1. **Optional:** [Add TypeInstance `alias`/`description` metadata field](https://github.com/capactio/capact/issues/579)
 
 ## Registering Storage Backends
 
 1. For every Storage Backend, we create a dedicated Type:
-
-    It should follow convention of having `url` and `additionalParametersSchema` fields.
 
     ```yaml
     ocfVersion: 0.0.1
@@ -159,7 +156,9 @@ Also, the additional, nice-to-have goals are:
       }
     ```
 
-    **TODO:** How we can enforce such convention? Type composition?
+    It should follow the convention of having `url` and `additionalParametersSchema` fields. As `additionalParameters` are optional, the `additionalParametersSchema` field is nullable.
+
+    > **NOTE:** In the nearest future, such convention won't be enforced by any validation around that. See the [Rejected ideas](#rejected-ideas) section to learn why such validation idea was rejected.
 
 1. To install new Storage Backend, Cluster Admin has two options:
 
@@ -170,13 +169,12 @@ Also, the additional, nice-to-have goals are:
       
       ```yaml
       id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16
-      metadata:
-        name: helm-storage
       typeRef:
         path: cap.type.helm.storage
         revision: 0.1.0
       latestResourceVersion:
         metadata:
+          alias: helm-storage
           attributes:
           - path: cap.core.attribute.hub.storage.backend # related to GrapHQL implementation
             revision: 0.1.0
@@ -201,22 +199,20 @@ Also, the additional, nice-to-have goals are:
             },
             "additionalProperties": false
           }
-      backend: capact-redis # immutable - contains TypeInstance ID or unique alias
-        # if not provided, fallback to default one 
+      backend: a36ed738-dfe7-45ec-acd1-8e44e8db893b # immutable - contains TypeInstance ID
+      # if not provided during TypeInstance creation, fallback to default one 
       ```
 
 1. In fresh Capact installation, there is one TypeInstance already preregistered:
 
-    **TODO:** Would Redis be really the default storage? Probably PostgreSQL will be better, as we treat it as a "builtin" Backend as well (to store Attributes, relations, etc.)
-
     ```yaml
     id: a36ed738-dfe7-45ec-acd1-8e44e8db893b
-    name: capact-redis
     typeRef:
-        path: cap.core.type.hub.storage.redis
+        path: cap.core.type.hub.storage.postgresql
         revision: 0.1.0
     latestResourceVersion:
       metadata:
+        alias: capact-postgresql
         attributes:
         - path: cap.core.attribute.default # if more such Typeinstances with default Attribute, select first one
           revision: 0.1.0 
@@ -225,12 +221,11 @@ Also, the additional, nice-to-have goals are:
       value:
         url: "storagebackend-handlers.capact-system:50051"
         additionalParameters: null
-    backend: builtin # the storage option which stores already all other metadata. It could be the same Redis instance
+    backend: builtin # Special keyword which specifies the storage option which stores already all other metadata. Effectively, it would be the same database as the PostgreSQL accessed via Capact Storage Backend service (`storagebackend-handlers.capact-system:50051`), but accessed directly.
     ```
 
-    Default storage backend should have `additionalParameters` empty, or, optional.
-
-    **TODO:** How to enforce that default backend doesn't have any additionalParameters needed? Maybe we shouldn't enforce that at all, as there could be additionalParameters, but not required. We could enforce that if it is implemented on Policy level...
+    - The one preregistered Storage Backend is Capact PostgreSQL. It uses special value of the `backend` property: `builtin`. This is a reserved system keyword and user cannot create a TypeInstance with such. To use Capact PostgreSQL, the `capact-postgresql` TypeInstance ID has to be referenced as a backend.
+    - Default storage backend should have `additionalParameters` empty (`null`) or optional, in order to work properly.
 
 ## Workflow syntax - Create
 
@@ -503,9 +498,34 @@ query ListTypeInstances {
 
 #### Registering Storage Backends
 
-1. Using Global / Action Policy to specify the default Storage Backend
+1. Enforcing convention of having Storage Backend defined as Type with `uri` and `additionalParametersSchema`.
+
+    Initially, we can't enforce such convention. That could be possible if we implement an ability to define validating JSON schema for Type nodes, and use such schemas to validate Type values which define `additionalRefs`. For example, the `cap.core.hub.storage` node could have JSON Schema defined, which validates Type values (JSON schema) attached to such node. In the end, that would be JSON schema validating another JSON schema.
+    
+    **Reason:** It is possible, but it's complex and brings too little benefits for now to implement it.
+
+1. Using Global / Action Policy to specify the default Storage Backend.
+
+    The benefit is that we could enforce empty or optional `additionalParameters` for such default Storage Backend.
 
     **Reason:** The Policy is already too big.
+
+1. Adding optional `TypeInstance.metadata.name` or `alias`, which is unique across all TypeInstances and immutable regardless resourceVersion. It would allow easier referencing Storage Backends in the `TypeInstance.spec.backend` field:
+
+    ```yaml
+    id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16
+    metadata:
+      name: helm-storage
+    typeRef:
+      path: cap.type.helm.storage
+      revision: 0.1.0
+    latestResourceVersion:
+       #...
+    backend: capact-postgresql # immutable - contains TypeInstance ID or unique alias
+      # if not provided, fallback to default one 
+    ```
+
+    **Reason:** It is not really needed as we can use unique IDs to reference such backends. Also, we can expose GraphQL API which resolves details of a given Storage Backend based on the ID.
 
 1. Dedicated entity of BackendStorage
 
