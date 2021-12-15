@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+type getManifestFun func(cfg *InterfaceConfig) (*templatingConfig, error)
+
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
 	cfgs := make([]*templatingConfig, 0, 4)
@@ -37,6 +39,48 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error)
 	}
 	cfgs = append(cfgs, outputTypeCfg)
 
+	generated, err := generateManifests(cfgs)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating manifests")
+	}
+
+	result := make(map[string]string, len(generated))
+
+	for _, m := range generated {
+		metadata, err := unmarshalMetadata([]byte(m))
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting metadata for manifest")
+		}
+
+		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
+
+		result[manifestPath] = m
+	}
+
+	return result, nil
+}
+
+func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
+	return generateFile(cfg, []getManifestFun{getInterfaceTemplatingConfig})
+}
+
+func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
+	return generateFile(cfg, []getManifestFun{getInterfaceGroupTemplatingConfig})
+}
+
+func GenerateTypeTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
+	return generateFile(cfg, []getManifestFun{getInterfaceInputTypeTemplatingConfig, getInterfaceOutputTypeTemplatingConfig})
+}
+
+func generateFile(cfg *InterfaceConfig, fn []getManifestFun) (map[string]string, error) {
+	cfgs := make([]*templatingConfig, 0, 4)
+	for _, fun := range fn {
+		interfaceCfg, err := fun(cfg)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting Interface templating config")
+		}
+		cfgs = append(cfgs, interfaceCfg)
+	}
 	generated, err := generateManifests(cfgs)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating manifests")

@@ -1,7 +1,9 @@
-package manifestgen
+package _interface
 
 import (
 	"strings"
+
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
@@ -63,4 +65,46 @@ func NewInterface() *cobra.Command {
 	cmd.Flags().StringVarP(&interfaceCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Interface manifest")
 
 	return cmd
+}
+
+func GenerateInterfaceFile(opts common.ManifestGenOptions) error {
+	var interfaceCfg manifestgen.InterfaceConfig
+	interfaceCfg.ManifestPath = opts.ManifestPath
+	files, err := manifestgen.GenerateInterfaceTemplatingConfig(&interfaceCfg)
+	if err != nil {
+		return errors.Wrap(err, "while generating content files")
+	}
+
+	if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
+		return errors.Wrap(err, "while writing manifest files")
+	}
+	return nil
+}
+
+func GenerateInterfaceGroupFile(opts common.ManifestGenOptions) error {
+	var interfaceCfg manifestgen.InterfaceConfig
+	interfaceCfg.ManifestPath = opts.ManifestPath
+	files, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceCfg)
+	if err != nil {
+		return errors.Wrap(err, "while generating content files")
+	}
+
+	if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
+		return errors.Wrap(err, "while writing manifest files")
+	}
+	return nil
+}
+
+func GenerateTypeFile(opts common.ManifestGenOptions) error {
+	var interfaceCfg manifestgen.InterfaceConfig
+	interfaceCfg.ManifestPath = opts.ManifestPath
+	files, err := manifestgen.GenerateTypeTemplatingConfig(&interfaceCfg)
+	if err != nil {
+		return errors.Wrap(err, "while generating content files")
+	}
+
+	if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
+		return errors.Wrap(err, "while writing manifest files")
+	}
+	return nil
 }
