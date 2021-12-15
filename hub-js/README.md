@@ -31,7 +31,7 @@ docker run -d \
   -e "NEO4J_AUTH=neo4j/okon" \
   -e "NEO4JLABS_PLUGINS=[\"apoc\"]" \
   --name hub-neo4j-instance \
-  neo4j:4.2.3
+  neo4j:4.4.1-community
 ```
 
 When you are done, remove the Docker container:
