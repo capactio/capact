@@ -110,7 +110,6 @@ Also, the additional, nice-to-have goals are:
     - https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes
 1. We add `TypeInstance.spec.backend` field (string)
 1. [Add TypeInstance `alias` metadata field](https://github.com/capactio/capact/issues/579)
-    - Optional until we want to implement the [dynamic TypeInstance projections](#dynamic-typeinstance-projections) according to the proposal
 
 ## Registering storage backends
 
@@ -1127,15 +1126,34 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 
 ## Consequences
 
-Once approved, these are the consequences:
+Once approved, we need to address the following list of items:
 
-**TODO: Write consequences**
-
-
-- Not documented convention on having runners which produce templatized `additionalOutput` is dropped
-- All Implementations are adjusted to the latest workflow syntax
+1. Implement these two Type features:
+    - https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes
+    - https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes
+1. Add `TypeInstance.spec.backend` field (string)
+1. Add [TypeInstance `alias` metadata field](https://github.com/capactio/capact/issues/579)  
+    - Optional until we want to implement the [dynamic TypeInstance projections(#dynamic-typeinstance-projections) according to the proposal
+1. Rewrite Local Hub to Go
+   - Make Local Hub to use PostgreSQL
+   - Extend GraphQL API
+   - (Optional) Rewrite it to Go - in the meantime we can implement our own resolvers in TypeScript
+1. Implement Go Template storage backend services:
+  - default storage backend service for PostgreSQL
+  - service for TypeInstance projection
+  - At the very beginning it can be simplified to built-in database driver in Local Hub. Later we can implement the gRPC+ProtoBuf external service concept
+1. Adjust all Implementations to use latest workflow syntax (Argo workflows artifact content):
+  - Use dynamic TypeInstance projection for output TypeInstances
   - We can try to keep backward compatibility if needed and for older manifests still treat whole Argo artifacts as TypeInstance value
-  - All output TypeInstances are
-- Implement TypeInstance backend delegation
-
-  As a mid-term solution, we may simplify Storage Backend implementation. In first iteration, we can stick with fixed Storage Backends implementation as a part of Capact Hub code.
+  - In case of backward compatibility we can adjust just a few manifests for showcase purposes
+1. Handle multiple backends for the TypeInstance upload from workflow
+  - Extend `capact-outputTypeInstances` syntax
+  - Set proper `uses` relations between storage backend TypeInstance and other TypeInstances
+  - Modify TypeInstance create/update/delete images (named as "Argo actions") to take new input
+1. Update Policy
+  - Add new properties
+  - Handle common TypeInstance injections
+1. Update documentation 
+  - Policy
+  - Content Development guide
+  - Type features
