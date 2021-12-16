@@ -25,7 +25,7 @@ This document describes the way how we will approach dynamic, external data for 
   * [TypeInstance create](#typeinstance-create)
   * [TypeInstance update](#typeinstance-update)
 - [Dynamic TypeInstance projections](#dynamic-typeinstance-projections)
-  * [Problem](#problem)
+  * [Introduction](#introduction)
   * [Go Template backend storage](#go-template-backend-storage)
   * [Helm runner templating](#helm-runner-templating)
 - [Rejected ideas](#rejected-ideas)
@@ -33,6 +33,9 @@ This document describes the way how we will approach dynamic, external data for 
   * [Workflow syntax](#workflow-syntax)
   * [Storage backend service implementation](#storage-backend-service-implementation-1)
   * [Configuring default storage backends](#configuring-default-storage-backends-1)
+- [Potential future evolution](#potential-future-evolution)
+  * [Key points](#key-points)
+  * [Summary](#summary)
 - [Consequences](#consequences)
 
 <!-- tocstop -->
@@ -786,7 +789,7 @@ type Mutation {
 
 ## Dynamic TypeInstance projections
 
-### Problem
+### Introduction
 
 In Capact manifests, there is another common pattern. Apart from TypeInstances describing external resources, there are TypeInstances which unify output based on related TypeInstances.
 
@@ -1123,6 +1126,30 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 1. Using the `cap.*` rule to define common TypeInstance injection
 
   **Reason**: That would be too difficult to understand for System Administrator and System User. Additional property seem as better solution.
+
+## Potential future evolution
+
+There is another concept, where storage backend service handles both CRUD operations for TypeInstances and external resources. For example, Helm backend service would manage Helm Releases. Underneath it could use Helm operator.
+
+### Key points
+- Get rid of current runners and rework them to asynchronous services which manage resources
+- Synchronous gRPC + Protobuf API
+- There should be still a container which passes inputs to the async service and waits for completion:
+  - Periodically polling status of the async task from the service.
+  - We need runner-specific Capact manifests to have proper Interface with Input/Output Types (for example, separate manifests for installing Helm charts, Terraform apply etc.)
+  - We can have one generic Docker image.
+- At current state, in a result, the Argo workflow would be most time-consuming on the TypeInstance creation (upload) step.
+  - To solve that, we would need to upload TypeInstances during workflow:
+    - It would make sense as we want to save the TypeInstances for failed workflows anyway. See the [related issue](https://github.com/capactio/capact/issues/563).
+    - To upload the TypeInstance into Hub:
+      - Use dedicated Action in workflow
+      - Or, The service could upload TypeInstance directly and pass its ID into workflow.
+  - (Rejected) Or, we would need to implement our own workflow progress reporting.
+
+### Summary
+
+Initially, I backed off from this idea as it seemed to me as too invasive. 
+While this idea seem to have a potential, I wasn't able to fully think the idea through. It definitely brings additional problems to solve, apart from the one described within this proposal. Fortunately, most of the solutions described in this document would be also applicable to the future evolution of the concept, so this topic could be continued in future.
 
 ## Consequences
 
