@@ -24,6 +24,9 @@ This document describes the way how we will approach dynamic, external data for 
   * [TypeInstance create](#typeinstance-create)
   * [TypeInstance update](#typeinstance-update)
 - [Dynamic TypeInstance projections](#dynamic-typeinstance-projections)
+  * [Problem](#problem)
+  * [Go Template backend storage](#go-template-backend-storage)
+  * [Helm runner templating](#helm-runner-templating)
 - [Rejected ideas](#rejected-ideas)
     + [Registering storage backends](#registering-storage-backends-1)
     + [Workflow syntax](#workflow-syntax)
@@ -104,7 +107,8 @@ Also, the additional, nice-to-have goals are:
     - https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes
     - https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes
 1. We add `TypeInstance.spec.backend` field (string)
-1. **Optional:** [Add TypeInstance `alias`/`description` metadata field](https://github.com/capactio/capact/issues/579)
+1. [Add TypeInstance `alias` metadata field](https://github.com/capactio/capact/issues/579)
+    - Optional until we want to implement the [dynamic TypeInstance projections](#dynamic-typeinstance-projections) according to the proposal
 
 ## Registering storage backends
 
@@ -118,12 +122,11 @@ Also, the additional, nice-to-have goals are:
       path: cap.type.helm.storage
     spec:
       additionalRefs:
-        - "cap.core.hub.storage" 
+        - "cap.core.type.hub.storage" 
       jsonSchema:
         value: # JSON schema with:
           {
           "$schema": "http://json-schema.org/draft-07/schema",
-          "$id": "http://example.com/example.json",
           "type": "object",
           "title": "The root schema",
           "required": [
@@ -138,7 +141,7 @@ Also, the additional, nice-to-have goals are:
             },
             "additionalParametersSchema": { # JSON schema which describes additional properties passed in Capact workflow
               "const": { # see http://json-schema.org/draft/2019-09/json-schema-validation.html#rfc.section.6.1.3
-                "$id": "#/properties/additionalParameters",
+                "$schema": "http://json-schema.org/draft-07/schema",
                 "type": "object",
                 "required": [
                   "name",
@@ -194,25 +197,26 @@ Also, the additional, nice-to-have goals are:
         value:
           url: "helm-release.default:50051"
           acceptValue: false
-          additionalParametersSchema: {
-            "$id": "#/properties/additionalParametersSchema",
-            "type": "object",
-            "required": [
-              "name",
-              "namespace"
-            ],
-            "properties": {
-              "name": {
-                "$id": "#/properties/additionalParametersSchema/properties/name",
-                "type": "string"
+          additionalParametersSchema: |-
+            {
+              "$id": "#/properties/additionalParametersSchema",
+              "type": "object",
+              "required": [
+                "name",
+                "namespace"
+              ],
+              "properties": {
+                "name": {
+                  "$id": "#/properties/additionalParametersSchema/properties/name",
+                  "type": "string"
+                },
+                "namespace": {
+                  "$id": "#/properties/additionalParametersSchema/properties/namespace",
+                  "type": "string"
+                }
               },
-              "namespace": {
-                "$id": "#/properties/additionalParametersSchema/properties/namespace",
-                "type": "string"
-              }
-            },
-            "additionalProperties": false
-          }
+              "additionalProperties": false
+            }
       backend:
         id: "a36ed738-dfe7-45ec-acd1-8e44e8db893b" # new immutable property - contains TypeInstance ID
           # if not provided during TypeInstance creation, fallback to default one (get TypeInstance with proper Attribute and write its ID in this property)
@@ -234,14 +238,19 @@ Also, the additional, nice-to-have goals are:
         - path: cap.core.attribute.hub.storage.backend
           revision: 0.1.0
       value:
-        url: "storagebackend-handlers.capact-system:50051"
+        url: "storagebackend-postgresql.capact-system:50051"
         acceptValue: true
         additionalParametersSchema: null
     backend: 
       abstract: true # Special keyword which specifies the built-in storage option which stores already all other metadata. Effectively, it would be the same database as the PostgreSQL accessed via Capact storage backend service (`storagebackend-handlers.capact-system:50051`), but accessed directly.
     ```
 
-    - The one preregistered storage backend is Capact PostgreSQL. It uses special `backend` property: `abstract: true`. This is a reserved system keyword and user cannot create a TypeInstance with such. To use Capact PostgreSQL, the `capact-postgresql` TypeInstance ID has to be referenced as a backend.
+    - The one preregistered storage backend is Capact PostgreSQL. It uses special `backend` property: `abstract: true`.
+    
+      To use Capact PostgreSQL in workflows, the `capact-postgresql` TypeInstance ID has to be referenced as a backend in workflow syntax.
+    
+      User is allowed to create TypeInstance with such property, however this is considered as advanced usage. If this will be overused, in future, we can restrict creating TypeInstances with such property by any user and keep it as a reserved system keyword.
+      
     - Default storage backend should have `additionalParameters` empty (`null`) or optional, in order to work properly.
       
       We can validate that using custom logic in TypeInstance validation. When User wants to add the `cap.core.attribute.hub.storage.default` Attribute we can see if the `additionalParameters` meet our conditions and if not, prevent such change.
@@ -400,7 +409,7 @@ Also, the additional, nice-to-have goals are:
     1. Saves TypeInstance metadata in the core Hub storage backend, which contains all metadata of the TypeInstances and  theirs relations.
 
       ``` yaml
-      id: # generated UUID
+      id: 5d925774-55d3-4c74-8ecb-c984ea7ef636
       typeRef:
         path: cap.core.type.hub.storage.redis
         revision: 0.1.0
@@ -722,15 +731,258 @@ type Mutation {
 
 ## Dynamic TypeInstance projections
 
-**TODO:** Figure out how to solve problem with static TypeInstances like `mattermost-config`:
-  - Support multiple different TypeInstances for a given projection
-  - TypeInstance composition?
+### Problem
 
-<!-- In the first approach IMO we can skip support for multiple different TypeInstances
+In Capact manifests, there is another common pattern. Apart from TypeInstances describing external resources, there are TypeInstances which unify output based on related TypeInstances.
 
-Maybe we will need to have sth like Porter has? Mixins for each "backend", e.g. option to https://github.com/MChorfa/porter-helm3#outputs. I saw that they have this pattern also for other "platforms" https://porter.sh/mixins/, maybe we could even reuse it without implementing that on our side.
+For example:
+- The `cap.interface.database.postgresql.install` Interface produces PostgreSQL Config TypeInstance, which contains data from a Helm release or AWS RDS for PostgreSQL Instance.
+- The `cap.interface.productivity.mattermost.install` Interface produces Mattermost Config TypeInstance, which contains data from Mattermost Helm release.
 
-Unfortunately, it will be on Content Developer side to create a proper pattern for resolution. -->
+There could be some cases where the output TypeInstance represents data gathered from multiple related TypeInstances. For example, a Kubernetes cluster TypeInstance could contain data from Terraform TypeInstance, and also a separate Kubeconfig TypeInstance.
+
+To avoid implementing a special storage backend service every time we have such case, we introduce a dedicated storage backend for convenience.
+
+### Go Template backend storage
+
+1. The following manifests will needed to register such backend storage:
+
+    <details> <summary><code>cap.core.type.hub.storage.gotemplate</code> Type</summary>
+
+    ```yaml
+    ocfVersion: 0.0.1
+    revision: 0.0.1
+    kind: Type
+    metadata:
+      path: cap.core.type.hub.storage.gotemplate
+    spec:
+      additionalRefs: [] # additionalRef not needed if it resides under `cap.core.type.hub.storage`
+      jsonSchema:
+        value: # JSON schema with:
+          {
+          "$schema": "http://json-schema.org/draft-07/schema",
+          "type": "object",
+          "title": "The root schema",
+          "required": [
+            "url",
+            "additionalParametersSchema"
+          ],
+          "properties": {
+            "url": { # url of hosted app, which implements storage backend ProtocolBuffers interface.
+              "$id": "#/properties/url",
+              "type": "string",
+              "format": "uri"
+            },
+            "additionalParametersSchema": { # JSON schema which describes additional properties passed in Capact workflow
+              "const": { # see http://json-schema.org/draft/2019-09/json-schema-validation.html#rfc.section.6.1.3
+                {
+                  "$schema": "http://json-schema.org/draft-07/schema",
+                  "type": "object",
+                  "default": {},
+                  "examples": [
+                    {
+                      "template" "username: '{{ .username }}'\npassword: '{{ .password }}'"
+                      "variables": {
+                        "foo": {
+                          "relatedTypeInstanceAlias": "alias"
+                        },
+                        "bar": {
+                          "typeInstanceID": "uuid"
+                        }
+                      }
+                    }
+                  ],
+                  "required": [
+                    "variables",
+                    "template"
+                  ],
+                  "properties": {
+                    "template": {
+                    "$id": "#/properties/template",
+                      "type": "string"
+                    },
+                    "variables": {
+                      "$id": "#/properties/variables",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^[a-zA-Z0-9]*$": {
+                          "type": "object",
+                          "properties": {
+                              "typeInstanceID": {
+                                "type": "string"
+                              },
+                              "relatedTypeInstanceAlias": {
+                                "type": "string"
+                              }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }        
+              }
+            },
+            "acceptValue": { # specifies if a given storage backend (app) accepts TypeInstance value while creating/updating TypeInstance, or just additionalParameters
+              "$id": "#/properties/acceptValue",
+              "type": "boolean",
+              "const": true # in this case - no
+            },
+          },
+          "additionalProperties": false
+        }
+    ```
+
+    </details>
+
+    <details> <summary><code>cap.core.type.hub.storage.gotemplate</code> TypeInstance</summary>
+
+    ```yaml
+    id: abd48b8c-99bd-40a7-99c0-047bd69f1db8
+    typeRef:
+        path: cap.core.type.hub.storage.gotemplate
+        revision: 0.1.0
+    latestResourceVersion:
+      metadata:
+        alias: capact-gotemplate
+        attributes:
+        - path: cap.core.attribute.hub.storage.backend
+          revision: 0.1.0
+      value:
+        url: "storagebackend-gotemplate.capact-system:50051"
+        acceptValue: true
+        additionalParametersSchema: |-
+          {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "type": "object",
+            "default": {},
+            "examples": [
+              {
+                "template" "username: '{{ .username }}'\npassword: '{{ .password }}'"
+                "variables": {
+                  "foo": {
+                    "relatedTypeInstanceAlias": "alias"
+                  },
+                  "bar": {
+                    "typeInstanceID": "uuid"
+                  }
+                }
+              }
+            ],
+            "required": [
+              "variables",
+              "template"
+            ],
+            "properties": {
+              "template": {
+              "$id": "#/properties/template",
+                "type": "string"
+              },
+              "variables": {
+                "$id": "#/properties/variables",
+                "type": "object",
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^[a-zA-Z0-9]*$": {
+                    "type": "object",
+                    "properties": {
+                      "typeInstanceID": {
+                        "type": "string"
+                      },
+                      "relatedTypeInstanceAlias": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+    backend: 
+      abstract: true # Special keyword which specifies the built-in storage option which stores already all other metadata. Effectively, it would be the same database as the PostgreSQL accessed via Capact storage backend service (`storagebackend-handlers.capact-system:50051`), but accessed directly.
+    ```
+
+    </details>
+
+1. Content Developer can define an Argo artifact:
+
+    ```yaml
+    backend:
+      additionalParameters:
+        template: |-
+          host: "{{ index .mattermost.values.ingress.hosts 0 }}"
+          version: "{{ .mattermost.values.image.tag }}"
+        variables:
+          mattermost:
+            # Reference by `metadata.alias` of the TypeInstance
+            # The TypeInstance must be in the `uses` tree
+            # Based on the alias the storage backend will resolve ID and return it
+            relatedTypeInstanceAlias: mattermost-config
+    ```
+
+1. During TypeInstance upload, the Go Template storage backend service will resolve the TypeInstance ID based on the `relatedTypeInstanceAlias`, by traversing the `uses` relation tree. It also validates whether the template rendering succeeds based on provided TypeInstances. If so, it returns mutated `additionalParameters`:
+
+    ```yaml
+    additionalParameters:
+        template: |-
+          host: "{{ index .mattermost.values.ingress.hosts 0 }}"
+          version: "{{ .mattermost.values.image.tag }}"
+        variables:
+          mattermost:
+            relatedTypeInstanceAlias: mattermost-config # kept for better readability
+            typeInstanceID: b895d2d4-d0e0-4f7c-9666-4c3d197d1795 # resolved ID based on `relatedTypeInstanceAlias`. It will be used for further template rendering
+    ```
+
+1. So, in a result, the final TypeInstance produced will look like this:
+
+    ```yaml
+    id: b895d2d4-d0e0-4f7c-9666-4c3d197d1795
+    typeRef:
+      path: cap.type.productivity.mattermost.config
+      revision: 0.1.0
+    latestResourceVersion:
+      resourceVersion: 1
+      backend:
+        additionalParameters: # additional parameters that might be modified via the service handling `onCreate` hook
+          template: |-
+            host: "{{ index mattermost.values.ingress.hosts 0 }}"
+            version: "{{ mattermost.values.image.tag }}"
+          variables:
+            mattermost:
+              relatedTypeInstanceAlias: mattermost-config # kept for better readability
+              typeInstanceID: b895d2d4-d0e0-4f7c-9666-4c3d197d1795 # resolved ID based on `relatedTypeInstanceAlias`. It will be used for further template rendering
+    backend: 
+      id: abd48b8c-99bd-40a7-99c0-047bd69f1db8 # capact-gotemplate backend - resolved UUID
+    ```
+
+1. When fetching the value of such TypeInstance, Go Template storage backend renders the template based on up-to-date values and returns:
+
+    ```yaml
+    host: mattermost.capact.local
+    version: 6.2.0
+    ```
+
+For more details, see the [Workflow syntax - Create](#workflow-syntax---create) paragraph.
+
+### Helm runner templating
+
+Sometimes we used Helm template rendering for some outputs, with usage of some Helm chart templating functions from `_helpers.tpl`:
+
+```yaml
+output:
+  goTemplate: |
+    host: '{{ template "common.names.fullname" . }}.{{ .Release.Namespace }}'
+    port: '{{ template "postgresql.port" . }}'
+    defaultDBName: '{{ template "postgresql.database" . }}'
+    superuser:
+      # It cannot be changed
+      username: 'postgres'
+      password: '{{ template "postgresql.password" . }}'
+```
+
+Unfortunately, that won't be possible anymore, and instead we should get all the values from Helm release details or additional external resources, like Kubernetes ConfigMaps or Secrets. In that case, Content Developer outputs additional TypeInstances and use them as template variables.
 
 ## Rejected ideas
 
@@ -809,4 +1061,15 @@ Unfortunately, it will be on Content Developer side to create a proper pattern f
 
 ## Consequences
 
+Once approved, these are the consequences:
+
 **TODO: Write consequences**
+
+
+- Not documented convention on having runners which produce templatized `additionalOutput` is dropped
+- All Implementations are adjusted to the latest workflow syntax
+  - We can try to keep backward compatibility if needed and for older manifests still treat whole Argo artifacts as TypeInstance value
+  - All output TypeInstances are
+- Implement TypeInstance backend delegation
+
+  As a mid-term solution, we may simplify Storage Backend implementation. In first iteration, we can stick with fixed Storage Backends implementation as a part of Capact Hub code.
