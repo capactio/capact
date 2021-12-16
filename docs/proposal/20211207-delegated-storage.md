@@ -17,6 +17,7 @@ This document describes the way how we will approach dynamic, external data for 
 - [Workflow syntax - Create](#workflow-syntax---create)
 - [Workflow syntax - Update](#workflow-syntax---update)
 - [Storage backend service implementation](#storage-backend-service-implementation)
+- [Configuring default storage backends](#configuring-default-storage-backends)
 - [Uninstalling storage backends](#uninstalling-storage-backends)
 - [GraphQL API](#graphql-api)
   * [List storage backends](#list-storage-backends)
@@ -28,9 +29,10 @@ This document describes the way how we will approach dynamic, external data for 
   * [Go Template backend storage](#go-template-backend-storage)
   * [Helm runner templating](#helm-runner-templating)
 - [Rejected ideas](#rejected-ideas)
-    + [Registering storage backends](#registering-storage-backends-1)
-    + [Workflow syntax](#workflow-syntax)
-    + [Storage backend service implementation](#storage-backend-service-implementation-1)
+  * [Registering storage backends](#registering-storage-backends-1)
+  * [Workflow syntax](#workflow-syntax)
+  * [Storage backend service implementation](#storage-backend-service-implementation-1)
+  * [Configuring default storage backends](#configuring-default-storage-backends-1)
 - [Consequences](#consequences)
 
 <!-- tocstop -->
@@ -94,9 +96,9 @@ Also, the additional, nice-to-have goals are:
 ## Assumptions
 
 1. Content Developer should be able to:
-    1. Write manifests without specifying a storage backend (use default one configured by Cluster Admin). In this case, a static TypeInstance value is stored in the default storage backend.
+    1. Write manifests without specifying a storage backend (use default one configured by System Administrator). In this case, a static TypeInstance value is stored in the default storage backend.
     1. Specify a specific storage backend as a part of a given Implementation. This case supports both static and dynamic TypeInstance values.
-1. Cluster Admin can configure default backend storage for static values.
+1. System Administrator can configure default backend storage for static values.
 1. There are two different cases when it comes CRUD operations on TypeInstances:
     1. CRUD operations on TypeInstance actually manages external resource (e.g. Vault). That is, CRUD operations on TypeInstances in Local Hub actually creates, updates and deletes a given resource.
     1. CRUD operations on TypeInstance represents external resources managed in different way (e.g. by running Helm.install). That is, CRUD operations on TypeInstances in Local Hub actually registers, unregisters and updates references for external state without changing them.
@@ -176,7 +178,7 @@ Also, the additional, nice-to-have goals are:
 
     > **NOTE:** See also the [Rejected ideas](#rejected-ideas) section to learn why a generic validation idea was rejected.
 
-1. To install new storage backend, Cluster Admin has two options:
+1. To install new storage backend, System Administrator has two options:
 
     - use Capact Actions (e.g. `cap.interface.capactio.capact.hub.storage.helm-release.install`).
     - Register a storage backend by creating such TypeInstance.
@@ -233,8 +235,6 @@ Also, the additional, nice-to-have goals are:
       metadata:
         alias: capact-postgresql
         attributes:
-        - path: cap.core.attribute.hub.storage.default # if more such Typeinstances with default Attribute, select first one
-          revision: 0.1.0 
         - path: cap.core.attribute.hub.storage.backend
           revision: 0.1.0
       value:
@@ -247,13 +247,9 @@ Also, the additional, nice-to-have goals are:
 
     - The one preregistered storage backend is Capact PostgreSQL. It uses special `backend` property: `abstract: true`.
     
-      To use Capact PostgreSQL in workflows, the `capact-postgresql` TypeInstance ID has to be referenced as a backend in workflow syntax.
-    
       User is allowed to create TypeInstance with such property, however this is considered as advanced usage. If this will be overused, in future, we can restrict creating TypeInstances with such property by any user and keep it as a reserved system keyword.
-      
-    - Default storage backend should have `additionalParameters` empty (`null`) or optional, in order to work properly.
-      
-      We can validate that using custom logic in TypeInstance validation. When User wants to add the `cap.core.attribute.hub.storage.default` Attribute we can see if the `additionalParameters` meet our conditions and if not, prevent such change.
+
+    - It is the default backend. To learn more, read the [Configuring default storage backends](#configuring-default-storage-backends) paragraph.    
 
 ## Workflow syntax - Create
 
@@ -270,7 +266,7 @@ Also, the additional, nice-to-have goals are:
     ```
 
     - This workflow cannot be run unless there is a `helm-release` storage backend installed (where `helm-release` is only workflow alias).
-    - If there are no specific storage backend requirements set, the default backend will be used.
+    - If there are no specific storage backend requirements set, the default backend will be used. To learn more, read the [Configuring default storage backends](#configuring-default-storage-backends) paragraph.    
 
 1. Content Developer outputs one of the following Argo workflow artifacts:
 
@@ -329,7 +325,7 @@ Also, the additional, nice-to-have goals are:
     capact-outputTypeInstances:
       - name: mattermost-config
         from: additional
-        # no backend definition -> use default (default storage backend (TypeInstance) is annotated with `cap.core.attribute.hub.storage.default`)
+        # no backend definition -> use default storage backend
 
     # option 2 - specific backend (defined in `Implementation.spec.requires` property)
     capact-outputTypeInstances:
@@ -559,6 +555,66 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
   - [go-cloud](https://github.com/google/go-cloud)
   - [stow](https://github.com/graymeta/stow)
 
+## Configuring default storage backends
+
+1. System Administrator configures default backends in Policy.
+
+    ```yaml
+    rules: [...] # rules for Interfaces
+
+    # ...
+
+    default:
+      typeInstance:
+        backend:
+          id: a36ed738-dfe7-45ec-acd1-8e44e8db893b
+          description: "Default Capact PostgreSQL backend"
+    ```
+
+    Default storage backend should have `additionalParameters` empty (`null`) or optional, in order to work properly. When updating Policy, the default backend storage will be validated to see if it meets the criteria.
+
+1. To make it easy to define default backend storages, in Global and Action Policies we introduce additional feature - default TypeInstance injection configuration:
+
+    ```yaml
+    rules: [...] # rules for Interfaces
+
+    common: # properties applied to all rules above
+      inject:
+        requiredTypeInstances:
+        - id: "3ef2e4ac-9070-4093-a3ce-142139fd4a16"
+          description: "Helm storage (cap.type.helm.storage:0.1.0)"
+
+          # it works globally, not only for storage backends:
+        - id: "c4f66896-c2a1-4031-b847-b55ae6a26c80"
+          description: "GCP SA (cap.type.gcp.auth.service-account:0.1.0)"
+
+    default: # ...
+    ```
+
+    Such list of default TypeInstance to inject will be automatically merged with other injection rules for all Interface rules. The required TypeInstances are injected into workflow only if such TypeInstance is truly required ([see source code](https://github.com/capactio/capact/blob/48502d764aaab9fd4133c2ad70ba82501ad7a35b/pkg/hub/client/policy_enforced_client.go#L123)).
+
+1. Of course, System Administrator or System User may override the defaults using current Policy syntax:
+
+    ```yaml
+    rules:
+      - interface:
+          path: cap.interface.database.postgresql.install 
+        oneOf:
+          - implementationConstraints:
+                # constraints to select Bitnami PostgreSQL installation, for example:
+                path: cap.implementation.bitnami.postgresql.install
+            inject:
+              requiredTypeInstances:
+                - id: b4cf15d2-79b1-45ee-9729-6b83289ecabc # Different TypeInstance of `cap.type.helm.storage` Type - it will be used instead of the one from `common.inject`
+                  description: "Helm Release storage"
+
+    common: # properties applied to all rules above
+      inject:
+        requiredTypeInstances:
+        - id: "3ef2e4ac-9070-4093-a3ce-142139fd4a16"
+          description: "Helm storage (cap.type.helm.storage:0.1.0)"
+    ```
+
 ## Uninstalling storage backends
 
 As described in the [Workflow syntax - Create](#workflow-syntax---create) section, every TypeInstance that uses a given storage backend, will use the `uses` property set:
@@ -575,7 +631,7 @@ According to the accepted [Rollback](./20201209-action-rollback.md) proposal:
 - User won't be able to delete TypeInstance manually, but will run Rollback procedure instead.
 - A given TypeInstance which contain any `usedBy` reference, cannot be deleted unless all related TypeInstances are deleted.
 
-In that way, we prevent removal of any storage backend that is used.
+In other words, we will prevent removal of any storage backend that is used without any additional implementation from our side.
 
 ## GraphQL API
 
@@ -827,7 +883,7 @@ To avoid implementing a special storage backend service every time we have such 
             "acceptValue": { # specifies if a given storage backend (app) accepts TypeInstance value while creating/updating TypeInstance, or just additionalParameters
               "$id": "#/properties/acceptValue",
               "type": "boolean",
-              "const": true # in this case - no
+              "const": false # in this case - no
             },
           },
           "additionalProperties": false
@@ -851,7 +907,7 @@ To avoid implementing a special storage backend service every time we have such 
           revision: 0.1.0
       value:
         url: "storagebackend-gotemplate.capact-system:50051"
-        acceptValue: true
+        acceptValue: false
         additionalParametersSchema: |-
           {
             "$schema": "http://json-schema.org/draft-07/schema",
@@ -986,7 +1042,7 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 
 ## Rejected ideas
 
-#### Registering storage backends
+### Registering storage backends
 
 1. Enforcing convention of having storage backend defined as Type with `uri` and `additionalParametersSchema`.
 
@@ -1019,14 +1075,14 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 
 1. Dedicated entity of StorageBackend
 
-    Such resource could reside in Local Hub, but it wouldn't be an OCF manifest. Cluster Admin should be able to manage them via GraphQL API, CLI and UI.
+    Such resource could reside in Local Hub, but it wouldn't be an OCF manifest. System Administrator should be able to manage them via GraphQL API, CLI and UI.
 
     **Reasons:**
     - We would still need some kind of StorageBackend templates (with `additionalParametersSchema` JSON schema) in public Hub
     - How we would be able to output such as a result of an Action? It could be done in a hacky way to output it as a side effect of running Action (not explicitly), but that would be definitely not elegant
     - We would need to have additional API
 
-#### Workflow syntax
+### Workflow syntax
 
 1. Keep the Argo artifact value as it is, and add additional syntax:
 
@@ -1053,11 +1109,21 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 
     **Reason:** More complex usage in the workflow, and more complex implementation as well
 
-#### Storage backend service implementation
+### Storage backend service implementation
 
 1. Using Actions as a way to do CRUD operations (separate Interface/Implementation per Create/Update/Get/Delete operation)
  
     **Reason:** While the idea may seem exciting, that would be really time consuming and ineffective. We are too far from the point at where we can think about such solution. 
+
+### Configuring default storage backends
+
+1. Using dedicated Attribute to specify which storage backend TypeInstance should be selected by default
+
+  **Reason**: We still need to configure Policy to configure common TypeInstance injection.
+
+1. Using the `cap.*` rule to define common TypeInstance injection
+
+  **Reason**: That would be too difficult to understand for System Administrator and System User. Additional property seem as better solution.
 
 ## Consequences
 
