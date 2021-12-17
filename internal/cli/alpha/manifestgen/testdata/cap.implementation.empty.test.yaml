@@ -1,0 +1,76 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.empty"
+  name: test
+  displayName: "test Action"
+  description: "test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+  license:
+    name: "Apache 2.0"
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      additional-parameters:
+        typeRef:
+          path: cap.type.empty.test-input
+          revision: 0.1.0
+
+  outputTypeInstanceRelations:
+      config: {}
+
+  implements:
+    - path: cap.interface.group.test
+      revision: 0.2.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: test
+        templates:
+          - name: test
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+            outputs:             
+              artifacts: {} # TODO(ContentDeveloper): Put here the output artifact if needed
+            steps: {} # TODO(ContentDeveloper): Put here the steps for the interface
+
+          - name: prepare-parameters
+            inputs:
+                artifacts:
+                  - name: input-parameters
+                    path: /yamls/input.yaml
+                  - name: additional-parameters
+                    path: /yamls/additionalinput.yaml
+                    optional: true
+            outputs:
+              artifacts: {} # TODO(ContentDeveloper): Put here the output artifact if needed
+            container:
+              image: alpine:latest
+              command: [sh, -c]
+              args: ["sleep 1; echo 'greeting: hello capact'"]

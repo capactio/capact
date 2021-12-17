@@ -2,16 +2,18 @@ package implementation
 
 import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/utils/strings/slices"
 )
 
 var (
-	helmType = "Helm"
-	terraformType = "Terraform"
+	helmTool      = "Helm"
+	terraformTool = "Terraform"
+	emptyManifest = "Empty"
 )
+
+type generateFun func(opts common.ManifestGenOptions) (map[string]string, error)
 
 // NewCmd returns a cobra.Command for Implementation manifest generation operations.
 func NewCmd() *cobra.Command {
@@ -24,52 +26,40 @@ func NewCmd() *cobra.Command {
 
 	cmd.AddCommand(NewTerraform())
 	cmd.AddCommand(NewHelm())
+	cmd.AddCommand(NewEmpty())
 
 	return cmd
 }
 
-// HandleInteractiveSession is responsible for handling interactive session with user
-func HandleInteractiveSession(opts common.ManifestGenOptions) error{
-	tool := askForImplementationTool()
-	basedToolDir := common.AskForOutputDirectory("Path to based tool template", "")
-	if tool == helmType {
-		var helmCfg manifestgen.HelmConfig
-		helmCfg.ManifestPath = opts.ManifestPath
-		helmCfg.ChartName = basedToolDir
-		files, err := manifestgen.GenerateHelmManifests(&helmCfg)
+// GenerateImplementationManifest is responsible for generating implementation manifest based on tool
+func GenerateImplementationManifest(opts common.ManifestGenOptions) (map[string]string, error) {
+	tool, err := askForImplementationTool()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for used implementation tool")
+	}
+
+	interfacePathSuffixAndRevision := ""
+	if slices.Contains(opts.ManifestsType, common.InterfaceManifest) {
+		interfacePathSuffixAndRevision = common.AddRevisionToPath(opts.ManifestPath, opts.Revision)
+	} else {
+		interfacePathSuffixAndRevision, err = askForInterface()
 		if err != nil {
-			return errors.Wrap(err, "while generating Helm manifests")
-		}
-
-		if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
-			return errors.Wrap(err, "while writing manifest files")
+			return nil, errors.Wrap(err, "while asking for interface path")
 		}
 	}
+	opts.InterfacePath = common.CreateManifestPath(common.InterfaceManifest, interfacePathSuffixAndRevision)
 
-	if tool == terraformType {
-		var tfContentCfg manifestgen.TerraformConfig
-		tfContentCfg.ManifestPath = opts.ManifestPath
-		tfContentCfg.ModulePath = basedToolDir
-		files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
-		if err != nil {
-			return errors.Wrap(err, "while generating content files")
-		}
+	license, err := askForLicense()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for license")
+	}
+	opts.Metadata.License = license
 
-		if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
-			return errors.Wrap(err, "while writing manifest files")
-		}
+	toolAction := map[string]generateFun{
+		helmTool:      generateHelmManifests,
+		terraformTool: generateTerraformManifests,
+		emptyManifest: generateEmptyManifests,
 	}
 
-	return nil
-}
-
-func askForImplementationTool() string{
-	var selectType string
-	availableManifestsType := []string{helmType, terraformType}
-	typePrompt := &survey.Select{
-		Message: "Based on which tool do you want to generate implementation:",
-		Options: availableManifestsType,
-	}
-	survey.AskOne(typePrompt, &selectType)
-	return selectType
+	return toolAction[tool](opts)
 }

@@ -1,0 +1,90 @@
+ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.{{ .Prefix }}"
+  name: {{ .Name }}
+  displayName: "{{ .Name }} Action"
+  description: "{{ .Name }} Action"
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
+  maintainers:
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
+  license:
+    name: "{{ .Metadata.License.Name }}"
+    {{- if .Metadata.License.Ref }}
+    ref: {{.Metadata.License.Ref}}
+    {{- end}}
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      additional-parameters:
+        typeRef:
+          path: cap.type.{{ .Prefix }}.{{ .Name }}-input
+          revision: 0.1.0
+
+  outputTypeInstanceRelations:
+      config: {}
+
+  implements:
+    - path: {{if .InterfacePath}}{{ .InterfacePath }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
+      revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: {{ .Name }}
+        templates:
+          - name: {{ .Name }}
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+            outputs:             
+              artifacts: {} # TODO(ContentDeveloper): Put here the output artifact if needed
+            steps: {} # TODO(ContentDeveloper): Put here the steps for the interface
+
+          - name: prepare-parameters
+            inputs:
+                artifacts:
+                  - name: input-parameters
+                    path: /yamls/input.yaml
+                  - name: additional-parameters
+                    path: /yamls/additionalinput.yaml
+                    optional: true
+            outputs:
+              artifacts: {} # TODO(ContentDeveloper): Put here the output artifact if needed
+            container:
+              image: alpine:latest
+              command: [sh, -c]
+              args: ["sleep 1; echo 'greeting: hello capact'"]

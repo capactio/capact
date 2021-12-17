@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
 revision: {{ .Revision }}
-kind: InterfaceGroup
+kind: Attribute
 metadata:
-  prefix: "cap.interface{{ if .Prefix }}.{{ .Prefix }}{{ end }}"
+  prefix: "cap.attribute.{{ .Prefix }}"
   name: "{{ .Name }}"
   displayName: "{{ .Name }}"
-  description: "{{ .Name }} related Interfaces"
+  description: "{{ .Name }} attribute"
   {{- if .Metadata.DocumentationURL }}
   documentationURL: {{.Metadata.DocumentationURL}}
   {{- end}}

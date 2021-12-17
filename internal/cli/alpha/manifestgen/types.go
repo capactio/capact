@@ -8,11 +8,19 @@ import (
 type Config struct {
 	ManifestPath     string
 	ManifestRevision string
+	ManifestMetadata MetaDataInfo
+}
+
+// AttributeConfig stores input parameters for Attribute content generation
+type AttributeConfig struct {
+	Config
 }
 
 // InterfaceConfig stores input parameters for Interface content generation
 type InterfaceConfig struct {
 	Config
+	InputPathWithRevision  string
+	OutputPathWithRevision string
 }
 
 // ImplementationConfig stores input parameters for Implementation content generation
@@ -39,6 +47,11 @@ type HelmConfig struct {
 	ChartVersion string
 }
 
+// EmptyImplementationConfig stores input parameters for empty Implementation content generation.
+type EmptyImplementationConfig struct {
+	ImplementationConfig
+}
+
 type templatingConfig struct {
 	Template string
 	Input    interface{}
@@ -48,6 +61,11 @@ type templatingInput struct {
 	Name     string
 	Prefix   string
 	Revision string
+	Metadata MetaDataInfo
+}
+
+type attributeTemplatingInput struct {
+	templatingInput
 }
 
 type interfaceGroupTemplatingInput struct {
@@ -56,6 +74,10 @@ type interfaceGroupTemplatingInput struct {
 
 type interfaceTemplatingInput struct {
 	templatingInput
+	InputTypeName      string
+	InputTypeRevision  string
+	OutputTypeName     string
+	OutputTypeRevision string
 }
 
 type outputTypeTemplatingInput struct {
@@ -65,6 +87,12 @@ type outputTypeTemplatingInput struct {
 type typeTemplatingInput struct {
 	templatingInput
 	JSONSchema string
+}
+
+type emptyImplementationTemplatingInput struct {
+	templatingInput
+	InterfacePath     string
+	InterfaceRevision string
 }
 
 type terraformImplementationTemplatingInput struct {

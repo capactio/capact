@@ -8,6 +8,7 @@ metadata:
   description: "Type representing a group config"
   documentationURL: https://example.com
   supportURL: https://example.com
+  iconURL: https://example.com/icon.png
   maintainers:
     - email: dev@example.com
       name: Example Dev

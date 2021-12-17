@@ -37,7 +37,7 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating manifests")
+		return nil, errors.Wrap(err, "while generating terraform manifests")
 	}
 
 	result := make(map[string]string, len(generated))
@@ -71,6 +71,7 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
+				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
@@ -99,6 +100,7 @@ func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tf
 
 	input := &terraformImplementationTemplatingInput{
 		templatingInput: templatingInput{
+			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,

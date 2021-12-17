@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type getManifestFun func(cfg *InterfaceConfig) (*templatingConfig, error)
+type genManifestFun func(cfg *InterfaceConfig) (*templatingConfig, error)
 
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
@@ -60,19 +60,22 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error)
 	return result, nil
 }
 
+// GenerateInterfaceTemplatingConfig generates Interface templating config
 func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
-	return generateFile(cfg, []getManifestFun{getInterfaceTemplatingConfig})
+	return generateFile(cfg, []genManifestFun{getInterfaceTemplatingConfig})
 }
 
+// GenerateInterfaceGroupTemplatingConfig generates InterfaceGroup templating config
 func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
-	return generateFile(cfg, []getManifestFun{getInterfaceGroupTemplatingConfig})
+	return generateFile(cfg, []genManifestFun{getInterfaceGroupTemplatingConfig})
 }
 
+// GenerateTypeTemplatingConfig generates Type templating config
 func GenerateTypeTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
-	return generateFile(cfg, []getManifestFun{getInterfaceInputTypeTemplatingConfig, getInterfaceOutputTypeTemplatingConfig})
+	return generateFile(cfg, []genManifestFun{getInterfaceInputTypeTemplatingConfig, getInterfaceOutputTypeTemplatingConfig})
 }
 
-func generateFile(cfg *InterfaceConfig, fn []getManifestFun) (map[string]string, error) {
+func generateFile(cfg *InterfaceConfig, fn []genManifestFun) (map[string]string, error) {
 	cfgs := make([]*templatingConfig, 0, 4)
 	for _, fun := range fn {
 		interfaceCfg, err := fun(cfg)
@@ -93,9 +96,7 @@ func generateFile(cfg *InterfaceConfig, fn []getManifestFun) (map[string]string,
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting metadata for manifest")
 		}
-
 		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
 		result[manifestPath] = m
 	}
 
@@ -113,6 +114,7 @@ func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig,
 		Template: interfaceGroupManifestTemplate,
 		Input: &interfaceGroupTemplatingInput{
 			templatingInput: templatingInput{
+				Metadata: cfg.ManifestMetadata,
 				Name:     groupName,
 				Prefix:   groupPrefix,
 				Revision: cfg.ManifestRevision,
@@ -127,14 +129,33 @@ func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, erro
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
+	var inputPath, inputRevision, outputPath, outputRevision string
+
+	inputPathSlice := strings.SplitN(cfg.InputPathWithRevision, ":", 2)
+	if len(inputPathSlice) == 2 {
+		inputPath = inputPathSlice[0]
+		inputRevision = inputPathSlice[1]
+	}
+
+	outputPathSlice := strings.SplitN(cfg.OutputPathWithRevision, ":", 2)
+	if len(outputPathSlice) == 2 {
+		outputPath = outputPathSlice[0]
+		outputRevision = outputPathSlice[1]
+	}
+
 	return &templatingConfig{
 		Template: interfaceManifestTemplate,
 		Input: &interfaceTemplatingInput{
 			templatingInput: templatingInput{
+				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
 			},
+			InputTypeName:      inputPath,
+			InputTypeRevision:  inputRevision,
+			OutputTypeName:     outputPath,
+			OutputTypeRevision: outputRevision,
 		},
 	}, nil
 }
@@ -154,6 +175,7 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
+				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
@@ -173,6 +195,7 @@ func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCo
 		Template: outputTypeManifestTemplate,
 		Input: &outputTypeTemplatingInput{
 			templatingInput: templatingInput{
+				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,

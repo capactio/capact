@@ -3,6 +3,7 @@ package implementation
 import (
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
@@ -43,6 +44,7 @@ func NewTerraform() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tfContentCfg.ManifestPath = args[0]
 			tfContentCfg.ModulePath = args[1]
+			tfContentCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 			if err != nil {
@@ -75,3 +77,33 @@ func NewTerraform() *cobra.Command {
 	return cmd
 }
 
+func generateTerraformManifests(opts common.ManifestGenOptions) (map[string]string, error) {
+	terraformTemplate, err := common.AskForDirectory("Path to Terraform template", "")
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for path to Terraform template")
+	}
+
+	provider, err := askForProvider()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for provider")
+	}
+
+	source, err := askForSource()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for source to Terraform template")
+	}
+
+	var tfContentCfg manifestgen.TerraformConfig
+	tfContentCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
+	tfContentCfg.ModulePath = terraformTemplate
+	tfContentCfg.ManifestMetadata = opts.Metadata
+	tfContentCfg.Provider = provider
+	tfContentCfg.ModuleSourceURL = source
+	tfContentCfg.InterfacePathWithRevision = opts.InterfacePath
+
+	files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating Terraform manifests")
+	}
+	return files, nil
+}

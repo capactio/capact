@@ -38,6 +38,18 @@ func WriteManifestFiles(outputDir string, files map[string]string, override bool
 	return nil
 }
 
+//ManifestsExistsInOutputDir checks if manifests exists in dir
+func ManifestsExistsInOutputDir(files map[string]string, dir string) bool {
+	for manifestPath := range files {
+		manifestFilepath := strings.ReplaceAll(strings.TrimPrefix(manifestPath, "cap."), ".", string(os.PathSeparator)) + ".yaml"
+		outputFilepath := path.Join(dir, manifestFilepath)
+		if _, err := os.Stat(outputFilepath); !os.IsNotExist(err) {
+			return true
+		}
+	}
+	return false
+}
+
 func deepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {

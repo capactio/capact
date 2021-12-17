@@ -1,16 +1,17 @@
-package _interface
+package interfacegen
 
 import (
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
+
+type genManifestFun func(cfg *manifestgen.InterfaceConfig) (map[string]string, error)
 
 // NewInterface returns a cobra.Command to bootstrap new Interface manifests.
 func NewInterface() *cobra.Command {
@@ -23,7 +24,7 @@ func NewInterface() *cobra.Command {
 		Long:    "Generate new InterfaceGroup, Interface and associated Type manifests",
 		Example: heredoc.WithCLIName(`
 			# Generate manifests for the cap.interface.database.postgresql.install Interface
-			<cli> alpha content interface cap.interface.database.postgresql install`, cli.Name),
+			<cli> alpha manifest-gen interface cap.interface.database.postgresql.install`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("accepts only one argument")
@@ -38,6 +39,7 @@ func NewInterface() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			interfaceCfg.ManifestPath = args[0]
+			interfaceCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			files, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
 			if err != nil {
@@ -67,44 +69,17 @@ func NewInterface() *cobra.Command {
 	return cmd
 }
 
-func GenerateInterfaceFile(opts common.ManifestGenOptions) error {
+// GenerateInterfaceFile generates new Interface-group file based on function passed.
+func GenerateInterfaceFile(opts common.ManifestGenOptions, fn genManifestFun) (map[string]string, error) {
 	var interfaceCfg manifestgen.InterfaceConfig
-	interfaceCfg.ManifestPath = opts.ManifestPath
-	files, err := manifestgen.GenerateInterfaceTemplatingConfig(&interfaceCfg)
+	interfaceCfg.ManifestPath = common.CreateManifestPath(common.InterfaceManifest, opts.ManifestPath)
+	interfaceCfg.ManifestRevision = opts.Revision
+	interfaceCfg.ManifestMetadata = opts.Metadata
+	interfaceCfg.InputPathWithRevision = opts.TypeInputPath
+	interfaceCfg.OutputPathWithRevision = opts.TypeOutputPath
+	files, err := fn(&interfaceCfg)
 	if err != nil {
-		return errors.Wrap(err, "while generating content files")
+		return nil, errors.Wrap(err, "while generating content files")
 	}
-
-	if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
-		return errors.Wrap(err, "while writing manifest files")
-	}
-	return nil
-}
-
-func GenerateInterfaceGroupFile(opts common.ManifestGenOptions) error {
-	var interfaceCfg manifestgen.InterfaceConfig
-	interfaceCfg.ManifestPath = opts.ManifestPath
-	files, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceCfg)
-	if err != nil {
-		return errors.Wrap(err, "while generating content files")
-	}
-
-	if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
-		return errors.Wrap(err, "while writing manifest files")
-	}
-	return nil
-}
-
-func GenerateTypeFile(opts common.ManifestGenOptions) error {
-	var interfaceCfg manifestgen.InterfaceConfig
-	interfaceCfg.ManifestPath = opts.ManifestPath
-	files, err := manifestgen.GenerateTypeTemplatingConfig(&interfaceCfg)
-	if err != nil {
-		return errors.Wrap(err, "while generating content files")
-	}
-
-	if err := manifestgen.WriteManifestFiles(opts.Directory, files, opts.Overwrite); err != nil {
-		return errors.Wrap(err, "while writing manifest files")
-	}
-	return nil
+	return files, nil
 }

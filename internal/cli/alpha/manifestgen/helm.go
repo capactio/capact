@@ -40,7 +40,7 @@ func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating manifests")
+		return nil, errors.Wrap(err, "while generating helm manifests")
 	}
 
 	result := make(map[string]string, len(generated))
@@ -92,6 +92,7 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
+			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,
@@ -141,6 +142,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 
 	input := &helmImplementationTemplatingInput{
 		templatingInput: templatingInput{
+			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,

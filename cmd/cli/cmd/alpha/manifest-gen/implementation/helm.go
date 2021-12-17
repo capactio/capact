@@ -3,6 +3,7 @@ package implementation
 import (
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -31,6 +32,7 @@ func NewHelm() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			helmCfg.ManifestPath = args[0]
 			helmCfg.ChartName = args[1]
+			helmCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			files, err := manifestgen.GenerateHelmManifests(&helmCfg)
 			if err != nil {
@@ -61,4 +63,29 @@ func NewHelm() *cobra.Command {
 	cmd.Flags().StringVar(&helmCfg.ChartVersion, "version", "", "Version of the Helm chart")
 
 	return cmd
+}
+
+func generateHelmManifests(opts common.ManifestGenOptions) (map[string]string, error) {
+	helmTemplate, err := common.AskForDirectory("Path to Helm template", "")
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for path to Helm template")
+	}
+	helmchartInfo, err := askForHelmChartDetails()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for Helm chart details")
+	}
+
+	var helmCfg manifestgen.HelmConfig
+	helmCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
+	helmCfg.ChartName = helmTemplate
+	helmCfg.ManifestMetadata = opts.Metadata
+	helmCfg.ChartRepoURL = helmchartInfo.URL
+	helmCfg.ChartVersion = helmchartInfo.Version
+	helmCfg.InterfacePathWithRevision = opts.InterfacePath
+
+	files, err := manifestgen.GenerateHelmManifests(&helmCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating Helm manifests")
+	}
+	return files, nil
 }

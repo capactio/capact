@@ -5,6 +5,12 @@ import (
 )
 
 var (
+	//go:embed templates/attribute.yaml.tmpl
+	attributeManifestTemplate string
+
+	//go:embed templates/empty-implementation.yaml.tmpl
+	emptyImplementationManifestTemplate string
+
 	//go:embed templates/interface-group.yaml.tmpl
 	interfaceGroupManifestTemplate string
 

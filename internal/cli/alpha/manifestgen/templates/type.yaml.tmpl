@@ -6,12 +6,23 @@ metadata:
   name: {{ .Name }}-input
   displayName: "Input for {{ .Prefix }}.{{ .Name }}"
   description: Input for the "{{ .Prefix }}.{{ .Name }} Action"
-  documentationURL: https://example.com
-  supportURL: https://example.com
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
   maintainers:
-    - email: dev@example.com
-      name: Example Dev
-      url: https://example.com
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
 spec:
   jsonSchema:
     # TODO(ContentDeveloper): Adjust the JSON schema if needed.

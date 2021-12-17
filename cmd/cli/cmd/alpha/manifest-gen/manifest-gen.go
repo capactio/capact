@@ -1,23 +1,14 @@
 package manifestgen
 
 import (
-	"fmt"
-	"strings"
-
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attribute"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
-	_interface "capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interface"
-	"github.com/AlecAivazis/survey/v2"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfacegen"
+	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
-)
-
-var (
-	interfaceType      = "interface"
-	interfaceGroupType = "interfaceGroup"
-	implementationType = "implementation"
-	typeType           = "type"
 )
 
 // NewCmd returns a cobra.Command for content generation operations.
@@ -27,16 +18,14 @@ func NewCmd() *cobra.Command {
 		Use:   "manifest-gen",
 		Short: "Manifests generation",
 		Long:  "Subcommand for various manifest generation operations",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 0 {
-				fmt.Println("To handle") //TODO
-			}
 			return askInteractivelyForParameters(opts)
 		},
 	}
 
-	cmd.AddCommand(_interface.NewInterface())
+	cmd.AddCommand(attribute.NewAttribute())
+	cmd.AddCommand(interfacegen.NewInterface())
 	cmd.AddCommand(implementation.NewCmd())
 
 	cmd.PersistentFlags().StringP("output", "o", "generated", "Path to the output directory for the generated manifests")
@@ -46,71 +35,72 @@ func NewCmd() *cobra.Command {
 }
 
 func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
-	opts.ManifestsType = askForManifestType()
-	opts.Directory = common.AskForOutputDirectory("path to the output directory for the generated manifests", "generated")
-	opts.Overwrite = askIfOverwrite()
-	opts.ManifestPath = askForManifestPath()
-
-	if slices.Contains(opts.ManifestsType, interfaceType) {
-		_interface.GenerateInterfaceFile(opts)
+	var err error
+	opts.ManifestsType, err = askForManifestType()
+	if err != nil {
+		return errors.Wrap(err, "while asking for manifest type")
 	}
 
-	if slices.Contains(opts.ManifestsType, interfaceGroupType) {
-		_interface.GenerateInterfaceGroupFile(opts)
+	opts.ManifestPath, err = common.AskForManifestPathSuffix("Manifest path suffix")
+	if err != nil {
+		return errors.Wrap(err, "while asking for manifest path suffix")
 	}
 
-	if slices.Contains(opts.ManifestsType, typeType) {
-		_interface.GenerateTypeFile(opts)
+	revision, err := common.AskForManifestRevision()
+	if err != nil {
+		return errors.Wrap(err, "while asking for manifest revision")
+	}
+	opts.Revision = revision
+
+	metadata, err := askForCommonMetadataInformation()
+	if err != nil {
+		return errors.Wrap(err, "while getting the common metadata information")
+	}
+	opts.Metadata = *metadata
+
+	generatingManifestsFun := map[string]genManifestFun{
+		common.AttributeManifest:      generateAttribute,
+		common.TypeManifest:           generateType,
+		common.InterfaceGroupManifest: generateInterfaceGroup,
+		common.InterfaceManifest:      generateInterface,
+		common.ImplementationManifest: generateImplementation,
+	}
+	var mergeFiles map[string]string
+
+	for manifestType, fn := range generatingManifestsFun {
+		if slices.Contains(opts.ManifestsType, manifestType) {
+			files, err := fn(opts)
+			if err != nil {
+				return errors.Wrap(err, "while generating manifest file")
+			}
+			mergeFiles = mergeManifests(mergeFiles, files)
+		}
 	}
 
-	if slices.Contains(opts.ManifestsType, implementationType) {
-		implementation.HandleInteractiveSession(opts)
+	opts.Directory, err = common.AskForDirectory("path to the output directory for the generated manifests", "generated")
+	if err != nil {
+		return errors.Wrap(err, "while asking for output directory")
 	}
 
+	if manifestgen.ManifestsExistsInOutputDir(mergeFiles, opts.Directory) {
+		opts.Overwrite, err = askIfOverwrite()
+		if err != nil {
+			return errors.Wrap(err, "while asking if overwrite existing manifest files")
+		}
+	}
+
+	if err := manifestgen.WriteManifestFiles(opts.Directory, mergeFiles, opts.Overwrite); err != nil {
+		return errors.Wrap(err, "while writing manifest files")
+	}
 	return nil
 }
 
-func askForManifestType() []string {
-	var manifestTypes []string
-	availableManifestsType := []string{implementationType, interfaceType, interfaceGroupType, typeType}
-	prompt := []*survey.Question{
-		{
-			Prompt: &survey.MultiSelect{
-				Message: "Which manifests do you want to generate:",
-				Options: availableManifestsType,
-			},
-			Validate: survey.MinItems(1),
-		},
+func mergeManifests(manifestsFiles ...map[string]string) (result map[string]string) {
+	result = make(map[string]string)
+	for _, manifestFiles := range manifestsFiles {
+		for path, fileName := range manifestFiles {
+			result[path] = fileName
+		}
 	}
-	survey.Ask(prompt, &manifestTypes)
-	return manifestTypes
-}
-
-func askForManifestPath() string {
-	var manifestPath string
-	prompt := []*survey.Question{
-		{
-			Prompt: &survey.Input{
-				Message: "Manifest path",
-			},
-			Validate: func(ans interface{}) error {
-				if str, ok := ans.(string); !ok || !strings.HasPrefix(str, "cap.interface.") || len(strings.Split(str, ".")) < 4 {
-					return errors.New(`manifest path must be in format "cap.interface.[PREFIX].[NAME]"`)
-
-				}
-				return nil
-			},
-		},
-	}
-	survey.Ask(prompt, &manifestPath)
-	return manifestPath
-}
-
-func askIfOverwrite() bool {
-	overwrite := false
-	prompt := &survey.Confirm{
-		Message: "Do you want to overwrite existing manifest files?",
-	}
-	survey.AskOne(prompt, &overwrite)
-	return overwrite
+	return result
 }
