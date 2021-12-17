@@ -184,12 +184,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Install upx 3.96
         run: |
-          # Install UPX
           wget https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz
           tar -xf upx-3.96-amd64_linux.tar.xz
-
-          # Compress files
-          ./upx-3.96-amd64_linux/upx -V
           mv ./upx-3.96-amd64_linux/upx /usr/local/bin/upx
           upx -V
       - name: Set up GoReleaser
