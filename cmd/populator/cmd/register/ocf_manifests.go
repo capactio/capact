@@ -63,10 +63,22 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 		return errors.Wrap(err, "while creating zap logger")
 	}
 
-	sourcesInfo, err := getSourcesInfo(ctx, cfg, log, sources)
+	parentDir, err := ioutil.TempDir("/tmp", "*-hubs-parent")
+	if err != nil {
+		return errors.Wrap(err, "while creating parent temporary directory")
+	}
+
+	sources = removeDuplicateSources(sources)
+	sourcesInfo, err := getSourcesInfo(ctx, cfg, log, sources, parentDir)
 	if err != nil {
 		return errors.Wrap(err, "while getting sources info")
 	}
+
+	defer func() {
+		if rErr := os.RemoveAll(parentDir); rErr != nil {
+			err = multierror.Append(err, rErr)
+		}
+	}()
 
 	// run server with merge file list from various sources
 	var fileList []string
@@ -94,13 +106,19 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 		}
 	}()
 
-	dataInDB, err := dbpopulator.IsDataInDB(session, log, commits)
-	if err != nil {
-		return errors.Wrap(err, "while verifying commits in db")
+	if cfg.UpdateOnGitCommit {
+		log.Info("APP_UPDATE_ON_GIT_COMMIT set. Updating manifests only if git commit changed.")
+		dataInDB, err := dbpopulator.IsDataInDB(session, log, commits)
+		if err != nil {
+			return errors.Wrap(err, "while verifying commits in db")
+		}
+		if dataInDB {
+			return nil
+		}
+	} else {
+		log.Info("APP_UPDATE_ON_GIT_COMMIT not set. Ignoring git commit, always updating manifests.")
 	}
-	if dataInDB {
-		return nil
-	}
+
 	for _, src := range sourcesInfo {
 		err = runDBPopulate(ctx, cfg, session, log, src)
 		if rErr := os.RemoveAll(src.dir); rErr != nil {
@@ -110,18 +128,34 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 			return errors.Wrap(err, "while populating db")
 		}
 	}
-	err = dbpopulator.SaveCommitsMetadata(session, commits)
-	if err != nil {
-		return errors.Wrap(err, "while saving metadata into db")
+
+	if cfg.UpdateOnGitCommit {
+		err = dbpopulator.SaveCommitsMetadata(session, commits)
+		if err != nil {
+			return errors.Wrap(err, "while saving metadata into db")
+		}
 	}
 
 	return nil
 }
 
-func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string) ([]sourceInfo, error) {
+func removeDuplicateSources(sources []string) []string {
+	var result []string
+	allSources := make(map[string]struct{})
+	for _, source := range sources {
+		if _, ok := allSources[source]; ok {
+			continue
+		}
+		allSources[source] = struct{}{}
+		result = append(result, source)
+	}
+	return result
+}
+
+func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string, parentDir string) ([]sourceInfo, error) {
 	var sourcesInfo []sourceInfo
 	for _, source := range sources {
-		parent, err := ioutil.TempDir("/tmp", "*-hub-parent")
+		parent, err := ioutil.TempDir(parentDir, "*-hub")
 		if err != nil {
 			return nil, errors.Wrap(err, "while creating temporary directory")
 		}
@@ -141,14 +175,9 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 		}
 
 		var gitHash []byte
-		if cfg.UpdateOnGitCommit {
-			log.Info("APP_UPDATE_ON_GIT_COMMIT set. Updating manifests only if git commit changed.")
-			gitHash, err = getGitHash(rootDir)
-			if err != nil {
-				return nil, errors.Wrap(err, "while getting `git rev-parse HEAD`")
-			}
-		} else {
-			log.Info("APP_UPDATE_ON_GIT_COMMIT not set. Ignoring git commit, always updating manifests.")
+		gitHash, err = getGitHash(rootDir)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting `git rev-parse HEAD`")
 		}
 		sourcesInfo = append(sourcesInfo, sourceInfo{
 			dir:     parent,

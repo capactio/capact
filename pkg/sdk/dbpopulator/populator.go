@@ -478,28 +478,24 @@ func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 
 // IsDataInDB checks whether the commits have already existed in the DB
 func IsDataInDB(session neo4j.Session, log *zap.Logger, commits []string) (bool, error) {
-	if len(commits) == 0 {
-		return false, nil
-	}
-
 	currentCommits, err := currentCommits(session)
 	if err != nil {
 		return false, errors.Wrap(err, "while getting commit hash of populated data")
 	}
 
 	commitsExistInDB := true
-	newCommit := ""
+	unknownCommit := ""
 	for _, commit := range commits {
 		if !strings.Contains(currentCommits, commit) {
 			commitsExistInDB = false
-			newCommit = commit
+			unknownCommit = commit
 		}
 	}
 	if commitsExistInDB {
-		log.Info("git commit did not change. Finishing")
+		log.Info("git commits did not change. Finishing")
 		return true, nil
 	}
-	log.Info("git commit changed", zap.String("current hash", currentCommits), zap.String("new hash", newCommit))
+	log.Info("found at least one changed commit", zap.String("current commits", currentCommits), zap.String("not found hash", unknownCommit))
 	return false, nil
 }
 
@@ -511,11 +507,11 @@ func SaveCommitsMetadata(session neo4j.Session, commits []string) error {
 		q := fmt.Sprintf(contentMetadata, strings.Join(commits, " "), time.Now())
 		result, err := transaction.Run(q, nil)
 		if err != nil {
-			return nil, errors.Wrapf(err, "when running query %s", q)
+			return nil, errors.Wrapf(err, "while running %s", q)
 		}
 		err = result.Err()
 		if err != nil {
-			return nil, errors.Wrapf(err, "when running query %s", q)
+			return nil, errors.Wrapf(err, "when checking results %s", q)
 		}
 		return nil, nil
 	})

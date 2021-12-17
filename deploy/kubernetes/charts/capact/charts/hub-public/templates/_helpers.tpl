@@ -62,12 +62,12 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Create the manifest paths separated by the comma
+Create the manifest source paths separated by the comma
 */}}
-{{- define "populator.manifestPaths" -}}
+{{- define "populator.manifestSources" -}}
 {{- $length := len .Values.populator.manifestsLocations }}
 {{- range $index, $values := .Values.populator.manifestsLocations -}}
-{{- include "populator.manifestPath" . }}
+{{- include "populator.manifestSource" . }}
 {{- $position := add $index 1 -}}
 {{- if ne $position $length -}},{{- end -}}
 {{- end }}
@@ -76,7 +76,7 @@ Create the manifest paths separated by the comma
 {{/*
 Create the manifest source path
 */}}
-{{- define "populator.manifestPath" -}}
+{{- define "populator.manifestSource" -}}
 {{- if .local -}}
 /hub-manifests
 {{- else }}
