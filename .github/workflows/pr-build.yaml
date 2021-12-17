@@ -389,7 +389,7 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Set up GoReleaser
-        run: go install github.com/goreleaser/goreleaser@v0.173.2
+        run: go install github.com/goreleaser/goreleaser@v1.1.0
       - run: make build-tool-cli
       - name: Share Capact CLI for integration tests bootstrapping
         uses: actions/upload-artifact@v2
