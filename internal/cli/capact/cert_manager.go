@@ -27,12 +27,12 @@ func ApplyClusterIssuer(ctx context.Context, config *rest.Config, new *certv1.Cl
 	err = retryCreatingClusterIssuer(ctx, cli, new)
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
-			return err
+			return errors.Wrapf(err, "while creating the ClusterIssuer %q", new.Name)
 		}
 
 		err = retryUpdatingClusterIssuer(ctx, cli, new)
 		if err != nil {
-			return errors.Wrapf(err, "while updating the ClusterIssuer %s", new.Name)
+			return errors.Wrapf(err, "while updating the ClusterIssuer %q", new.Name)
 		}
 	}
 
@@ -56,7 +56,7 @@ func retryUpdatingClusterIssuer(ctx context.Context, cli certmanager.ClusterIssu
 	return k8sretry.RetryOnConflict(k8sretry.DefaultRetry, func() error {
 		old, err := cli.Get(ctx, new.Name, metav1.GetOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "while getting the ClusterIssuer %s", old.Name)
+			return errors.Wrapf(err, "while getting the ClusterIssuer %q", old.Name)
 		}
 
 		old.Spec = new.Spec
