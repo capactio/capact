@@ -42,7 +42,7 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Set up GoReleaser
-        run: go install github.com/goreleaser/goreleaser@v0.173.2
+        run: go install github.com/goreleaser/goreleaser@v1.1.0
       - name: Set up GCS
         uses: google-github-actions/setup-gcloud@master
         with:

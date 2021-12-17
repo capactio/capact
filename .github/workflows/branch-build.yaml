@@ -182,8 +182,14 @@ jobs:
             ${{ runner.os }}-go-
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Install upx 3.96
+        run: |
+          wget https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz
+          tar -xf upx-3.96-amd64_linux.tar.xz
+          mv ./upx-3.96-amd64_linux/upx /usr/local/bin/upx
+          upx -V
       - name: Set up GoReleaser
-        run: go install github.com/goreleaser/goreleaser@v0.173.2
+        run: go install github.com/goreleaser/goreleaser@v1.1.0
       - name: Set up GCS
         uses: google-github-actions/setup-gcloud@master
         with:
