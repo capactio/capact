@@ -2,8 +2,11 @@ package register
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -81,9 +84,14 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 	}()
 
 	// run server with merge file list from various sources
+	seenFiles := make(map[string]struct{})
 	var fileList []string
 	var commits []string
 	for _, src := range sourcesInfo {
+		err = filesAlreadyExists(seenFiles, src.files)
+		if err != nil {
+			return errors.Wrap(err, "while validating the source files")
+		}
 		fileList = append(fileList, src.files...)
 		commits = append(commits, strings.TrimSpace(string(src.gitHash)))
 	}
@@ -121,9 +129,6 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 
 	for _, src := range sourcesInfo {
 		err = runDBPopulate(ctx, cfg, session, log, src)
-		if rErr := os.RemoveAll(src.dir); rErr != nil {
-			err = multierror.Append(err, rErr)
-		}
 		if err != nil {
 			return errors.Wrap(err, "while populating db")
 		}
@@ -152,22 +157,25 @@ func removeDuplicateSources(sources []string) []string {
 	return result
 }
 
-func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string, parentDir string) ([]sourceInfo, error) {
+func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string, parent string) ([]sourceInfo, error) {
 	var sourcesInfo []sourceInfo
 	for _, source := range sources {
-		parent, err := ioutil.TempDir(parentDir, "*-hub")
-		if err != nil {
-			return nil, errors.Wrap(err, "while creating temporary directory")
+		encodePath := path.Clean(encodePath(source))
+		dstDir := path.Join(parent, encodePath)
+		if encodePath == "." {
+			tempDir, err := createTempDirName("-local")
+			if err != nil {
+				return nil, errors.Wrap(err, "while creating temporary directory for local source")
+			}
+			dstDir = path.Join(parent, tempDir)
 		}
 
-		dstDir := path.Join(parent, "hub")
-
-		err = getter.Download(ctx, source, dstDir)
+		err := getter.Download(ctx, source, dstDir)
 		if err != nil {
 			return nil, errors.Wrap(err, "while downloading Hub manifests")
 		}
 
-		log.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))
+		log.Info("Populating downloaded manifests...", zap.String("source", source), zap.String("path", cfg.ManifestsPath))
 		rootDir := path.Join(dstDir, cfg.ManifestsPath)
 		files, err := io.ListYAMLs(rootDir)
 		if err != nil {
@@ -186,6 +194,35 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 		})
 	}
 	return sourcesInfo, nil
+}
+
+func encodePath(path string) string {
+	return url.QueryEscape(path)
+}
+
+func createTempDirName(suffix string) (string, error) {
+	randBytes := make([]byte, 16)
+	_, err := rand.Read(randBytes)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(randBytes) + suffix, nil
+}
+
+func filesAlreadyExists(container map[string]struct{}, files []string) error {
+	for _, file := range files {
+		shortPath := getPathWithoutRootDir(file)
+		if _, ok := container[shortPath]; ok {
+			return fmt.Errorf("duplicate path for: %s", shortPath)
+		}
+		container[shortPath] = struct{}{}
+	}
+	return nil
+}
+
+func getPathWithoutRootDir(fullPath string) string {
+	parts := strings.Split(fullPath, string(os.PathSeparator))
+	return path.Join(parts[4:]...)
 }
 
 func runDBPopulate(ctx context.Context, cfg dbpopulator.Config, session neo4j.Session, log *zap.Logger, source sourceInfo) (err error) {

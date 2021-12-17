@@ -54,6 +54,12 @@ APP_JSON_PUBLISH_ADDR=http://{HOST_IP} ./populator register ocf-manifests --sour
 ```
 Replace `HOST_IP` with your computer IP
 
+There is an option to run populator with multiple sources with the usage of the `source` flag.
+Example, which demonstrates this feature:
+ ```shell
+./populator register ocf-manifests --source {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_SOURCE_1} --source {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_SOURCE_2}
+```
+
 ## Configuration
 
 You can set the following environment variables to configure the Hub database populator:
@@ -65,6 +71,6 @@ You can set the following environment variables to configure the Hub database po
 | APP_NEO4J_PASSWORD                   | yes      |                          | Neo4h admin password                                                                                                                                  |
 | APP_JSON_PUBLISH_ADDR                | yes      |                          | Address on which populator will serve JSON files                                                                                                      |
 | APP_JSON_PUBLISH_PORT                | no       | `8080`                   | Port number on which populator will be listening                                                                                                      |
-| APP_MANIFESTS_PATH                   | no       | `manifests`            | Path to a directory in a repository where manifests are stored                                                                                        |
+| APP_MANIFESTS_PATH                   | no       | ` `            | Path to a directory in a repository where manifests are stored. In case of many sources the same path  will be used.                                                                                  |
 | APP_UPDATE_ON_GIT_COMMIT        | no       | `false`                  | Flag to make populator populate data only when there are new changes in a repository                                                                  |
 | APP_LOGGER_DEV_MODE                  | no       | `false`                  | Enable development mode logging                                                                                                                       |

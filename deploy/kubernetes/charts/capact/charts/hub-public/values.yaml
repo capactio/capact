@@ -79,6 +79,7 @@ populator:
     pullPolicy: IfNotPresent
   port: 8081
   updateOnGitCommit: true
+  manifestsPath: manifests
   manifestsLocations:
     - local: false
       # It's public repository
@@ -86,4 +87,4 @@ populator:
       branch: main
       # sshKey is a base64 encoded private key used by populator to download manifests. It has read only access
       #sshKey:
-  args: ["while true; do /app register ocf-manifests --source $MANIFESTS_PATHS; sleep 600;done"]
+  args: ["while true; do /app register ocf-manifests --source $MANIFESTS_SOURCES; sleep 600;done"]
