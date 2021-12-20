@@ -109,8 +109,8 @@ Also, the additional, nice-to-have goals are:
 ## Prerequisites
 
 1. Implement these two Type features:
-    - https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes
-    - https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes
+    - [Additional references to parent nodes](https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes)
+    - [Find Types based on prefix of parent nodes](https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes)
 1. [Add TypeInstance `alias` metadata field](https://github.com/capactio/capact/issues/579)
 1. [Validate TypeInstance input](https://github.com/capactio/capact/issues/544)
 
@@ -582,19 +582,19 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
 
 1. The service is installed inside the cluster. As the service manages potentially sensitive data, the access for such service is limited.
 
-  - It doesn't expose any publicly available API. For any communication between Hub and the service, the in-cluster connection is used.
-  - A proper Kubernetes [Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) configuration need to be applied to limit access to the service.
-  - The service is deployed in restricted namespace, where user cannot have access to. The namespace `capact-system` can be used for such deployment, as an override for Helm runner, which currently takes the namespace from the Platform context.
-  - As already mentioned, the recommended way to deploy such service is to use Capact manifests. The access to run such Implementations may be restricted to Cluster Admin only with Hub authorization. Such Hub authorization will be implemented as a part of [User authentication and authorization](https://github.com/capactio/capact/issues/508) epic.
+    - It doesn't expose any publicly available API. For any communication between Hub and the service, the in-cluster connection is used.
+    - A proper Kubernetes [Network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) configuration need to be applied to limit access to the service.
+    - The service is deployed in restricted namespace, where user cannot have access to. The namespace `capact-system` can be used for such deployment, as an override for Helm runner, which currently takes the namespace from the Platform context.
+    - As already mentioned, the recommended way to deploy such service is to use Capact manifests. The access to run such Implementations may be restricted to Cluster Admin only with Hub authorization. Such Hub authorization will be implemented as a part of [User authentication and authorization](https://github.com/capactio/capact/issues/508) epic.
 
 1. The service could be implemented using one of the following solutions, or other alternatives:
 
-  - [Dapr secrets](https://docs.dapr.io/developing-applications/building-blocks/secrets/secrets-overview/)
-  - [Kubernetes external secrets](https://github.com/external-secrets/kubernetes-external-secrets)
-  - [vault-k8s](https://github.com/hashicorp/vault-k8s)
-  - [db](https://upper.io/v4/getting-started/)
-  - [go-cloud](https://github.com/google/go-cloud)
-  - [stow](https://github.com/graymeta/stow)
+    - [Dapr secrets](https://docs.dapr.io/developing-applications/building-blocks/secrets/secrets-overview/)
+    - [Kubernetes external secrets](https://github.com/external-secrets/kubernetes-external-secrets)
+    - [vault-k8s](https://github.com/hashicorp/vault-k8s)
+    - [db](https://upper.io/v4/getting-started/)
+    - [go-cloud](https://github.com/google/go-cloud)
+    - [stow](https://github.com/graymeta/stow)
 
 ## Configuring storage backends
 
@@ -1173,11 +1173,11 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 
 1. Using dedicated Attribute to specify which storage backend TypeInstance should be selected by default
 
-  **Reason**: We still need to configure Policy to configure common TypeInstance injection.
+    **Reason**: We still need to configure Policy to configure common TypeInstance injection.
 
 1. Using the `cap.*` rule to define common TypeInstance injection
 
-  **Reason**: That would be too difficult to understand for System Administrator and System User. Additional property seem as better solution.
+    **Reason**: That would be too difficult to understand for System Administrator and System User. Additional property seem as better solution.
 
 ## Potential future evolution
 
@@ -1210,8 +1210,8 @@ Once approved, we need to address the following list of items:
 1. Investigate our approach to implementation
     - taking into account the [Potential feature evolution](#potential-future-evolution) which may impact implementation
 1. Implement these two Type features:
-    - https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes
-    - https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes
+    - [Additional references to parent nodes](https://capact.io/docs/feature/type-features/#additional-references-to-parent-nodes)
+    - [Find Types based on prefix of parent nodes](https://capact.io/docs/feature/type-features#find-types-based-on-prefix-of-parent-nodes)
 1. [Add TypeInstance `alias` metadata field](https://github.com/capactio/capact/issues/579)
     - Optional until we want to implement the [dynamic TypeInstance projections(#dynamic-typeinstance-projections) according to the proposal
 1. [Validate TypeInstance input](https://github.com/capactio/capact/issues/544)
@@ -1219,27 +1219,27 @@ Once approved, we need to address the following list of items:
     - Optional - needed only if we want to restrict Hub content access
 1. Extend TypeInstance with the `TypeInstance.spec.backend` field
 1. Rewrite Local Hub to Go
-   - Make Local Hub to use PostgreSQL
-   - Extend GraphQL API
+    - Make Local Hub to use PostgreSQL
+    - Extend GraphQL API
 1. Implement Go Template storage backend services:
-  - default storage backend service for PostgreSQL
-  - service for TypeInstance projection
-  - At the very beginning it can be simplified to built-in database driver in Local Hub. Later we can implement the gRPC+ProtoBuf external service concept
+    - default storage backend service for PostgreSQL
+    - service for TypeInstance projection
+    - At the very beginning it can be simplified to built-in database driver in Local Hub. Later we can implement the gRPC+ProtoBuf external service concept
 1. Adjust all Implementations to use latest workflow syntax (Argo workflows artifact content):
-  - Use dynamic TypeInstance projection for output TypeInstances
-  - We can try to keep backward compatibility if needed and for older manifests still treat whole Argo artifacts as TypeInstance value
-  - In case of backward compatibility we can adjust just a few manifests for showcase purposes
+    - Use dynamic TypeInstance projection for output TypeInstances
+    - We can try to keep backward compatibility if needed and for older manifests still treat whole Argo artifacts as TypeInstance value
+    - In case of backward compatibility we can adjust just a few manifests for showcase purposes
 1. Handle multiple backends for the TypeInstance upload from workflow
-  - Extend `capact-outputTypeInstances` syntax
-  - Set proper `uses` relations between storage backend TypeInstance and other TypeInstances
-  - Modify TypeInstance create/update/delete images (named as "Argo actions") to take new input
+    - Extend `capact-outputTypeInstances` syntax
+    - Set proper `uses` relations between storage backend TypeInstance and other TypeInstances
+    - Modify TypeInstance create/update/delete images (named as "Argo actions") to take new input
 1. Update Policy
-  - Add new properties
-  - Handle common TypeInstance injections
+    - Add new properties
+    - Handle common TypeInstance injections
 1. Update documentation 
-  - Policy
-  - Content Development guide
-  - Type features
+    - Policy
+    - Content Development guide
+    - Type features
 1. Runners
-  - Remove `output.goTemplate`
-  - Stop supporting usage of funcs from `_helpers.tpl` in case of Helm runner
+    - Remove `output.goTemplate`
+    - Stop supporting usage of funcs from `_helpers.tpl` in case of Helm runner
