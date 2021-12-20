@@ -1,7 +1,7 @@
-FROM neo4j:4.2.8
+FROM neo4j:4.2.13
 
 ARG DESTINATION=/apoc.jar
-ARG PLUGIN_JAR_URL=https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.2.0.5/apoc-4.2.0.5-all.jar
+ARG PLUGIN_JAR_URL=https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.2.0.9/apoc-4.2.0.9-all.jar
 
 RUN wget -q --timeout 300 --tries 30 --output-document="${DESTINATION}" "${PLUGIN_JAR_URL}"
 
