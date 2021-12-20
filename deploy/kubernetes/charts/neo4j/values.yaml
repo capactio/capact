@@ -9,7 +9,7 @@ neo4j:
         cpu: 400m
         memory: 2048Mi
   image: ghcr.io/capactio/neo4j
-  imageTag: 4.2.8-apoc
+  imageTag: 4.2.13-apoc
   neo4jPassword: okon
   readinessProbe:
     initialDelaySeconds: 10
