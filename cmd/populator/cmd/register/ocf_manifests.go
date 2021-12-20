@@ -34,6 +34,8 @@ type sourceInfo struct {
 	gitHash []byte
 }
 
+type filterPath func(string) string
+
 // NewOCFManifests returns a cobra.Command for populating manifests into a Neo4j database.
 // TODO: support configuration both via flags and environment variables
 func NewOCFManifests(cliName string) *cobra.Command {
@@ -72,6 +74,10 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 	}
 
 	sources = removeDuplicateSources(sources)
+	if len(sources) == 0 {
+		return fmt.Errorf("no source information provided")
+	}
+
 	sourcesInfo, err := getSourcesInfo(ctx, cfg, log, sources, parentDir)
 	if err != nil {
 		return errors.Wrap(err, "while getting sources info")
@@ -160,17 +166,12 @@ func removeDuplicateSources(sources []string) []string {
 func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string, parent string) ([]sourceInfo, error) {
 	var sourcesInfo []sourceInfo
 	for _, source := range sources {
-		encodePath := path.Clean(encodePath(source))
-		dstDir := path.Join(parent, encodePath)
-		if encodePath == "." {
-			tempDir, err := createTempDirName("-local")
-			if err != nil {
-				return nil, errors.Wrap(err, "while creating temporary directory for local source")
-			}
-			dstDir = path.Join(parent, tempDir)
+		dstDir, err := getDestDir(parent, source)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting a destination directory")
 		}
 
-		err := getter.Download(ctx, source, dstDir)
+		err = getter.Download(ctx, source, dstDir)
 		if err != nil {
 			return nil, errors.Wrap(err, "while downloading Hub manifests")
 		}
@@ -180,6 +181,10 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 		files, err := io.ListYAMLs(rootDir)
 		if err != nil {
 			return nil, errors.Wrap(err, "while loading manifests")
+		}
+
+		if len(files) == 0 {
+			return nil, fmt.Errorf("empty list of files for source %s", source)
 		}
 
 		var gitHash []byte
@@ -196,8 +201,24 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 	return sourcesInfo, nil
 }
 
-func encodePath(path string) string {
-	return url.QueryEscape(path)
+func getDestDir(parent string, source string) (string, error) {
+	encodePath := path.Clean(encodePath(source, []filterPath{trimSSHkey}))
+	if encodePath == "." {
+		tempDir, err := createTempDirName("-local")
+		if err != nil {
+			return "", errors.Wrap(err, "while creating temporary directory for local source")
+		}
+		return path.Join(parent, tempDir), nil
+	}
+	return path.Join(parent, encodePath), nil
+}
+
+func encodePath(path string, filterPaths []filterPath) string {
+	toEscape := path
+	for _, filterPath := range filterPaths {
+		toEscape = filterPath(toEscape)
+	}
+	return url.QueryEscape(toEscape)
 }
 
 func createTempDirName(suffix string) (string, error) {
@@ -223,6 +244,13 @@ func filesAlreadyExists(container map[string]struct{}, files []string) error {
 func getPathWithoutRootDir(fullPath string) string {
 	parts := strings.Split(fullPath, string(os.PathSeparator))
 	return path.Join(parts[4:]...)
+}
+
+func trimSSHkey(s string) string {
+	if idx := strings.LastIndex(s, "&sshkey="); idx != -1 {
+		return s[:idx]
+	}
+	return s
 }
 
 func runDBPopulate(ctx context.Context, cfg dbpopulator.Config, session neo4j.Session, log *zap.Logger, source sourceInfo) (err error) {
