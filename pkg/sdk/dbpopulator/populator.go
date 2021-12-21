@@ -501,7 +501,7 @@ func IsDataInDB(session neo4j.Session, log *zap.Logger, commits []string) (bool,
 	}
 
 	log.Info("git commits did not change. Finishing")
-	return false, nil
+	return true, nil
 }
 
 // SaveCommitsMetadata saves the commits from the repositories in the DB
@@ -598,7 +598,7 @@ func currentCommits(session neo4j.Session) (string, error) {
 	}
 	commit, ok := record.Values[0].(string)
 	if !ok {
-		return "", fmt.Errorf("Failed to convert database response: %v", record.Values[0])
+		return "", fmt.Errorf("failed to convert database response: %v", record.Values[0])
 	}
 
 	return commit, errors.Wrap(result.Err(), "while executing neo4j transaction")

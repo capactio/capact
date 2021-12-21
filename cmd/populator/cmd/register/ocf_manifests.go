@@ -29,7 +29,7 @@ import (
 )
 
 type sourceInfo struct {
-	dir     string
+	rootDir string
 	files   []string
 	gitHash []byte
 }
@@ -94,7 +94,7 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 	var fileList []string
 	var commits []string
 	for _, src := range sourcesInfo {
-		err = filesAlreadyExists(seenFiles, src.files)
+		err = filesAlreadyExists(seenFiles, src.files, src.rootDir)
 		if err != nil {
 			return errors.Wrap(err, "while validating the source files")
 		}
@@ -171,12 +171,12 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 			return nil, errors.Wrap(err, "while getting a destination directory")
 		}
 
+		log.Info("Downloading manifests...", zap.String("source", source), zap.String("path", cfg.ManifestsPath))
 		err = getter.Download(ctx, source, dstDir)
 		if err != nil {
 			return nil, errors.Wrap(err, "while downloading Hub manifests")
 		}
 
-		log.Info("Populating downloaded manifests...", zap.String("source", source), zap.String("path", cfg.ManifestsPath))
 		rootDir := path.Join(dstDir, cfg.ManifestsPath)
 		files, err := io.ListYAMLs(rootDir)
 		if err != nil {
@@ -193,9 +193,9 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 			return nil, errors.Wrap(err, "while getting `git rev-parse HEAD`")
 		}
 		sourcesInfo = append(sourcesInfo, sourceInfo{
-			dir:     parent,
 			files:   files,
 			gitHash: gitHash,
+			rootDir: rootDir,
 		})
 	}
 	return sourcesInfo, nil
@@ -230,20 +230,15 @@ func createTempDirName(suffix string) (string, error) {
 	return hex.EncodeToString(randBytes) + suffix, nil
 }
 
-func filesAlreadyExists(container map[string]struct{}, files []string) error {
+func filesAlreadyExists(container map[string]struct{}, files []string, rootDir string) error {
 	for _, file := range files {
-		shortPath := getPathWithoutRootDir(file)
+		shortPath := trimRootDir(file, rootDir)
 		if _, ok := container[shortPath]; ok {
 			return fmt.Errorf("duplicate path for: %s", shortPath)
 		}
 		container[shortPath] = struct{}{}
 	}
 	return nil
-}
-
-func getPathWithoutRootDir(fullPath string) string {
-	parts := strings.Split(fullPath, string(os.PathSeparator))
-	return path.Join(parts[4:]...)
 }
 
 func trimSSHkey(s string) string {
@@ -253,11 +248,15 @@ func trimSSHkey(s string) string {
 	return s
 }
 
+func trimRootDir(s string, rootDir string) string {
+	return strings.TrimPrefix(s, rootDir)[1:]
+}
+
 func runDBPopulate(ctx context.Context, cfg dbpopulator.Config, session neo4j.Session, log *zap.Logger, source sourceInfo) (err error) {
 	start := time.Now()
 	err = retry.Do(func() error {
 		populated, err := dbpopulator.Populate(
-			ctx, log, session, source.files, source.dir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
+			ctx, log, session, source.files, source.rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
 		if err != nil {
 			log.Error("Cannot populate a new data", zap.String("error", err.Error()))
 			return err
