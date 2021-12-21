@@ -1,4 +1,4 @@
-FROM python:rc-alpine
+FROM python:3.10-alpine3.14
 
 # Create folders
 RUN mkdir /templates/ /variables/
