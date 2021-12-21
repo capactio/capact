@@ -135,7 +135,7 @@ def _load_ini():
 def _load_yaml():
     import yaml
 
-    return yaml.load, yaml.YAMLError, MalformedYAML
+    return yaml.safe_load, yaml.YAMLError, MalformedYAML
 
 
 def _load_querystring():

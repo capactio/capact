@@ -29,9 +29,9 @@ setup(
     license="BSD",
     install_requires=install_requires,
     extras_require={
-        "yaml": install_requires + ["pyyaml"],
-        "toml": install_requires + ["toml"],
-        "xml": install_requires + ["xmltodict"],
+        "yaml": install_requires + ["pyyaml~=6.0.0"],
+        "toml": install_requires + ["toml~=0.10.2"],
+        "xml": install_requires + ["xmltodict~=0.12.0"],
         "tests": install_requires + tests_requires,
     },
     tests_require=tests_requires,
