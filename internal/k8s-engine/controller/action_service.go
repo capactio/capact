@@ -278,6 +278,16 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 			return err
 		}
 
+		if !metav1.IsControlledBy(oldSecret, action) {
+			return errors.Errorf("Secret %q already exists and it is not owned by Action with the same name", key.String())
+		}
+
+		// Kubernetes allows creating Secret without data.
+		// We cannot be 100% sure that it was already initialized.
+		if oldSecret.Data == nil {
+			oldSecret.Data = map[string][]byte{}
+		}
+
 		oldSecret.Data[runnerContextSecretKey] = secret.Data[runnerContextSecretKey]
 		oldSecret.Data[runnerArgsSecretKey] = secret.Data[runnerArgsSecretKey]
 		return a.k8sCli.Update(ctx, oldSecret)

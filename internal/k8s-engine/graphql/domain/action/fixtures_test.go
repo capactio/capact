@@ -344,6 +344,11 @@ func fixGQLInputParameters() *graphql.JSON {
 	return &params
 }
 
+func fixEmptyGQLInputParameters() *graphql.JSON {
+	params := graphql.JSON(`{}`)
+	return &params
+}
+
 func fixGQLInputTypeInstances() []*graphql.InputTypeInstanceData {
 	return []*graphql.InputTypeInstanceData{
 		{
