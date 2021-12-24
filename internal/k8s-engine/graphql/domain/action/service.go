@@ -337,13 +337,9 @@ func (s *Service) createInputParamsSecretIfShould(ctx context.Context, item mode
 	owner := item.Action
 	secret := item.InputParamsSecret
 	secret.SetResourceVersion("") // ResourceVersion can be not empty when using the Service directly
+
 	secret.SetOwnerReferences([]v1.OwnerReference{
-		{
-			APIVersion: v1alpha1.GroupVersion.Identifier(),
-			Kind:       v1alpha1.ActionKind,
-			Name:       owner.Name,
-			UID:        owner.UID,
-		},
+		*metav1.NewControllerRef(&owner, v1alpha1.GroupVersion.WithKind(v1alpha1.ActionKind)),
 	})
 
 	log.Info("Creating Secret with input params")

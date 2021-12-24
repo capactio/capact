@@ -54,6 +54,9 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 			expectedModelPolicy: fixModelInputPolicy(name),
 			expectedModelSecret: fixModelInputSecret(name, false, true),
 		},
+		"Should ignore empty parameters and don't create secret": {
+			givenGQLParams: fixEmptyGQLInputParameters(),
+		},
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {

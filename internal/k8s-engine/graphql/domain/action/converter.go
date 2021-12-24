@@ -230,6 +230,10 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		data[ActionPolicySecretDataKey] = string(policyData)
 	}
 
+	if len(data) == 0 { // e.g. after unmarshaling we discovered that empty params were submitted
+		return nil, nil
+	}
+
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       secretKind,
