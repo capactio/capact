@@ -189,10 +189,10 @@ func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 	editor := ""
 	prompt := &survey.Editor{
-		Default: c.getParametersForEditor(),
-		Message: "Please type Action input parameters in YAML format",
+		Default:       c.getParametersForEditor(),
+		Message:       "Please type Action input parameters in YAML format",
 		AppendDefault: true,
-		HideDefault: true,
+		HideDefault:   true,
 	}
 
 	valid := []survey.Validator{
@@ -242,9 +242,9 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 	editor := ""
 	prompt := &survey.Editor{
 		Message:       "Please type Action input TypeInstance in YAML format",
-		Default:        c.getTypeInstancesForEditor(),
+		Default:       c.getTypeInstancesForEditor(),
 		AppendDefault: true,
-		HideDefault: true,
+		HideDefault:   true,
 	}
 
 	valid := []survey.Validator{
