@@ -1014,7 +1014,7 @@ type Mutation {
   unlockTypeInstances(in: UnlockTypeInstancesInput!): [ID!]!
 }
 
-# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
+# TODO: Prepare directive for user authorization in https://github.com/capactio/capact/issues/508
 
 `, BuiltIn: false},
 }

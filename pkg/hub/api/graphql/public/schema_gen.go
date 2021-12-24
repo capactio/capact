@@ -2192,7 +2192,7 @@ type Query @additionalLabels(labels: ["published"]){
   attribute(path: NodePath!): Attribute
 }
 
-# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
+# TODO: Prepare directive for user authorization in https://github.com/capactio/capact/issues/508
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)

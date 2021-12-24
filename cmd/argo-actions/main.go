@@ -62,7 +62,6 @@ func main() {
 	exitOnError(err, "while executing action")
 
 	// Argo doesn't like when a Pod exits too fast
-	// See https://cshark.atlassian.net/browse/SV-236
 	minTime := start.Add(time.Second)
 	if time.Now().Before(minTime) {
 		time.Sleep(time.Second)

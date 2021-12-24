@@ -1201,7 +1201,7 @@ type Mutation {
   updatePolicy(in: PolicyInput!): Policy!
 }
 
-# TODO: Directive for User authorization in https://cshark.atlassian.net/browse/SV-58
+# TODO: Directive for User authorization in https://github.com/capactio/capact/issues/508
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
