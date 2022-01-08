@@ -23,7 +23,8 @@ func AddGatewayToHostsFile() error {
 
 // AddRegistryToHostsFile adds a new entry to the /etc/hosts file for Capact local Docker registry.
 func AddRegistryToHostsFile() error {
-	entry := fmt.Sprintf("\n127.0.0.1 %s", create.ContainerRegistry)
+	// The hosts file only deals with hostnames, not ports.
+	entry := fmt.Sprintf("\n127.0.0.1 %s", create.ContainerRegistryName)
 	return updateHostFile(entry)
 }
 
