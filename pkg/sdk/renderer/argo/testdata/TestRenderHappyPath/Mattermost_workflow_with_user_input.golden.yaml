@@ -6,7 +6,7 @@ args:
     - inputs:
         artifacts:
         - name: input-parameters
-        - name: postgresql-db
+        - name: postgresql
           optional: true
       metadata: {}
       name: mattermost-install

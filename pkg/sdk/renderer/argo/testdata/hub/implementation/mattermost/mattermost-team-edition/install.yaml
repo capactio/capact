@@ -30,7 +30,7 @@ spec:
 
   additionalInput:
     typeInstances:
-     - name: postgresql-db
+     - name: postgresql
        typeRef:
           path: cap.type.database.postgresql.config
           revision: 0.1.0
@@ -86,7 +86,7 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
-                - name: postgresql-db
+                - name: postgresql
                   optional: true
             outputs:
               artifacts:
@@ -95,7 +95,7 @@ spec:
             steps:
               # Install DB
               - - name: install-db
-                  capact-when: postgresql-db == nil
+                  capact-when: postgresql == nil
                   capact-action: postgresql.install
                   capact-outputTypeInstances:
                     - name: postgresql
