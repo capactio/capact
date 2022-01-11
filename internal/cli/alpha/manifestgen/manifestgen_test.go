@@ -41,7 +41,7 @@ func TestGenerateAttributeManifests(t *testing.T) {
 
 	for name, manifestData := range manifests {
 		filename := fmt.Sprintf("%s.yaml", name)
-		golden.Assert(t, manifestData, filename)
+		golden.Assert(t, string(manifestData), filename)
 	}
 }
 func TestGenerateInterfaceManifests(t *testing.T) {
@@ -71,7 +71,7 @@ func TestGenerateInterfaceManifests(t *testing.T) {
 
 	for name, manifestData := range manifests {
 		filename := fmt.Sprintf("%s.yaml", name)
-		golden.Assert(t, manifestData, filename)
+		golden.Assert(t, string(manifestData), filename)
 	}
 }
 
@@ -115,7 +115,7 @@ func TestGenerateEmptyImplementationManifests(t *testing.T) {
 
 			for name, manifestData := range manifests {
 				filename := fmt.Sprintf("%s.yaml", name)
-				golden.Assert(t, manifestData, filename)
+				golden.Assert(t, string(manifestData), filename)
 			}
 		})
 	}
@@ -221,7 +221,7 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 
 			for name, manifestData := range manifests {
 				filename := fmt.Sprintf("%s.yaml", name)
-				golden.Assert(t, manifestData, filename)
+				golden.Assert(t, string(manifestData), filename)
 			}
 		})
 	}
@@ -299,7 +299,7 @@ func TestGenerateHelmImplementationManifests(t *testing.T) {
 
 			for name, manifestData := range manifests {
 				filename := fmt.Sprintf("%s.yaml", name)
-				golden.Assert(t, manifestData, filename)
+				golden.Assert(t, string(manifestData), filename)
 			}
 		})
 	}

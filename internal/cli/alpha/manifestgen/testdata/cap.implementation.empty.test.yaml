@@ -56,21 +56,6 @@ spec:
                 - name: input-parameters
                 - name: additional-parameters
                   optional: true
-            outputs:             
-              artifacts: {} # TODO(ContentDeveloper): Put here the output artifact if needed
-            steps: {} # TODO(ContentDeveloper): Put here the steps for the interface
-
-          - name: prepare-parameters
-            inputs:
-                artifacts:
-                  - name: input-parameters
-                    path: /yamls/input.yaml
-                  - name: additional-parameters
-                    path: /yamls/additionalinput.yaml
-                    optional: true
-            outputs:
-              artifacts: {} # TODO(ContentDeveloper): Put here the output artifact if needed
-            container:
-              image: alpine:latest
-              command: [sh, -c]
-              args: ["sleep 1; echo 'greeting: hello capact'"]
+              outputs:
+                artifacts: [] # TODO(ContentDeveloper): Define output artifacts if needed
+            steps: [] # TODO(ContentDeveloper): Define steps for the workflow template

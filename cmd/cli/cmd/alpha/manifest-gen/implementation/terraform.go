@@ -46,7 +46,7 @@ func NewTerraform() *cobra.Command {
 			tfContentCfg.ModulePath = args[1]
 			tfContentCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
+			manifests, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating content files")
 			}
@@ -61,7 +61,7 @@ func NewTerraform() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -77,10 +77,10 @@ func NewTerraform() *cobra.Command {
 	return cmd
 }
 
-func generateTerraformManifests(opts common.ManifestGenOptions) (map[string]string, error) {
-	terraformTemplate, err := common.AskForDirectory("Path to Terraform template", "")
+func generateTerraformManifests(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
+	terraformModule, err := common.AskForDirectory("Path to Terraform module", "")
 	if err != nil {
-		return nil, errors.Wrap(err, "while asking for path to Terraform template")
+		return nil, errors.Wrap(err, "while asking for path to Terraform module")
 	}
 
 	provider, err := askForProvider()
@@ -90,12 +90,12 @@ func generateTerraformManifests(opts common.ManifestGenOptions) (map[string]stri
 
 	source, err := askForSource()
 	if err != nil {
-		return nil, errors.Wrap(err, "while asking for source to Terraform template")
+		return nil, errors.Wrap(err, "while asking for source to Terraform module")
 	}
 
 	var tfContentCfg manifestgen.TerraformConfig
 	tfContentCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
-	tfContentCfg.ModulePath = terraformTemplate
+	tfContentCfg.ModulePath = terraformModule
 	tfContentCfg.ManifestMetadata = opts.Metadata
 	tfContentCfg.Provider = provider
 	tfContentCfg.ModuleSourceURL = source

@@ -24,7 +24,7 @@ func NewAttribute() *cobra.Command {
 			<cli> alpha manifest-gen attribute cap.attribute.cloud.provider.aws`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return errors.New("accepts only one argument")
+				return errors.New("accepts one argument: [MANIFEST_PATH]")
 			}
 
 			path := args[0]
@@ -38,7 +38,7 @@ func NewAttribute() *cobra.Command {
 			attributeCfg.ManifestPath = args[0]
 			attributeCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			files, err := manifestgen.GenerateAttributeTemplatingConfig(&attributeCfg)
+			manifests, err := manifestgen.GenerateAttributeTemplatingConfig(&attributeCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating attribute templating config")
 			}
@@ -53,7 +53,7 @@ func NewAttribute() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -67,7 +67,7 @@ func NewAttribute() *cobra.Command {
 }
 
 // GenerateAttributeFile generates new Attribute file.
-func GenerateAttributeFile(opts common.ManifestGenOptions) (map[string]string, error) {
+func GenerateAttributeFile(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	var attributeCfg manifestgen.AttributeConfig
 	attributeCfg.ManifestPath = common.CreateManifestPath(common.AttributeManifest, opts.ManifestPath)
 	attributeCfg.ManifestMetadata = opts.Metadata

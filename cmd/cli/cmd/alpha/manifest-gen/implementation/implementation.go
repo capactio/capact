@@ -2,6 +2,7 @@ package implementation
 
 import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
+	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -13,7 +14,7 @@ var (
 	emptyManifest = "Empty"
 )
 
-type generateFun func(opts common.ManifestGenOptions) (map[string]string, error)
+type generateFn func(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error)
 
 // NewCmd returns a cobra.Command for Implementation manifest generation operations.
 func NewCmd() *cobra.Command {
@@ -32,7 +33,7 @@ func NewCmd() *cobra.Command {
 }
 
 // GenerateImplementationManifest is responsible for generating implementation manifest based on tool
-func GenerateImplementationManifest(opts common.ManifestGenOptions) (map[string]string, error) {
+func GenerateImplementationManifest(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	tool, err := askForImplementationTool()
 	if err != nil {
 		return nil, errors.Wrap(err, "while asking for used implementation tool")
@@ -53,9 +54,9 @@ func GenerateImplementationManifest(opts common.ManifestGenOptions) (map[string]
 	if err != nil {
 		return nil, errors.Wrap(err, "while asking for license")
 	}
-	opts.Metadata.License = license
+	opts.Metadata.License.Name = &license
 
-	toolAction := map[string]generateFun{
+	toolAction := map[string]generateFn{
 		helmTool:      generateHelmManifests,
 		terraformTool: generateTerraformManifests,
 		emptyManifest: generateEmptyManifests,

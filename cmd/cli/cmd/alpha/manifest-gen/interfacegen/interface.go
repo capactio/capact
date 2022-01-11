@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type genManifestFun func(cfg *manifestgen.InterfaceConfig) (map[string]string, error)
+type genManifestFn func(cfg *manifestgen.InterfaceConfig) (manifestgen.ManifestCollection, error)
 
 // NewInterface returns a cobra.Command to bootstrap new Interface manifests.
 func NewInterface() *cobra.Command {
@@ -27,7 +27,7 @@ func NewInterface() *cobra.Command {
 			<cli> alpha manifest-gen interface cap.interface.database.postgresql.install`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return errors.New("accepts only one argument")
+				return errors.New("accepts one argument: [MANIFEST_PATH]")
 			}
 
 			path := args[0]
@@ -41,7 +41,7 @@ func NewInterface() *cobra.Command {
 			interfaceCfg.ManifestPath = args[0]
 			interfaceCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			files, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
+			manifests, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating content files")
 			}
@@ -56,7 +56,7 @@ func NewInterface() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -70,7 +70,7 @@ func NewInterface() *cobra.Command {
 }
 
 // GenerateInterfaceFile generates new Interface-group file based on function passed.
-func GenerateInterfaceFile(opts common.ManifestGenOptions, fn genManifestFun) (map[string]string, error) {
+func GenerateInterfaceFile(opts common.ManifestGenOptions, fn genManifestFn) (manifestgen.ManifestCollection, error) {
 	var interfaceCfg manifestgen.InterfaceConfig
 	interfaceCfg.ManifestPath = common.CreateManifestPath(common.InterfaceManifest, opts.ManifestPath)
 	interfaceCfg.ManifestRevision = opts.Revision

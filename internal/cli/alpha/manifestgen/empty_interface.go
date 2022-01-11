@@ -1,14 +1,13 @@
 package manifestgen
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
 )
 
-// GenerateEmptyManifests generates empty manifest files to be filled by the content developer.
-func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (map[string]string, error) {
+// GenerateEmptyManifests generates collection of manifest to be filled by the content developer.
+func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (ManifestCollection, error) {
 	cfgs := make([]*templatingConfig, 0, 2)
 
 	inputTypeCfg, err := getEmptyInputTypeTemplatingConfig(cfg)
@@ -25,23 +24,10 @@ func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (map[string]string, 
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating empty manifests")
+		return nil, errors.Wrap(err, "while generating empty Implementation manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
 func getEmptyImplementationTemplatingConfig(cfg *EmptyImplementationConfig) (*templatingConfig, error) {

@@ -34,7 +34,7 @@ func NewHelm() *cobra.Command {
 			helmCfg.ChartName = args[1]
 			helmCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			files, err := manifestgen.GenerateHelmManifests(&helmCfg)
+			manifests, err := manifestgen.GenerateHelmManifests(&helmCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating Helm manifests")
 			}
@@ -49,7 +49,7 @@ func NewHelm() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -65,11 +65,7 @@ func NewHelm() *cobra.Command {
 	return cmd
 }
 
-func generateHelmManifests(opts common.ManifestGenOptions) (map[string]string, error) {
-	helmTemplate, err := common.AskForDirectory("Path to Helm template", "")
-	if err != nil {
-		return nil, errors.Wrap(err, "while asking for path to Helm template")
-	}
+func generateHelmManifests(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	helmchartInfo, err := askForHelmChartDetails()
 	if err != nil {
 		return nil, errors.Wrap(err, "while asking for Helm chart details")
@@ -77,9 +73,9 @@ func generateHelmManifests(opts common.ManifestGenOptions) (map[string]string, e
 
 	var helmCfg manifestgen.HelmConfig
 	helmCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
-	helmCfg.ChartName = helmTemplate
+	helmCfg.ChartName = helmchartInfo.Name
 	helmCfg.ManifestMetadata = opts.Metadata
-	helmCfg.ChartRepoURL = helmchartInfo.URL
+	helmCfg.ChartRepoURL = helmchartInfo.Repo
 	helmCfg.ChartVersion = helmchartInfo.Version
 	helmCfg.InterfacePathWithRevision = opts.InterfacePath
 

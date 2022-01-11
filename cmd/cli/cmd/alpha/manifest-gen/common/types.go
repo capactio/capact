@@ -2,6 +2,7 @@ package common
 
 import (
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 // Metadata is a alias for MetaDataInfo struct
@@ -25,19 +26,18 @@ type ManifestGenOptions struct {
 
 var (
 	// ApacheLicense hold a name for Apache License
-	ApacheLicense = "Apache 2.0"
-	// AWSProvider hold a name for AWS Provider
-	AWSProvider = "AWS"
+	ApacheLicense string = "Apache 2.0"
+)
+
+const (
 	// AttributeManifest hold a name for Attribute Manifest
-	AttributeManifest = "Attribute"
-	// GCPProvider hold a name for GCP Provider
-	GCPProvider = "GCP"
+	AttributeManifest = string(types.AttributeManifestKind)
 	// InterfaceManifest hold a name for Interface Manifest
-	InterfaceManifest = "Interface"
+	InterfaceManifest = string(types.InterfaceManifestKind)
 	// InterfaceGroupManifest hold a name for InterfaceGroup Manifest
-	InterfaceGroupManifest = "InterfaceGroup"
+	InterfaceGroupManifest = string(types.InterfaceGroupManifestKind)
 	// ImplementationManifest hold a name for Implementation Manifest
-	ImplementationManifest = "Implementation"
+	ImplementationManifest = string(types.ImplementationManifestKind)
 	// TypeManifest hold a name for Type Manifest
-	TypeManifest = "Type"
+	TypeManifest = string(types.TypeManifestKind)
 )

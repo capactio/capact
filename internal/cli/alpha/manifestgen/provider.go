@@ -2,18 +2,18 @@ package manifestgen
 
 import "fmt"
 
-// Provider represents the provider type of the manifest
+// Provider represents the provider type of the manifest.
 type Provider string
 
 const (
-	// ProviderAWS represents a AWS manifest type
+	// ProviderAWS represents a AWS manifest type.
 	ProviderAWS Provider = "aws"
 
-	// ProviderGCP respresents a GCP manifest type
+	// ProviderGCP respresents a GCP manifest type.
 	ProviderGCP Provider = "gcp"
 )
 
-// Set sets and validates the Provider from string
+// Set sets and validates the Provider from string.
 func (p *Provider) Set(s string) error {
 	switch s {
 	case string(ProviderAWS):
@@ -31,7 +31,7 @@ func (p *Provider) String() string {
 	return string(*p)
 }
 
-// Type returns the underlying type of the Provider
+// Type returns the underlying type of the Provider.
 func (p *Provider) Type() string {
 	return "string"
 }

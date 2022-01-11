@@ -2,17 +2,16 @@ package manifestgen
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 )
 
-type genManifestFun func(cfg *InterfaceConfig) (*templatingConfig, error)
+type genManifestFn func(cfg *InterfaceConfig) (*templatingConfig, error)
 
-// GenerateInterfaceManifests generates manifest files for a new Interface.
-func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
+// GenerateInterfaceManifests generates collection of manifests for a new Interface.
+func GenerateInterfaceManifests(cfg *InterfaceConfig) (ManifestCollection, error) {
 	cfgs := make([]*templatingConfig, 0, 4)
 
 	interfaceGroupCfg, err := getInterfaceGroupTemplatingConfig(cfg)
@@ -44,41 +43,28 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error)
 		return nil, errors.Wrap(err, "while generating manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
-// GenerateInterfaceTemplatingConfig generates Interface templating config
-func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
-	return generateFile(cfg, []genManifestFun{getInterfaceTemplatingConfig})
+// GenerateInterfaceTemplatingConfig generates Interface templating config.
+func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceTemplatingConfig})
 }
 
-// GenerateInterfaceGroupTemplatingConfig generates InterfaceGroup templating config
-func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
-	return generateFile(cfg, []genManifestFun{getInterfaceGroupTemplatingConfig})
+// GenerateInterfaceGroupTemplatingConfig generates InterfaceGroup templating config.
+func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
 }
 
-// GenerateTypeTemplatingConfig generates Type templating config
-func GenerateTypeTemplatingConfig(cfg *InterfaceConfig) (map[string]string, error) {
-	return generateFile(cfg, []genManifestFun{getInterfaceInputTypeTemplatingConfig, getInterfaceOutputTypeTemplatingConfig})
+// GenerateTypeTemplatingConfig generates Type templating config.
+func GenerateTypeTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceInputTypeTemplatingConfig, getInterfaceOutputTypeTemplatingConfig})
 }
 
-func generateFile(cfg *InterfaceConfig, fn []genManifestFun) (map[string]string, error) {
+func generateManifestCollection(cfg *InterfaceConfig, fnList []genManifestFn) (ManifestCollection, error) {
 	cfgs := make([]*templatingConfig, 0, 4)
-	for _, fun := range fn {
-		interfaceCfg, err := fun(cfg)
+	for _, fn := range fnList {
+		interfaceCfg, err := fn(cfg)
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting Interface templating config")
 		}
@@ -89,18 +75,7 @@ func generateFile(cfg *InterfaceConfig, fn []genManifestFun) (map[string]string,
 		return nil, errors.Wrap(err, "while generating manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
 func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {

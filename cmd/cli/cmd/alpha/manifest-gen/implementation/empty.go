@@ -32,7 +32,7 @@ func NewEmpty() *cobra.Command {
 			emptyCfg.ManifestPath = args[0]
 			emptyCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			files, err := manifestgen.GenerateEmptyManifests(&emptyCfg)
+			manifests, err := manifestgen.GenerateEmptyManifests(&emptyCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating empty implementation manifests")
 			}
@@ -47,7 +47,7 @@ func NewEmpty() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -61,7 +61,7 @@ func NewEmpty() *cobra.Command {
 	return cmd
 }
 
-func generateEmptyManifests(opts common.ManifestGenOptions) (map[string]string, error) {
+func generateEmptyManifests(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	var emptyManifestCfg manifestgen.EmptyImplementationConfig
 	emptyManifestCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
 	emptyManifestCfg.ManifestMetadata = opts.Metadata

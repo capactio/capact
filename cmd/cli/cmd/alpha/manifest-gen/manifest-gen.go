@@ -5,6 +5,7 @@ import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfacegen"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/typegen"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -25,6 +26,7 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(attribute.NewAttribute())
+	cmd.AddCommand(typegen.NewType())
 	cmd.AddCommand(interfacegen.NewInterface())
 	cmd.AddCommand(implementation.NewCmd())
 
@@ -46,7 +48,7 @@ func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
 		return errors.Wrap(err, "while asking for manifest path suffix")
 	}
 
-	revision, err := common.AskForManifestRevision()
+	revision, err := common.AskForManifestRevision("Manifests revision")
 	if err != nil {
 		return errors.Wrap(err, "while asking for manifest revision")
 	}
@@ -58,23 +60,24 @@ func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
 	}
 	opts.Metadata = *metadata
 
-	generatingManifestsFun := map[string]genManifestFun{
+	generatingManifestsFun := map[string]genManifestFn{
 		common.AttributeManifest:      generateAttribute,
 		common.TypeManifest:           generateType,
 		common.InterfaceGroupManifest: generateInterfaceGroup,
 		common.InterfaceManifest:      generateInterface,
 		common.ImplementationManifest: generateImplementation,
 	}
-	var mergeFiles map[string]string
+	var manifestCollection manifestgen.ManifestCollection
 
 	for manifestType, fn := range generatingManifestsFun {
-		if slices.Contains(opts.ManifestsType, manifestType) {
-			files, err := fn(opts)
-			if err != nil {
-				return errors.Wrap(err, "while generating manifest file")
-			}
-			mergeFiles = mergeManifests(mergeFiles, files)
+		if !slices.Contains(opts.ManifestsType, manifestType) {
+			continue
 		}
+		manifests, err := fn(opts)
+		if err != nil {
+			return errors.Wrap(err, "while generating manifest file")
+		}
+		manifestCollection = mergeManifests(manifestCollection, manifests)
 	}
 
 	opts.Directory, err = common.AskForDirectory("path to the output directory for the generated manifests", "generated")
@@ -82,24 +85,24 @@ func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
 		return errors.Wrap(err, "while asking for output directory")
 	}
 
-	if manifestgen.ManifestsExistsInOutputDir(mergeFiles, opts.Directory) {
+	if manifestgen.DoesAnyManifestAlreadyExistInDir(manifestCollection, opts.Directory) {
 		opts.Overwrite, err = askIfOverwrite()
 		if err != nil {
 			return errors.Wrap(err, "while asking if overwrite existing manifest files")
 		}
 	}
 
-	if err := manifestgen.WriteManifestFiles(opts.Directory, mergeFiles, opts.Overwrite); err != nil {
+	if err := manifestgen.WriteManifestFiles(opts.Directory, manifestCollection, opts.Overwrite); err != nil {
 		return errors.Wrap(err, "while writing manifest files")
 	}
 	return nil
 }
 
-func mergeManifests(manifestsFiles ...map[string]string) (result map[string]string) {
-	result = make(map[string]string)
-	for _, manifestFiles := range manifestsFiles {
-		for path, fileName := range manifestFiles {
-			result[path] = fileName
+func mergeManifests(manifestsCollections ...manifestgen.ManifestCollection) (result manifestgen.ManifestCollection) {
+	result = make(manifestgen.ManifestCollection)
+	for _, manifestCollection := range manifestsCollections {
+		for path, content := range manifestCollection {
+			result[path] = content
 		}
 	}
 	return result

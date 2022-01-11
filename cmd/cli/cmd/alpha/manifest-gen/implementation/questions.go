@@ -3,17 +3,10 @@ package implementation
 import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/runner/helm"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 )
-
-type helmChart struct {
-	// URL is address to helm repository
-	URL string
-	// Version defines a helm chart version
-	Version string
-}
 
 func askForImplementationTool() (string, error) {
 	var selectedTool string
@@ -32,50 +25,28 @@ func askForInterface() (string, error) {
 		return "", errors.Wrap(err, "while asking for interface manifest path suffix")
 	}
 
-	revision, err := common.AskForManifestRevision()
+	revision, err := common.AskForManifestRevision("Interface manifest revision")
 	if err != nil {
 		return "", errors.Wrap(err, "while asking for interface revision")
 	}
 	return common.AddRevisionToPath(path, revision), nil
 }
 
-func askForLicense() (types.License, error) {
-	var licenseName, licenseRef string
+func askForLicense() (string, error) {
+	var licenseName string
 	name := &survey.Input{
-		Message: "Name of the license",
+		Message: "License name",
 		Default: common.ApacheLicense,
 	}
 	err := survey.AskOne(name, &licenseName)
-	if err != nil {
-		return types.License{}, err
-	}
-
-	// TODO: can be extended to a list of licenses that do not need a ref
-	if licenseName == common.ApacheLicense {
-		return types.License{
-			Name: &licenseName,
-		}, nil
-	}
-
-	ref := &survey.Input{
-		Message: "Reference for the license",
-		Default: "",
-	}
-	err = survey.AskOne(ref, &licenseRef)
-	if err != nil {
-		return types.License{}, err
-	}
-	return types.License{
-		Name: &licenseName,
-		Ref:  &licenseRef,
-	}, nil
+	return licenseName, err
 }
 
 func askForProvider() (manifestgen.Provider, error) {
 	var selectedProvider string
 	availableProviders := []string{string(manifestgen.ProviderAWS), string(manifestgen.ProviderGCP)}
 	prompt := &survey.Select{
-		Message: "Create a provider-specific workflow:",
+		Message: "Terraform provider",
 		Options: availableProviders,
 	}
 	err := survey.AskOne(prompt, &selectedProvider)
@@ -87,7 +58,7 @@ func askForSource() (string, error) {
 	prompt := []*survey.Question{
 		{
 			Prompt: &survey.Input{
-				Message: "Path to the Terraform module, such as URL to Tarball or Git repository",
+				Message: "Location of the hosted Terraform module, such as URL to Tarball or Git repository",
 				Default: "",
 			},
 		},
@@ -96,24 +67,33 @@ func askForSource() (string, error) {
 	return source, err
 }
 
-func askForHelmChartDetails() (helmChart, error) {
-	var helmChartInfo helmChart
+func askForHelmChartDetails() (helm.Chart, error) {
+	var helmChartInfo helm.Chart
+
+	helmTemplate, err := common.AskForDirectory("Path to Helm template", "")
+	if err != nil {
+		return helm.Chart{}, errors.Wrap(err, "while asking for path to Helm template")
+	}
+
 	var qs = []*survey.Question{
 		{
 			Name: "URL",
 			Prompt: &survey.Input{
-				Message: "URL of the Helm repository",
+				Message: "Helm repository URL",
 				Default: "",
 			},
 		},
 		{
 			Name: "Version",
 			Prompt: &survey.Input{
-				Message: "Version of the Helm chart",
+				Message: "Helm chart version",
 				Default: "",
 			},
 		},
 	}
-	err := survey.Ask(qs, &helmChartInfo)
+	err = survey.Ask(qs, &helmChartInfo)
+
+	helmChartInfo.Name = helmTemplate
+
 	return helmChartInfo, err
 }

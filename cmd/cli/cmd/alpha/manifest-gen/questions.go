@@ -28,7 +28,7 @@ func askForCommonMetadataInformation() (*common.Metadata, error) {
 		{
 			Name: "DocumentationURL",
 			Prompt: &survey.Input{
-				Message: "What is documentation URL?",
+				Message: "Documentation URL",
 				Default: "",
 			},
 			Validate: common.ValidateURL,
@@ -36,7 +36,7 @@ func askForCommonMetadataInformation() (*common.Metadata, error) {
 		{
 			Name: "SupportURL",
 			Prompt: &survey.Input{
-				Message: "What is support URL?",
+				Message: "Support URL",
 				Default: "",
 			},
 			Validate: common.ValidateURL,
@@ -44,7 +44,7 @@ func askForCommonMetadataInformation() (*common.Metadata, error) {
 		{
 			Name: "IconURL",
 			Prompt: &survey.Input{
-				Message: "What is icon URL?",
+				Message: "Icon URL?",
 				Default: "",
 			},
 			Validate: common.ValidateURL,
@@ -67,21 +67,17 @@ func askForMaintainers() ([]common.Maintainers, error) {
 	var maintainers []common.Maintainers
 	for {
 		addMore := false
-		message := ""
-		if len(maintainers) < 1 {
-			message = "Do you want to add maintainer?"
-		} else {
-			message = "Do you want to add another maintainer?"
-		}
-		prompt := &survey.Confirm{
-			Message: message,
-		}
-		err := survey.AskOne(prompt, &addMore)
-		if err != nil {
-			return nil, errors.Wrap(err, "while asking if add maintainers")
-		}
-		if !addMore {
-			return maintainers, nil
+		if len(maintainers) >= 1 {
+			prompt := &survey.Confirm{
+				Message: "Do you want to add more maintainers",
+			}
+			err := survey.AskOne(prompt, &addMore)
+			if err != nil {
+				return nil, errors.Wrap(err, "while asking if add maintainers")
+			}
+			if !addMore {
+				return maintainers, nil
+			}
 		}
 
 		maintainer, err := askForMaintainer()
@@ -98,15 +94,15 @@ func askForMaintainer() (common.Maintainers, error) {
 		{
 			Name: "Email",
 			Prompt: &survey.Input{
-				Message: "What is email",
+				Message: "Maintainer's e-mail address",
 				Default: "",
 			},
-			Validate: common.ManyValidators([]common.ValidateFun{survey.Required, common.ValidateEmail}),
+			Validate: common.ManyValidators([]survey.Validator{survey.Required, common.ValidateEmail}),
 		},
 		{
 			Name: "Name",
 			Prompt: &survey.Input{
-				Message: "What is a name?",
+				Message: "Maintainer's name",
 				Default: "",
 			},
 			Validate: survey.Required,
@@ -114,10 +110,10 @@ func askForMaintainer() (common.Maintainers, error) {
 		{
 			Name: "URL",
 			Prompt: &survey.Input{
-				Message: "What is a Url?",
+				Message: "Maintainer's URL",
 				Default: "",
 			},
-			Validate: common.ManyValidators([]common.ValidateFun{survey.Required, common.ValidateURL}),
+			Validate: common.ManyValidators([]survey.Validator{survey.Required, common.ValidateURL}),
 		},
 	}
 	err := survey.Ask(qs, &maintainer)

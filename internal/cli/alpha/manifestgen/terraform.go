@@ -2,7 +2,6 @@ package manifestgen
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -14,8 +13,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
-func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error) {
+// GenerateTerraformManifests generates collection of manifest for a Terraform module based Implementation.
+func GenerateTerraformManifests(cfg *TerraformConfig) (ManifestCollection, error) {
 	module, diags := tfconfig.LoadModule(cfg.ModulePath)
 	if diags.Err() != nil {
 		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")
@@ -37,23 +36,10 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating terraform manifests")
+		return nil, errors.Wrap(err, "while generating Terraform manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
 func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {

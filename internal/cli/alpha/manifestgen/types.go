@@ -4,32 +4,41 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-// Config stores generic input parameters for content generation
+// ManifestPath is a type for manifest path.
+type ManifestPath string
+
+// ManifestContent is a type for manifest content.
+type ManifestContent []byte
+
+// ManifestCollection is a type for manifest collections.
+type ManifestCollection map[ManifestPath]ManifestContent
+
+// Config stores generic input parameters for content generation.
 type Config struct {
 	ManifestPath     string
 	ManifestRevision string
 	ManifestMetadata MetaDataInfo
 }
 
-// AttributeConfig stores input parameters for Attribute content generation
+// AttributeConfig stores input parameters for Attribute content generation.
 type AttributeConfig struct {
 	Config
 }
 
-// InterfaceConfig stores input parameters for Interface content generation
+// InterfaceConfig stores input parameters for Interface content generation.
 type InterfaceConfig struct {
 	Config
 	InputPathWithRevision  string
 	OutputPathWithRevision string
 }
 
-// ImplementationConfig stores input parameters for Implementation content generation
+// ImplementationConfig stores input parameters for Implementation content generation.
 type ImplementationConfig struct {
 	Config
 	InterfacePathWithRevision string
 }
 
-// TerraformConfig stores input parameters for Terraform-based Implementation content generation
+// TerraformConfig stores input parameters for Terraform-based Implementation content generation.
 type TerraformConfig struct {
 	ImplementationConfig
 

@@ -12,9 +12,9 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-type genManifestFun func(opts common.ManifestGenOptions) (map[string]string, error)
+type genManifestFn func(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error)
 
-func generateAttribute(opts common.ManifestGenOptions) (map[string]string, error) {
+func generateAttribute(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	files, err := attribute.GenerateAttributeFile(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating attribute file")
@@ -22,7 +22,7 @@ func generateAttribute(opts common.ManifestGenOptions) (map[string]string, error
 	return files, nil
 }
 
-func generateType(opts common.ManifestGenOptions) (map[string]string, error) {
+func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	if slices.Contains(opts.ManifestsType, common.ImplementationManifest) {
 		// type files has been already generated in the implementation step
 		return nil, nil
@@ -34,7 +34,7 @@ func generateType(opts common.ManifestGenOptions) (map[string]string, error) {
 	return files, nil
 }
 
-func generateInterfaceGroup(opts common.ManifestGenOptions) (map[string]string, error) {
+func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	files, err := interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating interface group templating config")
@@ -42,7 +42,7 @@ func generateInterfaceGroup(opts common.ManifestGenOptions) (map[string]string, 
 	return files, nil
 }
 
-func generateInterface(opts common.ManifestGenOptions) (map[string]string, error) {
+func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	if slices.Contains(opts.ManifestsType, common.TypeManifest) || slices.Contains(opts.ManifestsType, common.ImplementationManifest) {
 		inputPath := common.CreateManifestPath(common.TypeManifest, opts.ManifestPath) + "-input"
 		opts.TypeInputPath = common.AddRevisionToPath(inputPath, opts.Revision)
@@ -61,7 +61,7 @@ func generateInterface(opts common.ManifestGenOptions) (map[string]string, error
 	return files, nil
 }
 
-func generateImplementation(opts common.ManifestGenOptions) (map[string]string, error) {
+func generateImplementation(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	files, err := implementation.GenerateImplementationManifest(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating implementation manifest")

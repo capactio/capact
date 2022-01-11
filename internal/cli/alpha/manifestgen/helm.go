@@ -17,8 +17,8 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 )
 
-// GenerateHelmManifests generates manifest files for a Helm module based Implementation
-func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
+// GenerateHelmManifests generates manifest files for a Helm module based Implementation.
+func GenerateHelmManifests(cfg *HelmConfig) (ManifestCollection, error) {
 	helmChart, err := loadHelmChart(cfg)
 	if err != nil {
 		return nil, err
@@ -40,23 +40,10 @@ func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating helm manifests")
+		return nil, errors.Wrap(err, "while generating Helm manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
 func loadHelmChart(cfg *HelmConfig) (*chart.Chart, error) {
