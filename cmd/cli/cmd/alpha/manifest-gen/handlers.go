@@ -35,7 +35,14 @@ func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollectio
 }
 
 func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	files, err := interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
+	var files manifestgen.ManifestCollection
+	var err error
+	if slices.Contains(opts.ManifestsType, common.InterfaceManifest) {
+		files, err = interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg)
+	} else {
+		files, err = interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating interface group templating config")
 	}

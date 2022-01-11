@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Type
 metadata:
   prefix: "cap.type.empty"
-  name: test-input
-  displayName: Input for empty.test
-  description: Input for the "empty.test Action"
+  name: additional-parameters
+  displayName: Additional input for test
+  description: Additional input for the "test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:

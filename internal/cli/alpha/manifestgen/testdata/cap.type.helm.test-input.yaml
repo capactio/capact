@@ -4,7 +4,7 @@ kind: Type
 metadata:
   prefix: "cap.type.helm"
   name: test-input
-  displayName: "Input for helm.test"
+  displayName: Input for helm.test
   description: Input for the "helm.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com

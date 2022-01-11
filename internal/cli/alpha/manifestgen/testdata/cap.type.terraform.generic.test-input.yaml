@@ -4,7 +4,7 @@ kind: Type
 metadata:
   prefix: "cap.type.terraform.generic"
   name: test-input
-  displayName: "Input for terraform.generic.test"
+  displayName: Input for terraform.generic.test
   description: Input for the "terraform.generic.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com

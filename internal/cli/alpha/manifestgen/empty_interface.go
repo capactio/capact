@@ -1,6 +1,7 @@
 package manifestgen
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -15,6 +16,12 @@ func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (ManifestCollection,
 		return nil, errors.Wrap(err, "while getting Implementation templating config")
 	}
 	cfgs = append(cfgs, inputTypeCfg)
+
+	additionalInputTypeCfg, err := getEmptyAdditionalInputTypeTemplatingConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Implementation templating config")
+	}
+	cfgs = append(cfgs, additionalInputTypeCfg)
 
 	implCfg, err := getEmptyImplementationTemplatingConfig(cfg)
 	if err != nil {
@@ -54,12 +61,37 @@ func getEmptyImplementationTemplatingConfig(cfg *EmptyImplementationConfig) (*te
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,
 		},
-		InterfacePath:     interfacePath,
-		InterfaceRevision: interfaceRevision,
+		AdditionalInputName: cfg.AdditionalInputTypeName,
+		InterfacePath:       interfacePath,
+		InterfaceRevision:   interfaceRevision,
 	}
 
 	return &templatingConfig{
 		Template: emptyImplementationManifestTemplate,
+		Input:    input,
+	}, nil
+}
+
+func getEmptyAdditionalInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
+	}
+
+	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Additional input for %s", name)
+	cfg.ManifestMetadata.Description = fmt.Sprintf("Additional input for the \"%s Action\"", name)
+
+	input := &typeTemplatingInput{
+		templatingInput: templatingInput{
+			Metadata: cfg.ManifestMetadata,
+			Name:     cfg.AdditionalInputTypeName,
+			Prefix:   prefix,
+			Revision: cfg.ManifestRevision,
+		},
+	}
+
+	return &templatingConfig{
+		Template: typeManifestTemplate,
 		Input:    input,
 	}, nil
 }
@@ -70,10 +102,13 @@ func getEmptyInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templat
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
+	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
+
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
 			Metadata: cfg.ManifestMetadata,
-			Name:     name,
+			Name:     getDefaultInputTypeName(name),
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,
 		},

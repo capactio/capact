@@ -1,13 +1,14 @@
 ocfVersion: 0.0.1
-revision: 0.1.0
+revision: 0.2.0
 kind: Type
 metadata:
-  prefix: "cap.type.empty"
-  name: test-input
-  displayName: Input for empty.test
-  description: Input for the "empty.test Action"
+  prefix: "cap.type.group"
+  name: test
+  displayName: group config
+  description: Type representing a group config
   documentationURL: https://example.com
   supportURL: https://example.com
+  iconURL: https://example.com/icon.png
   maintainers:
     - email: dev@example.com
       name: Example Dev

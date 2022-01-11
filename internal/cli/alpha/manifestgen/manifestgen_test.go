@@ -83,6 +83,7 @@ func TestGenerateEmptyImplementationManifests(t *testing.T) {
 		{
 			name: "Implementation manifests",
 			cfg: &manifestgen.EmptyImplementationConfig{
+				AdditionalInputTypeName: "additional-parameters",
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.empty.test",

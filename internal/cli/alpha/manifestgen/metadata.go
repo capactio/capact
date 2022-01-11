@@ -19,6 +19,8 @@ type Maintainer struct {
 type MetaDataInfo struct {
 	Name             string        `yaml:"name"`
 	Prefix           string        `yaml:"prefix"`
+	DisplayName      string        `yaml:"displayName"`
+	Description      string        `yaml:"description"`
 	DocumentationURL string        `yaml:"documentationURL"`
 	SupportURL       string        `yaml:"supportURL"`
 	IconURL          string        `yaml:"iconURL"`

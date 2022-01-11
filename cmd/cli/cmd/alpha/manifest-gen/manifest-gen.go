@@ -27,6 +27,7 @@ func NewCmd() *cobra.Command {
 
 	cmd.AddCommand(attribute.NewAttribute())
 	cmd.AddCommand(typegen.NewType())
+	cmd.AddCommand(interfacegen.NewInterfaceGroup())
 	cmd.AddCommand(interfacegen.NewInterface())
 	cmd.AddCommand(implementation.NewCmd())
 

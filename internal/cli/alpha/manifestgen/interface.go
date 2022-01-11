@@ -2,6 +2,7 @@ package manifestgen
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
@@ -51,8 +52,15 @@ func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceTemplatingConfig})
 }
 
+// GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg generates InterfaceGroup templating config from interface config.
+func GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg(cfg *InterfaceConfig) (ManifestCollection, error) {
+	cfg.ManifestPath = getInterfaceGroupPathFromInterfacePath(cfg.ManifestPath)
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
+}
+
 // GenerateInterfaceGroupTemplatingConfig generates InterfaceGroup templating config.
 func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	// TODO: created dedicated InterfaceGroupConfig
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
 }
 
@@ -79,8 +87,7 @@ func generateManifestCollection(cfg *InterfaceConfig, fnList []genManifestFn) (M
 }
 
 func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
-	interfaceGroupPath := getInterfaceGroupPathFromInterfacePath(cfg.ManifestPath)
-	groupPrefix, groupName, err := splitPathToPrefixAndName(interfaceGroupPath)
+	groupPrefix, groupName, err := splitPathToPrefixAndName(cfg.ManifestPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting InterfaceGroup prefix and path")
 	}
@@ -146,12 +153,15 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 		return nil, errors.Wrap(err, "while getting input type JSON schema")
 	}
 
+	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
+
 	return &templatingConfig{
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
 				Metadata: cfg.ManifestMetadata,
-				Name:     name,
+				Name:     getDefaultInputTypeName(name),
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
 			},
@@ -166,9 +176,12 @@ func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCo
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
+	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("%s config", prefix)
+	cfg.ManifestMetadata.Description = fmt.Sprintf("Type representing a %s config", prefix)
+
 	return &templatingConfig{
-		Template: outputTypeManifestTemplate,
-		Input: &outputTypeTemplatingInput{
+		Template: typeManifestTemplate,
+		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
 				Metadata: cfg.ManifestMetadata,
 				Name:     name,

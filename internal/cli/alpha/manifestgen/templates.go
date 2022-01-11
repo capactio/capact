@@ -20,9 +20,6 @@ var (
 	//go:embed templates/type.yaml.tmpl
 	typeManifestTemplate string
 
-	//go:embed templates/output-type.yaml.tmpl
-	outputTypeManifestTemplate string
-
 	//go:embed templates/terraform-implementation.yaml.tmpl
 	terraformImplementationManifestTemplate string
 

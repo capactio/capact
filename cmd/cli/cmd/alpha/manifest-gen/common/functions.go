@@ -12,7 +12,7 @@ func CreateManifestPath(manifestType string, suffix string) string {
 	return "cap." + suffixes[manifestType] + "." + suffix
 }
 
-// AddRevisionToPath adds revision to manifest path
+// AddRevisionToPath adds revision to manifest path.
 func AddRevisionToPath(path string, revision string) string {
 	return path + ":" + revision
 }

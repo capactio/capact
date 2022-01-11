@@ -5,13 +5,13 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
-// Metadata is a alias for MetaDataInfo struct
+// Metadata is a alias for MetaDataInfo struct.
 type Metadata = manifestgen.MetaDataInfo
 
-// Maintainers is a alias for Maintainer struct
+// Maintainers is a alias for Maintainer struct.
 type Maintainers = manifestgen.Maintainer
 
-// ManifestGenOptions is a struct based on which manifests are generated
+// ManifestGenOptions is a struct based on which manifests are generated.
 type ManifestGenOptions struct {
 	Directory      string
 	InterfacePath  string
@@ -25,19 +25,19 @@ type ManifestGenOptions struct {
 }
 
 var (
-	// ApacheLicense hold a name for Apache License
-	ApacheLicense string = "Apache 2.0"
+	// ApacheLicense hold a name for Apache License.
+	ApacheLicense = "Apache 2.0"
 )
 
 const (
-	// AttributeManifest hold a name for Attribute Manifest
+	// AttributeManifest hold a name for Attribute Manifest.
 	AttributeManifest = string(types.AttributeManifestKind)
-	// InterfaceManifest hold a name for Interface Manifest
+	// InterfaceManifest hold a name for Interface Manifest.
 	InterfaceManifest = string(types.InterfaceManifestKind)
-	// InterfaceGroupManifest hold a name for InterfaceGroup Manifest
+	// InterfaceGroupManifest hold a name for InterfaceGroup Manifest.
 	InterfaceGroupManifest = string(types.InterfaceGroupManifestKind)
-	// ImplementationManifest hold a name for Implementation Manifest
+	// ImplementationManifest hold a name for Implementation Manifest.
 	ImplementationManifest = string(types.ImplementationManifestKind)
-	// TypeManifest hold a name for Type Manifest
+	// TypeManifest hold a name for Type Manifest.
 	TypeManifest = string(types.TypeManifestKind)
 )

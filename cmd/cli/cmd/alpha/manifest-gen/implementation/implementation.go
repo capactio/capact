@@ -8,10 +8,12 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-var (
-	helmTool      = "Helm"
-	terraformTool = "Terraform"
-	emptyManifest = "Empty"
+type implGeneratorType string
+
+const (
+	helmTool      implGeneratorType = "Helm"
+	terraformTool implGeneratorType = "Terraform"
+	emptyManifest implGeneratorType = "Empty"
 )
 
 type generateFn func(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error)
@@ -32,7 +34,7 @@ func NewCmd() *cobra.Command {
 	return cmd
 }
 
-// GenerateImplementationManifest is responsible for generating implementation manifest based on tool
+// GenerateImplementationManifest is responsible for generating implementation manifest based on tool.
 func GenerateImplementationManifest(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	tool, err := askForImplementationTool()
 	if err != nil {
@@ -56,11 +58,11 @@ func GenerateImplementationManifest(opts common.ManifestGenOptions) (manifestgen
 	}
 	opts.Metadata.License.Name = &license
 
-	toolAction := map[string]generateFn{
+	toolAction := map[implGeneratorType]generateFn{
 		helmTool:      generateHelmManifests,
 		terraformTool: generateTerraformManifests,
 		emptyManifest: generateEmptyManifests,
 	}
 
-	return toolAction[tool](opts)
+	return toolAction[implGeneratorType(tool)](opts)
 }

@@ -10,10 +10,16 @@ import (
 
 func askForImplementationTool() (string, error) {
 	var selectedTool string
-	availableTool := []string{helmTool, terraformTool, emptyManifest}
+	var options []string
+
+	availableTool := []implGeneratorType{helmTool, terraformTool, emptyManifest}
+	for _, tool := range availableTool {
+		options = append(options, string(tool))
+	}
+
 	prompt := &survey.Select{
 		Message: "Based on which tool do you want to generate implementation:",
-		Options: availableTool,
+		Options: options,
 	}
 	err := survey.AskOne(prompt, &selectedTool)
 	return selectedTool, err

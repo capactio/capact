@@ -4,7 +4,7 @@ kind: Type
 metadata:
   prefix: "cap.type.group"
   name: test-input
-  displayName: "Input for group.test"
+  displayName: Input for group.test
   description: Input for the "group.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com

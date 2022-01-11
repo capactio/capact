@@ -3,9 +3,9 @@ revision: {{ .Revision }}
 kind: Type
 metadata:
   prefix: "cap.type.{{ .Prefix }}"
-  name: {{ .Name }}-input
-  displayName: "Input for {{ .Prefix }}.{{ .Name }}"
-  description: Input for the "{{ .Prefix }}.{{ .Name }} Action"
+  name: {{ .Name }}
+  displayName: {{.Metadata.DisplayName}}
+  description: {{.Metadata.Description}}
   {{- if .Metadata.DocumentationURL }}
   documentationURL: {{.Metadata.DocumentationURL}}
   {{- end}}
@@ -26,5 +26,21 @@ metadata:
 spec:
   jsonSchema:
     # TODO(ContentDeveloper): Adjust the JSON schema if needed.
+  {{- if .JSONSchema }}
     value: |-
 {{ .JSONSchema | indent 6 }}
+  {{- else}}
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "required": [],
+        "properties": {
+          "example": {
+            "$id": "#/properties/example",
+            "type": "string",
+            "description": "Example field"
+          }
+        }
+      }
+  {{- end}}

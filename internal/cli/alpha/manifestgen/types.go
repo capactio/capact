@@ -58,6 +58,7 @@ type HelmConfig struct {
 
 // EmptyImplementationConfig stores input parameters for empty Implementation content generation.
 type EmptyImplementationConfig struct {
+	AdditionalInputTypeName string
 	ImplementationConfig
 }
 
@@ -89,10 +90,6 @@ type interfaceTemplatingInput struct {
 	OutputTypeRevision string
 }
 
-type outputTypeTemplatingInput struct {
-	templatingInput
-}
-
 type typeTemplatingInput struct {
 	templatingInput
 	JSONSchema string
@@ -100,8 +97,9 @@ type typeTemplatingInput struct {
 
 type emptyImplementationTemplatingInput struct {
 	templatingInput
-	InterfacePath     string
-	InterfaceRevision string
+	AdditionalInputName string
+	InterfacePath       string
+	InterfaceRevision   string
 }
 
 type terraformImplementationTemplatingInput struct {

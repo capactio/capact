@@ -77,10 +77,13 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 		return nil, errors.Wrap(err, "while getting JSON schema for Helm chart values")
 	}
 
+	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
+
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
 			Metadata: cfg.ManifestMetadata,
-			Name:     name,
+			Name:     getDefaultInputTypeName(name),
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,
 		},

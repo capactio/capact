@@ -21,7 +21,7 @@ spec:
     parameters:
       additional-parameters:
         typeRef:
-          path: cap.type.empty.test-input
+          path: cap.type.empty.additional-parameters-input
           revision: 0.1.0
 
   outputTypeInstanceRelations:

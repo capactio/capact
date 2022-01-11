@@ -10,6 +10,10 @@ Manifests generation
 
 Subcommand for various manifest generation operations
 
+```
+capact alpha manifest-gen [flags]
+```
+
 ### Options
 
 ```
@@ -28,6 +32,9 @@ Subcommand for various manifest generation operations
 ### SEE ALSO
 
 * [capact alpha](capact_alpha.md)	 - Alpha features
+* [capact alpha manifest-gen attribute](capact_alpha_manifest-gen_attribute.md)	 - Generate new Attribute manifests
 * [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Generate new Implementation manifests
 * [capact alpha manifest-gen interface](capact_alpha_manifest-gen_interface.md)	 - Generate new Interface-related manifests
+* [capact alpha manifest-gen interfacegroup](capact_alpha_manifest-gen_interfacegroup.md)	 - Generate new InterfaceGroup manifest
+* [capact alpha manifest-gen type](capact_alpha_manifest-gen_type.md)	 - Generate new Type manifests
 

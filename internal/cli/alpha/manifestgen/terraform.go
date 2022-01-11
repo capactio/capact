@@ -2,6 +2,7 @@ package manifestgen
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -53,12 +54,15 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		return nil, errors.Wrap(err, "while getting input type JSON Schema")
 	}
 
+	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
+
 	return &templatingConfig{
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
 				Metadata: cfg.ManifestMetadata,
-				Name:     name,
+				Name:     getDefaultInputTypeName(name),
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
 			},

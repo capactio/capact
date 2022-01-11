@@ -75,7 +75,10 @@ func createManifestCollection(generatedManifests []string) (ManifestCollection, 
 
 func createFilePathFromManifestPath(path ManifestPath) string {
 	return strings.ReplaceAll(strings.TrimPrefix(string(path), "cap."), ".", string(os.PathSeparator)) + ".yaml"
+}
 
+func getDefaultInputTypeName(name string) string {
+	return name + "-input"
 }
 
 func splitPathToPrefixAndName(path string) (string, string, error) {
