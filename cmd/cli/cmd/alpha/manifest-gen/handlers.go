@@ -55,7 +55,7 @@ func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestColl
 		opts.TypeInputPath = common.AddRevisionToPath(inputPath, opts.Revision)
 	}
 
-	if slices.Contains(opts.ManifestsType, common.TypeManifest) {
+	if slices.Contains(opts.ManifestsType, common.TypeManifest) && !slices.Contains(opts.ManifestsType, common.ImplementationManifest) {
 		outputsuffix := strings.Split(opts.ManifestPath, ".")
 		outputPath := common.CreateManifestPath(common.TypeManifest, outputsuffix[0]) + ".config"
 		opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)

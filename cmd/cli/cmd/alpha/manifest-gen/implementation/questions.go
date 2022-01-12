@@ -76,23 +76,23 @@ func askForSource() (string, error) {
 func askForHelmChartDetails() (helm.Chart, error) {
 	var helmChartInfo helm.Chart
 
-	helmTemplate, err := common.AskForDirectory("Path to Helm template", "")
+	helmTemplate, err := common.AskForDirectory("Helm chart name", "")
 	if err != nil {
 		return helm.Chart{}, errors.Wrap(err, "while asking for path to Helm template")
 	}
 
 	var qs = []*survey.Question{
 		{
-			Name: "URL",
+			Name: "Version",
 			Prompt: &survey.Input{
-				Message: "Helm repository URL",
+				Message: "Helm chart version",
 				Default: "",
 			},
 		},
 		{
-			Name: "Version",
+			Name: "Repo",
 			Prompt: &survey.Input{
-				Message: "Helm chart version",
+				Message: "Helm repository URL",
 				Default: "",
 			},
 		},
