@@ -193,6 +193,7 @@ func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 		Message:       "Please type Action input parameters in YAML format",
 		AppendDefault: true,
 		HideDefault:   true,
+		FileName:      "*.yaml",
 	}
 
 	valid := []survey.Validator{
@@ -245,6 +246,7 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 		Default:       c.getTypeInstancesForEditor(),
 		AppendDefault: true,
 		HideDefault:   true,
+		FileName:      "*.yaml",
 	}
 
 	valid := []survey.Validator{
@@ -311,6 +313,7 @@ func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
     `, ifacePath)),
 		AppendDefault: true,
 		HideDefault:   true,
+		FileName:      "*.yaml",
 	}
 	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
 		return nil, err
