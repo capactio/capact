@@ -1,4 +1,4 @@
-package interfacegen
+package interfaces
 
 import (
 	"strings"

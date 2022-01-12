@@ -1,4 +1,4 @@
-package interfacegen
+package types
 
 import (
 	"strings"
@@ -11,34 +11,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewInterfaceGroup returns a cobra.Command to bootstrap new InterfaceGroup manifests.
-func NewInterfaceGroup() *cobra.Command {
-	var interfaceGroupCfg manifestgen.InterfaceConfig
+// NewType returns a cobra.Command to bootstrap new Type manifests.
+func NewType() *cobra.Command {
+	var typeCfg manifestgen.InterfaceConfig
 
 	cmd := &cobra.Command{
-		Use:     "interfacegroup [PATH]",
-		Aliases: []string{"igroup", "interfacegroups"},
-		Short:   "Generate new InterfaceGroup manifest",
+		Use:     "type [PATH]",
+		Aliases: []string{"types"},
+		Short:   "Generate new Type manifests",
 		Example: heredoc.WithCLIName(`
-			# Generate manifests for the cap.interface.database.postgresql InterfaceGroup
-			<cli> alpha manifest-gen interfacegroup cap.interface.database.postgresql`, cli.Name),
+			# Generate manifests for the cap.type.database.postgresql.config Type
+			<cli> alpha manifest-gen type cap.type.database.postgresql.config`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("accepts one argument: [MANIFEST_PATH]")
 			}
 
 			path := args[0]
-			if !strings.HasPrefix(path, "cap.interface.") || len(strings.Split(path, ".")) < 3 {
-				return errors.New(`manifest path must be in format "cap.interface.[NAME]"`)
+			if !strings.HasPrefix(path, "cap.type.") || len(strings.Split(path, ".")) < 4 {
+				return errors.New(`manifest path must be in format "cap.type.[PREFIX].[NAME]"`)
 			}
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			interfaceGroupCfg.ManifestPath = args[0]
-			interfaceGroupCfg.ManifestMetadata = common.GetDefaultMetadata()
+			typeCfg.ManifestPath = args[0]
+			typeCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			manifests, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceGroupCfg)
+			manifests, err := manifestgen.GenerateTypeTemplatingConfig(&typeCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating content files")
 			}
@@ -61,7 +61,7 @@ func NewInterfaceGroup() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&interfaceGroupCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the InterfaceGroup manifest")
+	cmd.Flags().StringVarP(&typeCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Type manifest")
 
 	return cmd
 }

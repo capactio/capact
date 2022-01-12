@@ -4,8 +4,8 @@ import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attribute"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfacegen"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/typegen"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfaces"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/types"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -26,9 +26,9 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(attribute.NewAttribute())
-	cmd.AddCommand(typegen.NewType())
-	cmd.AddCommand(interfacegen.NewInterfaceGroup())
-	cmd.AddCommand(interfacegen.NewInterface())
+	cmd.AddCommand(types.NewType())
+	cmd.AddCommand(interfaces.NewInterfaceGroup())
+	cmd.AddCommand(interfaces.NewInterface())
 	cmd.AddCommand(implementation.NewCmd())
 
 	cmd.PersistentFlags().StringP("output", "o", "generated", "Path to the output directory for the generated manifests")

@@ -6,7 +6,7 @@ import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attribute"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfacegen"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfaces"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"github.com/pkg/errors"
 	"k8s.io/utils/strings/slices"
@@ -27,7 +27,7 @@ func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollectio
 		// type files has been already generated in the implementation step
 		return nil, nil
 	}
-	files, err := interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateTypeTemplatingConfig)
+	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateTypeTemplatingConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating type templating config")
 	}
@@ -38,9 +38,9 @@ func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.Manifes
 	var files manifestgen.ManifestCollection
 	var err error
 	if slices.Contains(opts.ManifestsType, common.InterfaceManifest) {
-		files, err = interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg)
+		files, err = interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg)
 	} else {
-		files, err = interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
+		files, err = interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
 	}
 
 	if err != nil {
@@ -61,7 +61,7 @@ func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestColl
 		opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)
 	}
 
-	files, err := interfacegen.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceTemplatingConfig)
+	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceTemplatingConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating interface templating config")
 	}
