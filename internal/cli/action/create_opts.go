@@ -187,8 +187,14 @@ func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 }
 
 func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
-	rawInput := ""
-	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
+	editor := ""
+	prompt := &survey.Editor{
+		Default:       c.getParametersForEditor(),
+		Message:       "Please type Action input parameters in YAML format",
+		AppendDefault: true,
+		HideDefault:   true,
+		FileName:      "*.yaml",
+	}
 
 	valid := []survey.Validator{
 		survey.Required,
@@ -202,7 +208,7 @@ func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 				return errors.Wrap(err, "while converting YAML to JSON")
 			}
 
-			parameters, err := argo.ToParametersCollection(json.RawMessage(jsonInputParameters))
+			parameters, err := argo.ToParametersCollection(jsonInputParameters)
 			if err != nil {
 				return errors.Wrap(err, "while getting parameters collection")
 			}
@@ -215,29 +221,32 @@ func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 		}))
 	}
 
-	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
+	if err := survey.AskOne(prompt, &editor, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
 		return nil, err
 	}
 
-	return json.RawMessage(rawInput), nil
+	return yaml.YAMLToJSON([]byte(editor))
+}
+
+func (c *CreateOptions) getParametersForEditor() (body string) {
+	out := bytes.Buffer{}
+	for name := range c.ifaceSchemas {
+		out.WriteString(heredoc.Docf(`
+               %s:
+                 # put data for %s here`, name, name))
+		out.WriteString("\n")
+	}
+	return out.String()
 }
 
 func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
-	body, requiredTI := c.getTypeInstancesForEditor()
-
-	// TODO(https://github.com/capactio/capact/issues/438): If input TypeInstances are not required,
-	// still ask user whether he wants to specify one.
-	// We need to allow to pass additionalTypeInstances
-	// which are not specified in a given Interface, e.g. existing database.
-	if !requiredTI {
-		askAboutTI := &survey.Confirm{Message: "Do you want to provide input TypeInstances?", Default: false}
-		if err := survey.AskOne(askAboutTI, &requiredTI); err != nil {
-			return nil, err
-		}
-	}
-
-	if !requiredTI {
-		return nil, nil
+	editor := ""
+	prompt := &survey.Editor{
+		Message:       "Please type Action input TypeInstance in YAML format",
+		Default:       c.getTypeInstancesForEditor(),
+		AppendDefault: true,
+		HideDefault:   true,
+		FileName:      "*.yaml",
 	}
 
 	valid := []survey.Validator{
@@ -259,14 +268,6 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 		}))
 	}
 
-	editor := ""
-	prompt := &survey.Editor{
-		Message:       "Please type Action input TypeInstance in YAML format",
-		Default:       body,
-		AppendDefault: true,
-
-		HideDefault: true,
-	}
 	if err := survey.AskOne(prompt, &editor, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
 		return nil, err
 	}
@@ -274,16 +275,7 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 	return toTypeInstance([]byte(editor))
 }
 
-func (c *CreateOptions) getTypeInstancesForEditor() (body string, required bool) {
-	if len(c.ifaceTypes) == 0 {
-		return heredoc.Doc(`
-               # Interface doesn't specify input TypeInstance.
-
-               typeInstances:
-                 - name: ""
-                   id: ""`), false
-	}
-
+func (c *CreateOptions) getTypeInstancesForEditor() (body string) {
 	out := bytes.Buffer{}
 	out.WriteString("typeInstances:")
 	for tiName, tiType := range c.ifaceTypes {
@@ -294,7 +286,7 @@ func (c *CreateOptions) getTypeInstancesForEditor() (body string, required bool)
                  id: "" `,
 			tiType.Path, tiType.Revision, tiName))
 	}
-	return out.String(), true
+	return out.String()
 }
 
 func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
@@ -321,6 +313,7 @@ func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
     `, ifacePath)),
 		AppendDefault: true,
 		HideDefault:   true,
+		FileName:      "*.yaml",
 	}
 	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
 		return nil, err

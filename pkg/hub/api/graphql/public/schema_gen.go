@@ -1735,7 +1735,7 @@ input TypeFilter {
   pathPattern: NodePathPattern
 }
 
-type RepoMetadata @additionalLabels(labels: ["published"]){
+type RepoMetadata @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix! @index
@@ -1752,36 +1752,37 @@ type RepoMetadata @additionalLabels(labels: ["published"]){
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type RepoMetadataRevision @additionalLabels(labels: ["published"]){
+type RepoMetadataRevision @additionalLabels(labels: ["published"]) {
   revision: Version! @index
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
 }
 
-type RepoMetadataSpec @additionalLabels(labels: ["published"]){
+type RepoMetadataSpec @additionalLabels(labels: ["published"]) {
   hubVersion: Version!
   ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
   implementation: RepoImplementationConfig!
     @relation(name: "CONFIGURED", direction: "OUT")
 }
 
-type RepoImplementationConfig @additionalLabels(labels: ["published"]){
+type RepoImplementationConfig @additionalLabels(labels: ["published"]) {
   appVersion: RepoImplementationAppVersionConfig!
     @relation(name: "APP_VERSION", direction: "OUT")
 }
 
-type RepoImplementationAppVersionConfig @additionalLabels(labels: ["published"]){
+type RepoImplementationAppVersionConfig
+  @additionalLabels(labels: ["published"]) {
   semVerTaggingStrategy: SemVerTaggingStrategy!
     @relation(name: "TAGGING_STRATEGY", direction: "OUT")
 }
 
-type SemVerTaggingStrategy @additionalLabels(labels: ["published"]){
+type SemVerTaggingStrategy @additionalLabels(labels: ["published"]) {
   latest: LatestSemVerTaggingStrategy!
     @relation(name: "LATEST", direction: "OUT")
 }
 
-type LatestSemVerTaggingStrategy @additionalLabels(labels: ["published"]){
+type LatestSemVerTaggingStrategy @additionalLabels(labels: ["published"]) {
   pointsTo: SemVerTaggingStrategyTags!
 }
 
@@ -1790,19 +1791,19 @@ enum SemVerTaggingStrategyTags {
   EDGE
 }
 
-type RepoOCFVersion @additionalLabels(labels: ["published"]){
+type RepoOCFVersion @additionalLabels(labels: ["published"]) {
   supported: [Version!]!
   default: Version!
 }
 
-type InterfaceGroup @additionalLabels(labels: ["published"]){
+type InterfaceGroup @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   interfaces(filter: InterfaceFilter): [Interface!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type Interface @additionalLabels(labels: ["published"]){
+type Interface @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix! @index
@@ -1818,7 +1819,7 @@ type Interface @additionalLabels(labels: ["published"]){
   revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type InterfaceRevision @additionalLabels(labels: ["published"]){
+type InterfaceRevision @additionalLabels(labels: ["published"]) {
   revision: Version! @index
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -1832,23 +1833,23 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
   # See the initial implementation: https://github.com/capactio/capact/commit/18bded8aed9d4e7b8a90d23ffc17134d920290e0#diff-73bc98d8e409e7044514f7af22931d76cb7da73504c678421c398f0c0501ef92R203
 }
 
-type InterfaceSpec @additionalLabels(labels: ["published"]){
+type InterfaceSpec @additionalLabels(labels: ["published"]) {
   input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
   output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
 }
 
-type InterfaceInput @additionalLabels(labels: ["published"]){
+type InterfaceInput @additionalLabels(labels: ["published"]) {
   parameters: [InputParameter!]! @relation(name: "HAS", direction: "OUT")
   typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
-type InputParameter @additionalLabels(labels: ["published"]){
+type InputParameter @additionalLabels(labels: ["published"]) {
   name: String!
   jsonSchema: Any
   typeRef: TypeReference @relation(name: "OF_TYPE", direction: "OUT")
 }
 
-type InterfaceOutput @additionalLabels(labels: ["published"]){
+type InterfaceOutput @additionalLabels(labels: ["published"]) {
   typeInstances: [OutputTypeInstance]!
     @relation(name: "OUTPUTS", direction: "OUT")
 }
@@ -1858,7 +1859,8 @@ interface TypeInstanceFields {
   typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
+type InputTypeInstance implements TypeInstanceFields
+  @additionalLabels(labels: ["published"]) {
   name: String!
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
   verbs: [TypeInstanceOperationVerb!]!
@@ -1878,12 +1880,13 @@ enum TypeInstanceOperationVerb {
   DELETE
 }
 
-type OutputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
+type OutputTypeInstance implements TypeInstanceFields
+  @additionalLabels(labels: ["published"]) {
   name: String!
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
-type Type @additionalLabels(labels: ["published"]){
+type Type @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix! @index
@@ -1899,19 +1902,19 @@ type Type @additionalLabels(labels: ["published"]){
   revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TypeRevision @additionalLabels(labels: ["published"]){
+type TypeRevision @additionalLabels(labels: ["published"]) {
   revision: Version! @index
 
   metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
 }
 
-type TypeSpec @additionalLabels(labels: ["published"]){
+type TypeSpec @additionalLabels(labels: ["published"]) {
   additionalRefs: [NodePath!]
   jsonSchema: Any
 }
 
-type Implementation @additionalLabels(labels: ["published"]){
+type Implementation @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix! @index
@@ -1928,7 +1931,7 @@ type Implementation @additionalLabels(labels: ["published"]){
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationRevision @additionalLabels(labels: ["published"]){
+type ImplementationRevision @additionalLabels(labels: ["published"]) {
   revision: Version! @index
 
   metadata: ImplementationMetadata!
@@ -1938,7 +1941,7 @@ type ImplementationRevision @additionalLabels(labels: ["published"]){
     @relation(name: "IMPLEMENTS", direction: "OUT")
 }
 
-type ImplementationSpec @additionalLabels(labels: ["published"]){
+type ImplementationSpec @additionalLabels(labels: ["published"]) {
   appVersion: VersionRange! @index
 
   implements: [InterfaceReference!]!
@@ -1952,27 +1955,28 @@ type ImplementationSpec @additionalLabels(labels: ["published"]){
   additionalOutput: ImplementationAdditionalOutput
     @relation(name: "OUTPUTS", direction: "OUT")
   outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
-  @relation(name: "RELATIONS", direction: "OUT")
+    @relation(name: "RELATIONS", direction: "OUT")
 }
 
-type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
+type ImplementationAdditionalInput @additionalLabels(labels: ["published"]) {
   typeInstances: [InputTypeInstance!]
     @relation(name: "CONTAINS", direction: "OUT")
   parameters: [ImplementationAdditionalInputParameter!]
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationAdditionalInputParameter @additionalLabels(labels: ["published"]){
+type ImplementationAdditionalInputParameter
+  @additionalLabels(labels: ["published"]) {
   name: String!
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
-type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){
+type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]) {
   typeInstances: [OutputTypeInstance!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
+type TypeInstanceRelationItem @additionalLabels(labels: ["published"]) {
   typeInstanceName: String!
 
   """
@@ -1981,12 +1985,12 @@ type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
   uses: [String!]
 }
 
-type InterfaceReference @additionalLabels(labels: ["published"]){
+type InterfaceReference @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   revision: Version! @index
 }
 
-type ImplementationRequirement @additionalLabels(labels: ["published"]){
+type ImplementationRequirement @additionalLabels(labels: ["published"]) {
   prefix: NodePrefix!
   oneOf: [ImplementationRequirementItem!]!
     @relation(name: "ONE_OF", direction: "OUT")
@@ -1996,7 +2000,7 @@ type ImplementationRequirement @additionalLabels(labels: ["published"]){
     @relation(name: "ALL_OF", direction: "OUT")
 }
 
-type ImplementationRequirementItem @additionalLabels(labels: ["published"]){
+type ImplementationRequirementItem @additionalLabels(labels: ["published"]) {
   typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
 
   """
@@ -2011,12 +2015,12 @@ type ImplementationRequirementItem @additionalLabels(labels: ["published"]){
   alias: String
 }
 
-type TypeReference @additionalLabels(labels: ["published"]){
+type TypeReference @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   revision: Version! @index
 }
 
-type ImplementationImport @additionalLabels(labels: ["published"]){
+type ImplementationImport @additionalLabels(labels: ["published"]) {
   interfaceGroupPath: NodePath!
   alias: String
   appVersion: VersionRange
@@ -2025,7 +2029,7 @@ type ImplementationImport @additionalLabels(labels: ["published"]){
     @relation(name: "HAS", direction: "OUT")
 }
 
-type ImplementationImportMethod @additionalLabels(labels: ["published"]){
+type ImplementationImportMethod @additionalLabels(labels: ["published"]) {
   name: NodeName!
 
   """
@@ -2034,7 +2038,7 @@ type ImplementationImportMethod @additionalLabels(labels: ["published"]){
   revision: Version
 }
 
-type ImplementationAction @additionalLabels(labels: ["published"]){
+type ImplementationAction @additionalLabels(labels: ["published"]) {
   """
   The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
   """
@@ -2047,7 +2051,7 @@ type ImplementationAction @additionalLabels(labels: ["published"]){
     )
 }
 
-type Attribute @additionalLabels(labels: ["published"]){
+type Attribute @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix! @index
@@ -2063,7 +2067,7 @@ type Attribute @additionalLabels(labels: ["published"]){
   revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type AttributeRevision @additionalLabels(labels: ["published"]){
+type AttributeRevision @additionalLabels(labels: ["published"]) {
   revision: Version! @index
 
   spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
@@ -2085,7 +2089,8 @@ interface MetadataBaseFields {
   iconURL: String
 }
 
-type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+type GenericMetadata implements MetadataBaseFields
+  @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix @index
@@ -2098,7 +2103,8 @@ type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["p
   iconURL: String
 }
 
-type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+type ImplementationMetadata implements MetadataBaseFields
+  @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix @index
@@ -2114,7 +2120,8 @@ type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labe
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+type TypeMetadata implements MetadataBaseFields
+  @additionalLabels(labels: ["published"]) {
   path: NodePath! @index
   name: NodeName! @index
   prefix: NodePrefix @index
@@ -2128,21 +2135,21 @@ type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["publ
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type License @additionalLabels(labels: ["published"]){
+type License @additionalLabels(labels: ["published"]) {
   name: String! @index
 }
 
-type Maintainer @additionalLabels(labels: ["published"]){
+type Maintainer @additionalLabels(labels: ["published"]) {
   name: String @index
   email: String! @index
   url: String
 }
 
-type AttributeSpec @additionalLabels(labels: ["published"]){
+type AttributeSpec @additionalLabels(labels: ["published"]) {
   additionalRefs: [NodePath!]!
 }
 
-type Query @additionalLabels(labels: ["published"]){
+type Query @additionalLabels(labels: ["published"]) {
   repoMetadata: RepoMetadata
 
   interfaceGroups(filter: InterfaceGroupFilter = {}): [InterfaceGroup!]!
@@ -2192,7 +2199,7 @@ type Query @additionalLabels(labels: ["published"]){
   attribute(path: NodePath!): Attribute
 }
 
-# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
+# TODO: Prepare directive for user authorization in https://github.com/capactio/capact/issues/508
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)

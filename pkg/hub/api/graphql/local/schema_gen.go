@@ -586,7 +586,8 @@ type TypeInstance {
   """
   Common properties for all TypeInstances which cannot be changed
   """
-  typeRef: TypeInstanceTypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  typeRef: TypeInstanceTypeReference!
+    @relation(name: "OF_TYPE", direction: "OUT")
   uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
   usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
 
@@ -1014,8 +1015,7 @@ type Mutation {
   unlockTypeInstances(in: UnlockTypeInstancesInput!): [ID!]!
 }
 
-# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
-
+# TODO: Prepare directive for user authorization in https://github.com/capactio/capact/issues/508
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)

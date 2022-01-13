@@ -84,6 +84,7 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		InterfacePath: interfacePath,
 		DryRun:        false,
 		Interactive:   true,
+		Validate:      true,
 	}
 
 	_, err = action.Create(ctx, create, w)
