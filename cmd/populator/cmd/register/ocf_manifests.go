@@ -185,23 +185,20 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 			return nil, fmt.Errorf("empty list of files for source %s", source)
 		}
 
-		if !cfg.UpdateOnGitCommit {
-			sourcesInfo = append(sourcesInfo, dbpopulator.SourceInfo{
-				Files:   files,
-				RootDir: rootDir,
-			})
-			continue
+		newSourceInfo := dbpopulator.SourceInfo{
+			Files:   files,
+			RootDir: rootDir,
 		}
 
-		gitHash, err := getGitHash(rootDir)
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting `git rev-parse HEAD`")
+		if cfg.UpdateOnGitCommit {
+			gitHash, err := getGitHash(rootDir)
+			if err != nil {
+				return nil, errors.Wrap(err, "while getting `git rev-parse HEAD`")
+			}
+			newSourceInfo.GitHash = gitHash
 		}
-		sourcesInfo = append(sourcesInfo, dbpopulator.SourceInfo{
-			Files:   files,
-			GitHash: gitHash,
-			RootDir: rootDir,
-		})
+
+		sourcesInfo = append(sourcesInfo, newSourceInfo)
 	}
 	return sourcesInfo, nil
 }

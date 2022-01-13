@@ -22,7 +22,7 @@ It creates a binary for your platform in the `bin` directory. For example, for L
 > **CAUTION:**  In order to run DB populator manually, make sure the populator inside development cluster is disabled.
 > To disable it, run `ENABLE_POPULATOR=false make dev-cluster-update`
 
-It requires one argument, which is a path to directory with Hub manifests. Internally it uses [go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations and in different formats.
+It requires one argument, which is a path to directory with Hub manifests. Internally it uses [go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations and in different formats. Supported protocols in DB populator are Git and local files. 
 
 To be able to use it locally when Capact is running in a Kubernetes cluster, two ports need to
 be forwarded:
