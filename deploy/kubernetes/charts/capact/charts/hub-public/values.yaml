@@ -80,10 +80,9 @@ populator:
   port: 8081
   updateOnGitCommit: true
   manifestsPath: manifests
+  enableEmbeddedSources: false
   manifestsLocations:
-    - local: false
-      # It's public repository
-      repository: github.com/capactio/hub-manifests
+    - repository: github.com/capactio/hub-manifests
       branch: main
       # sshKey is a base64 encoded private key used by populator to download manifests. It has read only access
       #sshKey:

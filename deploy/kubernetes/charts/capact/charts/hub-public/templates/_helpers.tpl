@@ -65,6 +65,9 @@ Create the name of the service account to use
 Create the manifest source paths separated by the comma
 */}}
 {{- define "populator.manifestSources" -}}
+{{- if .Values.populator.enableEmbeddedSources -}}
+/hub-manifests
+{{- else }}
 {{- $length := len .Values.populator.manifestsLocations }}
 {{- range $index, $values := .Values.populator.manifestsLocations -}}
 {{- include "populator.manifestSource" . }}
@@ -72,18 +75,15 @@ Create the manifest source paths separated by the comma
 {{- if ne $position $length -}},{{- end -}}
 {{- end }}
 {{- end }}
+{{- end }}
 
 {{/*
 Create the manifest source path
 */}}
 {{- define "populator.manifestSource" -}}
-{{- if .local -}}
-/hub-manifests
-{{- else }}
 {{- .repository -}}
 ?ref={{ .branch -}}
 {{- if .sshKey -}}
 &sshkey={{ .sshKey -}}
-{{- end }}
 {{- end }}
 {{- end }}

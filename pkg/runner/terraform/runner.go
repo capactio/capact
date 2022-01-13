@@ -57,7 +57,7 @@ func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*run
 		return nil, fmt.Errorf("the workdir directory %q must not exist when cloning git repository", r.cfg.WorkDir)
 	}
 
-	err = getter.Download(context.Background(), args.Module.Source, r.cfg.WorkDir)
+	err = getter.Download(context.Background(), args.Module.Source, r.cfg.WorkDir, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "while downloading module")
 	}

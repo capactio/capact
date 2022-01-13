@@ -21,18 +21,13 @@ import (
 	"capact.io/capact/pkg/sdk/dbpopulator"
 	"github.com/avast/retry-go"
 	"github.com/docker/cli/cli"
+	gogetter "github.com/hashicorp/go-getter"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
 )
-
-type sourceInfo struct {
-	rootDir string
-	files   []string
-	gitHash []byte
-}
 
 type filterPath func(string) string
 
@@ -73,6 +68,12 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 		return errors.Wrap(err, "while creating parent temporary directory")
 	}
 
+	defer func() {
+		if rErr := os.RemoveAll(parentDir); rErr != nil {
+			err = multierror.Append(err, rErr)
+		}
+	}()
+
 	sources = removeDuplicateSources(sources)
 	if len(sources) == 0 {
 		return fmt.Errorf("no source information provided")
@@ -83,23 +84,17 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 		return errors.Wrap(err, "while getting sources info")
 	}
 
-	defer func() {
-		if rErr := os.RemoveAll(parentDir); rErr != nil {
-			err = multierror.Append(err, rErr)
-		}
-	}()
-
 	// run server with merge file list from various sources
 	seenFiles := make(map[string]struct{})
 	var fileList []string
 	var commits []string
 	for _, src := range sourcesInfo {
-		err = filesAlreadyExists(seenFiles, src.files, src.rootDir)
+		err = filesAlreadyExists(seenFiles, src.Files, src.RootDir)
 		if err != nil {
 			return errors.Wrap(err, "while validating the source files")
 		}
-		fileList = append(fileList, src.files...)
-		commits = append(commits, strings.TrimSpace(string(src.gitHash)))
+		fileList = append(fileList, src.Files...)
+		commits = append(commits, strings.TrimSpace(string(src.GitHash)))
 	}
 	go dbpopulator.MustServeJSON(ctx, cfg.JSONPublishPort, fileList)
 
@@ -133,11 +128,9 @@ func runDBPopulateWithSources(ctx context.Context, sources []string) (err error)
 		log.Info("APP_UPDATE_ON_GIT_COMMIT not set. Ignoring git commit, always updating manifests.")
 	}
 
-	for _, src := range sourcesInfo {
-		err = runDBPopulate(ctx, cfg, session, log, src)
-		if err != nil {
-			return errors.Wrap(err, "while populating db")
-		}
+	err = runDBPopulate(ctx, cfg, session, log, sourcesInfo)
+	if err != nil {
+		return errors.Wrap(err, "while populating db")
 	}
 
 	if cfg.UpdateOnGitCommit {
@@ -163,16 +156,21 @@ func removeDuplicateSources(sources []string) []string {
 	return result
 }
 
-func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string, parent string) ([]sourceInfo, error) {
-	var sourcesInfo []sourceInfo
+func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger, sources []string, parent string) ([]dbpopulator.SourceInfo, error) {
+	var sourcesInfo []dbpopulator.SourceInfo
 	for _, source := range sources {
 		dstDir, err := getDestDir(parent, source)
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting a destination directory")
 		}
 
-		log.Info("Downloading manifests...", zap.String("source", source), zap.String("path", cfg.ManifestsPath))
-		err = getter.Download(ctx, source, dstDir)
+		log.Info("Downloading manifests...", zap.String("source", trimSource(source)), zap.String("path", cfg.ManifestsPath))
+
+		getters := map[string]gogetter.Getter{
+			"file": new(gogetter.FileGetter),
+			"git":  new(gogetter.GitGetter),
+		}
+		err = getter.Download(ctx, source, dstDir, getters)
 		if err != nil {
 			return nil, errors.Wrap(err, "while downloading Hub manifests")
 		}
@@ -187,22 +185,29 @@ func getSourcesInfo(ctx context.Context, cfg dbpopulator.Config, log *zap.Logger
 			return nil, fmt.Errorf("empty list of files for source %s", source)
 		}
 
-		var gitHash []byte
-		gitHash, err = getGitHash(rootDir)
+		if !cfg.UpdateOnGitCommit {
+			sourcesInfo = append(sourcesInfo, dbpopulator.SourceInfo{
+				Files:   files,
+				RootDir: rootDir,
+			})
+			continue
+		}
+
+		gitHash, err := getGitHash(rootDir)
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting `git rev-parse HEAD`")
 		}
-		sourcesInfo = append(sourcesInfo, sourceInfo{
-			files:   files,
-			gitHash: gitHash,
-			rootDir: rootDir,
+		sourcesInfo = append(sourcesInfo, dbpopulator.SourceInfo{
+			Files:   files,
+			GitHash: gitHash,
+			RootDir: rootDir,
 		})
 	}
 	return sourcesInfo, nil
 }
 
 func getDestDir(parent string, source string) (string, error) {
-	encodePath := path.Clean(encodePath(source, []filterPath{trimSSHkey}))
+	encodePath := path.Clean(encodePath(source))
 	if encodePath == "." {
 		tempDir, err := createTempDirName("-local")
 		if err != nil {
@@ -213,12 +218,21 @@ func getDestDir(parent string, source string) (string, error) {
 	return path.Join(parent, encodePath), nil
 }
 
-func encodePath(path string, filterPaths []filterPath) string {
-	toEscape := path
-	for _, filterPath := range filterPaths {
-		toEscape = filterPath(toEscape)
+func encodePath(path string) string {
+	return url.QueryEscape(trimSource(path))
+}
+
+// trimSource trim sensitive data from Git source.
+// TODO: add support for other types
+func trimSource(source string) string {
+	toEscape := source
+	filterPaths := []filterPath{
+		trimSSHkey,
 	}
-	return url.QueryEscape(toEscape)
+	for _, filterPath := range filterPaths {
+		toEscape = filterPath(source)
+	}
+	return toEscape
 }
 
 func createTempDirName(suffix string) (string, error) {
@@ -252,11 +266,11 @@ func trimRootDir(s string, rootDir string) string {
 	return strings.TrimPrefix(s, rootDir)[1:]
 }
 
-func runDBPopulate(ctx context.Context, cfg dbpopulator.Config, session neo4j.Session, log *zap.Logger, source sourceInfo) (err error) {
+func runDBPopulate(ctx context.Context, cfg dbpopulator.Config, session neo4j.Session, log *zap.Logger, sources []dbpopulator.SourceInfo) (err error) {
 	start := time.Now()
 	err = retry.Do(func() error {
 		populated, err := dbpopulator.Populate(
-			ctx, log, session, source.files, source.rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
+			ctx, log, session, sources, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
 		if err != nil {
 			log.Error("Cannot populate a new data", zap.String("error", err.Error()))
 			return err

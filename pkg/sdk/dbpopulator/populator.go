@@ -11,6 +11,18 @@ import (
 	"go.uber.org/zap"
 )
 
+// SourceInfo defines a single source with Hub manifests.
+type SourceInfo struct {
+	RootDir string
+	Files   []string
+	GitHash []byte
+}
+
+const (
+	commitEncodeSep  = ","
+	maxStoredCommits = 1000
+)
+
 var attributeQuery = `
 MERGE (attribute:Attribute:unpublished{
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
@@ -455,19 +467,16 @@ call apoc.periodic.iterate("MATCH (n:to_remove) return n", "DETACH DELETE n", {b
 yield batches, total return batches, total
 `
 
-const (
-	commitEncodeSep  = ","
-	maxStoredCommits = 1000
-)
-
 // Populate imports Public Hub manifests into a Neo4j database.
-func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string) (bool, error) {
-	err := populate(ctx, log, session, paths, rootDir, publishPath)
-	if err != nil {
-		return false, errors.Wrap(err, "while adding new manifests")
+func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, sources []SourceInfo, publishPath string) (bool, error) {
+	for _, source := range sources {
+		err := populate(ctx, log, session, source.Files, source.RootDir, publishPath)
+		if err != nil {
+			return false, errors.Wrap(err, "while adding new manifests")
+		}
 	}
 
-	err = swap(session)
+	err := swap(session)
 	if err != nil {
 		return false, errors.Wrap(err, "while swapping manifests")
 	}
