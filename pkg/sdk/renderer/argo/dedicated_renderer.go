@@ -746,6 +746,8 @@ func (r *dedicatedRenderer) getInputTypeInstanceWhichSatisfyStep(step *WorkflowS
 //    - isDefined(foo,bar,baz) && isNotDefined(foo,bar,baz)
 //    - isDefined(foo,bar,baz) || isNotDefined(foo,bar,baz)
 func (*dedicatedRenderer) evaluateWhenExpression(params *mapEvalParameters, exprString string) (interface{}, error) {
+	// Dashes need to be escaped, otherwise statement is treated as expression,
+	// see: https://github.com/Knetic/govaluate/tree/v3.0.0#escaping-characters
 	escapeDashes := strings.Replace(exprString, "-", "\\-", -1)
 	expr, err := govaluate.NewEvaluableExpression(escapeDashes)
 	if err != nil {
