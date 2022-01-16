@@ -1,4 +1,4 @@
-package implementation
+package implementations
 
 import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
@@ -6,6 +6,11 @@ import (
 	"capact.io/capact/pkg/runner/helm"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
+)
+
+const (
+	localHelmLocation  = "local"
+	remoteHelmLocation = "remote"
 )
 
 func askForImplementationTool() (string, error) {
@@ -42,7 +47,7 @@ func askForLicense() (string, error) {
 	var licenseName string
 	name := &survey.Input{
 		Message: "License name",
-		Default: common.ApacheLicense,
+		Default: *common.ApacheLicense,
 	}
 	err := survey.AskOne(name, &licenseName)
 	return licenseName, err
@@ -73,21 +78,51 @@ func askForSource() (string, error) {
 	return source, err
 }
 
+func askForHelmLocation() (string, error) {
+	var selectedLocation string
+	availableLocations := []string{localHelmLocation, remoteHelmLocation}
+	prompt := &survey.Select{
+		Message: "Select Helm chart location",
+		Options: availableLocations,
+	}
+	err := survey.AskOne(prompt, &selectedLocation)
+	return selectedLocation, err
+}
+
+// TODO: in case of error ask for helm chart details in a loop
 func askForHelmChartDetails() (helm.Chart, error) {
 	var helmChartInfo helm.Chart
 
-	helmTemplate, err := common.AskForDirectory("Helm chart name", "")
+	location, err := askForHelmLocation()
 	if err != nil {
-		return helm.Chart{}, errors.Wrap(err, "while asking for path to Helm template")
+		return helm.Chart{}, errors.Wrap(err, "while asking for selecting Helm location")
+	}
+
+	if location == localHelmLocation {
+		helmTemplate, err := common.AskForDirectory("Path to Helm chart", "")
+		if err != nil {
+			return helm.Chart{}, errors.Wrap(err, "while asking for path to Helm chart")
+		}
+		helmChartInfo.Name = helmTemplate
+		return helmChartInfo, nil
 	}
 
 	var qs = []*survey.Question{
+		{
+			Name: "Name",
+			Prompt: &survey.Input{
+				Message: "Helm chart name",
+				Default: "",
+			},
+			Validate: survey.Required,
+		},
 		{
 			Name: "Version",
 			Prompt: &survey.Input{
 				Message: "Helm chart version",
 				Default: "",
 			},
+			Validate: survey.Required,
 		},
 		{
 			Name: "Repo",
@@ -95,11 +130,9 @@ func askForHelmChartDetails() (helm.Chart, error) {
 				Message: "Helm repository URL",
 				Default: "",
 			},
+			Validate: common.ManyValidators([]survey.Validator{survey.Required, common.ValidateURL}),
 		},
 	}
 	err = survey.Ask(qs, &helmChartInfo)
-
-	helmChartInfo.Name = helmTemplate
-
 	return helmChartInfo, err
 }

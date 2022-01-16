@@ -1,4 +1,4 @@
-package attribute
+package attributes
 
 import (
 	"strings"
@@ -7,6 +7,7 @@ import (
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -68,10 +69,13 @@ func NewAttribute() *cobra.Command {
 
 // GenerateAttributeFile generates new Attribute file.
 func GenerateAttributeFile(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	var attributeCfg manifestgen.AttributeConfig
-	attributeCfg.ManifestPath = common.CreateManifestPath(common.AttributeManifest, opts.ManifestPath)
-	attributeCfg.ManifestMetadata = opts.Metadata
-	attributeCfg.ManifestRevision = opts.Revision
+	attributeCfg := manifestgen.AttributeConfig{
+		Config: manifestgen.Config{
+			ManifestMetadata: opts.Metadata,
+			ManifestPath:     common.CreateManifestPath(types.AttributeManifestKind, opts.ManifestPath),
+			ManifestRevision: opts.Revision,
+		},
+	}
 	files, err := manifestgen.GenerateAttributeTemplatingConfig(&attributeCfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating attribute content file")

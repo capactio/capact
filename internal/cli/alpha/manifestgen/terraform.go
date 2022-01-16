@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
 	"github.com/alecthomas/jsonschema"
 	"github.com/fatih/camelcase"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -54,7 +55,7 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		return nil, errors.Wrap(err, "while getting input type JSON Schema")
 	}
 
-	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
 	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
 
 	return &templatingConfig{

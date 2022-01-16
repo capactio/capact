@@ -7,6 +7,7 @@ import (
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -71,12 +72,15 @@ func NewInterface() *cobra.Command {
 
 // GenerateInterfaceFile generates new Interface-group file based on function passed.
 func GenerateInterfaceFile(opts common.ManifestGenOptions, fn genManifestFn) (manifestgen.ManifestCollection, error) {
-	var interfaceCfg manifestgen.InterfaceConfig
-	interfaceCfg.ManifestPath = common.CreateManifestPath(common.InterfaceManifest, opts.ManifestPath)
-	interfaceCfg.ManifestRevision = opts.Revision
-	interfaceCfg.ManifestMetadata = opts.Metadata
-	interfaceCfg.InputPathWithRevision = opts.TypeInputPath
-	interfaceCfg.OutputPathWithRevision = opts.TypeOutputPath
+	interfaceCfg := manifestgen.InterfaceConfig{
+		Config: manifestgen.Config{
+			ManifestMetadata: opts.Metadata,
+			ManifestPath:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
+			ManifestRevision: opts.Revision,
+		},
+		InputPathWithRevision:  opts.TypeInputPath,
+		OutputPathWithRevision: opts.TypeOutputPath,
+	}
 	files, err := fn(&interfaceCfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating content files")

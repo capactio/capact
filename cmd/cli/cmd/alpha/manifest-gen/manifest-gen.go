@@ -1,12 +1,13 @@
 package manifestgen
 
 import (
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attribute"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attributes"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementations"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfaces"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/types"
+	gentypes "capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/types"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -25,11 +26,11 @@ func NewCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(attribute.NewAttribute())
-	cmd.AddCommand(types.NewType())
+	cmd.AddCommand(attributes.NewAttribute())
+	cmd.AddCommand(gentypes.NewType())
 	cmd.AddCommand(interfaces.NewInterfaceGroup())
 	cmd.AddCommand(interfaces.NewInterface())
-	cmd.AddCommand(implementation.NewCmd())
+	cmd.AddCommand(implementations.NewCmd())
 
 	cmd.PersistentFlags().StringP("output", "o", "generated", "Path to the output directory for the generated manifests")
 	cmd.PersistentFlags().Bool("overwrite", false, "Overwrite existing manifest files")
@@ -61,17 +62,17 @@ func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
 	}
 	opts.Metadata = *metadata
 
-	generatingManifestsFun := map[string]genManifestFn{
-		common.AttributeManifest:      generateAttribute,
-		common.TypeManifest:           generateType,
-		common.InterfaceGroupManifest: generateInterfaceGroup,
-		common.InterfaceManifest:      generateInterface,
-		common.ImplementationManifest: generateImplementation,
+	generatingManifestsFun := map[types.ManifestKind]genManifestFn{
+		types.AttributeManifestKind:      generateAttribute,
+		types.TypeManifestKind:           generateType,
+		types.InterfaceGroupManifestKind: generateInterfaceGroup,
+		types.InterfaceManifestKind:      generateInterface,
+		types.ImplementationManifestKind: generateImplementation,
 	}
 	var manifestCollection manifestgen.ManifestCollection
 
 	for manifestType, fn := range generatingManifestsFun {
-		if !slices.Contains(opts.ManifestsType, manifestType) {
+		if !slices.Contains(opts.ManifestsType, string(manifestType)) {
 			continue
 		}
 		manifests, err := fn(opts)

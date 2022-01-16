@@ -12,6 +12,7 @@ import (
 
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/golden"
@@ -22,14 +23,14 @@ func TestGenerateAttributeManifests(t *testing.T) {
 		Config: manifestgen.Config{
 			ManifestPath:     "cap.attribute.group.test",
 			ManifestRevision: "0.2.0",
-			ManifestMetadata: manifestgen.MetaDataInfo{
-				DocumentationURL: "https://example.com",
-				SupportURL:       "https://example.com",
-				Maintainers: []common.Maintainers{
+			ManifestMetadata: types.ImplementationMetadata{
+				DocumentationURL: ptr.String("https://example.com"),
+				SupportURL:       ptr.String("https://example.com"),
+				Maintainers: []types.Maintainer{
 					{
 						Email: "dev@example.com",
-						Name:  "Example Dev",
-						URL:   "https://example.com",
+						Name:  ptr.String("Example Dev"),
+						URL:   ptr.String("https://example.com"),
 					},
 				},
 			},
@@ -44,6 +45,91 @@ func TestGenerateAttributeManifests(t *testing.T) {
 		golden.Assert(t, string(manifestData), filename)
 	}
 }
+
+func TestGenerateInputTypeManifests(t *testing.T) {
+	cfg := &manifestgen.InterfaceConfig{
+		Config: manifestgen.Config{
+			ManifestPath:     "cap.type.input.test",
+			ManifestRevision: "0.2.0",
+			ManifestMetadata: types.ImplementationMetadata{
+				DocumentationURL: ptr.String("https://example.com"),
+				SupportURL:       ptr.String("https://example.com"),
+				Maintainers: []types.Maintainer{
+					{
+						Email: "dev@example.com",
+						Name:  ptr.String("Example Dev"),
+						URL:   ptr.String("https://example.com"),
+					},
+				},
+			},
+		},
+	}
+
+	manifests, err := manifestgen.GenerateInputTypeTemplatingConfig(cfg)
+	require.NoError(t, err)
+
+	for name, manifestData := range manifests {
+		filename := fmt.Sprintf("%s.yaml", name)
+		golden.Assert(t, string(manifestData), filename)
+	}
+}
+
+func TestGenerateOutputTypeManifests(t *testing.T) {
+	cfg := &manifestgen.InterfaceConfig{
+		Config: manifestgen.Config{
+			ManifestPath:     "cap.type.output.test",
+			ManifestRevision: "0.2.0",
+			ManifestMetadata: types.ImplementationMetadata{
+				DocumentationURL: ptr.String("https://example.com"),
+				SupportURL:       ptr.String("https://example.com"),
+				Maintainers: []types.Maintainer{
+					{
+						Email: "dev@example.com",
+						Name:  ptr.String("Example Dev"),
+						URL:   ptr.String("https://example.com"),
+					},
+				},
+			},
+		},
+	}
+
+	manifests, err := manifestgen.GenerateOutputTypeTemplatingConfig(cfg)
+	require.NoError(t, err)
+
+	for name, manifestData := range manifests {
+		filename := fmt.Sprintf("%s.yaml", name)
+		golden.Assert(t, string(manifestData), filename)
+	}
+}
+
+func TestGenerateInterfaceGroupManifests(t *testing.T) {
+	cfg := &manifestgen.InterfaceConfig{
+		Config: manifestgen.Config{
+			ManifestPath:     "cap.interface.grouptest",
+			ManifestRevision: "0.2.0",
+			ManifestMetadata: types.ImplementationMetadata{
+				DocumentationURL: ptr.String("https://example.com"),
+				SupportURL:       ptr.String("https://example.com"),
+				Maintainers: []types.Maintainer{
+					{
+						Email: "dev@example.com",
+						Name:  ptr.String("Example Dev"),
+						URL:   ptr.String("https://example.com"),
+					},
+				},
+			},
+		},
+	}
+
+	manifests, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(cfg)
+	require.NoError(t, err)
+
+	for name, manifestData := range manifests {
+		filename := fmt.Sprintf("%s.yaml", name)
+		golden.Assert(t, string(manifestData), filename)
+	}
+}
+
 func TestGenerateInterfaceManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
 		InputPathWithRevision:  "cap.type.group.test-input:0.1.0",
@@ -51,15 +137,15 @@ func TestGenerateInterfaceManifests(t *testing.T) {
 		Config: manifestgen.Config{
 			ManifestPath:     "cap.interface.group.test",
 			ManifestRevision: "0.2.0",
-			ManifestMetadata: manifestgen.MetaDataInfo{
-				DocumentationURL: "https://example.com",
-				SupportURL:       "https://example.com",
-				IconURL:          "https://example.com/icon.png",
-				Maintainers: []common.Maintainers{
+			ManifestMetadata: types.ImplementationMetadata{
+				DocumentationURL: ptr.String("https://example.com"),
+				SupportURL:       ptr.String("https://example.com"),
+				IconURL:          ptr.String("https://example.com/icon.png"),
+				Maintainers: []types.Maintainer{
 					{
 						Email: "dev@example.com",
-						Name:  "Example Dev",
-						URL:   "https://example.com",
+						Name:  ptr.String("Example Dev"),
+						URL:   ptr.String("https://example.com"),
 					},
 				},
 			},
@@ -88,18 +174,18 @@ func TestGenerateEmptyImplementationManifests(t *testing.T) {
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.empty.test",
 						ManifestRevision: "0.1.0",
-						ManifestMetadata: manifestgen.MetaDataInfo{
-							DocumentationURL: "https://example.com",
-							SupportURL:       "https://example.com",
-							Maintainers: []common.Maintainers{
+						ManifestMetadata: types.ImplementationMetadata{
+							DocumentationURL: ptr.String("https://example.com"),
+							SupportURL:       ptr.String("https://example.com"),
+							Maintainers: []types.Maintainer{
 								{
 									Email: "dev@example.com",
-									Name:  "Example Dev",
-									URL:   "https://example.com",
+									Name:  ptr.String("Example Dev"),
+									URL:   ptr.String("https://example.com"),
 								},
 							},
 							License: types.License{
-								Name: &common.ApacheLicense,
+								Name: common.ApacheLicense,
 							},
 						},
 					},
@@ -134,18 +220,18 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.terraform.generic.test",
 						ManifestRevision: "0.1.0",
-						ManifestMetadata: manifestgen.MetaDataInfo{
-							DocumentationURL: "https://example.com",
-							SupportURL:       "https://example.com",
-							Maintainers: []common.Maintainers{
+						ManifestMetadata: types.ImplementationMetadata{
+							DocumentationURL: ptr.String("https://example.com"),
+							SupportURL:       ptr.String("https://example.com"),
+							Maintainers: []types.Maintainer{
 								{
 									Email: "dev@example.com",
-									Name:  "Example Dev",
-									URL:   "https://example.com",
+									Name:  ptr.String("Example Dev"),
+									URL:   ptr.String("https://example.com"),
 								},
 							},
 							License: types.License{
-								Name: &common.ApacheLicense,
+								Name: common.ApacheLicense,
 							},
 						},
 					},
@@ -162,18 +248,18 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.terraform.aws.test",
 						ManifestRevision: "0.1.0",
-						ManifestMetadata: manifestgen.MetaDataInfo{
-							DocumentationURL: "https://example.com",
-							SupportURL:       "https://example.com",
-							Maintainers: []common.Maintainers{
+						ManifestMetadata: types.ImplementationMetadata{
+							DocumentationURL: ptr.String("https://example.com"),
+							SupportURL:       ptr.String("https://example.com"),
+							Maintainers: []types.Maintainer{
 								{
 									Email: "dev@example.com",
-									Name:  "Example Dev",
-									URL:   "https://example.com",
+									Name:  ptr.String("Example Dev"),
+									URL:   ptr.String("https://example.com"),
 								},
 							},
 							License: types.License{
-								Name: &common.ApacheLicense,
+								Name: common.ApacheLicense,
 							},
 						},
 					},
@@ -191,18 +277,18 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.terraform.gcp.test",
 						ManifestRevision: "0.1.0",
-						ManifestMetadata: manifestgen.MetaDataInfo{
-							DocumentationURL: "https://example.com",
-							SupportURL:       "https://example.com",
-							Maintainers: []common.Maintainers{
+						ManifestMetadata: types.ImplementationMetadata{
+							DocumentationURL: ptr.String("https://example.com"),
+							SupportURL:       ptr.String("https://example.com"),
+							Maintainers: []types.Maintainer{
 								{
 									Email: "dev@example.com",
-									Name:  "Example Dev",
-									URL:   "https://example.com",
+									Name:  ptr.String("Example Dev"),
+									URL:   ptr.String("https://example.com"),
 								},
 							},
 							License: types.License{
-								Name: &common.ApacheLicense,
+								Name: common.ApacheLicense,
 							},
 						},
 					},
@@ -240,18 +326,18 @@ func TestGenerateHelmImplementationManifests(t *testing.T) {
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.helm.test",
 						ManifestRevision: "0.1.0",
-						ManifestMetadata: manifestgen.MetaDataInfo{
-							DocumentationURL: "https://example.com",
-							SupportURL:       "https://example.com",
-							Maintainers: []common.Maintainers{
+						ManifestMetadata: types.ImplementationMetadata{
+							DocumentationURL: ptr.String("https://example.com"),
+							SupportURL:       ptr.String("https://example.com"),
+							Maintainers: []types.Maintainer{
 								{
 									Email: "dev@example.com",
-									Name:  "Example Dev",
-									URL:   "https://example.com",
+									Name:  ptr.String("Example Dev"),
+									URL:   ptr.String("https://example.com"),
 								},
 							},
 							License: types.License{
-								Name: &common.ApacheLicense,
+								Name: common.ApacheLicense,
 							},
 						},
 					},
@@ -269,18 +355,18 @@ func TestGenerateHelmImplementationManifests(t *testing.T) {
 					Config: manifestgen.Config{
 						ManifestPath:     "cap.implementation.helm.test-generated-schema",
 						ManifestRevision: "0.1.0",
-						ManifestMetadata: manifestgen.MetaDataInfo{
-							DocumentationURL: "https://example.com",
-							SupportURL:       "https://example.com",
-							Maintainers: []common.Maintainers{
+						ManifestMetadata: types.ImplementationMetadata{
+							DocumentationURL: ptr.String("https://example.com"),
+							SupportURL:       ptr.String("https://example.com"),
+							Maintainers: []types.Maintainer{
 								{
 									Email: "dev@example.com",
-									Name:  "Example Dev",
-									URL:   "https://example.com",
+									Name:  ptr.String("Example Dev"),
+									URL:   ptr.String("https://example.com"),
 								},
 							},
 							License: types.License{
-								Name: &common.ApacheLicense,
+								Name: common.ApacheLicense,
 							},
 						},
 					},

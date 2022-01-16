@@ -1,12 +1,14 @@
-package implementation
+package implementations
 
 import (
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/utils/strings/slices"
 )
 
 // NewEmpty returns a cobra.Command to bootstrap empty Implementation manifests.
@@ -63,12 +65,20 @@ func NewEmpty() *cobra.Command {
 }
 
 func generateEmptyManifests(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	var emptyManifestCfg manifestgen.EmptyImplementationConfig
-	emptyManifestCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
-	emptyManifestCfg.ManifestMetadata = opts.Metadata
-	emptyManifestCfg.ManifestRevision = opts.Revision
-	emptyManifestCfg.InterfacePathWithRevision = opts.InterfacePath
-	emptyManifestCfg.AdditionalInputTypeName = "additional-parameters"
+	emptyManifestCfg := manifestgen.EmptyImplementationConfig{
+		ImplementationConfig: manifestgen.ImplementationConfig{
+			Config: manifestgen.Config{
+				ManifestMetadata: opts.Metadata,
+				ManifestPath:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+				ManifestRevision: opts.Revision,
+			},
+			InterfacePathWithRevision: opts.InterfacePath,
+		},
+		AdditionalInputTypeName: "additional-parameters",
+	}
+	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
+		emptyManifestCfg.GenerateInputType = true
+	}
 	files, err := manifestgen.GenerateEmptyManifests(&emptyManifestCfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating empty implementation manifests")

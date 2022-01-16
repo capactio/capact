@@ -9,9 +9,9 @@ import (
 )
 
 //ManyValidators allow using many validators function in the Survey validator.
-func ManyValidators(validateFuns []survey.Validator) func(ans interface{}) error {
+func ManyValidators(validateFuncs []survey.Validator) func(ans interface{}) error {
 	return func(ans interface{}) error {
-		for _, fun := range validateFuns {
+		for _, fun := range validateFuncs {
 			if err := fun(ans); err != nil {
 				return err
 			}

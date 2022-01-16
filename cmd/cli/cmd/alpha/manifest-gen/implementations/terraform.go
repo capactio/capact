@@ -1,4 +1,4 @@
-package implementation
+package implementations
 
 import (
 	"strings"
@@ -7,6 +7,7 @@ import (
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -93,13 +94,19 @@ func generateTerraformManifests(opts common.ManifestGenOptions) (manifestgen.Man
 		return nil, errors.Wrap(err, "while asking for source to Terraform module")
 	}
 
-	var tfContentCfg manifestgen.TerraformConfig
-	tfContentCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
-	tfContentCfg.ModulePath = terraformModule
-	tfContentCfg.ManifestMetadata = opts.Metadata
-	tfContentCfg.Provider = provider
-	tfContentCfg.ModuleSourceURL = source
-	tfContentCfg.InterfacePathWithRevision = opts.InterfacePath
+	tfContentCfg := manifestgen.TerraformConfig{
+		ImplementationConfig: manifestgen.ImplementationConfig{
+			Config: manifestgen.Config{
+				ManifestMetadata: opts.Metadata,
+				ManifestPath:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+				ManifestRevision: opts.Revision,
+			},
+			InterfacePathWithRevision: opts.InterfacePath,
+		},
+		ModulePath:      terraformModule,
+		Provider:        provider,
+		ModuleSourceURL: source,
+	}
 
 	files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 	if err != nil {

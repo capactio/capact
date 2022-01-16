@@ -1,10 +1,11 @@
-package implementation
+package implementations
 
 import (
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -71,13 +72,19 @@ func generateHelmManifests(opts common.ManifestGenOptions) (manifestgen.Manifest
 		return nil, errors.Wrap(err, "while asking for Helm chart details")
 	}
 
-	var helmCfg manifestgen.HelmConfig
-	helmCfg.ManifestPath = common.CreateManifestPath(common.ImplementationManifest, opts.ManifestPath)
-	helmCfg.ChartName = helmchartInfo.Name
-	helmCfg.ManifestMetadata = opts.Metadata
-	helmCfg.ChartRepoURL = helmchartInfo.Repo
-	helmCfg.ChartVersion = helmchartInfo.Version
-	helmCfg.InterfacePathWithRevision = opts.InterfacePath
+	helmCfg := manifestgen.HelmConfig{
+		ImplementationConfig: manifestgen.ImplementationConfig{
+			Config: manifestgen.Config{
+				ManifestMetadata: opts.Metadata,
+				ManifestPath:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+				ManifestRevision: opts.Revision,
+			},
+			InterfacePathWithRevision: opts.InterfacePath,
+		},
+		ChartName:    helmchartInfo.Name,
+		ChartRepoURL: helmchartInfo.Repo,
+		ChartVersion: helmchartInfo.Version,
+	}
 
 	files, err := manifestgen.GenerateHelmManifests(&helmCfg)
 	if err != nil {

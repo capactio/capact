@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
 	"github.com/alecthomas/jsonschema"
 	"github.com/iancoleman/orderedmap"
 	"github.com/iancoleman/strcase"
@@ -77,7 +78,7 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 		return nil, errors.Wrap(err, "while getting JSON schema for Helm chart values")
 	}
 
-	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
 	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
 
 	input := &typeTemplatingInput{

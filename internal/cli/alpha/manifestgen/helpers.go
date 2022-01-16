@@ -66,7 +66,7 @@ func createManifestCollection(generatedManifests []string) (ManifestCollection, 
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting metadata for manifest")
 		}
-		manifestPath := ManifestPath(fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name))
+		manifestPath := ManifestPath(fmt.Sprintf("%s.%s", *metadata.Metadata.Prefix, metadata.Metadata.Name))
 		result[manifestPath] = []byte(m)
 	}
 

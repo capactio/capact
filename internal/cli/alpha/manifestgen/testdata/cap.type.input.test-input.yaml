@@ -1,0 +1,21 @@
+ocfVersion: 0.0.1
+revision: 0.2.0
+kind: Type
+metadata:
+  prefix: "cap.type.input"
+  name: test-input
+  displayName: Input for input.test
+  description: Input for the "input.test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
+    value: |-
+      {
+        "type": "object"
+      }

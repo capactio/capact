@@ -3,11 +3,12 @@ package manifestgen
 import (
 	"strings"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attribute"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attributes"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementations"
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfaces"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"k8s.io/utils/strings/slices"
 )
@@ -15,7 +16,7 @@ import (
 type genManifestFn func(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error)
 
 func generateAttribute(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	files, err := attribute.GenerateAttributeFile(opts)
+	files, err := attributes.GenerateAttributeFile(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating attribute file")
 	}
@@ -23,13 +24,21 @@ func generateAttribute(opts common.ManifestGenOptions) (manifestgen.ManifestColl
 }
 
 func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	if slices.Contains(opts.ManifestsType, common.ImplementationManifest) {
+	if slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
 		// type files has been already generated in the implementation step
 		return nil, nil
 	}
-	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateTypeTemplatingConfig)
+
+	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInputTypeTemplatingConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating type templating config")
+		return nil, errors.Wrap(err, "while generating input type templating config")
+	}
+	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
+		outputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateOutputTypeTemplatingConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating input type templating config")
+		}
+		files = mergeManifests(files, outputTypeManifest)
 	}
 	return files, nil
 }
@@ -37,7 +46,7 @@ func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollectio
 func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	var files manifestgen.ManifestCollection
 	var err error
-	if slices.Contains(opts.ManifestsType, common.InterfaceManifest) {
+	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
 		files, err = interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg)
 	} else {
 		files, err = interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
@@ -50,14 +59,14 @@ func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.Manifes
 }
 
 func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	if slices.Contains(opts.ManifestsType, common.TypeManifest) || slices.Contains(opts.ManifestsType, common.ImplementationManifest) {
-		inputPath := common.CreateManifestPath(common.TypeManifest, opts.ManifestPath) + "-input"
+	if slices.Contains(opts.ManifestsType, string(types.TypeManifestKind)) || slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
+		inputPath := common.CreateManifestPath(types.TypeManifestKind, opts.ManifestPath) + "-input"
 		opts.TypeInputPath = common.AddRevisionToPath(inputPath, opts.Revision)
 	}
 
-	if slices.Contains(opts.ManifestsType, common.TypeManifest) && !slices.Contains(opts.ManifestsType, common.ImplementationManifest) {
+	if slices.Contains(opts.ManifestsType, string(types.TypeManifestKind)) && !slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
 		outputsuffix := strings.Split(opts.ManifestPath, ".")
-		outputPath := common.CreateManifestPath(common.TypeManifest, outputsuffix[0]) + ".config"
+		outputPath := common.CreateManifestPath(types.TypeManifestKind, outputsuffix[0]) + ".config"
 		opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)
 	}
 
@@ -69,7 +78,7 @@ func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestColl
 }
 
 func generateImplementation(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	files, err := implementation.GenerateImplementationManifest(opts)
+	files, err := implementations.GenerateImplementationManifest(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating implementation manifest")
 	}

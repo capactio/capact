@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
 	"github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 )
@@ -64,9 +65,14 @@ func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (ManifestColle
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
 }
 
-// GenerateTypeTemplatingConfig generates Type templating config.
-func GenerateTypeTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
-	return generateManifestCollection(cfg, []genManifestFn{getInterfaceInputTypeTemplatingConfig, getInterfaceOutputTypeTemplatingConfig})
+// GenerateInputTypeTemplatingConfig generates Input Type templating config.
+func GenerateInputTypeTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceInputTypeTemplatingConfig})
+}
+
+// GenerateOutputTypeTemplatingConfig generates Output Type templating config.
+func GenerateOutputTypeTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceOutputTypeTemplatingConfig})
 }
 
 func generateManifestCollection(cfg *InterfaceConfig, fnList []genManifestFn) (ManifestCollection, error) {
@@ -153,7 +159,7 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 		return nil, errors.Wrap(err, "while getting input type JSON schema")
 	}
 
-	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
 	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
 
 	return &templatingConfig{
@@ -176,7 +182,7 @@ func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCo
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
-	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("%s config", prefix)
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("%s config", prefix))
 	cfg.ManifestMetadata.Description = fmt.Sprintf("Type representing a %s config", prefix)
 
 	return &templatingConfig{

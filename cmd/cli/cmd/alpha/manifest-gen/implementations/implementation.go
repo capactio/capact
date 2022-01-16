@@ -1,8 +1,9 @@
-package implementation
+package implementations
 
 import (
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -42,7 +43,7 @@ func GenerateImplementationManifest(opts common.ManifestGenOptions) (manifestgen
 	}
 
 	interfacePathSuffixAndRevision := ""
-	if slices.Contains(opts.ManifestsType, common.InterfaceManifest) {
+	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
 		interfacePathSuffixAndRevision = common.AddRevisionToPath(opts.ManifestPath, opts.Revision)
 	} else {
 		interfacePathSuffixAndRevision, err = askForInterface()
@@ -50,7 +51,7 @@ func GenerateImplementationManifest(opts common.ManifestGenOptions) (manifestgen
 			return nil, errors.Wrap(err, "while asking for interface path")
 		}
 	}
-	opts.InterfacePath = common.CreateManifestPath(common.InterfaceManifest, interfacePathSuffixAndRevision)
+	opts.InterfacePath = common.CreateManifestPath(types.InterfaceManifestKind, interfacePathSuffixAndRevision)
 
 	license, err := askForLicense()
 	if err != nil {

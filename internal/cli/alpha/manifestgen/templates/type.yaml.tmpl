@@ -6,13 +6,13 @@ metadata:
   name: {{ .Name }}
   displayName: {{.Metadata.DisplayName}}
   description: {{.Metadata.Description}}
-  {{- if .Metadata.DocumentationURL }}
+  {{- if (DerefS .Metadata.DocumentationURL) }}
   documentationURL: {{.Metadata.DocumentationURL}}
   {{- end}}
-  {{- if .Metadata.SupportURL }}
+  {{- if (DerefS .Metadata.SupportURL) }}
   supportURL: {{.Metadata.SupportURL}}
   {{- end}}
-  {{- if .Metadata.IconURL }}
+  {{- if (DerefS .Metadata.IconURL) }}
   iconURL: {{.Metadata.IconURL}}
   {{- end}}
   {{- if .Metadata.Maintainers }}

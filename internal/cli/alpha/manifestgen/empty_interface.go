@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
 	"github.com/pkg/errors"
 )
 
@@ -11,11 +12,13 @@ import (
 func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (ManifestCollection, error) {
 	cfgs := make([]*templatingConfig, 0, 2)
 
-	inputTypeCfg, err := getEmptyInputTypeTemplatingConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting Implementation templating config")
+	if cfg.GenerateInputType {
+		inputTypeCfg, err := getEmptyInputTypeTemplatingConfig(cfg)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting Implementation templating config")
+		}
+		cfgs = append(cfgs, inputTypeCfg)
 	}
-	cfgs = append(cfgs, inputTypeCfg)
 
 	additionalInputTypeCfg, err := getEmptyAdditionalInputTypeTemplatingConfig(cfg)
 	if err != nil {
@@ -78,7 +81,7 @@ func getEmptyAdditionalInputTypeTemplatingConfig(cfg *EmptyImplementationConfig)
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
-	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Additional input for %s", name)
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Additional input for %s", name))
 	cfg.ManifestMetadata.Description = fmt.Sprintf("Additional input for the \"%s Action\"", name)
 
 	input := &typeTemplatingInput{
@@ -102,7 +105,7 @@ func getEmptyInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templat
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
-	cfg.ManifestMetadata.DisplayName = fmt.Sprintf("Input for %s.%s", prefix, name)
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
 	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
 
 	input := &typeTemplatingInput{

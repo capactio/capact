@@ -38,7 +38,7 @@ func NewType() *cobra.Command {
 			typeCfg.ManifestPath = args[0]
 			typeCfg.ManifestMetadata = common.GetDefaultMetadata()
 
-			manifests, err := manifestgen.GenerateTypeTemplatingConfig(&typeCfg)
+			manifests, err := manifestgen.GenerateInputTypeTemplatingConfig(&typeCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating content files")
 			}

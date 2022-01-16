@@ -1,6 +1,7 @@
 package manifestgen
 
 import (
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
@@ -17,7 +18,7 @@ type ManifestCollection map[ManifestPath]ManifestContent
 type Config struct {
 	ManifestPath     string
 	ManifestRevision string
-	ManifestMetadata MetaDataInfo
+	ManifestMetadata types.ImplementationMetadata
 }
 
 // AttributeConfig stores input parameters for Attribute content generation.
@@ -60,6 +61,7 @@ type HelmConfig struct {
 type EmptyImplementationConfig struct {
 	AdditionalInputTypeName string
 	ImplementationConfig
+	GenerateInputType bool
 }
 
 type templatingConfig struct {
@@ -71,7 +73,7 @@ type templatingInput struct {
 	Name     string
 	Prefix   string
 	Revision string
-	Metadata MetaDataInfo
+	Metadata types.ImplementationMetadata
 }
 
 type attributeTemplatingInput struct {
