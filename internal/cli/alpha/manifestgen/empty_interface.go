@@ -93,27 +93,3 @@ func getEmptyAdditionalInputTypeTemplatingConfig(cfg *EmptyImplementationConfig)
 		Input:    input,
 	}, nil
 }
-
-func getEmptyInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
-	}
-
-	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
-	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
-
-	input := &typeTemplatingInput{
-		templatingInput: templatingInput{
-			Metadata: cfg.ManifestMetadata,
-			Name:     getDefaultInputTypeName(name),
-			Prefix:   prefix,
-			Revision: cfg.ManifestRef.Revision,
-		},
-	}
-
-	return &templatingConfig{
-		Template: typeManifestTemplate,
-		Input:    input,
-	}, nil
-}

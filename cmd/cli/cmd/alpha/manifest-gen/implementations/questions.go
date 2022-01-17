@@ -82,7 +82,7 @@ func askForSource() (string, error) {
 
 func askForHelmLocation() (string, error) {
 	var selectedLocation string
-	availableLocations := []string{string(localHelmChartLocation), string(localHelmChartLocation)}
+	availableLocations := []string{string(localHelmChartLocation), string(remoteHelmChartLocation)}
 	prompt := &survey.Select{
 		Message: "Select Helm chart location",
 		Options: availableLocations,

@@ -64,7 +64,7 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
 				Metadata: cfg.ManifestMetadata,
-				Name:     name + "-input-parameters",
+				Name:     getDefaultAdditionalImplTypeName(name),
 				Prefix:   prefix,
 				Revision: cfg.ManifestRef.Revision,
 			},

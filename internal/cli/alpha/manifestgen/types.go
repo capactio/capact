@@ -17,8 +17,6 @@ type ManifestCollection map[ManifestPath]ManifestContent
 // Config stores generic input parameters for content generation.
 type Config struct {
 	ManifestRef      types.ManifestRef
-	ManifestPath     string
-	ManifestRevision string
 	ManifestMetadata types.ImplementationMetadata
 }
 

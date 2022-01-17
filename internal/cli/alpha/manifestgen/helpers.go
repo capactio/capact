@@ -81,6 +81,10 @@ func getDefaultInputTypeName(name string) string {
 	return name + "-input"
 }
 
+func getDefaultAdditionalImplTypeName(name string) string {
+	return name + "-input-parameters"
+}
+
 func splitPathToPrefixAndName(path string) (string, string, error) {
 	parts := strings.Split(path, ".")
 	if len(parts) < 3 {

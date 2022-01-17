@@ -8,7 +8,6 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/utils/strings/slices"
 )
 
 // NewEmpty returns a cobra.Command to bootstrap empty Implementation manifests.
@@ -77,9 +76,6 @@ func generateEmptyManifests(opts common.ManifestGenOptions) (manifestgen.Manifes
 			InterfacePathWithRevision: opts.InterfacePath,
 		},
 		AdditionalInputTypeName: "additional-parameters",
-	}
-	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
-		emptyManifestCfg.GenerateInputType = true
 	}
 	files, err := manifestgen.GenerateEmptyManifests(&emptyManifestCfg)
 	if err != nil {

@@ -85,7 +85,7 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
 			Metadata: cfg.ManifestMetadata,
-			Name:     name + "-input-parameters",
+			Name:     getDefaultAdditionalImplTypeName(name),
 			Prefix:   prefix,
 			Revision: cfg.ManifestRef.Revision,
 		},

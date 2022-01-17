@@ -11,9 +11,7 @@ import (
 // CreateManifestPath create a manifest path based on a manifest type and suffix.
 func CreateManifestPath(manifestType types.ManifestKind, suffix string) string {
 	if manifestType == types.InterfaceGroupManifestKind {
-		// InterfaceGroup resides in the same directory as Interfaces
 		manifestType = types.InterfaceManifestKind
-		// not sure, probably for InterfaceGroup the suffix has to be also modified, didn't check that far
 	}
 
 	return fmt.Sprintf("cap.%s.%s", strings.ToLower(string(manifestType)), suffix)
