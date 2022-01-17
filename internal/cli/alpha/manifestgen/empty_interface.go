@@ -5,20 +5,13 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 )
 
 // GenerateEmptyManifests generates collection of manifest to be filled by the content developer.
 func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (ManifestCollection, error) {
 	cfgs := make([]*templatingConfig, 0, 2)
-
-	if cfg.GenerateInputType {
-		inputTypeCfg, err := getEmptyInputTypeTemplatingConfig(cfg)
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting Implementation templating config")
-		}
-		cfgs = append(cfgs, inputTypeCfg)
-	}
 
 	additionalInputTypeCfg, err := getEmptyAdditionalInputTypeTemplatingConfig(cfg)
 	if err != nil {
@@ -41,7 +34,7 @@ func GenerateEmptyManifests(cfg *EmptyImplementationConfig) (ManifestCollection,
 }
 
 func getEmptyImplementationTemplatingConfig(cfg *EmptyImplementationConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -62,11 +55,13 @@ func getEmptyImplementationTemplatingConfig(cfg *EmptyImplementationConfig) (*te
 			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
 		AdditionalInputName: cfg.AdditionalInputTypeName,
-		InterfacePath:       interfacePath,
-		InterfaceRevision:   interfaceRevision,
+		InterfaceRef: types.ManifestRef{
+			Path:     interfacePath,
+			Revision: interfaceRevision,
+		},
 	}
 
 	return &templatingConfig{
@@ -76,7 +71,7 @@ func getEmptyImplementationTemplatingConfig(cfg *EmptyImplementationConfig) (*te
 }
 
 func getEmptyAdditionalInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -89,7 +84,7 @@ func getEmptyAdditionalInputTypeTemplatingConfig(cfg *EmptyImplementationConfig)
 			Metadata: cfg.ManifestMetadata,
 			Name:     cfg.AdditionalInputTypeName,
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
 	}
 
@@ -100,7 +95,7 @@ func getEmptyAdditionalInputTypeTemplatingConfig(cfg *EmptyImplementationConfig)
 }
 
 func getEmptyInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -113,7 +108,7 @@ func getEmptyInputTypeTemplatingConfig(cfg *EmptyImplementationConfig) (*templat
 			Metadata: cfg.ManifestMetadata,
 			Name:     getDefaultInputTypeName(name),
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
 	}
 

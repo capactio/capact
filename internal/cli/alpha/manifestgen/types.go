@@ -16,6 +16,7 @@ type ManifestCollection map[ManifestPath]ManifestContent
 
 // Config stores generic input parameters for content generation.
 type Config struct {
+	ManifestRef      types.ManifestRef
 	ManifestPath     string
 	ManifestRevision string
 	ManifestMetadata types.ImplementationMetadata
@@ -29,8 +30,8 @@ type AttributeConfig struct {
 // InterfaceConfig stores input parameters for Interface content generation.
 type InterfaceConfig struct {
 	Config
-	InputPathWithRevision  string
-	OutputPathWithRevision string
+	InputTypeRef  string
+	OutputTypeRef string
 }
 
 // ImplementationConfig stores input parameters for Implementation content generation.
@@ -86,10 +87,8 @@ type interfaceGroupTemplatingInput struct {
 
 type interfaceTemplatingInput struct {
 	templatingInput
-	InputTypeName      string
-	InputTypeRevision  string
-	OutputTypeName     string
-	OutputTypeRevision string
+	InputRef  types.ManifestRef
+	OutputRef types.ManifestRef
 }
 
 type typeTemplatingInput struct {
@@ -100,26 +99,23 @@ type typeTemplatingInput struct {
 type emptyImplementationTemplatingInput struct {
 	templatingInput
 	AdditionalInputName string
-	InterfacePath       string
-	InterfaceRevision   string
+	InterfaceRef        types.ManifestRef
 }
 
 type terraformImplementationTemplatingInput struct {
 	templatingInput
 
-	InterfacePath     string
-	InterfaceRevision string
-	ModuleSourceURL   string
-	Outputs           []*tfconfig.Output
-	Provider          Provider
-	Variables         []*tfconfig.Variable
+	InterfaceRef    types.ManifestRef
+	ModuleSourceURL string
+	Outputs         []*tfconfig.Output
+	Provider        Provider
+	Variables       []*tfconfig.Variable
 }
 
 type helmImplementationTemplatingInput struct {
 	templatingInput
 
-	InterfacePath     string
-	InterfaceRevision string
+	InterfaceRef types.ManifestRef
 
 	HelmChartName    string
 	HelmChartVersion string

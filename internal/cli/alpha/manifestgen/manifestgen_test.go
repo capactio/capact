@@ -21,8 +21,10 @@ import (
 func TestGenerateAttributeManifests(t *testing.T) {
 	cfg := &manifestgen.AttributeConfig{
 		Config: manifestgen.Config{
-			ManifestPath:     "cap.attribute.group.test",
-			ManifestRevision: "0.2.0",
+			ManifestRef: types.ManifestRef{
+				Path:     "cap.attribute.group.test",
+				Revision: "0.2.0",
+			},
 			ManifestMetadata: types.ImplementationMetadata{
 				DocumentationURL: ptr.String("https://example.com"),
 				SupportURL:       ptr.String("https://example.com"),
@@ -49,8 +51,10 @@ func TestGenerateAttributeManifests(t *testing.T) {
 func TestGenerateInputTypeManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
-			ManifestPath:     "cap.type.input.test",
-			ManifestRevision: "0.2.0",
+			ManifestRef: types.ManifestRef{
+				Path:     "cap.type.input.test",
+				Revision: "0.2.0",
+			},
 			ManifestMetadata: types.ImplementationMetadata{
 				DocumentationURL: ptr.String("https://example.com"),
 				SupportURL:       ptr.String("https://example.com"),
@@ -77,8 +81,10 @@ func TestGenerateInputTypeManifests(t *testing.T) {
 func TestGenerateOutputTypeManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
-			ManifestPath:     "cap.type.output.test",
-			ManifestRevision: "0.2.0",
+			ManifestRef: types.ManifestRef{
+				Path:     "cap.type.output.test",
+				Revision: "0.2.0",
+			},
 			ManifestMetadata: types.ImplementationMetadata{
 				DocumentationURL: ptr.String("https://example.com"),
 				SupportURL:       ptr.String("https://example.com"),
@@ -105,8 +111,10 @@ func TestGenerateOutputTypeManifests(t *testing.T) {
 func TestGenerateTypeManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
-			ManifestPath:     "cap.type.test.empty",
-			ManifestRevision: "0.2.0",
+			ManifestRef: types.ManifestRef{
+				Path:     "cap.type.test.empty",
+				Revision: "0.2.0",
+			},
 			ManifestMetadata: types.ImplementationMetadata{
 				DocumentationURL: ptr.String("https://example.com"),
 				SupportURL:       ptr.String("https://example.com"),
@@ -121,7 +129,7 @@ func TestGenerateTypeManifests(t *testing.T) {
 		},
 	}
 
-	manifests, err := manifestgen.GenerateOutputTypeTemplatingConfig(cfg)
+	manifests, err := manifestgen.GenerateTypeTemplatingConfig(cfg)
 	require.NoError(t, err)
 
 	for name, manifestData := range manifests {
@@ -133,8 +141,10 @@ func TestGenerateTypeManifests(t *testing.T) {
 func TestGenerateInterfaceGroupManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
-			ManifestPath:     "cap.interface.grouptest",
-			ManifestRevision: "0.2.0",
+			ManifestRef: types.ManifestRef{
+				Path:     "cap.interface.grouptest",
+				Revision: "0.2.0",
+			},
 			ManifestMetadata: types.ImplementationMetadata{
 				DocumentationURL: ptr.String("https://example.com"),
 				SupportURL:       ptr.String("https://example.com"),
@@ -160,11 +170,13 @@ func TestGenerateInterfaceGroupManifests(t *testing.T) {
 
 func TestGenerateInterfaceManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
-		InputPathWithRevision:  "cap.type.group.test-input:0.1.0",
-		OutputPathWithRevision: "cap.type.group.config:0.1.0",
+		InputTypeRef:  "cap.type.group.test-input:0.1.0",
+		OutputTypeRef: "cap.type.group.config:0.1.0",
 		Config: manifestgen.Config{
-			ManifestPath:     "cap.interface.group.test",
-			ManifestRevision: "0.2.0",
+			ManifestRef: types.ManifestRef{
+				Path:     "cap.interface.group.test",
+				Revision: "0.2.0",
+			},
 			ManifestMetadata: types.ImplementationMetadata{
 				DocumentationURL: ptr.String("https://example.com"),
 				SupportURL:       ptr.String("https://example.com"),
@@ -200,8 +212,10 @@ func TestGenerateEmptyImplementationManifests(t *testing.T) {
 				AdditionalInputTypeName: "additional-parameters",
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
-						ManifestPath:     "cap.implementation.empty.test",
-						ManifestRevision: "0.1.0",
+						ManifestRef: types.ManifestRef{
+							Path:     "cap.implementation.empty.test",
+							Revision: "0.1.0",
+						},
 						ManifestMetadata: types.ImplementationMetadata{
 							DocumentationURL: ptr.String("https://example.com"),
 							SupportURL:       ptr.String("https://example.com"),
@@ -246,8 +260,10 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 			cfg: &manifestgen.TerraformConfig{
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
-						ManifestPath:     "cap.implementation.terraform.generic.test",
-						ManifestRevision: "0.1.0",
+						ManifestRef: types.ManifestRef{
+							Path:     "cap.implementation.terraform.generic.test",
+							Revision: "0.1.0",
+						},
 						ManifestMetadata: types.ImplementationMetadata{
 							DocumentationURL: ptr.String("https://example.com"),
 							SupportURL:       ptr.String("https://example.com"),
@@ -274,8 +290,10 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 			cfg: &manifestgen.TerraformConfig{
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
-						ManifestPath:     "cap.implementation.terraform.aws.test",
-						ManifestRevision: "0.1.0",
+						ManifestRef: types.ManifestRef{
+							Path:     "cap.implementation.terraform.aws.test",
+							Revision: "0.1.0",
+						},
 						ManifestMetadata: types.ImplementationMetadata{
 							DocumentationURL: ptr.String("https://example.com"),
 							SupportURL:       ptr.String("https://example.com"),
@@ -303,8 +321,10 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 			cfg: &manifestgen.TerraformConfig{
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
-						ManifestPath:     "cap.implementation.terraform.gcp.test",
-						ManifestRevision: "0.1.0",
+						ManifestRef: types.ManifestRef{
+							Path:     "cap.implementation.terraform.gcp.test",
+							Revision: "0.1.0",
+						},
 						ManifestMetadata: types.ImplementationMetadata{
 							DocumentationURL: ptr.String("https://example.com"),
 							SupportURL:       ptr.String("https://example.com"),
@@ -352,8 +372,10 @@ func TestGenerateHelmImplementationManifests(t *testing.T) {
 			cfg: &manifestgen.HelmConfig{
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
-						ManifestPath:     "cap.implementation.helm.test",
-						ManifestRevision: "0.1.0",
+						ManifestRef: types.ManifestRef{
+							Path:     "cap.implementation.helm.test",
+							Revision: "0.1.0",
+						},
 						ManifestMetadata: types.ImplementationMetadata{
 							DocumentationURL: ptr.String("https://example.com"),
 							SupportURL:       ptr.String("https://example.com"),
@@ -381,8 +403,10 @@ func TestGenerateHelmImplementationManifests(t *testing.T) {
 			cfg: &manifestgen.HelmConfig{
 				ImplementationConfig: manifestgen.ImplementationConfig{
 					Config: manifestgen.Config{
-						ManifestPath:     "cap.implementation.helm.test-generated-schema",
-						ManifestRevision: "0.1.0",
+						ManifestRef: types.ManifestRef{
+							Path:     "cap.implementation.helm.test-generated-schema",
+							Revision: "0.1.0",
+						},
 						ManifestMetadata: types.ImplementationMetadata{
 							DocumentationURL: ptr.String("https://example.com"),
 							SupportURL:       ptr.String("https://example.com"),

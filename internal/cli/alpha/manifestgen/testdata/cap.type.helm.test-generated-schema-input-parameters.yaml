@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   prefix: "cap.type.helm"
-  name: test-generated-schema-input
+  name: test-generated-schema-input-parameters
   displayName: Input for helm.test-generated-schema
   description: Input for the "helm.test-generated-schema Action"
   documentationURL: https://example.com

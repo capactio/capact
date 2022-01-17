@@ -4,8 +4,8 @@ kind: Type
 metadata:
   prefix: "cap.type.test"
   name: empty
-  displayName: test config
-  description: Type representing a test config
+  displayName: Type test.empty
+  description: Description of the Type
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -17,14 +17,5 @@ spec:
     # TODO(ContentDeveloper): Adjust the JSON schema if needed.
     value: |-
       {
-        "$schema": "http://json-schema.org/draft-07/schema",
-        "type": "object",
-        "required": [],
-        "properties": {
-          "example": {
-            "$id": "#/properties/example",
-            "type": "string",
-            "description": "Example field"
-          }
-        }
+        "type": "object"
       }

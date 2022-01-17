@@ -6,13 +6,13 @@ metadata:
   name: "{{ .Name }}"
   displayName: "{{ .Name }}"
   description: "{{ .Name }} action for {{ .Prefix }}"
-  {{- if (DerefS .Metadata.DocumentationURL) }}
+  {{- if .Metadata.DocumentationURL }}
   documentationURL: {{.Metadata.DocumentationURL}}
   {{- end}}
-  {{- if (DerefS .Metadata.SupportURL) }}
+  {{- if .Metadata.SupportURL }}
   supportURL: {{.Metadata.SupportURL}}
   {{- end}}
-  {{- if (DerefS .Metadata.IconURL) }}
+  {{- if .Metadata.IconURL }}
   iconURL: {{.Metadata.IconURL}}
   {{- end}}
   {{- if .Metadata.Maintainers }}
@@ -29,15 +29,15 @@ spec:
     parameters:
       input-parameters:
         typeRef:
-          path: {{if .InputTypeName}}{{ .InputTypeName }}{{else}}cap.type. # TODO(ContentDeveloper): Put here the path of the input Type{{end}}
-          revision: {{if .InputTypeRevision}}{{ .InputTypeRevision }}{{else}}0.1.0{{end}}
+          path: {{if .InputRef.Path}}{{ .InputRef.Path }}{{else}}cap.type. # TODO(ContentDeveloper): Put here the path of the input Type{{end}}
+          revision: {{if .InputRef.Revision}}{{ .InputRef.Revision }}{{else}}0.1.0{{end}}
     typeInstances: {}
 
   output:
     typeInstances:
-    {{- if .OutputTypeName}}
+    {{- if .OutputRef.Path}}
       config:
         typeRef:
-          path: {{ .OutputTypeName }}
-          revision: {{if .OutputTypeRevision}}{{ .OutputTypeRevision }}{{else}}0.1.0{{end}}
+          path: {{ .OutputRef.Path }}
+          revision: {{if .OutputRef.Revision}}{{ .OutputRef.Revision }}{{else}}0.1.0{{end}}
     {{else}} {} # TODO(ContentDeveloper): Configure here the output typeInstance if needed{{end}}

@@ -24,21 +24,18 @@ func generateAttribute(opts common.ManifestGenOptions) (manifestgen.ManifestColl
 }
 
 func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	if slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
-		// type files has been already generated in the implementation step
-		return nil, nil
-	}
-
 	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
 		inputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInputTypeTemplatingConfig)
 		if err != nil {
 			return nil, errors.Wrap(err, "while generating input type templating config")
 		}
-		outputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateOutputTypeTemplatingConfig)
-		if err != nil {
-			return nil, errors.Wrap(err, "while generating output type templating config")
+		if !slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
+			outputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateOutputTypeTemplatingConfig)
+			if err != nil {
+				return nil, errors.Wrap(err, "while generating output type templating config")
+			}
+			inputTypeManifest = mergeManifests(inputTypeManifest, outputTypeManifest)
 		}
-		inputTypeManifest = mergeManifests(inputTypeManifest, outputTypeManifest)
 		return inputTypeManifest, nil
 	}
 	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateTypeTemplatingConfig)
@@ -64,15 +61,14 @@ func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.Manifes
 }
 
 func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
-	if slices.Contains(opts.ManifestsType, string(types.TypeManifestKind)) || slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
+	if slices.Contains(opts.ManifestsType, string(types.TypeManifestKind)) {
 		inputPath := common.CreateManifestPath(types.TypeManifestKind, opts.ManifestPath) + "-input"
 		opts.TypeInputPath = common.AddRevisionToPath(inputPath, opts.Revision)
-	}
-
-	if slices.Contains(opts.ManifestsType, string(types.TypeManifestKind)) && !slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
-		outputsuffix := strings.Split(opts.ManifestPath, ".")
-		outputPath := common.CreateManifestPath(types.TypeManifestKind, outputsuffix[0]) + ".config"
-		opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)
+		if !slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
+			outputsuffix := strings.Split(opts.ManifestPath, ".")
+			outputPath := common.CreateManifestPath(types.TypeManifestKind, outputsuffix[0]) + ".config"
+			opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)
+		}
 	}
 
 	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceTemplatingConfig)

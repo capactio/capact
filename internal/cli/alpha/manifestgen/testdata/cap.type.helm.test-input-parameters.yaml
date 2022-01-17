@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   prefix: "cap.type.helm"
-  name: test-input
+  name: test-input-parameters
   displayName: Input for helm.test
   description: Input for the "helm.test Action"
   documentationURL: https://example.com

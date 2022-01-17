@@ -43,7 +43,7 @@ func NewTerraform() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tfContentCfg.ManifestPath = args[0]
+			tfContentCfg.ManifestRef.Path = args[0]
 			tfContentCfg.ModulePath = args[1]
 			tfContentCfg.ManifestMetadata = common.GetDefaultMetadata()
 
@@ -71,7 +71,7 @@ func NewTerraform() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&tfContentCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
-	cmd.Flags().StringVarP(&tfContentCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVarP(&tfContentCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 	cmd.Flags().StringVarP(&tfContentCfg.ModuleSourceURL, "source", "s", "https://example.com/terraform-module.tgz", "Path to the Terraform module, such as URL to Tarball or Git repository")
 	cmd.Flags().VarP(&tfContentCfg.Provider, "provider", "p", `Create a provider-specific workflow. Possible values: "aws", "gcp"`)
 
@@ -98,8 +98,10 @@ func generateTerraformManifests(opts common.ManifestGenOptions) (manifestgen.Man
 		ImplementationConfig: manifestgen.ImplementationConfig{
 			Config: manifestgen.Config{
 				ManifestMetadata: opts.Metadata,
-				ManifestPath:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
-				ManifestRevision: opts.Revision,
+				ManifestRef: types.ManifestRef{
+					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+					Revision: opts.Revision,
+				},
 			},
 			InterfacePathWithRevision: opts.InterfacePath,
 		},

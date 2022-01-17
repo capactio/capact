@@ -6,7 +6,7 @@ import (
 
 // GenerateAttributeTemplatingConfig generates an attribute templating config.
 func GenerateAttributeTemplatingConfig(cfg *AttributeConfig) (ManifestCollection, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
@@ -18,7 +18,7 @@ func GenerateAttributeTemplatingConfig(cfg *AttributeConfig) (ManifestCollection
 				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
 		},
 	}

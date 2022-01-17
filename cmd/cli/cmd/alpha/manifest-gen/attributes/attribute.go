@@ -36,7 +36,7 @@ func NewAttribute() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			attributeCfg.ManifestPath = args[0]
+			attributeCfg.ManifestRef.Path = args[0]
 			attributeCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			manifests, err := manifestgen.GenerateAttributeTemplatingConfig(&attributeCfg)
@@ -62,7 +62,7 @@ func NewAttribute() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&attributeCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Attribute manifest")
+	cmd.Flags().StringVarP(&attributeCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Attribute manifest")
 
 	return cmd
 }
@@ -72,8 +72,10 @@ func GenerateAttributeFile(opts common.ManifestGenOptions) (manifestgen.Manifest
 	attributeCfg := manifestgen.AttributeConfig{
 		Config: manifestgen.Config{
 			ManifestMetadata: opts.Metadata,
-			ManifestPath:     common.CreateManifestPath(types.AttributeManifestKind, opts.ManifestPath),
-			ManifestRevision: opts.Revision,
+			ManifestRef: types.ManifestRef{
+				Path:     common.CreateManifestPath(types.AttributeManifestKind, opts.ManifestPath),
+				Revision: opts.Revision,
+			},
 		},
 	}
 	files, err := manifestgen.GenerateAttributeTemplatingConfig(&attributeCfg)

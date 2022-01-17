@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 )
@@ -55,7 +56,7 @@ func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection
 
 // GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg generates InterfaceGroup templating config from interface config.
 func GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg(cfg *InterfaceConfig) (ManifestCollection, error) {
-	cfg.ManifestPath = getInterfaceGroupPathFromInterfacePath(cfg.ManifestPath)
+	cfg.ManifestRef.Path = getInterfaceGroupPathFromInterfacePath(cfg.ManifestRef.Path)
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
 }
 
@@ -98,7 +99,7 @@ func generateManifestCollection(cfg *InterfaceConfig, fnList []genManifestFn) (M
 }
 
 func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
-	groupPrefix, groupName, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	groupPrefix, groupName, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting InterfaceGroup prefix and path")
 	}
@@ -110,27 +111,27 @@ func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig,
 				Metadata: cfg.ManifestMetadata,
 				Name:     groupName,
 				Prefix:   groupPrefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
 		},
 	}, nil
 }
 
 func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
 	var inputPath, inputRevision, outputPath, outputRevision string
 
-	inputPathSlice := strings.SplitN(cfg.InputPathWithRevision, ":", 2)
+	inputPathSlice := strings.SplitN(cfg.InputTypeRef, ":", 2)
 	if len(inputPathSlice) == 2 {
 		inputPath = inputPathSlice[0]
 		inputRevision = inputPathSlice[1]
 	}
 
-	outputPathSlice := strings.SplitN(cfg.OutputPathWithRevision, ":", 2)
+	outputPathSlice := strings.SplitN(cfg.OutputTypeRef, ":", 2)
 	if len(outputPathSlice) == 2 {
 		outputPath = outputPathSlice[0]
 		outputRevision = outputPathSlice[1]
@@ -143,18 +144,22 @@ func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, erro
 				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
-			InputTypeName:      inputPath,
-			InputTypeRevision:  inputRevision,
-			OutputTypeName:     outputPath,
-			OutputTypeRevision: outputRevision,
+			InputRef: types.ManifestRef{
+				Path:     inputPath,
+				Revision: inputRevision,
+			},
+			OutputRef: types.ManifestRef{
+				Path:     outputPath,
+				Revision: outputRevision,
+			},
 		},
 	}, nil
 }
 
 func getInterfaceTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
@@ -174,7 +179,7 @@ func getInterfaceTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, 
 				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
 			JSONSchema: string(jsonSchema),
 		},
@@ -182,7 +187,7 @@ func getInterfaceTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, 
 }
 
 func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
@@ -202,7 +207,7 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 				Metadata: cfg.ManifestMetadata,
 				Name:     getDefaultInputTypeName(name),
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
 			JSONSchema: string(jsonSchema),
 		},
@@ -210,7 +215,7 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 }
 
 func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, _, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
@@ -223,9 +228,9 @@ func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCo
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
 				Metadata: cfg.ManifestMetadata,
-				Name:     name,
+				Name:     "config",
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
 		},
 	}, nil

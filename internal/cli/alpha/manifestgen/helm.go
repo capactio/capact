@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/alecthomas/jsonschema"
 	"github.com/iancoleman/orderedmap"
 	"github.com/iancoleman/strcase"
@@ -68,7 +69,7 @@ func loadHelmChart(cfg *HelmConfig) (*chart.Chart, error) {
 }
 
 func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -84,9 +85,9 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
 			Metadata: cfg.ManifestMetadata,
-			Name:     getDefaultInputTypeName(name),
+			Name:     name + "-input-parameters",
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
 		JSONSchema: string(jsonSchema),
 	}
@@ -104,7 +105,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		interfaceRevision = "0.1.0"
 	)
 
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -136,14 +137,16 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
-		InterfacePath:     interfacePath,
-		InterfaceRevision: interfaceRevision,
-		HelmChartName:     helmChart.Name(),
-		HelmChartVersion:  helmChart.Metadata.Version,
-		HelmRepoURL:       cfg.ChartRepoURL,
-		ValuesYAML:        helmValuesBuf.String(),
+		InterfaceRef: types.ManifestRef{
+			Path:     interfacePath,
+			Revision: interfaceRevision,
+		},
+		HelmChartName:    helmChart.Name(),
+		HelmChartVersion: helmChart.Metadata.Version,
+		HelmRepoURL:      cfg.ChartRepoURL,
+		ValuesYAML:       helmValuesBuf.String(),
 	}
 
 	return &templatingConfig{

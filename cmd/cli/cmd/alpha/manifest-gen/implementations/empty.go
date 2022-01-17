@@ -31,7 +31,7 @@ func NewEmpty() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			emptyCfg.ManifestPath = args[0]
+			emptyCfg.ManifestRef.Path = args[0]
 			emptyCfg.ManifestMetadata = common.GetDefaultMetadata()
 			emptyCfg.AdditionalInputTypeName = "additional-parameters"
 
@@ -59,7 +59,7 @@ func NewEmpty() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&emptyCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
-	cmd.Flags().StringVarP(&emptyCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVarP(&emptyCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 
 	return cmd
 }
@@ -69,8 +69,10 @@ func generateEmptyManifests(opts common.ManifestGenOptions) (manifestgen.Manifes
 		ImplementationConfig: manifestgen.ImplementationConfig{
 			Config: manifestgen.Config{
 				ManifestMetadata: opts.Metadata,
-				ManifestPath:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
-				ManifestRevision: opts.Revision,
+				ManifestRef: types.ManifestRef{
+					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+					Revision: opts.Revision,
+				},
 			},
 			InterfacePathWithRevision: opts.InterfacePath,
 		},

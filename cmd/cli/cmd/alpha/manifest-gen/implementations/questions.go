@@ -8,9 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+type HelmChartLocation string
+
 const (
-	localHelmLocation  = "local"
-	remoteHelmLocation = "remote"
+	localHelmChartLocation  HelmChartLocation = "local"
+	remoteHelmChartLocation HelmChartLocation = "remote"
 )
 
 func askForImplementationTool() (string, error) {
@@ -80,7 +82,7 @@ func askForSource() (string, error) {
 
 func askForHelmLocation() (string, error) {
 	var selectedLocation string
-	availableLocations := []string{localHelmLocation, remoteHelmLocation}
+	availableLocations := []string{string(localHelmChartLocation), string(localHelmChartLocation)}
 	prompt := &survey.Select{
 		Message: "Select Helm chart location",
 		Options: availableLocations,
@@ -98,7 +100,7 @@ func askForHelmChartDetails() (helm.Chart, error) {
 		return helm.Chart{}, errors.Wrap(err, "while asking for selecting Helm location")
 	}
 
-	if location == localHelmLocation {
+	if location == string(localHelmChartLocation) {
 		helmTemplate, err := common.AskForDirectory("Path to Helm chart", "")
 		if err != nil {
 			return helm.Chart{}, errors.Wrap(err, "while asking for path to Helm chart")

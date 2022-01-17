@@ -39,7 +39,7 @@ func NewInterface() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			interfaceCfg.ManifestPath = args[0]
+			interfaceCfg.ManifestRef.Path = args[0]
 			interfaceCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			manifests, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
@@ -65,7 +65,7 @@ func NewInterface() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&interfaceCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Interface manifest")
+	cmd.Flags().StringVarP(&interfaceCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Interface manifest")
 
 	return cmd
 }
@@ -75,11 +75,13 @@ func GenerateInterfaceFile(opts common.ManifestGenOptions, fn genManifestFn) (ma
 	interfaceCfg := manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
 			ManifestMetadata: opts.Metadata,
-			ManifestPath:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
-			ManifestRevision: opts.Revision,
+			ManifestRef: types.ManifestRef{
+				Path:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
+				Revision: opts.Revision,
+			},
 		},
-		InputPathWithRevision:  opts.TypeInputPath,
-		OutputPathWithRevision: opts.TypeOutputPath,
+		InputTypeRef:  opts.TypeInputPath,
+		OutputTypeRef: opts.TypeOutputPath,
 	}
 	files, err := fn(&interfaceCfg)
 	if err != nil {

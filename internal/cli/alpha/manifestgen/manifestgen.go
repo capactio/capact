@@ -24,15 +24,8 @@ func generateManifests(cfgs []*templatingConfig) ([]string, error) {
 }
 
 func generateManifest(cfg *templatingConfig) (string, error) {
-	functionMap := template.FuncMap(sprig.FuncMap())
-	functionMap["DerefS"] = func(s *string) string {
-		if s != nil {
-			return *s
-		}
-		return ""
-	}
 	tmpl, err := template.New("manifest").
-		Funcs(functionMap).
+		Funcs(template.FuncMap(sprig.FuncMap())).
 		Parse(cfg.Template)
 	if err != nil {
 		return "", errors.Wrap(err, "while creating new template")

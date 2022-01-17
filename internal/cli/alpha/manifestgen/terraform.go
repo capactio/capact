@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/alecthomas/jsonschema"
 	"github.com/fatih/camelcase"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -45,7 +46,7 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (ManifestCollection, error
 }
 
 func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -63,9 +64,9 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
 				Metadata: cfg.ManifestMetadata,
-				Name:     getDefaultInputTypeName(name),
+				Name:     name + "-input-parameters",
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
 			JSONSchema: string(jsonSchema),
 		},
@@ -73,7 +74,7 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 }
 
 func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -94,14 +95,16 @@ func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tf
 			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
-		InterfacePath:     interfacePath,
-		InterfaceRevision: interfaceRevision,
-		ModuleSourceURL:   cfg.ModuleSourceURL,
-		Provider:          cfg.Provider,
-		Outputs:           make([]*tfconfig.Output, 0, len(module.Outputs)),
-		Variables:         make([]*tfconfig.Variable, 0, len(module.Variables)),
+		InterfaceRef: types.ManifestRef{
+			Path:     interfacePath,
+			Revision: interfaceRevision,
+		},
+		ModuleSourceURL: cfg.ModuleSourceURL,
+		Provider:        cfg.Provider,
+		Outputs:         make([]*tfconfig.Output, 0, len(module.Outputs)),
+		Variables:       make([]*tfconfig.Variable, 0, len(module.Variables)),
 	}
 
 	for i := range module.Variables {

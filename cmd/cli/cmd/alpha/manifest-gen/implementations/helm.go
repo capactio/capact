@@ -31,7 +31,7 @@ func NewHelm() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helmCfg.ManifestPath = args[0]
+			helmCfg.ManifestRef.Path = args[0]
 			helmCfg.ChartName = args[1]
 			helmCfg.ManifestMetadata = common.GetDefaultMetadata()
 
@@ -59,7 +59,7 @@ func NewHelm() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&helmCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
-	cmd.Flags().StringVarP(&helmCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVarP(&helmCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 	cmd.Flags().StringVar(&helmCfg.ChartRepoURL, "repo", "", "URL of the Helm repository")
 	cmd.Flags().StringVar(&helmCfg.ChartVersion, "version", "", "Version of the Helm chart")
 
@@ -76,8 +76,10 @@ func generateHelmManifests(opts common.ManifestGenOptions) (manifestgen.Manifest
 		ImplementationConfig: manifestgen.ImplementationConfig{
 			Config: manifestgen.Config{
 				ManifestMetadata: opts.Metadata,
-				ManifestPath:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
-				ManifestRevision: opts.Revision,
+				ManifestRef: types.ManifestRef{
+					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+					Revision: opts.Revision,
+				},
 			},
 			InterfacePathWithRevision: opts.InterfacePath,
 		},

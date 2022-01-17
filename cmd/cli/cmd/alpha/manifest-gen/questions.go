@@ -70,10 +70,16 @@ func askForCommonMetadataInformation() (*types.ImplementationMetadata, error) {
 		return nil, errors.Wrap(err, "while asking for maintainers")
 	}
 	metadata := types.ImplementationMetadata{
-		DocumentationURL: &answers.DocumentationURL,
-		SupportURL:       &answers.SupportURL,
-		IconURL:          &answers.IconURL,
-		Maintainers:      maintainers,
+		Maintainers: maintainers,
+	}
+	if answers.DocumentationURL != "" {
+		metadata.DocumentationURL = &answers.DocumentationURL
+	}
+	if answers.SupportURL != "" {
+		metadata.SupportURL = &answers.SupportURL
+	}
+	if answers.IconURL != "" {
+		metadata.IconURL = &answers.IconURL
 	}
 	return &metadata, nil
 }

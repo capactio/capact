@@ -6,13 +6,13 @@ metadata:
   name: {{ .Name }}
   displayName: "{{ .Name }} Action"
   description: "{{ .Name }} Action"
-  {{- if (DerefS .Metadata.DocumentationURL) }}
+  {{- if .Metadata.DocumentationURL }}
   documentationURL: {{.Metadata.DocumentationURL}}
   {{- end}}
-  {{- if (DerefS .Metadata.SupportURL) }}
+  {{- if .Metadata.SupportURL }}
   supportURL: {{.Metadata.SupportURL}}
   {{- end}}
-  {{- if (DerefS .Metadata.IconURL) }}
+  {{- if .Metadata.IconURL }}
   iconURL: {{.Metadata.IconURL}}
   {{- end}}
   {{- if .Metadata.Maintainers }}
@@ -32,7 +32,7 @@ spec:
     parameters:
       additional-parameters:
         typeRef:
-          path: "cap.type.{{ .Prefix }}.{{ .Name }}-input"
+          path: "cap.type.{{ .Prefix }}.{{ .Name }}-input-parameters"
           revision: 0.1.0
 
   outputTypeInstanceRelations:
@@ -41,8 +41,8 @@ spec:
         - helm-release
 
   implements:
-    - path: {{if .InterfacePath}}{{ .InterfacePath }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
-      revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
+    - path: {{if .InterfaceRef.Path}}{{ .InterfaceRef.Path }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
+      revision: {{if .InterfaceRef.Revision}}{{ .InterfaceRef.Revision }}{{else}}0.1.0{{end}}
 
   requires:
     cap.core.type.platform:

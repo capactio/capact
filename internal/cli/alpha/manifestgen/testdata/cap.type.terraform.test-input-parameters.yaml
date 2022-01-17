@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  prefix: "cap.type.terraform.aws"
-  name: test-input
-  displayName: Input for terraform.aws.test
-  description: Input for the "terraform.aws.test Action"
+  prefix: "cap.type.terraform"
+  name: test-input-parameters
+  displayName: Input for terraform.test
+  description: Input for the "terraform.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -20,15 +20,13 @@ spec:
         "properties": {
           "count": {
             "type": "number",
-            "title": "Count",
-            "description": "Number of instances",
-            "default": 3
+            "title": "count",
+            "description": "Number if instance"
           },
           "name": {
             "type": "string",
-            "title": "Name",
-            "description": "Name of environment",
-            "default": "test"
+            "title": "name",
+            "description": "Name of environment"
           }
         }
       }

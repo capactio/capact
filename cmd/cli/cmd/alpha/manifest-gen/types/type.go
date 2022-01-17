@@ -35,7 +35,7 @@ func NewType() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			typeCfg.ManifestPath = args[0]
+			typeCfg.ManifestRef.Path = args[0]
 			typeCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			manifests, err := manifestgen.GenerateTypeTemplatingConfig(&typeCfg)
@@ -61,7 +61,7 @@ func NewType() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&typeCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Type manifest")
+	cmd.Flags().StringVarP(&typeCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Type manifest")
 
 	return cmd
 }

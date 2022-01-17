@@ -35,7 +35,7 @@ func NewInterfaceGroup() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			interfaceGroupCfg.ManifestPath = args[0]
+			interfaceGroupCfg.ManifestRef.Path = args[0]
 			interfaceGroupCfg.ManifestMetadata = common.GetDefaultMetadata()
 
 			manifests, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceGroupCfg)
@@ -61,7 +61,7 @@ func NewInterfaceGroup() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&interfaceGroupCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the InterfaceGroup manifest")
+	cmd.Flags().StringVarP(&interfaceGroupCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the InterfaceGroup manifest")
 
 	return cmd
 }
