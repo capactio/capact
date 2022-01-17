@@ -29,16 +29,21 @@ func generateType(opts common.ManifestGenOptions) (manifestgen.ManifestCollectio
 		return nil, nil
 	}
 
-	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInputTypeTemplatingConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "while generating input type templating config")
-	}
 	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
-		outputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateOutputTypeTemplatingConfig)
+		inputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInputTypeTemplatingConfig)
 		if err != nil {
 			return nil, errors.Wrap(err, "while generating input type templating config")
 		}
-		files = mergeManifests(files, outputTypeManifest)
+		outputTypeManifest, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateOutputTypeTemplatingConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating output type templating config")
+		}
+		inputTypeManifest = mergeManifests(inputTypeManifest, outputTypeManifest)
+		return inputTypeManifest, nil
+	}
+	files, err := interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateTypeTemplatingConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating type templating config")
 	}
 	return files, nil
 }

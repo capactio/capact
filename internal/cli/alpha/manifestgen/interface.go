@@ -65,6 +65,11 @@ func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (ManifestColle
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
 }
 
+// GenerateTypeTemplatingConfig generates Type templating config.
+func GenerateTypeTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
+	return generateManifestCollection(cfg, []genManifestFn{getInterfaceTypeTemplatingConfig})
+}
+
 // GenerateInputTypeTemplatingConfig generates Input Type templating config.
 func GenerateInputTypeTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceInputTypeTemplatingConfig})
@@ -144,6 +149,34 @@ func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, erro
 			InputTypeRevision:  inputRevision,
 			OutputTypeName:     outputPath,
 			OutputTypeRevision: outputRevision,
+		},
+	}, nil
+}
+
+func getInterfaceTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
+	}
+
+	jsonSchema, err := getInterfaceInputTypeJSONSchema()
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting input type JSON schema")
+	}
+
+	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Type %s.%s", prefix, name))
+	cfg.ManifestMetadata.Description = "Description of the Type"
+
+	return &templatingConfig{
+		Template: typeManifestTemplate,
+		Input: &typeTemplatingInput{
+			templatingInput: templatingInput{
+				Metadata: cfg.ManifestMetadata,
+				Name:     name,
+				Prefix:   prefix,
+				Revision: cfg.ManifestRevision,
+			},
+			JSONSchema: string(jsonSchema),
 		},
 	}, nil
 }

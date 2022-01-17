@@ -102,6 +102,34 @@ func TestGenerateOutputTypeManifests(t *testing.T) {
 	}
 }
 
+func TestGenerateTypeManifests(t *testing.T) {
+	cfg := &manifestgen.InterfaceConfig{
+		Config: manifestgen.Config{
+			ManifestPath:     "cap.type.test.empty",
+			ManifestRevision: "0.2.0",
+			ManifestMetadata: types.ImplementationMetadata{
+				DocumentationURL: ptr.String("https://example.com"),
+				SupportURL:       ptr.String("https://example.com"),
+				Maintainers: []types.Maintainer{
+					{
+						Email: "dev@example.com",
+						Name:  ptr.String("Example Dev"),
+						URL:   ptr.String("https://example.com"),
+					},
+				},
+			},
+		},
+	}
+
+	manifests, err := manifestgen.GenerateOutputTypeTemplatingConfig(cfg)
+	require.NoError(t, err)
+
+	for name, manifestData := range manifests {
+		filename := fmt.Sprintf("%s.yaml", name)
+		golden.Assert(t, string(manifestData), filename)
+	}
+}
+
 func TestGenerateInterfaceGroupManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
