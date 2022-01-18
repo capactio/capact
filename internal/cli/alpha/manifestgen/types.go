@@ -16,18 +16,19 @@ type ManifestCollection map[ManifestPath]ManifestContent
 
 // Config stores generic input parameters for content generation.
 type Config struct {
-	ManifestRef      types.ManifestRef
-	ManifestMetadata types.ImplementationMetadata
+	ManifestRef types.ManifestRef
 }
 
 // AttributeConfig stores input parameters for Attribute content generation.
 type AttributeConfig struct {
 	Config
+	Metadata types.InterfaceMetadata
 }
 
 // InterfaceConfig stores input parameters for Interface content generation.
 type InterfaceConfig struct {
 	Config
+	Metadata      types.InterfaceMetadata
 	InputTypeRef  string
 	OutputTypeRef string
 }
@@ -35,11 +36,13 @@ type InterfaceConfig struct {
 // InterfaceGroupConfig stores input parameters for InterfaceGroup content generation.
 type InterfaceGroupConfig struct {
 	Config
+	Metadata types.InterfaceMetadata
 }
 
 // ImplementationConfig stores input parameters for Implementation content generation.
 type ImplementationConfig struct {
 	Config
+	Metadata                  types.ImplementationMetadata
 	InterfacePathWithRevision string
 }
 
@@ -77,30 +80,34 @@ type templatingInput struct {
 	Name     string
 	Prefix   string
 	Revision string
-	Metadata types.ImplementationMetadata
 }
 
 type attributeTemplatingInput struct {
 	templatingInput
+	Metadata types.InterfaceMetadata
 }
 
 type interfaceGroupTemplatingInput struct {
 	templatingInput
+	Metadata types.InterfaceMetadata
 }
 
 type interfaceTemplatingInput struct {
 	templatingInput
+	Metadata  types.InterfaceMetadata
 	InputRef  types.ManifestRef
 	OutputRef types.ManifestRef
 }
 
 type typeTemplatingInput struct {
 	templatingInput
+	Metadata   types.TypeMetadata
 	JSONSchema string
 }
 
 type emptyImplementationTemplatingInput struct {
 	templatingInput
+	Metadata            types.ImplementationMetadata
 	AdditionalInputName string
 	InterfaceRef        types.ManifestRef
 }
@@ -109,6 +116,7 @@ type terraformImplementationTemplatingInput struct {
 	templatingInput
 
 	InterfaceRef    types.ManifestRef
+	Metadata        types.ImplementationMetadata
 	ModuleSourceURL string
 	Outputs         []*tfconfig.Output
 	Provider        Provider
@@ -117,6 +125,8 @@ type terraformImplementationTemplatingInput struct {
 
 type helmImplementationTemplatingInput struct {
 	templatingInput
+
+	Metadata types.ImplementationMetadata
 
 	InterfaceRef types.ManifestRef
 

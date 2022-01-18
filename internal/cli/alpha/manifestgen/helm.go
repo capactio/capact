@@ -79,16 +79,22 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 		return nil, errors.Wrap(err, "while getting JSON schema for Helm chart values")
 	}
 
-	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
-	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
+	typeMetadata := types.TypeMetadata{
+		DocumentationURL: cfg.Metadata.DocumentationURL,
+		IconURL:          cfg.Metadata.IconURL,
+		SupportURL:       cfg.Metadata.SupportURL,
+		Maintainers:      cfg.Metadata.Maintainers,
+		DisplayName:      ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name)),
+		Description:      fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name),
+	}
 
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
-			Metadata: cfg.ManifestMetadata,
 			Name:     getDefaultAdditionalImplTypeName(name),
 			Prefix:   prefix,
 			Revision: cfg.ManifestRef.Revision,
 		},
+		Metadata:   typeMetadata,
 		JSONSchema: string(jsonSchema),
 	}
 
@@ -134,11 +140,11 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 
 	input := &helmImplementationTemplatingInput{
 		templatingInput: templatingInput{
-			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
 			Revision: cfg.ManifestRef.Revision,
 		},
+		Metadata: cfg.Metadata,
 		InterfaceRef: types.ManifestRef{
 			Path:     interfacePath,
 			Revision: interfaceRevision,

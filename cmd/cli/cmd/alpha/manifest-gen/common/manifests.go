@@ -22,19 +22,47 @@ func AddRevisionToPath(path string, revision string) string {
 	return path + ":" + revision
 }
 
-// GetDefaultMetadata creates a new Metadata object and sets default values.
-func GetDefaultMetadata() types.ImplementationMetadata {
-	var metadata types.ImplementationMetadata
-	metadata.DocumentationURL = ptr.String("https://example.com")
-	metadata.SupportURL = ptr.String("https://example.com")
-	metadata.IconURL = ptr.String("https://example.com/icon.png")
-	metadata.Maintainers = []types.Maintainer{
+// GetDefaultInterfaceMetadata creates a new Metadata object for Interface-kind manifests and sets default values.
+func GetDefaultInterfaceMetadata() types.InterfaceMetadata {
+	return types.InterfaceMetadata{
+		DocumentationURL: defaultURL(),
+		SupportURL:       defaultURL(),
+		IconURL:          defaultIconURL(),
+		Maintainers:      defaultMaintainers(),
+	}
+}
+
+// GetDefaultImplementationMetadata creates a new Metadata object for Implementation and sets default values.
+func GetDefaultImplementationMetadata() types.ImplementationMetadata {
+	return types.ImplementationMetadata{
+		DocumentationURL: defaultURL(),
+		SupportURL:       defaultURL(),
+		IconURL:          defaultIconURL(),
+		Maintainers:      defaultMaintainers(),
+		License:          defaultLicense(),
+	}
+}
+
+func defaultURL() *string {
+	return ptr.String("https://example.com")
+}
+
+func defaultIconURL() *string {
+	return ptr.String("https://example.com/icon.png")
+}
+
+func defaultMaintainers() []types.Maintainer {
+	return []types.Maintainer{
 		{
 			Email: "dev@example.com",
 			Name:  ptr.String("Example Dev"),
 			URL:   ptr.String("https://example.com"),
 		},
 	}
-	metadata.License.Name = ApacheLicense
-	return metadata
+}
+
+func defaultLicense() types.License {
+	return types.License{
+		Name: ApacheLicense,
+	}
 }

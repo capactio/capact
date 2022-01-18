@@ -40,7 +40,7 @@ func NewInterface() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			interfaceCfg.ManifestRef.Path = args[0]
-			interfaceCfg.ManifestMetadata = common.GetDefaultMetadata()
+			interfaceCfg.Metadata = common.GetDefaultInterfaceMetadata()
 
 			manifests, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
 			if err != nil {
@@ -74,11 +74,16 @@ func NewInterface() *cobra.Command {
 func GenerateInterfaceFile(opts common.ManifestGenOptions, fn genManifestFn) (manifestgen.ManifestCollection, error) {
 	interfaceCfg := manifestgen.InterfaceConfig{
 		Config: manifestgen.Config{
-			ManifestMetadata: opts.Metadata,
 			ManifestRef: types.ManifestRef{
 				Path:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
 				Revision: opts.Revision,
 			},
+		},
+		Metadata: types.InterfaceMetadata{
+			DocumentationURL: opts.Metadata.DocumentationURL,
+			SupportURL:       opts.Metadata.SupportURL,
+			IconURL:          opts.Metadata.IconURL,
+			Maintainers:      opts.Metadata.Maintainers,
 		},
 		InputTypeRef:  opts.TypeInputPath,
 		OutputTypeRef: opts.TypeOutputPath,

@@ -8,11 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type HelmChartLocation string
+type helmChartLocation string
 
 const (
-	localHelmChartLocation  HelmChartLocation = "local"
-	remoteHelmChartLocation HelmChartLocation = "remote"
+	localHelmChartLocation  helmChartLocation = "local"
+	remoteHelmChartLocation helmChartLocation = "remote"
 )
 
 func askForImplementationTool() (string, error) {

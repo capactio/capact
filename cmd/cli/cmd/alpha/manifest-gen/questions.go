@@ -14,7 +14,8 @@ func askForManifestType() ([]string, error) {
 		string(types.TypeManifestKind),
 		string(types.InterfaceGroupManifestKind),
 		string(types.InterfaceManifestKind),
-		string(types.ImplementationManifestKind)}
+		string(types.ImplementationManifestKind),
+	}
 	prompt := []*survey.Question{
 		{
 			Prompt: &survey.MultiSelect{
@@ -28,7 +29,7 @@ func askForManifestType() ([]string, error) {
 	return manifestTypes, err
 }
 
-func askForCommonMetadataInformation() (*types.ImplementationMetadata, error) {
+func askForCommonMetadataInformation() (*common.Metadata, error) {
 	type Answers struct {
 		DocumentationURL string
 		SupportURL       string

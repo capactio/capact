@@ -15,11 +15,11 @@ func GenerateAttributeTemplatingConfig(cfg *AttributeConfig) (ManifestCollection
 		Template: attributeManifestTemplate,
 		Input: &attributeTemplatingInput{
 			templatingInput: templatingInput{
-				Metadata: cfg.ManifestMetadata,
 				Name:     name,
 				Prefix:   prefix,
 				Revision: cfg.ManifestRef.Revision,
 			},
+			Metadata: cfg.Metadata,
 		},
 	}
 

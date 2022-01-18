@@ -56,18 +56,24 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		return nil, errors.Wrap(err, "while getting input type JSON Schema")
 	}
 
-	cfg.ManifestMetadata.DisplayName = ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name))
-	cfg.ManifestMetadata.Description = fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name)
+	typeMetadata := types.TypeMetadata{
+		DocumentationURL: cfg.Metadata.DocumentationURL,
+		IconURL:          cfg.Metadata.IconURL,
+		SupportURL:       cfg.Metadata.SupportURL,
+		Maintainers:      cfg.Metadata.Maintainers,
+		DisplayName:      ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name)),
+		Description:      fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name),
+	}
 
 	return &templatingConfig{
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
-				Metadata: cfg.ManifestMetadata,
 				Name:     getDefaultAdditionalImplTypeName(name),
 				Prefix:   prefix,
 				Revision: cfg.ManifestRef.Revision,
 			},
+			Metadata:   typeMetadata,
 			JSONSchema: string(jsonSchema),
 		},
 	}, nil
@@ -92,7 +98,6 @@ func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tf
 
 	input := &terraformImplementationTemplatingInput{
 		templatingInput: templatingInput{
-			Metadata: cfg.ManifestMetadata,
 			Name:     name,
 			Prefix:   prefix,
 			Revision: cfg.ManifestRef.Revision,
@@ -101,6 +106,7 @@ func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tf
 			Path:     interfacePath,
 			Revision: interfaceRevision,
 		},
+		Metadata:        cfg.Metadata,
 		ModuleSourceURL: cfg.ModuleSourceURL,
 		Provider:        cfg.Provider,
 		Outputs:         make([]*tfconfig.Output, 0, len(module.Outputs)),

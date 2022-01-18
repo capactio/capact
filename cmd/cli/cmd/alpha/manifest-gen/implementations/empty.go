@@ -31,7 +31,7 @@ func NewEmpty() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			emptyCfg.ManifestRef.Path = args[0]
-			emptyCfg.ManifestMetadata = common.GetDefaultMetadata()
+			emptyCfg.Metadata = common.GetDefaultImplementationMetadata()
 			emptyCfg.AdditionalInputTypeName = "additional-parameters"
 
 			manifests, err := manifestgen.GenerateEmptyManifests(&emptyCfg)
@@ -67,11 +67,17 @@ func generateEmptyManifests(opts common.ManifestGenOptions) (manifestgen.Manifes
 	emptyManifestCfg := manifestgen.EmptyImplementationConfig{
 		ImplementationConfig: manifestgen.ImplementationConfig{
 			Config: manifestgen.Config{
-				ManifestMetadata: opts.Metadata,
 				ManifestRef: types.ManifestRef{
 					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
 					Revision: opts.Revision,
 				},
+			},
+			Metadata: types.ImplementationMetadata{
+				DocumentationURL: opts.Metadata.DocumentationURL,
+				SupportURL:       opts.Metadata.SupportURL,
+				IconURL:          opts.Metadata.IconURL,
+				Maintainers:      opts.Metadata.Maintainers,
+				License:          opts.Metadata.License,
 			},
 			InterfacePathWithRevision: opts.InterfacePath,
 		},

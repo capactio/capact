@@ -33,7 +33,7 @@ func NewHelm() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			helmCfg.ManifestRef.Path = args[0]
 			helmCfg.ChartName = args[1]
-			helmCfg.ManifestMetadata = common.GetDefaultMetadata()
+			helmCfg.Metadata = common.GetDefaultImplementationMetadata()
 
 			manifests, err := manifestgen.GenerateHelmManifests(&helmCfg)
 			if err != nil {
@@ -75,11 +75,17 @@ func generateHelmManifests(opts common.ManifestGenOptions) (manifestgen.Manifest
 	helmCfg := manifestgen.HelmConfig{
 		ImplementationConfig: manifestgen.ImplementationConfig{
 			Config: manifestgen.Config{
-				ManifestMetadata: opts.Metadata,
 				ManifestRef: types.ManifestRef{
 					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
 					Revision: opts.Revision,
 				},
+			},
+			Metadata: types.ImplementationMetadata{
+				DocumentationURL: opts.Metadata.DocumentationURL,
+				SupportURL:       opts.Metadata.SupportURL,
+				IconURL:          opts.Metadata.IconURL,
+				Maintainers:      opts.Metadata.Maintainers,
+				License:          opts.Metadata.License,
 			},
 			InterfacePathWithRevision: opts.InterfacePath,
 		},

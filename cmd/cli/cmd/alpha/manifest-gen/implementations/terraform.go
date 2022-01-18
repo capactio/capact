@@ -45,7 +45,7 @@ func NewTerraform() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tfContentCfg.ManifestRef.Path = args[0]
 			tfContentCfg.ModulePath = args[1]
-			tfContentCfg.ManifestMetadata = common.GetDefaultMetadata()
+			tfContentCfg.Metadata = common.GetDefaultImplementationMetadata()
 
 			manifests, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 			if err != nil {
@@ -97,11 +97,17 @@ func generateTerraformManifests(opts common.ManifestGenOptions) (manifestgen.Man
 	tfContentCfg := manifestgen.TerraformConfig{
 		ImplementationConfig: manifestgen.ImplementationConfig{
 			Config: manifestgen.Config{
-				ManifestMetadata: opts.Metadata,
 				ManifestRef: types.ManifestRef{
 					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
 					Revision: opts.Revision,
 				},
+			},
+			Metadata: types.ImplementationMetadata{
+				DocumentationURL: opts.Metadata.DocumentationURL,
+				SupportURL:       opts.Metadata.SupportURL,
+				IconURL:          opts.Metadata.IconURL,
+				Maintainers:      opts.Metadata.Maintainers,
+				License:          opts.Metadata.License,
 			},
 			InterfacePathWithRevision: opts.InterfacePath,
 		},

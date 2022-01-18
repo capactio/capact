@@ -7,9 +7,10 @@ import (
 
 // Metadata holds generic metadata information for Capact manifests.
 type Metadata struct {
-	OCFVersion types.OCFVersion             `yaml:"ocfVersion"`
-	Kind       types.ManifestKind           `yaml:"kind"`
-	Metadata   types.ImplementationMetadata `yaml:"metadata"`
+	OCFVersion types.OCFVersion   `yaml:"ocfVersion"`
+	Kind       types.ManifestKind `yaml:"kind"`
+	// for simplicity of unmarshaling, use the most generic Metadata object
+	Metadata types.ImplementationMetadata `yaml:"metadata"`
 }
 
 // unmarshalMetadata reads the manifest metadata from a bytes slice of a Capact manifest.

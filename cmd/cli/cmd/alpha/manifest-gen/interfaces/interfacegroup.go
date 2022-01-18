@@ -37,7 +37,7 @@ func NewInterfaceGroup() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			interfaceGroupCfg.ManifestRef.Path = args[0]
-			interfaceGroupCfg.ManifestMetadata = common.GetDefaultMetadata()
+			interfaceGroupCfg.Metadata = common.GetDefaultInterfaceMetadata()
 
 			manifests, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceGroupCfg)
 			if err != nil {
@@ -71,11 +71,16 @@ func NewInterfaceGroup() *cobra.Command {
 func GenerateInterfaceGroupFile(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	interfaceCfg := manifestgen.InterfaceGroupConfig{
 		Config: manifestgen.Config{
-			ManifestMetadata: opts.Metadata,
 			ManifestRef: types.ManifestRef{
 				Path:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
 				Revision: opts.Revision,
 			},
+		},
+		Metadata: types.InterfaceMetadata{
+			DocumentationURL: opts.Metadata.DocumentationURL,
+			SupportURL:       opts.Metadata.SupportURL,
+			IconURL:          opts.Metadata.IconURL,
+			Maintainers:      opts.Metadata.Maintainers,
 		},
 	}
 	files, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceCfg)
@@ -89,11 +94,16 @@ func GenerateInterfaceGroupFile(opts common.ManifestGenOptions) (manifestgen.Man
 func GenerateInterfaceGroupFileFromInterfacePath(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	interfaceCfg := manifestgen.InterfaceGroupConfig{
 		Config: manifestgen.Config{
-			ManifestMetadata: opts.Metadata,
 			ManifestRef: types.ManifestRef{
 				Path:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
 				Revision: opts.Revision,
 			},
+		},
+		Metadata: types.InterfaceMetadata{
+			DocumentationURL: opts.Metadata.DocumentationURL,
+			SupportURL:       opts.Metadata.SupportURL,
+			IconURL:          opts.Metadata.IconURL,
+			Maintainers:      opts.Metadata.Maintainers,
 		},
 	}
 	files, err := manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfacePath(&interfaceCfg)
