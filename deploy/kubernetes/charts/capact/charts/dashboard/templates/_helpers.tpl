@@ -62,12 +62,23 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Get Dashboard URL
+Get Dashboard image path
 */}}
-{{- define "dashboard.appURL" -}}
-{{- if .Values.ingress.enabled }}
-{{- printf "https://%s.%s:%d" .Values.ingress.host .Values.global.domainName }}
+{{- define "dashboard.imagePath" -}}
+{{- if .Values.image.path }}
+{{- print .Values.image.path }}
 {{- else }}
-{{- printf "http://%s.%s:%d" (include "dashboard.fullname" .) .Release.Namespace .Values.service.port }}
+{{- print .Values.global.containerRegistry.path }}
+{{- end }}
+{{- end }}
+
+{{/*
+Get Dashboard image tag
+*/}}
+{{- define "dashboard.imageTag" -}}
+{{- if .Values.image.tag }}
+{{- print .Values.image.tag }}
+{{- else }}
+{{- print .Values.global.containerRegistry.overrideTag }}
 {{- end }}
 {{- end }}

@@ -24,10 +24,6 @@ Use the following header configuration in the Gateway GraphQL Playground:
   }
 {{ end }}
 
-{{/*
-TODO: Upgrade to Helm 3.7 or newer to use simply: {{ include "dashboard.appURL" .Subcharts.dashboard }}
-*/}}
-
 - Capact Dashboard: {{ include "capact.dashboardURL" . }}
 
 {{ if .Values.notes.printInsecure }}

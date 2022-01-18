@@ -16,9 +16,12 @@ global:
       username: graphql
       password: t0p_s3cr3t
 
-  dashboard:
-    image:
-      tag: "4d639bb"
+dashboard:
+  image:
+    # Overrides the image path provided in globals (`global.containerRegistry.path`)
+    path: ghcr.io/capactio
+    # Overrides the image tag provided in globals (`global.containerRegistry.overrideTag`)
+    tag: "4d639bb"
 
 integrationTest:
   image:

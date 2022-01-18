@@ -7,5 +7,5 @@ metadata:
 data:
   config.js: |
     window.RuntimeConfig = {
-      defaultGatewayEndpoint: "{{ include "dashboard.appURL" . }}"
+      defaultGatewayEndpoint: "https://gateway.{{ .Values.global.domainName}}/graphql"
     };
