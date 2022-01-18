@@ -1,0 +1,31 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "dashboard.fullname" . }}
+  labels:
+  {{- include "dashboard.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: "{{ .Values.ingress.annotations.class }}"
+    kubernetes.io/tls-acme: "{{ .Values.ingress.annotations.tls_acme }}"
+    cert-manager.io/cluster-issuer: "{{ .Values.ingress.annotations.issuer }}"
+    acmechallengetype: "{{ .Values.ingress.annotations.acmechallengetype }}"
+spec:
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - "{{ .Values.ingress.host }}.{{ .Values.global.domainName }}"
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: "{{ .Values.ingress.host}}.{{ .Values.global.domainName }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dashboard.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+  {{- end}}
