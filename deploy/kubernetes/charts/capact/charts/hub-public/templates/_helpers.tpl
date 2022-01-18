@@ -65,7 +65,7 @@ Create the name of the service account to use
 Create the manifest source paths separated by the comma
 */}}
 {{- define "populator.manifestSources" -}}
-{{- if .Values.populator.enableEmbeddedSources -}}
+{{- if .Values.populator.useEmbeddedSourceOnly -}}
 /hub-manifests
 {{- else }}
 {{- $length := len .Values.populator.manifestsLocations }}

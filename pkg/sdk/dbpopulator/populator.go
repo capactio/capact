@@ -18,6 +18,11 @@ type SourceInfo struct {
 	GitHash []byte
 }
 
+type manifestPath struct {
+	path   string
+	prefix string
+}
+
 const (
 	commitEncodeSep  = ","
 	maxStoredCommits = 1000
@@ -469,14 +474,12 @@ yield batches, total return batches, total
 
 // Populate imports Public Hub manifests into a Neo4j database.
 func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, sources []SourceInfo, publishPath string) (bool, error) {
-	for _, source := range sources {
-		err := populate(ctx, log, session, source.Files, source.RootDir, publishPath)
-		if err != nil {
-			return false, errors.Wrap(err, "while adding new manifests")
-		}
+	err := populate(ctx, log, session, sources, publishPath)
+	if err != nil {
+		return false, errors.Wrap(err, "while adding new manifests")
 	}
 
-	err := swap(session)
+	err = swap(session)
 	if err != nil {
 		return false, errors.Wrap(err, "while swapping manifests")
 	}
@@ -532,7 +535,7 @@ func SaveCommitsMetadata(session neo4j.Session, commits []string) error {
 	return errors.Wrap(err, "while executing neo4j transaction")
 }
 
-func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string) error {
+func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, sources []SourceInfo, publishPath string) error {
 	var queries = map[string]string{
 		"RepoMetadata":   repoMetadataQuery,
 		"Attribute":      attributeQuery,
@@ -541,33 +544,37 @@ func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 		"Interface":      interfaceQuery,
 		"Implementation": implementationQuery,
 	}
-	grouped, err := Group(paths)
-	if err != nil {
-		return errors.Wrap(err, "while grouping manifests")
+
+	var mergeGroupedManifests map[string][]manifestPath
+	for _, source := range sources {
+		grouped, err := Group(source.Files, source.RootDir)
+		if err != nil {
+			return errors.Wrap(err, "while grouping manifests")
+		}
+		mergeGroupedManifests = mergeGroupManifests(mergeGroupedManifests, grouped)
 	}
 
-	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		for _, kind := range ordered {
-			paths = grouped[kind]
+			manifestPaths := mergeGroupedManifests[kind]
 			query := queries[kind]
-			for _, manifestPath := range paths {
-				prefix := getPrefix(manifestPath, rootDir)
-				q := renderQuery(query, publishPath, manifestPath, prefix)
+			for _, manifest := range manifestPaths {
+				q := renderQuery(query, publishPath, manifest.path, manifest.prefix)
 
 				select {
 				case <-ctx.Done():
 					// returning error to not commit transaction
 					return nil, errors.New("canceled")
 				default:
-					log.Info("Processing manifest", zap.String("manifest", manifestPath))
+					log.Info("Processing manifest", zap.String("manifest", manifest.path))
 					log.Debug("Executing query", zap.String("query", q))
 					result, err := transaction.Run(q, nil)
 					if err != nil {
-						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
+						return nil, errors.Wrapf(err, "when adding manifest %s", manifest.path)
 					}
 					err = result.Err()
 					if err != nil {
-						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
+						return nil, errors.Wrapf(err, "when adding manifest %s", manifest.path)
 					}
 				}
 			}
@@ -652,6 +659,16 @@ func getPrefix(manifestPath string, rootDir string) string {
 	prefix := strings.Join(parts[:len(parts)-1], ".")
 	prefix = "cap" + prefix
 	return prefix
+}
+
+func mergeGroupManifests(manifestsGroups ...map[string][]manifestPath) map[string][]manifestPath {
+	results := map[string][]manifestPath{}
+	for _, manifestsGroup := range manifestsGroups {
+		for manifestType, manifests := range manifestsGroup {
+			results[manifestType] = append(results[manifestType], manifests...)
+		}
+	}
+	return results
 }
 
 func renderQuery(query, publishPath, manifestPath, prefix string) string {

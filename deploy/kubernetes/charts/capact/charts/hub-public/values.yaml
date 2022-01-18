@@ -80,7 +80,7 @@ populator:
   port: 8081
   updateOnGitCommit: true
   manifestsPath: manifests
-  enableEmbeddedSources: false
+  useEmbeddedSourceOnly: false
   manifestsLocations:
     - repository: github.com/capactio/hub-manifests
       branch: main
