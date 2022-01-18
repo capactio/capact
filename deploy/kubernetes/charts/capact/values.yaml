@@ -2,7 +2,7 @@
 global:
   containerRegistry:
     path: ghcr.io/capactio
-    # Overrides the image tag for all Capact components except Dashboard. Default is the sub-chart appVersion.
+    # Overrides the image tag for all Capact components. Default is the sub-chart appVersion.
     overrideTag: "latest"
   domainName: "stage.cluster.capact.dev"
 
@@ -18,10 +18,10 @@ global:
 
 dashboard:
   image:
-    # Overrides the image path provided in globals (`global.containerRegistry.path`)
-    path: ghcr.io/capactio/pr # TODO: Change to ghcr.io/capactio
-    # Overrides the image tag provided in globals (`global.containerRegistry.overrideTag`)
-    tag: "PR-17" # TODO: Change to image built from main branch on Dashboard repo
+    # Overrides the image path provided in globals (`global.containerRegistry.path`).
+    path: ghcr.io/capactio/pr # TODO: Before merge, change it to ghcr.io/capactio
+    # Overrides the image tag provided in globals (`global.containerRegistry.overrideTag`).
+    tag: "PR-17" # TODO: Before merge, change it to image built from main branch on Dashboard repo
 
 integrationTest:
   image:
