@@ -29,8 +29,8 @@ type AttributeConfig struct {
 type InterfaceConfig struct {
 	Config
 	Metadata      types.InterfaceMetadata
-	InputTypeRef  string
-	OutputTypeRef string
+	InputTypeRef  types.ManifestRef
+	OutputTypeRef types.ManifestRef
 }
 
 // InterfaceGroupConfig stores input parameters for InterfaceGroup content generation.

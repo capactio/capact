@@ -39,13 +39,18 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (ManifestCollection, error
 	cfgs = append(cfgs, outputTypeCfg)
 
 	trimmedInterfacePath := strings.TrimPrefix(cfg.ManifestRef.Path, "cap.interface.")
-	inputPath := common.CreateManifestPath(types.TypeManifestKind, trimmedInterfacePath+"-input")
 	outputsuffix := strings.Split(trimmedInterfacePath, ".")
 	pathWithoutLastName := strings.Join(outputsuffix[:len(outputsuffix)-1], ".")
-	outputPath := common.CreateManifestPath(types.TypeManifestKind, pathWithoutLastName) + ".config"
 
-	cfg.InputTypeRef = common.AddRevisionToPath(inputPath, cfg.ManifestRef.Revision)
-	cfg.OutputTypeRef = common.AddRevisionToPath(outputPath, cfg.ManifestRef.Revision)
+	cfg.InputTypeRef = types.ManifestRef{
+		Path:     common.CreateManifestPath(types.TypeManifestKind, trimmedInterfacePath+"-input"),
+		Revision: cfg.ManifestRef.Revision,
+	}
+
+	cfg.OutputTypeRef = types.ManifestRef{
+		Path:     common.CreateManifestPath(types.TypeManifestKind, pathWithoutLastName) + ".config",
+		Revision: cfg.ManifestRef.Revision,
+	}
 
 	interfaceCfg, err := getInterfaceTemplatingConfig(cfg)
 	if err != nil {
@@ -153,20 +158,6 @@ func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, erro
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
-	var inputPath, inputRevision, outputPath, outputRevision string
-
-	inputPathSlice := strings.SplitN(cfg.InputTypeRef, ":", 2)
-	if len(inputPathSlice) == 2 {
-		inputPath = inputPathSlice[0]
-		inputRevision = inputPathSlice[1]
-	}
-
-	outputPathSlice := strings.SplitN(cfg.OutputTypeRef, ":", 2)
-	if len(outputPathSlice) == 2 {
-		outputPath = outputPathSlice[0]
-		outputRevision = outputPathSlice[1]
-	}
-
 	return &templatingConfig{
 		Template: interfaceManifestTemplate,
 		Input: &interfaceTemplatingInput{
@@ -177,12 +168,12 @@ func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, erro
 			},
 			Metadata: cfg.Metadata,
 			InputRef: types.ManifestRef{
-				Path:     inputPath,
-				Revision: inputRevision,
+				Path:     cfg.InputTypeRef.Path,
+				Revision: cfg.InputTypeRef.Revision,
 			},
 			OutputRef: types.ManifestRef{
-				Path:     outputPath,
-				Revision: outputRevision,
+				Path:     cfg.OutputTypeRef.Path,
+				Revision: cfg.OutputTypeRef.Revision,
 			},
 		},
 	}, nil

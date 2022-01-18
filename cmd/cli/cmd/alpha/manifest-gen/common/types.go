@@ -17,8 +17,8 @@ type ManifestGenOptions struct {
 	Metadata       Metadata
 	Overwrite      bool
 	Revision       string
-	TypeInputPath  string
-	TypeOutputPath string
+	TypeInputPath  types.ManifestRef
+	TypeOutputPath types.ManifestRef
 }
 
 var (

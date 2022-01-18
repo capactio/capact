@@ -18,6 +18,7 @@ import (
 
 // GenerateTerraformManifests generates collection of manifest for a Terraform module based Implementation.
 func GenerateTerraformManifests(cfg *TerraformConfig) (ManifestCollection, error) {
+	// TODO: checks if in the cfg.ModulePath there are terraform files
 	module, diags := tfconfig.LoadModule(cfg.ModulePath)
 	if diags.Err() != nil {
 		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")

@@ -62,13 +62,17 @@ func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.Manifes
 
 func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
 	if slices.Contains(opts.ManifestsType, string(types.TypeManifestKind)) {
-		inputPath := common.CreateManifestPath(types.TypeManifestKind, opts.ManifestPath) + "-input"
-		opts.TypeInputPath = common.AddRevisionToPath(inputPath, opts.Revision)
+		opts.TypeInputPath = types.ManifestRef{
+			Path:     common.CreateManifestPath(types.TypeManifestKind, opts.ManifestPath) + "-input",
+			Revision: opts.Revision,
+		}
 		if !slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
 			outputsuffix := strings.Split(opts.ManifestPath, ".")
 			pathWithoutLastName := strings.Join(outputsuffix[:len(outputsuffix)-1], ".")
-			outputPath := common.CreateManifestPath(types.TypeManifestKind, pathWithoutLastName) + ".config"
-			opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)
+			opts.TypeOutputPath = types.ManifestRef{
+				Path:     common.CreateManifestPath(types.TypeManifestKind, pathWithoutLastName) + ".config",
+				Revision: opts.Revision,
+			}
 		}
 	}
 
