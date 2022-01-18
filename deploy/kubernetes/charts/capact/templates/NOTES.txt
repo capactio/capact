@@ -1,7 +1,7 @@
 Thank you for installing Capact components.
 
 Here is the list of exposed services:
-- (Advanced) Gateway GraphQL Playground: https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}
+- Gateway GraphQL Playground: https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}
 
 {{ if .Values.notes.printInsecure }}
 Use the following header configuration in the Gateway GraphQL Playground:
@@ -23,13 +23,13 @@ Use the following header configuration in the Gateway GraphQL Playground:
     "Authorization": "Basic $BASIC_AUTH_HEADER"
   }
 {{ end }}
-
 - Capact Dashboard: {{ include "capact.dashboardURL" . }}
 
 {{ if .Values.notes.printInsecure }}
 Use the following credentials to log in:
 
-  {{ printf "%s:%s" .Values.global.gateway.auth.username .Values.global.gateway.auth.password -}}
+  Username: {{- .Values.global.gateway.auth.username -}}
+  Password: {{- .Values.global.gateway.auth.password -}}
 
 {{ else }}
 To obtain the user credentials, run:
@@ -37,7 +37,7 @@ To obtain the user credentials, run:
     export GATEWAY_USER=$(kubectl -n {{ .Release.Namespace }} get secret capact-gateway -ogo-template='{{`{{.data.username | base64decode }}`}}')
     export GATEWAY_PASS=$(kubectl -n {{ .Release.Namespace }} get secret capact-gateway -ogo-template='{{`{{.data.password | base64decode }}`}}')
     // print the credentials in your Terminal and use in the login form:
-    echo "$GATEWAY_USER:$GATEWAY_PASS"
+    print "Username: $GATEWAY_USER\nPassword: GATEWAY_PASS"
 {{ end }}
 
 To read more about Capact, check out the documentation on https://capact.io

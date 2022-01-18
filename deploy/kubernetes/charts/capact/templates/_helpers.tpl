@@ -70,7 +70,7 @@ Get Dashboard URL
 {{- else }}
 {{/*
 TODO: Naive temporary implementation. After upgrade to Helm 3.7 or newer, use simply:
-    {{- printf "http://%s.%s:%d" (include "gateway.fullname" .Subcharts.gateway) .Release.Namespace .Values.dashboard.service.port }}
+    {{- printf "http://%s.%s:%d" (include "dashboard.fullname" .Subcharts.dashboard) .Release.Namespace .Values.dashboard.service.port }}
     See issue: https://github.com/helm/helm/pull/9957
 */}}
 {{- printf "http://%s-dashboard.%s:%d" .Release.Name .Release.Namespace .Values.dashboard.service.port }}
