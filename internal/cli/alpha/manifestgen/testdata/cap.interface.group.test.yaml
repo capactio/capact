@@ -20,7 +20,7 @@ spec:
       input-parameters:
         typeRef:
           path: cap.type.group.test-input
-          revision: 0.1.0
+          revision: 0.2.0
     typeInstances: {}
 
   output:
@@ -28,5 +28,5 @@ spec:
       config:
         typeRef:
           path: cap.type.group.config
-          revision: 0.1.0
+          revision: 0.2.0
     

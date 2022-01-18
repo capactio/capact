@@ -49,9 +49,9 @@ func generateInterfaceGroup(opts common.ManifestGenOptions) (manifestgen.Manifes
 	var files manifestgen.ManifestCollection
 	var err error
 	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
-		files, err = interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg)
+		files, err = interfaces.GenerateInterfaceGroupFileFromInterfacePath(opts)
 	} else {
-		files, err = interfaces.GenerateInterfaceFile(opts, manifestgen.GenerateInterfaceGroupTemplatingConfig)
+		files, err = interfaces.GenerateInterfaceGroupFile(opts)
 	}
 
 	if err != nil {
@@ -66,7 +66,8 @@ func generateInterface(opts common.ManifestGenOptions) (manifestgen.ManifestColl
 		opts.TypeInputPath = common.AddRevisionToPath(inputPath, opts.Revision)
 		if !slices.Contains(opts.ManifestsType, string(types.ImplementationManifestKind)) {
 			outputsuffix := strings.Split(opts.ManifestPath, ".")
-			outputPath := common.CreateManifestPath(types.TypeManifestKind, outputsuffix[0]) + ".config"
+			pathWithoutLastName := strings.Join(outputsuffix[:len(outputsuffix)-1], ".")
+			outputPath := common.CreateManifestPath(types.TypeManifestKind, pathWithoutLastName) + ".config"
 			opts.TypeOutputPath = common.AddRevisionToPath(outputPath, opts.Revision)
 		}
 	}

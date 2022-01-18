@@ -7,13 +7,14 @@ import (
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 // NewInterfaceGroup returns a cobra.Command to bootstrap new InterfaceGroup manifests.
 func NewInterfaceGroup() *cobra.Command {
-	var interfaceGroupCfg manifestgen.InterfaceConfig
+	var interfaceGroupCfg manifestgen.InterfaceGroupConfig
 
 	cmd := &cobra.Command{
 		Use:     "interfacegroup [PATH]",
@@ -64,4 +65,40 @@ func NewInterfaceGroup() *cobra.Command {
 	cmd.Flags().StringVarP(&interfaceGroupCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the InterfaceGroup manifest")
 
 	return cmd
+}
+
+// GenerateInterfaceGroupFile generates new InterfaceGroup file.
+func GenerateInterfaceGroupFile(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
+	interfaceCfg := manifestgen.InterfaceGroupConfig{
+		Config: manifestgen.Config{
+			ManifestMetadata: opts.Metadata,
+			ManifestRef: types.ManifestRef{
+				Path:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
+				Revision: opts.Revision,
+			},
+		},
+	}
+	files, err := manifestgen.GenerateInterfaceGroupTemplatingConfig(&interfaceCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating content files")
+	}
+	return files, nil
+}
+
+// GenerateInterfaceGroupFileFromInterfacePath generates new InterfaceGroup file based on Interface path.
+func GenerateInterfaceGroupFileFromInterfacePath(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
+	interfaceCfg := manifestgen.InterfaceGroupConfig{
+		Config: manifestgen.Config{
+			ManifestMetadata: opts.Metadata,
+			ManifestRef: types.ManifestRef{
+				Path:     common.CreateManifestPath(types.InterfaceManifestKind, opts.ManifestPath),
+				Revision: opts.Revision,
+			},
+		},
+	}
+	files, err := manifestgen.GenerateInterfaceGroupTemplatingConfigFromInterfacePath(&interfaceCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating content files")
+	}
+	return files, nil
 }

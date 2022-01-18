@@ -139,7 +139,7 @@ func TestGenerateTypeManifests(t *testing.T) {
 }
 
 func TestGenerateInterfaceGroupManifests(t *testing.T) {
-	cfg := &manifestgen.InterfaceConfig{
+	cfg := &manifestgen.InterfaceGroupConfig{
 		Config: manifestgen.Config{
 			ManifestRef: types.ManifestRef{
 				Path:     "cap.interface.grouptest",
@@ -170,8 +170,6 @@ func TestGenerateInterfaceGroupManifests(t *testing.T) {
 
 func TestGenerateInterfaceManifests(t *testing.T) {
 	cfg := &manifestgen.InterfaceConfig{
-		InputTypeRef:  "cap.type.group.test-input:0.1.0",
-		OutputTypeRef: "cap.type.group.config:0.1.0",
 		Config: manifestgen.Config{
 			ManifestRef: types.ManifestRef{
 				Path:     "cap.interface.group.test",

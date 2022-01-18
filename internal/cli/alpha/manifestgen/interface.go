@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/alecthomas/jsonschema"
@@ -17,17 +18,13 @@ type genManifestFn func(cfg *InterfaceConfig) (*templatingConfig, error)
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (ManifestCollection, error) {
 	cfgs := make([]*templatingConfig, 0, 4)
 
-	interfaceGroupCfg, err := getInterfaceGroupTemplatingConfig(cfg)
+	interfaceGroupCfg, err := getInterfaceGroupTemplatingConfig(&InterfaceGroupConfig{
+		Config: cfg.Config,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting InterfaceGroup templating config")
 	}
 	cfgs = append(cfgs, interfaceGroupCfg)
-
-	interfaceCfg, err := getInterfaceTemplatingConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting Interface templating config")
-	}
-	cfgs = append(cfgs, interfaceCfg)
 
 	inputTypeCfg, err := getInterfaceInputTypeTemplatingConfig(cfg)
 	if err != nil {
@@ -40,6 +37,21 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (ManifestCollection, error
 		return nil, errors.Wrap(err, "while getting Interface output Type templating config")
 	}
 	cfgs = append(cfgs, outputTypeCfg)
+
+	trimmedInterfacePath := strings.TrimPrefix(cfg.ManifestRef.Path, "cap.interface.")
+	inputPath := common.CreateManifestPath(types.TypeManifestKind, trimmedInterfacePath+"-input")
+	outputsuffix := strings.Split(trimmedInterfacePath, ".")
+	pathWithoutLastName := strings.Join(outputsuffix[:len(outputsuffix)-1], ".")
+	outputPath := common.CreateManifestPath(types.TypeManifestKind, pathWithoutLastName) + ".config"
+
+	cfg.InputTypeRef = common.AddRevisionToPath(inputPath, cfg.ManifestRef.Revision)
+	cfg.OutputTypeRef = common.AddRevisionToPath(outputPath, cfg.ManifestRef.Revision)
+
+	interfaceCfg, err := getInterfaceTemplatingConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Interface templating config")
+	}
+	cfgs = append(cfgs, interfaceCfg)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
@@ -54,16 +66,34 @@ func GenerateInterfaceTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection
 	return generateManifestCollection(cfg, []genManifestFn{getInterfaceTemplatingConfig})
 }
 
-// GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg generates InterfaceGroup templating config from interface config.
-func GenerateInterfaceGroupTemplatingConfigFromInterfaceCfg(cfg *InterfaceConfig) (ManifestCollection, error) {
+// GenerateInterfaceGroupTemplatingConfigFromInterfacePath generates InterfaceGroup templating config from interface config.
+func GenerateInterfaceGroupTemplatingConfigFromInterfacePath(cfg *InterfaceGroupConfig) (ManifestCollection, error) {
 	cfg.ManifestRef.Path = getInterfaceGroupPathFromInterfacePath(cfg.ManifestRef.Path)
-	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
+
+	interfaceCfg, err := getInterfaceGroupTemplatingConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Interface templating config")
+	}
+	generated, err := generateManifests([]*templatingConfig{interfaceCfg})
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating manifests")
+	}
+
+	return createManifestCollection(generated)
 }
 
 // GenerateInterfaceGroupTemplatingConfig generates InterfaceGroup templating config.
-func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (ManifestCollection, error) {
-	// TODO: created dedicated InterfaceGroupConfig
-	return generateManifestCollection(cfg, []genManifestFn{getInterfaceGroupTemplatingConfig})
+func GenerateInterfaceGroupTemplatingConfig(cfg *InterfaceGroupConfig) (ManifestCollection, error) {
+	interfaceCfg, err := getInterfaceGroupTemplatingConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Interface templating config")
+	}
+	generated, err := generateManifests([]*templatingConfig{interfaceCfg})
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating manifests")
+	}
+
+	return createManifestCollection(generated)
 }
 
 // GenerateTypeTemplatingConfig generates Type templating config.
@@ -98,7 +128,7 @@ func generateManifestCollection(cfg *InterfaceConfig, fnList []genManifestFn) (M
 	return createManifestCollection(generated)
 }
 
-func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
+func getInterfaceGroupTemplatingConfig(cfg *InterfaceGroupConfig) (*templatingConfig, error) {
 	groupPrefix, groupName, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting InterfaceGroup prefix and path")

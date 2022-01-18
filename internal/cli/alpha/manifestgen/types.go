@@ -32,6 +32,11 @@ type InterfaceConfig struct {
 	OutputTypeRef string
 }
 
+// InterfaceGroupConfig stores input parameters for InterfaceGroup content generation.
+type InterfaceGroupConfig struct {
+	Config
+}
+
 // ImplementationConfig stores input parameters for Implementation content generation.
 type ImplementationConfig struct {
 	Config
