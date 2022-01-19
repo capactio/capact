@@ -23,8 +23,8 @@ var (
 	componentHosts = []string{"gateway", "dashboard"}
 )
 
-// UpdateHostsFile adds a new entry to the /etc/hosts file for the exposed Capact components.
-func UpdateHostsFile() error {
+// AddComponentsToHostsFile adds a new entry to the /etc/hosts file for the exposed Capact components.
+func AddComponentsToHostsFile() error {
 	var hostnames []string
 	for _, componentHost := range componentHosts {
 		hostnames = append(hostnames, fmt.Sprintf("%s.%s", componentHost, localDomain))
