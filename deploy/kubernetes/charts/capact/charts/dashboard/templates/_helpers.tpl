@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "capact.name" -}}
+{{- define "dashboard.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "capact.fullname" -}}
+{{- define "dashboard.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "capact.chart" -}}
+{{- define "dashboard.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "capact.labels" -}}
-helm.sh/chart: {{ include "capact.chart" . }}
-{{ include "capact.selectorLabels" . }}
+{{- define "dashboard.labels" -}}
+helm.sh/chart: {{ include "dashboard.chart" . }}
+{{ include "dashboard.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,34 +45,40 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "capact.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "capact.name" . }}
+{{- define "dashboard.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "dashboard.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "capact.serviceAccountName" -}}
+{{- define "dashboard.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "capact.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "dashboard.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
 
 {{/*
-Get Dashboard URL
+Get Dashboard image path
 */}}
-{{- define "capact.dashboardURL" -}}
-{{- if .Values.dashboard.ingress.enabled }}
-{{- printf "https://%s.%s" .Values.dashboard.ingress.host .Values.global.domainName }}
+{{- define "dashboard.imagePath" -}}
+{{- if .Values.image.path }}
+{{- print .Values.image.path }}
 {{- else }}
+{{- print .Values.global.containerRegistry.path }}
+{{- end }}
+{{- end }}
+
 {{/*
-TODO: Naive temporary implementation. After upgrade to Helm 3.7 or newer, use simply:
-    {{- printf "http://%s.%s:%d" (include "dashboard.fullname" .Subcharts.dashboard) .Release.Namespace .Values.dashboard.service.port }}
-    See issue: https://github.com/helm/helm/pull/9957
+Get Dashboard image tag
 */}}
-{{- printf "http://%s-dashboard.%s:%d" .Release.Name .Release.Namespace .Values.dashboard.service.port }}
+{{- define "dashboard.imageTag" -}}
+{{- if .Values.image.tag }}
+{{- print .Values.image.tag }}
+{{- else }}
+{{- print .Values.global.containerRegistry.overrideTag }}
 {{- end }}
 {{- end }}

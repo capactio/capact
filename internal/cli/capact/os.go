@@ -15,9 +15,22 @@ import (
 
 const hosts = "/etc/hosts"
 
-// AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway.
-func AddGatewayToHostsFile() error {
-	entry := fmt.Sprintf("\n127.0.0.1 gateway.%s.local", Name)
+var (
+	// localDomain is a domain used for local Capact installation.
+	localDomain = fmt.Sprintf("%s.local", Name)
+
+	// componentHosts is a slice of Capact components which should have entries in /etc/hosts.
+	componentHosts = []string{"gateway", "dashboard"}
+)
+
+// AddComponentsToHostsFile adds a new entry to the /etc/hosts file for the exposed Capact components.
+func AddComponentsToHostsFile() error {
+	var hostnames []string
+	for _, componentHost := range componentHosts {
+		hostnames = append(hostnames, fmt.Sprintf("%s.%s", componentHost, localDomain))
+	}
+
+	entry := fmt.Sprintf("\n127.0.0.1 %s", strings.Join(hostnames, " "))
 	return updateHostFile(entry)
 }
 

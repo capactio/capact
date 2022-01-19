@@ -1,4 +1,4 @@
-{{- $files := .Files.Glob "dashboards/*.json" }}
+{{- $files := .Files.Glob "grafana-dashboards/*.json" }}
 {{- if $files }}
 apiVersion: v1
 kind: ConfigMapList
