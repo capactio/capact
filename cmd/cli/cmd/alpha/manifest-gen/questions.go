@@ -7,9 +7,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-func askForManifestType() ([]string, error) {
+func askForManifestKinds() ([]string, error) {
 	var manifestTypes []string
-	availableManifestsType := []string{
+	availableManifestKinds := []string{
 		string(types.AttributeManifestKind),
 		string(types.TypeManifestKind),
 		string(types.InterfaceGroupManifestKind),
@@ -20,7 +20,8 @@ func askForManifestType() ([]string, error) {
 		{
 			Prompt: &survey.MultiSelect{
 				Message: "Which manifests do you want to generate:",
-				Options: availableManifestsType,
+				Help:    "If the Interface is selected, Type toggles input and output Type generation for a given Interface.",
+				Options: availableManifestKinds,
 			},
 			Validate: survey.MinItems(1),
 		},

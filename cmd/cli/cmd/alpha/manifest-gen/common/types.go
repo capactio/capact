@@ -12,7 +12,7 @@ type Metadata = types.ImplementationMetadata
 type ManifestGenOptions struct {
 	Directory      string
 	InterfacePath  string
-	ManifestsType  []string
+	ManifestsKinds []string
 	ManifestPath   string
 	Metadata       Metadata
 	Overwrite      bool

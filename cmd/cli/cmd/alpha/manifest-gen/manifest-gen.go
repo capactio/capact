@@ -40,7 +40,7 @@ func NewCmd() *cobra.Command {
 
 func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
 	var err error
-	opts.ManifestsType, err = askForManifestType()
+	opts.ManifestsKinds, err = askForManifestKinds()
 	if err != nil {
 		return errors.Wrap(err, "while asking for manifest type")
 	}
@@ -72,7 +72,7 @@ func askInteractivelyForParameters(opts common.ManifestGenOptions) error {
 	var manifestCollection manifestgen.ManifestCollection
 
 	for manifestType, fn := range generatingManifestsFun {
-		if !slices.Contains(opts.ManifestsType, string(manifestType)) {
+		if !slices.Contains(opts.ManifestsKinds, string(manifestType)) {
 			continue
 		}
 		manifests, err := fn(opts)

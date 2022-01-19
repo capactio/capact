@@ -43,7 +43,7 @@ func GenerateImplementationManifest(opts common.ManifestGenOptions) (manifestgen
 	}
 
 	interfacePathSuffixAndRevision := ""
-	if slices.Contains(opts.ManifestsType, string(types.InterfaceManifestKind)) {
+	if slices.Contains(opts.ManifestsKinds, string(types.InterfaceManifestKind)) {
 		interfacePathSuffixAndRevision = common.AddRevisionToPath(opts.ManifestPath, opts.Revision)
 	} else {
 		interfacePathSuffixAndRevision, err = askForInterface()

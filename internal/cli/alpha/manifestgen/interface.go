@@ -1,14 +1,12 @@
 package manifestgen
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 )
 
@@ -185,11 +183,6 @@ func getInterfaceTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, 
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
-	jsonSchema, err := getInterfaceInputTypeJSONSchema()
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting input type JSON schema")
-	}
-
 	typeMetadata := types.TypeMetadata{
 		DocumentationURL: cfg.Metadata.DocumentationURL,
 		IconURL:          cfg.Metadata.IconURL,
@@ -207,8 +200,7 @@ func getInterfaceTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, 
 				Prefix:   prefix,
 				Revision: cfg.ManifestRef.Revision,
 			},
-			Metadata:   typeMetadata,
-			JSONSchema: string(jsonSchema),
+			Metadata: typeMetadata,
 		},
 	}, nil
 }
@@ -217,11 +209,6 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
-	}
-
-	jsonSchema, err := getInterfaceInputTypeJSONSchema()
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting input type JSON schema")
 	}
 
 	typeMetadata := types.TypeMetadata{
@@ -241,8 +228,7 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 				Prefix:   prefix,
 				Revision: cfg.ManifestRef.Revision,
 			},
-			Metadata:   typeMetadata,
-			JSONSchema: string(jsonSchema),
+			Metadata: typeMetadata,
 		},
 	}, nil
 }
@@ -273,19 +259,6 @@ func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCo
 			Metadata: typeMetadata,
 		},
 	}, nil
-}
-
-func getInterfaceInputTypeJSONSchema() ([]byte, error) {
-	schema := &jsonschema.Type{
-		Type: "object",
-	}
-
-	schemaBytes, err := json.MarshalIndent(schema, "", "  ")
-	if err != nil {
-		return nil, errors.Wrap(err, "while marshaling JSON schema")
-	}
-
-	return schemaBytes, nil
 }
 
 func getInterfaceGroupPathFromInterfacePath(ifacePath string) string {

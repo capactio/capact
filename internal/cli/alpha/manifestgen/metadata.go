@@ -9,7 +9,7 @@ import (
 type Metadata struct {
 	OCFVersion types.OCFVersion   `yaml:"ocfVersion"`
 	Kind       types.ManifestKind `yaml:"kind"`
-	// for simplicity of unmarshalling, use the most generic Metadata object
+	// TODO: Use proper Metadata types depending on the manifest kind
 	Metadata types.ImplementationMetadata `yaml:"metadata"`
 }
 
