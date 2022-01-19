@@ -9,10 +9,8 @@ import (
 type Metadata struct {
 	OCFVersion types.OCFVersion   `yaml:"ocfVersion"`
 	Kind       types.ManifestKind `yaml:"kind"`
-	Metadata   struct {
-		Name   string `yaml:"name"`
-		Prefix string `yaml:"prefix"`
-	} `yaml:"metadata"`
+	// TODO: Use proper Metadata types depending on the manifest kind
+	Metadata types.ImplementationMetadata `yaml:"metadata"`
 }
 
 // unmarshalMetadata reads the manifest metadata from a bytes slice of a Capact manifest.

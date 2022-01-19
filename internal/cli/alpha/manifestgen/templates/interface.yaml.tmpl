@@ -6,26 +6,38 @@ metadata:
   name: "{{ .Name }}"
   displayName: "{{ .Name }}"
   description: "{{ .Name }} action for {{ .Prefix }}"
-  documentationURL: https://example.com
-  supportURL: https://example.com
-  iconURL: https://example.com/icon.png
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
   maintainers:
-    - email: dev@example.cop
-      name: Example Dev
-      url: https://example.com
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
 
 spec:
   input:
     parameters:
       input-parameters:
         typeRef:
-          path: cap.type.{{ .Prefix }}.{{ .Name }}-input
-          revision: 0.1.0
+          path: {{if .InputRef.Path}}{{ .InputRef.Path }}{{else}}cap.type. # TODO(ContentDeveloper): Put here the path of the input Type{{end}}
+          revision: {{if .InputRef.Revision}}{{ .InputRef.Revision }}{{else}}0.1.0{{end}}
     typeInstances: {}
 
   output:
     typeInstances:
+    {{- if .OutputRef.Path}}
       config:
         typeRef:
-          path: cap.type.{{ .Prefix }}.config
-          revision: 0.1.0
+          path: {{ .OutputRef.Path }}
+          revision: {{if .OutputRef.Revision}}{{ .OutputRef.Revision }}{{else}}0.1.0{{end}}
+    {{else}} {} # TODO(ContentDeveloper): Configure here the output typeInstance if needed{{end}}

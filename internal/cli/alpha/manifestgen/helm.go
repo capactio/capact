@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/alecthomas/jsonschema"
 	"github.com/iancoleman/orderedmap"
 	"github.com/iancoleman/strcase"
@@ -17,8 +19,8 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 )
 
-// GenerateHelmManifests generates manifest files for a Helm module based Implementation
-func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
+// GenerateHelmManifests generates manifest files for a Helm module based Implementation.
+func GenerateHelmManifests(cfg *HelmConfig) (ManifestCollection, error) {
 	helmChart, err := loadHelmChart(cfg)
 	if err != nil {
 		return nil, err
@@ -40,23 +42,10 @@ func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating manifests")
+		return nil, errors.Wrap(err, "while generating Helm manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
 func loadHelmChart(cfg *HelmConfig) (*chart.Chart, error) {
@@ -80,7 +69,7 @@ func loadHelmChart(cfg *HelmConfig) (*chart.Chart, error) {
 }
 
 func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -90,12 +79,22 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 		return nil, errors.Wrap(err, "while getting JSON schema for Helm chart values")
 	}
 
+	typeMetadata := types.TypeMetadata{
+		DocumentationURL: cfg.Metadata.DocumentationURL,
+		IconURL:          cfg.Metadata.IconURL,
+		SupportURL:       cfg.Metadata.SupportURL,
+		Maintainers:      cfg.Metadata.Maintainers,
+		DisplayName:      ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name)),
+		Description:      fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name),
+	}
+
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
-			Name:     name,
+			Name:     getDefaultAdditionalImplTypeName(name),
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
+		Metadata:   typeMetadata,
 		JSONSchema: string(jsonSchema),
 	}
 
@@ -112,7 +111,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		interfaceRevision = "0.1.0"
 	)
 
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -143,14 +142,17 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		templatingInput: templatingInput{
 			Name:     name,
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
-		InterfacePath:     interfacePath,
-		InterfaceRevision: interfaceRevision,
-		HelmChartName:     helmChart.Name(),
-		HelmChartVersion:  helmChart.Metadata.Version,
-		HelmRepoURL:       cfg.ChartRepoURL,
-		ValuesYAML:        helmValuesBuf.String(),
+		Metadata: cfg.Metadata,
+		InterfaceRef: types.ManifestRef{
+			Path:     interfacePath,
+			Revision: interfaceRevision,
+		},
+		HelmChartName:    helmChart.Name(),
+		HelmChartVersion: helmChart.Metadata.Version,
+		HelmRepoURL:      cfg.ChartRepoURL,
+		ValuesYAML:       helmValuesBuf.String(),
 	}
 
 	return &templatingConfig{

@@ -1,11 +1,13 @@
-package implementation
+package implementations
 
 import (
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -41,10 +43,11 @@ func NewTerraform() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tfContentCfg.ManifestPath = args[0]
+			tfContentCfg.ManifestRef.Path = args[0]
 			tfContentCfg.ModulePath = args[1]
+			tfContentCfg.Metadata = common.GetDefaultImplementationMetadata()
 
-			files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
+			manifests, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating content files")
 			}
@@ -59,7 +62,7 @@ func NewTerraform() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -68,9 +71,54 @@ func NewTerraform() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&tfContentCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
-	cmd.Flags().StringVarP(&tfContentCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVarP(&tfContentCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 	cmd.Flags().StringVarP(&tfContentCfg.ModuleSourceURL, "source", "s", "https://example.com/terraform-module.tgz", "Path to the Terraform module, such as URL to Tarball or Git repository")
 	cmd.Flags().VarP(&tfContentCfg.Provider, "provider", "p", `Create a provider-specific workflow. Possible values: "aws", "gcp"`)
 
 	return cmd
+}
+
+func generateTerraformManifests(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
+	terraformModule, err := common.AskForDirectory("Path to Terraform module", "")
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for path to Terraform module")
+	}
+
+	provider, err := askForProvider()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for provider")
+	}
+
+	source, err := askForSource()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for source to Terraform module")
+	}
+
+	tfContentCfg := manifestgen.TerraformConfig{
+		ImplementationConfig: manifestgen.ImplementationConfig{
+			Config: manifestgen.Config{
+				ManifestRef: types.ManifestRef{
+					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+					Revision: opts.Revision,
+				},
+			},
+			Metadata: types.ImplementationMetadata{
+				DocumentationURL: opts.Metadata.DocumentationURL,
+				SupportURL:       opts.Metadata.SupportURL,
+				IconURL:          opts.Metadata.IconURL,
+				Maintainers:      opts.Metadata.Maintainers,
+				License:          opts.Metadata.License,
+			},
+			InterfacePathWithRevision: opts.InterfacePath,
+		},
+		ModulePath:      terraformModule,
+		Provider:        provider,
+		ModuleSourceURL: source,
+	}
+
+	files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating Terraform manifests")
+	}
+	return files, nil
 }

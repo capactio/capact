@@ -20,7 +20,7 @@ spec:
   additionalInput:
     parameters:
       typeRef:
-        path: "cap.type.terraform.test-input"
+        path: "cap.type.terraform.test-input-parameters"
         revision: 0.1.0
 
   outputTypeInstanceRelations:

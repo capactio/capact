@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/alecthomas/jsonschema"
 	"github.com/fatih/camelcase"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -14,8 +16,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
-func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error) {
+// GenerateTerraformManifests generates collection of manifest for a Terraform module based Implementation.
+func GenerateTerraformManifests(cfg *TerraformConfig) (ManifestCollection, error) {
+	// TODO: checks if in the cfg.ModulePath there are terraform files
 	module, diags := tfconfig.LoadModule(cfg.ModulePath)
 	if diags.Err() != nil {
 		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")
@@ -37,27 +40,14 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while generating manifests")
+		return nil, errors.Wrap(err, "while generating Terraform manifests")
 	}
 
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := unmarshalMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
+	return createManifestCollection(generated)
 }
 
 func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -67,21 +57,31 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		return nil, errors.Wrap(err, "while getting input type JSON Schema")
 	}
 
+	typeMetadata := types.TypeMetadata{
+		DocumentationURL: cfg.Metadata.DocumentationURL,
+		IconURL:          cfg.Metadata.IconURL,
+		SupportURL:       cfg.Metadata.SupportURL,
+		Maintainers:      cfg.Metadata.Maintainers,
+		DisplayName:      ptr.String(fmt.Sprintf("Input for %s.%s", prefix, name)),
+		Description:      fmt.Sprintf("Input for the \"%s.%s Action\"", prefix, name),
+	}
+
 	return &templatingConfig{
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
 			templatingInput: templatingInput{
-				Name:     name,
+				Name:     getDefaultAdditionalImplTypeName(name),
 				Prefix:   prefix,
-				Revision: cfg.ManifestRevision,
+				Revision: cfg.ManifestRef.Revision,
 			},
+			Metadata:   typeMetadata,
 			JSONSchema: string(jsonSchema),
 		},
 	}, nil
 }
 
 func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestRef.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
@@ -101,14 +101,17 @@ func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tf
 		templatingInput: templatingInput{
 			Name:     name,
 			Prefix:   prefix,
-			Revision: cfg.ManifestRevision,
+			Revision: cfg.ManifestRef.Revision,
 		},
-		InterfacePath:     interfacePath,
-		InterfaceRevision: interfaceRevision,
-		ModuleSourceURL:   cfg.ModuleSourceURL,
-		Provider:          cfg.Provider,
-		Outputs:           make([]*tfconfig.Output, 0, len(module.Outputs)),
-		Variables:         make([]*tfconfig.Variable, 0, len(module.Variables)),
+		InterfaceRef: types.ManifestRef{
+			Path:     interfacePath,
+			Revision: interfaceRevision,
+		},
+		Metadata:        cfg.Metadata,
+		ModuleSourceURL: cfg.ModuleSourceURL,
+		Provider:        cfg.Provider,
+		Outputs:         make([]*tfconfig.Output, 0, len(module.Outputs)),
+		Variables:       make([]*tfconfig.Variable, 0, len(module.Variables)),
 	}
 
 	for i := range module.Variables {

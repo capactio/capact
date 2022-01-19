@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  prefix: "cap.type.terraform.aws"
+  prefix: "cap.type.empty"
   name: test-input
-  displayName: "Input for terraform.aws.test"
-  description: Input for the "terraform.aws.test Action"
+  displayName: Input for empty.test
+  description: Input for the "empty.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -17,18 +17,14 @@ spec:
     # TODO(ContentDeveloper): Adjust the JSON schema if needed.
     value: |-
       {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "required": [],
         "properties": {
-          "count": {
-            "type": "number",
-            "title": "Count",
-            "description": "Number of instances",
-            "default": 3
-          },
-          "name": {
+          "example": {
+            "$id": "#/properties/example",
             "type": "string",
-            "title": "Name",
-            "description": "Name of environment",
-            "default": "test"
+            "description": "Example field"
           }
         }
       }

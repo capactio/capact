@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  prefix: "cap.type.terraform.generic"
-  name: test-input
-  displayName: "Input for terraform.generic.test"
-  description: Input for the "terraform.generic.test Action"
+  prefix: "cap.type.terraform.aws"
+  name: test-input-parameters
+  displayName: Input for terraform.aws.test
+  description: Input for the "terraform.aws.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:

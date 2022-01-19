@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: {{ .Revision }}
+revision: 0.2.0
 kind: Type
 metadata:
-  prefix: "cap.type.{{ .Prefix }}"
+  prefix: "cap.type.test"
   name: config
-  displayName: "{{.Prefix }} config"
-  description: "Type representing a {{ .Prefix }} config"
+  displayName: test config
+  description: Type representing a test config
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -14,7 +14,7 @@ metadata:
       url: https://example.com
 spec:
   jsonSchema:
-    # TODO(ContentDeveloper): Put the properties of your Interface output Type in form of a JSON Schema
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",

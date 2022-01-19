@@ -14,9 +14,9 @@ import (
 
 // WriteManifestFiles writes the manifests file in files parameters to the provided outputDir.
 // Depending on the override parameter is will either override existing manifest files or skip them.
-func WriteManifestFiles(outputDir string, files map[string]string, override bool) error {
+func WriteManifestFiles(outputDir string, files ManifestCollection, override bool) error {
 	for manifestPath, content := range files {
-		manifestFilepath := strings.ReplaceAll(strings.TrimPrefix(manifestPath, "cap."), ".", string(os.PathSeparator)) + ".yaml"
+		manifestFilepath := createFilePathFromManifestPath(manifestPath)
 		outputFilepath := path.Join(outputDir, manifestFilepath)
 
 		if err := os.MkdirAll(path.Dir(outputFilepath), 0750); err != nil {
@@ -28,7 +28,7 @@ func WriteManifestFiles(outputDir string, files map[string]string, override bool
 			continue
 		}
 
-		if err := os.WriteFile(outputFilepath, []byte(content), 0600); err != nil {
+		if err := os.WriteFile(outputFilepath, content, 0600); err != nil {
 			return errors.Wrapf(err, "while writing generated manifest %q", manifestPath)
 		}
 
@@ -38,12 +38,51 @@ func WriteManifestFiles(outputDir string, files map[string]string, override bool
 	return nil
 }
 
+//DoesAnyManifestAlreadyExistInDir if any of provided manifests exists in dir.
+func DoesAnyManifestAlreadyExistInDir(files ManifestCollection, dir string) bool {
+	for manifestPath := range files {
+		manifestFilepath := createFilePathFromManifestPath(manifestPath)
+		outputFilepath := path.Join(dir, manifestFilepath)
+		if _, err := os.Stat(outputFilepath); !os.IsNotExist(err) {
+			return true
+		}
+	}
+	return false
+}
+
 func deepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
 		return err
 	}
 	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
+}
+
+func createManifestCollection(generatedManifests []string) (ManifestCollection, error) {
+	result := make(map[ManifestPath]ManifestContent, len(generatedManifests))
+
+	for _, m := range generatedManifests {
+		metadata, err := unmarshalMetadata([]byte(m))
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting metadata for manifest")
+		}
+		manifestPath := ManifestPath(fmt.Sprintf("%s.%s", *metadata.Metadata.Prefix, metadata.Metadata.Name))
+		result[manifestPath] = []byte(m)
+	}
+
+	return result, nil
+}
+
+func createFilePathFromManifestPath(path ManifestPath) string {
+	return strings.ReplaceAll(strings.TrimPrefix(string(path), "cap."), ".", string(os.PathSeparator)) + ".yaml"
+}
+
+func getDefaultInputTypeName(name string) string {
+	return name + "-input"
+}
+
+func getDefaultAdditionalImplTypeName(name string) string {
+	return name + "-input-parameters"
 }
 
 func splitPathToPrefixAndName(path string) (string, string, error) {

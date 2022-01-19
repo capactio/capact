@@ -1,9 +1,11 @@
-package implementation
+package implementations
 
 import (
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -29,10 +31,11 @@ func NewHelm() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helmCfg.ManifestPath = args[0]
+			helmCfg.ManifestRef.Path = args[0]
 			helmCfg.ChartName = args[1]
+			helmCfg.Metadata = common.GetDefaultImplementationMetadata()
 
-			files, err := manifestgen.GenerateHelmManifests(&helmCfg)
+			manifests, err := manifestgen.GenerateHelmManifests(&helmCfg)
 			if err != nil {
 				return errors.Wrap(err, "while generating Helm manifests")
 			}
@@ -47,7 +50,7 @@ func NewHelm() *cobra.Command {
 				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
-			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+			if err := manifestgen.WriteManifestFiles(outputDir, manifests, overrideManifests); err != nil {
 				return errors.Wrap(err, "while writing manifest files")
 			}
 
@@ -56,9 +59,44 @@ func NewHelm() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&helmCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
-	cmd.Flags().StringVarP(&helmCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVarP(&helmCfg.ManifestRef.Revision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 	cmd.Flags().StringVar(&helmCfg.ChartRepoURL, "repo", "", "URL of the Helm repository")
 	cmd.Flags().StringVar(&helmCfg.ChartVersion, "version", "", "Version of the Helm chart")
 
 	return cmd
+}
+
+func generateHelmManifests(opts common.ManifestGenOptions) (manifestgen.ManifestCollection, error) {
+	helmchartInfo, err := askForHelmChartDetails()
+	if err != nil {
+		return nil, errors.Wrap(err, "while asking for Helm chart details")
+	}
+
+	helmCfg := manifestgen.HelmConfig{
+		ImplementationConfig: manifestgen.ImplementationConfig{
+			Config: manifestgen.Config{
+				ManifestRef: types.ManifestRef{
+					Path:     common.CreateManifestPath(types.ImplementationManifestKind, opts.ManifestPath),
+					Revision: opts.Revision,
+				},
+			},
+			Metadata: types.ImplementationMetadata{
+				DocumentationURL: opts.Metadata.DocumentationURL,
+				SupportURL:       opts.Metadata.SupportURL,
+				IconURL:          opts.Metadata.IconURL,
+				Maintainers:      opts.Metadata.Maintainers,
+				License:          opts.Metadata.License,
+			},
+			InterfacePathWithRevision: opts.InterfacePath,
+		},
+		ChartName:    helmchartInfo.Name,
+		ChartRepoURL: helmchartInfo.Repo,
+		ChartVersion: helmchartInfo.Version,
+	}
+
+	files, err := manifestgen.GenerateHelmManifests(&helmCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while generating Helm manifests")
+	}
+	return files, nil
 }

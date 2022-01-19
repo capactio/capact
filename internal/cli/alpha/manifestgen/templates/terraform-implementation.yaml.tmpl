@@ -6,14 +6,25 @@ metadata:
   name: {{ .Name }}
   displayName: "{{ .Name }} Action"
   description: "{{ .Name }} Action"
-  documentationURL: https://example.com
-  supportURL: https://example.com
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
   maintainers:
-    - email: dev@example.com
-      name: Example Dev
-      url: https://example.com
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
   license:
-    name: "Apache 2.0"
+    name: "{{ .Metadata.License.Name }}"
 
 spec:
   appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
@@ -21,7 +32,7 @@ spec:
     parameters:
       additional-parameters:
         typeRef:
-          path: cap.type.{{ .Prefix }}.{{ .Name }}-input
+          path: cap.type.{{ .Prefix }}.{{ .Name }}-input-parameters
           revision: 0.1.0
 
   outputTypeInstanceRelations:
@@ -30,8 +41,8 @@ spec:
         - terraform-release
 
   implements:
-    - path: {{if .InterfacePath}}{{ .InterfacePath }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
-      revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
+    - path: {{if .InterfaceRef.Path}}{{ .InterfaceRef.Path }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
+      revision: {{if .InterfaceRef.Revision}}{{ .InterfaceRef.Revision }}{{else}}0.1.0{{end}}
 
   requires: {{if eq .Provider "aws"}}
     cap.type.aws.auth:
