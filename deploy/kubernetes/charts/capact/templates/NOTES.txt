@@ -5,8 +5,8 @@ Here is the list of exposed services:
 {{ if .Values.notes.printInsecure }}
     Use the following credentials to log in:
 
-    Username: {{- .Values.global.gateway.auth.username }}
-    Password: {{- .Values.global.gateway.auth.password -}}
+    Username: {{ .Values.global.gateway.auth.username }}
+    Password: {{ .Values.global.gateway.auth.password -}}
 
 {{ else }}
     To obtain the user credentials, run:
@@ -37,5 +37,4 @@ Here is the list of exposed services:
       "Authorization": "Basic $BASIC_AUTH_HEADER"
     }
 {{ end }}
-
 To read more about Capact, check out the documentation on https://capact.io
