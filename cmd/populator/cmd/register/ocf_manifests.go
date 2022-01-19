@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -224,7 +225,7 @@ func encodePath(path string) string {
 func trimSource(source string) string {
 	toEscape := source
 	filterPaths := []filterPath{
-		trimSSHkey,
+		trimSSHKey,
 	}
 	for _, filterPath := range filterPaths {
 		toEscape = filterPath(source)
@@ -252,11 +253,9 @@ func filesAlreadyExists(container map[string]struct{}, files []string, rootDir s
 	return nil
 }
 
-func trimSSHkey(s string) string {
-	if idx := strings.LastIndex(s, "&sshkey="); idx != -1 {
-		return s[:idx]
-	}
-	return s
+func trimSSHKey(s string) string {
+	reg := regexp.MustCompile("[?|&]sshkey=[^&]*")
+	return reg.ReplaceAllString(s, "${1}")
 }
 
 func trimRootDir(s string, rootDir string) string {
