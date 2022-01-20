@@ -63,7 +63,7 @@ ingress:
     issuer: "letsencrypt"
     acmechallengetype: "http01"
     cors:
-      enabled: false
+      enabled: true
       allowMethods: "HEAD, GET, POST, OPTIONS"
       allowOrigins: "*"
 

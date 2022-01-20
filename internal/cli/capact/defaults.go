@@ -62,11 +62,6 @@ var (
 	capactLocalClusterOverridesYAML = fmt.Sprintf(`
 global:
   domainName: "%s"
-gateway:
-  ingress:
-    annotations:
-      cors:
-        enabled: true
 `, localDomain)
 )
 
