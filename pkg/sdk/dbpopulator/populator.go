@@ -545,18 +545,18 @@ func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, sourc
 		"Implementation": implementationQuery,
 	}
 
-	var mergeGroupedManifests map[string][]manifestPath
+	mergedGroupedManifests := GroupManifests{}
 	for _, source := range sources {
 		grouped, err := Group(source.Files, source.RootDir)
 		if err != nil {
 			return errors.Wrap(err, "while grouping manifests")
 		}
-		mergeGroupedManifests = mergeGroupManifests(mergeGroupedManifests, grouped)
+		mergedGroupedManifests.MergeWith(grouped)
 	}
 
 	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		for _, kind := range ordered {
-			manifestPaths := mergeGroupedManifests[kind]
+			manifestPaths := mergedGroupedManifests[kind]
 			query := queries[kind]
 			for _, manifest := range manifestPaths {
 				q := renderQuery(query, publishPath, manifest.path, manifest.prefix)
@@ -651,24 +651,6 @@ func indexStringSlice(slice []string) map[string]struct{} {
 func warmup(session neo4j.Session) error {
 	_, err := session.Run("CALL apoc.warmup.run(true, true, true)", map[string]interface{}{})
 	return errors.Wrap(err, "while warming up the data")
-}
-
-func getPrefix(manifestPath string, rootDir string) string {
-	path := strings.TrimPrefix(manifestPath, rootDir)
-	parts := strings.Split(path, "/")
-	prefix := strings.Join(parts[:len(parts)-1], ".")
-	prefix = "cap" + prefix
-	return prefix
-}
-
-func mergeGroupManifests(manifestsGroups ...map[string][]manifestPath) map[string][]manifestPath {
-	results := map[string][]manifestPath{}
-	for _, manifestsGroup := range manifestsGroups {
-		for manifestType, manifests := range manifestsGroup {
-			results[manifestType] = append(results[manifestType], manifests...)
-		}
-	}
-	return results
 }
 
 func renderQuery(query, publishPath, manifestPath, prefix string) string {

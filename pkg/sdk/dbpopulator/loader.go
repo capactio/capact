@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"capact.io/capact/pkg/sdk/manifest"
 
@@ -21,9 +22,19 @@ var ordered = []string{
 	"Vendor",
 }
 
+// GroupManifests represents a single grouped collection of manifests.
+type GroupManifests map[string][]manifestPath
+
+// MergeWith merges two grouped manifests.
+func (g GroupManifests) MergeWith(in GroupManifests) {
+	for manifestType, manifests := range in {
+		g[manifestType] = append(g[manifestType], manifests...)
+	}
+}
+
 // Group returns a map with a collection of Manifest paths and prefixes, grouped by the manifest kind.
-func Group(paths []string, rootDir string) (map[string][]manifestPath, error) {
-	manifests := map[string][]manifestPath{}
+func Group(paths []string, rootDir string) (GroupManifests, error) {
+	manifests := GroupManifests{}
 	for _, kind := range ordered {
 		manifests[kind] = []manifestPath{}
 	}
@@ -48,4 +59,12 @@ func Group(paths []string, rootDir string) (map[string][]manifestPath, error) {
 		})
 	}
 	return manifests, nil
+}
+
+func getPrefix(manifestPath string, rootDir string) string {
+	path := strings.TrimPrefix(manifestPath, rootDir)
+	parts := strings.Split(path, "/")
+	prefix := strings.Join(parts[:len(parts)-1], ".")
+	prefix = "cap" + prefix
+	return prefix
 }
