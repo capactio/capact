@@ -24,7 +24,7 @@ type Config struct {
 
 	// ManifestsPath is a path to a directory in a repository where
 	// manifests are stored
-	ManifestsPath string `envconfig:"default=manifests"`
+	ManifestsPath string `envconfig:"optional"`
 
 	// UpdateOnGitCommit makes populator to populate a new data
 	// only when a git commit chaned in source repository

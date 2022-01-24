@@ -11,6 +11,23 @@ import (
 	"go.uber.org/zap"
 )
 
+// SourceInfo defines a single source with Hub manifests.
+type SourceInfo struct {
+	RootDir string
+	Files   []string
+	GitHash []byte
+}
+
+type manifestPath struct {
+	path   string
+	prefix string
+}
+
+const (
+	commitEncodeSep  = ","
+	maxStoredCommits = 1000
+)
+
 var attributeQuery = `
 MERGE (attribute:Attribute:unpublished{
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
@@ -456,21 +473,8 @@ yield batches, total return batches, total
 `
 
 // Populate imports Public Hub manifests into a Neo4j database.
-func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) (bool, error) {
-	currentCommit, err := currentCommit(session)
-	if err != nil {
-		return false, errors.Wrap(err, "while getting commit hash of populated data")
-	}
-
-	if commit != "" {
-		if currentCommit == commit {
-			log.Info("git commit did not change. Finishing")
-			return false, nil
-		}
-		log.Info("git commit changed", zap.String("current hash", currentCommit), zap.String("new hash", commit))
-	}
-
-	err = populate(ctx, log, session, paths, rootDir, publishPath, commit)
+func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, sources []SourceInfo, publishPath string) (bool, error) {
+	err := populate(ctx, log, session, sources, publishPath)
 	if err != nil {
 		return false, errors.Wrap(err, "while adding new manifests")
 	}
@@ -489,7 +493,49 @@ func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 	return true, err
 }
 
-func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) error {
+// IsDataInDB checks whether the commits have already existed in the DB
+func IsDataInDB(session neo4j.Session, log *zap.Logger, commits []string) (bool, error) {
+	currentCommits, err := currentCommits(session)
+	if err != nil {
+		return false, errors.Wrap(err, "while getting commit hash of populated data")
+	}
+
+	storedCommits := decodeCommits(currentCommits)
+	if len(storedCommits) != len(commits) {
+		log.Info("new sources were added or removed", zap.String("current commits", currentCommits), zap.String("given commits", encodeCommits(commits)))
+		return false, nil
+	}
+
+	unknownCommits, found := detectUnknownCommit(commits, storedCommits)
+	if found {
+		log.Info("detected unknown commits", zap.String("current commits", currentCommits), zap.String("unknown commits", encodeCommits(unknownCommits)))
+		return false, nil
+	}
+
+	log.Info("git commits did not change. Finishing")
+	return true, nil
+}
+
+// SaveCommitsMetadata saves the commits from the repositories in the DB
+// TODO: gather commits per repository, now only repositories from the last run are cached
+func SaveCommitsMetadata(session neo4j.Session, commits []string) error {
+	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		contentMetadata := "CREATE (n:ContentMetadata:published { commits: '%s', timestamp: '%s'}) RETURN *"
+		q := fmt.Sprintf(contentMetadata, encodeCommits(commits), time.Now())
+		result, err := transaction.Run(q, nil)
+		if err != nil {
+			return nil, errors.Wrapf(err, "while running %s", q)
+		}
+		err = result.Err()
+		if err != nil {
+			return nil, errors.Wrapf(err, "when checking results %s", q)
+		}
+		return nil, nil
+	})
+	return errors.Wrap(err, "while executing neo4j transaction")
+}
+
+func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, sources []SourceInfo, publishPath string) error {
 	var queries = map[string]string{
 		"RepoMetadata":   repoMetadataQuery,
 		"Attribute":      attributeQuery,
@@ -498,46 +544,40 @@ func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 		"Interface":      interfaceQuery,
 		"Implementation": implementationQuery,
 	}
-	grouped, err := Group(paths)
-	if err != nil {
-		return errors.Wrap(err, "while grouping manifests")
+
+	mergedGroupedManifests := GroupManifests{}
+	for _, source := range sources {
+		grouped, err := Group(source.Files, source.RootDir)
+		if err != nil {
+			return errors.Wrap(err, "while grouping manifests")
+		}
+		mergedGroupedManifests.MergeWith(grouped)
 	}
 
-	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+	_, err := session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 		for _, kind := range ordered {
-			paths = grouped[kind]
+			manifestPaths := mergedGroupedManifests[kind]
 			query := queries[kind]
-			for _, manifestPath := range paths {
-				prefix := getPrefix(manifestPath, rootDir)
-				q := renderQuery(query, publishPath, manifestPath, prefix)
+			for _, manifest := range manifestPaths {
+				q := renderQuery(query, publishPath, manifest.path, manifest.prefix)
 
 				select {
 				case <-ctx.Done():
 					// returning error to not commit transaction
 					return nil, errors.New("canceled")
 				default:
-					log.Info("Processing manifest", zap.String("manifest", manifestPath))
+					log.Info("Processing manifest", zap.String("manifest", manifest.path))
 					log.Debug("Executing query", zap.String("query", q))
 					result, err := transaction.Run(q, nil)
 					if err != nil {
-						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
+						return nil, errors.Wrapf(err, "when adding manifest %s", manifest.path)
 					}
 					err = result.Err()
 					if err != nil {
-						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
+						return nil, errors.Wrapf(err, "when adding manifest %s", manifest.path)
 					}
 				}
 			}
-		}
-		contentMetadata := "CREATE (n:ContentMetadata:unpublished { commit: '%s', timestamp: '%s'}) RETURN *"
-		q := fmt.Sprintf(contentMetadata, commit, time.Now())
-		result, err := transaction.Run(q, nil)
-		if err != nil {
-			return nil, errors.Wrapf(err, "when running query %s", q)
-		}
-		err = result.Err()
-		if err != nil {
-			return nil, errors.Wrapf(err, "when running query %s", q)
 		}
 		return nil, nil
 	})
@@ -560,10 +600,10 @@ func cleanOld(session neo4j.Session) error {
 	return errors.Wrap(err, "while executing neo4j transaction")
 }
 
-func currentCommit(session neo4j.Session) (string, error) {
-	result, err := session.Run("MATCH (c:ContentMetadata:published) RETURN c.commit", map[string]interface{}{})
+func currentCommits(session neo4j.Session) (string, error) {
+	result, err := session.Run("MATCH (c:ContentMetadata:published) RETURN c.commits", map[string]interface{}{})
 	if err != nil {
-		return "", errors.Wrap(err, "while querying ContextMetadada")
+		return "", errors.Wrap(err, "while querying ContentMetadata")
 	}
 
 	var record *neo4j.Record
@@ -574,23 +614,43 @@ func currentCommit(session neo4j.Session) (string, error) {
 	}
 	commit, ok := record.Values[0].(string)
 	if !ok {
-		return "", fmt.Errorf("Failed to convert database response: %v", record.Values[0])
+		return "", fmt.Errorf("failed to convert database response: %v", record.Values[0])
 	}
 
 	return commit, errors.Wrap(result.Err(), "while executing neo4j transaction")
 }
 
+func detectUnknownCommit(newCommits []string, storedCommits []string) ([]string, bool) {
+	var out []string
+	indexed := indexStringSlice(storedCommits)
+	for _, commit := range newCommits {
+		if _, found := indexed[commit]; found {
+			continue
+		}
+		out = append(out, commit)
+	}
+	return out, len(out) > 0
+}
+
+func decodeCommits(in string) []string {
+	return strings.SplitN(in, commitEncodeSep, maxStoredCommits)
+}
+
+func encodeCommits(in []string) string {
+	return strings.Join(in, commitEncodeSep)
+}
+
+func indexStringSlice(slice []string) map[string]struct{} {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+	return set
+}
+
 func warmup(session neo4j.Session) error {
 	_, err := session.Run("CALL apoc.warmup.run(true, true, true)", map[string]interface{}{})
 	return errors.Wrap(err, "while warming up the data")
-}
-
-func getPrefix(manifestPath string, rootDir string) string {
-	path := strings.TrimPrefix(manifestPath, rootDir)
-	parts := strings.Split(path, "/")
-	prefix := strings.Join(parts[:len(parts)-1], ".")
-	prefix = "cap" + prefix
-	return prefix
 }
 
 func renderQuery(query, publishPath, manifestPath, prefix string) string {

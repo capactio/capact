@@ -45,10 +45,12 @@ spec:
               value: {{ printf "http://%s.%s" (include "hub.fullname" .) .Release.Namespace }}
             - name: APP_JSON_PUBLISH_PORT
               value: "{{ .Values.populator.port }}"
-            - name: MANIFESTS_PATH
-              value: "{{ include "populator.manifestPath" . }}"
+            - name: APP_MANIFESTS_PATH
+              value: "{{ .Values.populator.manifestsPath}}"
             - name: APP_UPDATE_ON_GIT_COMMIT
               value: "{{ .Values.populator.updateOnGitCommit}}"
+            - name: MANIFESTS_SOURCES
+              value: "{{ include "populator.manifestSources" . }}"
 
           command: ["/bin/sh", "-c"]
           args: {{ .Values.populator.args }}

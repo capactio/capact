@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"capact.io/capact/pkg/sdk/manifest"
 
 	"github.com/pkg/errors"
 )
 
-// Order in which manifests will be loaded into DB
+// Order in which manifests will be loaded into DB.
 var ordered = []string{
 	"Attribute",
 	"Type",
@@ -21,11 +22,21 @@ var ordered = []string{
 	"Vendor",
 }
 
-// Group returns a map of the provided Manifests Paths, grouped by the manifest kind.
-func Group(paths []string) (map[string][]string, error) {
-	manifests := map[string][]string{}
+// GroupManifests represents a single grouped collection of manifests.
+type GroupManifests map[string][]manifestPath
+
+// MergeWith merges two grouped manifests.
+func (g GroupManifests) MergeWith(in GroupManifests) {
+	for manifestType, manifests := range in {
+		g[manifestType] = append(g[manifestType], manifests...)
+	}
+}
+
+// Group returns a map with a collection of Manifest paths and prefixes, grouped by the manifest kind.
+func Group(paths []string, rootDir string) (GroupManifests, error) {
+	manifests := GroupManifests{}
 	for _, kind := range ordered {
-		manifests[kind] = []string{}
+		manifests[kind] = []manifestPath{}
 	}
 	for _, path := range paths {
 		// may just read first 3 lines if there are performance issues
@@ -40,9 +51,20 @@ func Group(paths []string) (map[string][]string, error) {
 
 		list, ok := manifests[string(metadata.Kind)]
 		if !ok {
-			return nil, fmt.Errorf("Unknown manifest kind: %s", metadata.Kind)
+			return nil, fmt.Errorf("unknown manifest kind: %s", metadata.Kind)
 		}
-		manifests[string(metadata.Kind)] = append(list, path)
+		manifests[string(metadata.Kind)] = append(list, manifestPath{
+			path:   path,
+			prefix: getPrefix(path, rootDir),
+		})
 	}
 	return manifests, nil
+}
+
+func getPrefix(manifestPath string, rootDir string) string {
+	path := strings.TrimPrefix(manifestPath, rootDir)
+	parts := strings.Split(path, "/")
+	prefix := strings.Join(parts[:len(parts)-1], ".")
+	prefix = "cap" + prefix
+	return prefix
 }
