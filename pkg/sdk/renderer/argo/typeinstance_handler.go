@@ -38,7 +38,7 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 		return nil
 	}
 
-	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	idx, err := GetEntrypointWorkflowIndex(rootWorkflow)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 		},
 	}
 
-	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	idx, err := GetEntrypointWorkflowIndex(rootWorkflow)
 	if err != nil {
 		return err
 	}
@@ -295,7 +295,7 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 		},
 	}
 
-	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	idx, err := GetEntrypointWorkflowIndex(rootWorkflow)
 	if err != nil {
 		return err
 	}

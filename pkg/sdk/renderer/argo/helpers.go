@@ -19,7 +19,8 @@ func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReferenc
 	}
 }
 
-func getEntrypointWorkflowIndex(w *Workflow) (int, error) {
+// GetEntrypointWorkflowIndex returns workflow entrypoint index
+func GetEntrypointWorkflowIndex(w *Workflow) (int, error) {
 	if w == nil {
 		return 0, NewWorkflowNilError()
 	}

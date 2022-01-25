@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
 	"k8s.io/utils/strings/slices"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -125,7 +126,10 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 
 	//1. get implementations inputs
 	for _, implementsItem := range entity.Spec.Implements {
-		interfaceInput, err := getTypesForImplementation(ctx, implementsItem.Path, v.hub)
+		interfaceInput, err := v.fetchInterfaceInput(ctx, hubpublicgraphql.InterfaceReference{
+			Path:     implementsItem.Path,
+			Revision: implementsItem.Revision,
+		}, v.hub)
 		if err != nil {
 			return ValidationResult{}, errors.Wrap(err, "while getting types for implementation")
 		}
@@ -137,16 +141,7 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 		}
 	}
 
-	//2. get inputs from first workflow template
-	workflow, err := createWorkflow(entity.Spec.Action.Args)
-	if err != nil {
-		return ValidationResult{}, errors.Wrap(err, "while creating Workflow object")
-	}
-	if len(workflow.Templates) > 0 {
-		workflowArtifacts = append(workflowArtifacts, workflow.Templates[0].Inputs.Artifacts...)
-	}
-
-	//3. get additional inputs
+	//2. get additional inputs
 	if entity.Spec.AdditionalInput != nil {
 		for name := range entity.Spec.AdditionalInput.Parameters {
 			implAdditionalInput = append(implAdditionalInput, name)
@@ -156,38 +151,64 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 		}
 	}
 
-	//4. verified optional parameter on input parameter
+	//3. get inputs from entrypoint workflow template
+	workflow, err := decodeImplArgsToArgoWorkflow(entity.Spec.Action.Args)
+	if err != nil {
+		return ValidationResult{}, errors.Wrap(err, "while decoding Implementation arguments to Argo workflow")
+	}
+
+	idx, err := argo.GetEntrypointWorkflowIndex(workflow)
+	if err != nil {
+		return ValidationResult{}, errors.Wrap(err, "while getting entrypoint from workflow")
+	}
+	workflowArtifacts = append(workflowArtifacts, workflow.Templates[idx].Inputs.Artifacts...)
+
+	//4. verify if the inputs from Implementation and Interface match with Argo workflow ones
 	for _, artifact := range workflowArtifacts {
 		existsInInterface := slices.Contains(interfacesInputNames, artifact.Name)
+		existsInAdditionalInput := slices.Contains(implAdditionalInput, artifact.Name)
+
 		if existsInInterface &&
 			artifact.Optional {
-			validationErrs = append(validationErrs, fmt.Errorf("workflow artifact input '%s' is optional but it is in interface", artifact.Name))
+			validationErrs = append(validationErrs, fmt.Errorf("invalid workflow input artifact %q: it shouldn't be optional as it is defined as Interface input", artifact.Name))
 		}
-		existsInAdditionalInput := slices.Contains(implAdditionalInput, artifact.Name)
 		if existsInAdditionalInput && !artifact.Optional {
-			validationErrs = append(validationErrs, fmt.Errorf("workflow artifact input '%s' is not optional", artifact.Name))
+			validationErrs = append(validationErrs, fmt.Errorf("invalid workflow input artifact %q: it should be optional, as it is defined as Implementation additional input", artifact.Name))
 		}
 		if !existsInInterface && !existsInAdditionalInput {
-			validationErrs = append(validationErrs, fmt.Errorf("workflow artifact input '%s' does not exists neither in interface input nor additional input", artifact.Name))
+			validationErrs = append(validationErrs, fmt.Errorf("unknown workflow input artifact %q: there is no such input neither in Interface input, nor Implementation additional input", artifact.Name))
 		}
 	}
 
 	return ValidationResult{Errors: validationErrs}, nil
 }
 
-func createWorkflow(rawWorkflowSpec map[string]interface{}) (*argo.Workflow, error) {
-	var renderedWorkflow = struct {
-		Spec argo.Workflow `json:"workflow"`
+func (v *RemoteImplementationValidator) fetchInterfaceInput(ctx context.Context, interfaceRef hubpublicgraphql.InterfaceReference, hub Hub) (hubpublicgraphql.InterfaceInput, error) {
+	iface, err := hub.FindInterfaceRevision(ctx, interfaceRef, public.WithInterfaceRevisionFields(public.InterfaceRevisionInputFields))
+	if err != nil {
+		return hubpublicgraphql.InterfaceInput{}, errors.Wrap(err, "while looking for Interface definition")
+	}
+	if iface == nil {
+		return hubpublicgraphql.InterfaceInput{}, fmt.Errorf("interface %s:%s was not found in Hub", interfaceRef.Path, interfaceRef.Revision)
+	}
+
+	return *iface.Spec.Input, nil
+}
+
+func decodeImplArgsToArgoWorkflow(implArgs map[string]interface{}) (*argo.Workflow, error) {
+	var decodedImplArgs = struct {
+		Workflow argo.Workflow `json:"workflow"`
 	}{}
 
-	b, err := json.Marshal(rawWorkflowSpec)
+	b, err := json.Marshal(implArgs)
 	if err != nil {
-		return nil, errors.Wrap(err, "while marshaling Implementation workflow")
+		return nil, errors.Wrap(err, "while marshaling Implementation arguments")
 	}
-	if err := json.Unmarshal(b, &renderedWorkflow); err != nil {
-		return nil, errors.Wrap(err, "while unmarshaling to spec")
+
+	if err := json.Unmarshal(b, &decodedImplArgs); err != nil {
+		return nil, errors.Wrap(err, "while unmarshalling Implementation arguments to Argo Workflow")
 	}
-	return &renderedWorkflow.Spec, nil
+	return &decodedImplArgs.Workflow, nil
 }
 
 // Name returns the validator name.

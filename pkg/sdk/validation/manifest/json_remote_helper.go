@@ -36,17 +36,3 @@ func checkManifestRevisionsExist(ctx context.Context, hub Hub, manifestRefsToChe
 
 	return ValidationResult{Errors: validationErrs}, nil
 }
-
-func getTypesForImplementation(ctx context.Context, interfacePath string, hub Hub) (hubpublicgraphql.InterfaceInput, error) {
-	iface, err := hub.FindInterfaceRevision(ctx, hubpublicgraphql.InterfaceReference{
-		Path: interfacePath,
-	}, public.WithInterfaceRevisionFields(public.InterfaceRevisionInputFields))
-	if err != nil {
-		return hubpublicgraphql.InterfaceInput{}, errors.Wrap(err, "while looking for Interface definition")
-	}
-	if iface == nil {
-		return hubpublicgraphql.InterfaceInput{}, fmt.Errorf("interface %s was not found in Hub", interfacePath)
-	}
-
-	return *iface.Spec.Input, nil
-}
