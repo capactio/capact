@@ -1,6 +1,6 @@
 # Dgraph as the OCH graph database
 
-This proof of concept shows the OCH server implemented using [Dgraph v20.07](https://dgraph.io/docs/v20.07/).
+This proof of concept shows the OCH server implemented using [Dgraph](https://dgraph.io) v20.07.
 
 ## Motivation
 
@@ -42,7 +42,7 @@ Use the Dgraph only as of the database and create our own GraphQL server with de
 
 ### Simplifications
 1.	The `interface.implementations` field uses resolver which is able to return Implementations only for the `latestResvision` property.
-2.	The input filters for `interface.implementations` were not implemented as currently not possible.  
+2.	The input filters for `interface.implementations` were not implemented as currently not possible.
 3.	The OCH content has additional properties and different names in manifests. By doing, so I didn't have to focus on mappers between OCF Entities and the data store model. In the normal scenario, we should read the OCF entity then convert it to the domain model, calculate edges and map to Dgraph data storage object.
 4.	The OCH content is based on the mocked versions form [`hack/mock/graphql/public`](https://github.com/capactio/capact/tree/release-0.1/hack/mock/graphql/public).
 
@@ -52,7 +52,7 @@ The PoC has the following structure:
 
 ```
 .
-├── app 
+├── app
 │  └── cmd
 │    ├── db-loader           # loader that is able to load GraphQL schema and entities from och-content
 │    └── resolver-svr
@@ -69,7 +69,7 @@ The PoC has the following structure:
 
 ### Conditional upsert
 
-We need to support situations when edges should always point to the latest revision. To ensure that state we can use [conditional upserts](https://dgraph.io/docs/v20.07/mutations/conditional-upsert/)
+We need to support situations when edges should always point to the latest revision. To ensure that state we can use [conditional upserts](https://github.com/dgraph-io/dgraph-docs/blob/release/v20.07/content/mutations/conditional-upsert.md)
 
 It is not possible to execute conditional upsert using GraphQL mutation. You need to use DQL. You can use RDF or JSON syntax. Furthermore, you cannot use your own filter functions. Currently, supported functions are: [`eq/le/lt/ge/gt`](https://discuss.dgraph.io/t/would-like-support-of-eq-le-lt-ge-gt-in-mutation-conditional-upsert-other-than-existing-len-function-only/8846).
 
@@ -94,7 +94,7 @@ I sorted the problems that I faced during the investigation. The **HARD** catego
 	```graphql
 	type InterfaceRevision {
 	    id: ID!
-	    
+
 	    # THIS input ImplementationFilter is not allowed
 	    implementations(filter: ImplementationFilter): [Implementation!] @custom(http: {
 	      url: "http://example.com"
@@ -102,7 +102,7 @@ I sorted the problems that I faced during the investigation. The **HARD** catego
 	     body: "{id:$id, filter:$filter}"
 	    })
 	}
-	    
+
 	input ImplementationFilter {
 	  requirementsSatisfiedBy: [Requirement]
 	}
