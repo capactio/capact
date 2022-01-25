@@ -1,27 +1,21 @@
 ---
-title: capact alpha manifest-gen implementation helm
+title: capact manifest generate implementation empty
 ---
 
-## capact alpha manifest-gen implementation helm
+## capact manifest generate implementation empty
 
-Generate Helm chart based manifests
-
-### Synopsis
-
-Generate Implementation manifests based on a Helm chart
+Generate empty Implementation manifests
 
 ```
-capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] [flags]
+capact manifest generate implementation empty [MANIFEST_PATH] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help               help for helm
+  -h, --help               help for empty
   -i, --interface string   Path with revision of the Interface, which is implemented by this Implementation
-      --repo string        URL of the Helm repository
   -r, --revision string    Revision of the Implementation manifest (default "0.1.0")
-      --version string     Version of the Helm chart
 ```
 
 ### Options inherited from parent commands
@@ -35,5 +29,5 @@ capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] 
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Generate new Implementation manifests
+* [capact manifest generate implementation](capact_manifest_generate_implementation.md)	 - Generate new Implementation manifests
 

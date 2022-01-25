@@ -1,8 +1,8 @@
 ---
-title: capact alpha manifest-gen implementation terraform
+title: capact alpha generate implementation terraform
 ---
 
-## capact alpha manifest-gen implementation terraform
+## capact alpha generate implementation terraform
 
 Generate Terraform based manifests
 
@@ -11,7 +11,7 @@ Generate Terraform based manifests
 Generate Implementation manifests based on a Terraform module
 
 ```
-capact alpha manifest-gen implementation terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH] [flags]
+capact alpha generate implementation terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH] [flags]
 ```
 
 ### Examples
@@ -48,5 +48,5 @@ capact alpha manifest-gen implementation terraform cap.implementation.gcp.clouds
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Generate new Implementation manifests
+* [capact alpha generate implementation](capact_alpha_generate_implementation.md)	 - Generate new Implementation manifests
 

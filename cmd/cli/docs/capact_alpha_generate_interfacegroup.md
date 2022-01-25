@@ -1,13 +1,13 @@
 ---
-title: capact alpha manifest-gen interfacegroup
+title: capact alpha generate interfacegroup
 ---
 
-## capact alpha manifest-gen interfacegroup
+## capact alpha generate interfacegroup
 
 Generate new InterfaceGroup manifest
 
 ```
-capact alpha manifest-gen interfacegroup [PATH] [flags]
+capact alpha generate interfacegroup [PATH] [flags]
 ```
 
 ### Examples
@@ -35,5 +35,5 @@ capact alpha manifest-gen interfacegroup cap.interface.database.postgresql
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
+* [capact alpha generate](capact_alpha_generate.md)	 - OCF Manifests generation
 
