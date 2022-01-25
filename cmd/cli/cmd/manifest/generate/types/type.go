@@ -3,9 +3,10 @@ package types
 import (
 	"strings"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/internal/cli/manifestgen"
+
 	"capact.io/capact/internal/cli"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

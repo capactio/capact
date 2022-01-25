@@ -1,13 +1,13 @@
-package manifestgen
+package generate
 
 import (
 	"strings"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attributes"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementations"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfaces"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/attributes"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/implementations"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/interfaces"
+	"capact.io/capact/internal/cli/manifestgen"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"k8s.io/utils/strings/slices"

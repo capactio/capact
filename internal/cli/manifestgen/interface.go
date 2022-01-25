@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"

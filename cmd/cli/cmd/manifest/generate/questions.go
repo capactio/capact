@@ -1,7 +1,7 @@
-package manifestgen
+package generate
 
 import (
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"

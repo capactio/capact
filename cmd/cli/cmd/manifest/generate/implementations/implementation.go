@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/internal/cli/manifestgen"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

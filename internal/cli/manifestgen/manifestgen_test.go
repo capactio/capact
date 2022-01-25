@@ -3,15 +3,16 @@
 // to the golden file.
 //
 // To update golden files, run:
-//   go test ./internal/cli/alpha/manifestgen/... -test.update-golden
+//   go test ./internal/cli/manifestgen/... -test.update-golden
 package manifestgen_test
 
 import (
 	"fmt"
 	"testing"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/internal/cli/manifestgen"
+
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/stretchr/testify/require"
