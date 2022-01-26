@@ -48,7 +48,7 @@ CREATE (attributeRevision: AttributeRevision:unpublished {revision: value.revisi
 CREATE (attributeRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (attribute)-[:CONTAINS]->(attributeRevision)
 
-WITH value, metadata 
+WITH value, metadata
 UNWIND value.metadata.maintainers as m
 MERGE (maintainer:Maintainer:unpublished {
   email: m.email,
@@ -72,7 +72,9 @@ CREATE (metadata:TypeMetadata:unpublished {
   supportURL: value.metadata.supportURL,
   iconURL: value.metadata.iconURL})
 
-CREATE (typeSpec:TypeSpec:unpublished {jsonSchema: value.spec.jsonSchema.value})
+CREATE (typeSpec:TypeSpec:unpublished {
+	jsonSchema: value.spec.jsonSchema.value,
+  additionalRefs: value.spec.additionalRefs})
 CREATE (typeRevision:TypeRevision:unpublished {revision: value.revision})
 
 // VirtualType allows us to find types which define spec.additionalRefs
@@ -92,7 +94,7 @@ CALL {
  RETURN count([]) as _tmp1
 }
 
-WITH value, metadata 
+WITH value, metadata
 UNWIND value.metadata.maintainers as m
 MERGE (maintainer:Maintainer:unpublished {
   email: m.email,
@@ -130,7 +132,7 @@ CREATE (interfaceGroup:InterfaceGroup:unpublished{
 
 CREATE (interfaceGroup)-[:DESCRIBED_BY]->(metadata)
 
-WITH value, metadata 
+WITH value, metadata
 UNWIND value.metadata.maintainers as m
 MERGE (maintainer:Maintainer:unpublished {
   email: m.email,

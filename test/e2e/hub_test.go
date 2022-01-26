@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package e2e
@@ -7,17 +8,16 @@ import (
 	"fmt"
 	"strings"
 
-	prmt "github.com/gitchander/permutation"
-
-	"github.com/MakeNowJust/heredoc"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"capact.io/capact/internal/ptr"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/public"
+
+	"github.com/MakeNowJust/heredoc"
+	prmt "github.com/gitchander/permutation"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("GraphQL API", func() {
@@ -30,6 +30,66 @@ var _ = Describe("GraphQL API", func() {
 			cli = getHubGraphQLClient()
 		})
 
+		Describe("should return Types", func() {
+			It("based on full path name", func() {
+				const fullTypePath = "cap.core.type.platform.kubernetes"
+
+				gotTypes, err := cli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+					PathPattern: ptr.String(fullTypePath),
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(gotTypes).To(HaveLen(1))
+				Expect(gotTypes[0].Metadata.Path).To(Equal(fullTypePath))
+			})
+
+			It("based on a prefix of the parent node", func() {
+				const parentNode = "cap.core.type.platform.*"
+				expAssociatedPaths := []string{"cap.core.type.platform.kubernetes", "cap.type.platform.cloud-foundry"}
+
+				gotTypes, err := cli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+					PathPattern: ptr.String(parentNode),
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+
+				HasOnlyExpectTypePaths(gotTypes, expAssociatedPaths)
+			})
+			It("only child node if full path name specified", func() {
+				const fullTypePath = "cap.type.platform.cloud-foundry"
+
+				gotTypes, err := cli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+					PathPattern: ptr.String(fullTypePath),
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(gotTypes).To(HaveLen(1))
+				Expect(gotTypes[0].Metadata.Path).To(Equal(fullTypePath))
+			})
+			It("entries matching or regex (cap.core.type.generic.value|cap.type.platform.cloud-foundry)", func() {
+				expTypePaths := []string{"cap.core.type.generic.value", "cap.type.platform.cloud-foundry"}
+				typePathORFilter := fmt.Sprintf(`(%s)`, strings.Join(expTypePaths, "|"))
+
+				gotTypes, err := cli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+					PathPattern: ptr.String(typePathORFilter),
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+
+				HasOnlyExpectTypePaths(gotTypes, expTypePaths)
+			})
+			It("all entries if there is no filter", func() {
+				gotTypes, err := cli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+					// no path filter
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(len(gotTypes)).Should(BeNumerically(">=", 50))
+			})
+		})
 		Describe("should return ImplementationRevision", func() {
 			const (
 				interfacePath  = "cap.interface.capactio.capact.validation.hub.install"
@@ -730,7 +790,7 @@ func expectedParentTypeInstance(ID string) *gqllocalapi.TypeInstance {
 
 // We cannot write specs using Context and It which are connected with each other
 // see: https://github.com/onsi/ginkgo/issues/246
-// this functions just adds syntax suggar which can be used when we have just one single `It` block
+// this functions just adds syntax sugar which can be used when we have just one single `It` block
 // with sequential test-cases
 func scenario(format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, "[Scenario]: "+format+"\n", args...)
@@ -758,4 +818,16 @@ func allPermutations(in []string) string {
 		opts = append(opts, fmt.Sprintf(`"%s"`, strings.Join(in, `", "`)))
 	}
 	return fmt.Sprintf(`(%s)`, strings.Join(opts, "|"))
+}
+
+func HasOnlyExpectTypePaths(gotTypes []*gqlpublicapi.TypeRevision, expectedPaths []string) {
+	Expect(gotTypes).To(HaveLen(len(expectedPaths)))
+	var gotPaths []string
+	for _, t := range gotTypes {
+		if t == nil {
+			continue
+		}
+		gotPaths = append(gotPaths, t.Metadata.Path)
+	}
+	Expect(gotPaths).To(ConsistOf(expectedPaths))
 }

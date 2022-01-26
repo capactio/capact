@@ -576,8 +576,10 @@ type Query @additionalLabels(labels: ["published"]) {
   types(filter: TypeFilter = {}): [Type!]!
     @cypher(
       statement: """
-      MATCH (this:Type:published)
-      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      OPTIONAL MATCH (this:VirtualType:published)-[:CONTAINS]->(types)
+      MATCH (types:Type:published)
+      WHERE $filter = {} OR $filter.pathPattern IS NULL OR (this.path =~ $filter.pathPattern OR types.path =~ $filter.pathPattern)
+      RETURN DISTINCT types
       """
     )
   type(path: NodePath!): Type

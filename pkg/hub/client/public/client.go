@@ -62,15 +62,15 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 func (c *Client) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
 	req := graphql.NewRequest(`query ListTypeRefsJSONSchemas($typeFilter: TypeFilter!)  {
 		  types(filter: $typeFilter) {
-			revisions {
-			  revision
-			  metadata {
-				path
+			  revisions {
+			    revision
+			    metadata {
+			  	  path
+			    }
+			    spec {
+			  	  jsonSchema
+			    }
 			  }
-			  spec {
-				jsonSchema
-			  }
-			}
 		  }
 		}`)
 
@@ -153,7 +153,7 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 			latestRevision {
 				revision
 			}
-		}		
+		}
 	}`)
 
 	req.Var("interfacePath", ref.Path)

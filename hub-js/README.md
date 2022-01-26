@@ -31,7 +31,7 @@ docker run -d \
   -e "NEO4J_AUTH=neo4j/okon" \
   -e "NEO4JLABS_PLUGINS=[\"apoc\"]" \
   --name hub-neo4j-instance \
-  neo4j:4.2.3
+  ghcr.io/capactio/neo4j:4.2.13-apoc
 ```
 
 When you are done, remove the Docker container:
@@ -100,13 +100,20 @@ To access Neo4j Browser, follow the steps:
 
 1. Run the following commands:
 
-```bash
-kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
-kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
-```
+   - Capact cluster:
+     ```bash
+     kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
+     kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
+     ```
+   - Docker:
+     Make sure that `-p 7687:7687 -p 7474:7474` flags were specified for the `docker run` command.
 
-1. Navigate to [http://localhost:7474](http://localhost:7474).
-1. Change the connection URL to `neo4j://localhost:7687`.
-1. Use `neo4j` user and password configured during Helm chart installation. See the default values in [`values.yaml`](../deploy/kubernetes/charts/neo4j/values.yaml) file.
+2. Navigate to [http://localhost:7474](http://localhost:7474).
+3. Change the connection URL to `neo4j://localhost:7687`.
+4. Use `neo4j` configured user and password:
+   - Capact cluster:
+     See the default values in [`values.yaml`](../deploy/kubernetes/charts/neo4j/values.yaml) file.
+   - Docker:
+     Use values set by the `NEO4J_AUTH` enviroment variable.
 
 To read more about development, see the [Development guide](https://capact.io/community/development/development-guide).
