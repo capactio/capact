@@ -1,8 +1,8 @@
 ---
-title: capact alpha manifest-gen implementation helm
+title: capact manifest generate implementation helm
 ---
 
-## capact alpha manifest-gen implementation helm
+## capact manifest generate implementation helm
 
 Generate Helm chart based manifests
 
@@ -11,7 +11,7 @@ Generate Helm chart based manifests
 Generate Implementation manifests based on a Helm chart
 
 ```
-capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] [flags]
+capact manifest generate implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] [flags]
 ```
 
 ### Options
@@ -35,5 +35,5 @@ capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] 
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Generate new Implementation manifests
+* [capact manifest generate implementation](capact_manifest_generate_implementation.md)	 - Generate new Implementation manifests
 

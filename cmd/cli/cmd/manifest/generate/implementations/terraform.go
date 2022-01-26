@@ -3,9 +3,10 @@ package implementations
 import (
 	"strings"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/internal/cli/manifestgen"
+
 	"capact.io/capact/internal/cli"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
@@ -22,13 +23,13 @@ func NewTerraform() *cobra.Command {
 		Long:  "Generate Implementation manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
 		# Generate Implementation manifests 
-		<cli> alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds
+		<cli> manifest generate implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds
 
 		# Generate Implementation manifests for an AWS Terraform module
-		<cli> alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds -p aws
+		<cli> manifest generate implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds -p aws
 	
 		# Generate Implementation manifests for an GCP Terraform module
-		<cli> alpha manifest-gen implementation terraform cap.implementation.gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp`, cli.Name),
+		<cli> manifest generate implementation terraform cap.implementation.gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp`, cli.Name),
 
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 2 {

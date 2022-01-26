@@ -1,8 +1,8 @@
 ---
-title: capact alpha manifest-gen interface
+title: capact manifest generate interface
 ---
 
-## capact alpha manifest-gen interface
+## capact manifest generate interface
 
 Generate new Interface-related manifests
 
@@ -11,14 +11,14 @@ Generate new Interface-related manifests
 Generate new InterfaceGroup, Interface and associated Type manifests
 
 ```
-capact alpha manifest-gen interface [PATH] [flags]
+capact manifest generate interface [PATH] [flags]
 ```
 
 ### Examples
 
 ```
 # Generate manifests for the cap.interface.database.postgresql.install Interface
-capact alpha manifest-gen interface cap.interface.database.postgresql.install
+capact manifest generate interface cap.interface.database.postgresql.install
 ```
 
 ### Options
@@ -39,5 +39,5 @@ capact alpha manifest-gen interface cap.interface.database.postgresql.install
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
+* [capact manifest generate](capact_manifest_generate.md)	 - OCF Manifests generation
 

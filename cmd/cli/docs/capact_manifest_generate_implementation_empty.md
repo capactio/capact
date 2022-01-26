@@ -1,13 +1,13 @@
 ---
-title: capact alpha manifest-gen implementation empty
+title: capact manifest generate implementation empty
 ---
 
-## capact alpha manifest-gen implementation empty
+## capact manifest generate implementation empty
 
 Generate empty Implementation manifests
 
 ```
-capact alpha manifest-gen implementation empty [MANIFEST_PATH] [flags]
+capact manifest generate implementation empty [MANIFEST_PATH] [flags]
 ```
 
 ### Options
@@ -29,5 +29,5 @@ capact alpha manifest-gen implementation empty [MANIFEST_PATH] [flags]
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Generate new Implementation manifests
+* [capact manifest generate implementation](capact_manifest_generate_implementation.md)	 - Generate new Implementation manifests
 

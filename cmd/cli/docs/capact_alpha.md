@@ -27,5 +27,4 @@ Subcommand for alpha features in the CLI
 
 * [capact](capact.md)	 - Collective Capability Manager CLI
 * [capact alpha archive-images](capact_alpha_archive-images.md)	 - Export Capact Docker images to a tar archive
-* [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
 

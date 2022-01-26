@@ -1,8 +1,8 @@
 ---
-title: capact alpha manifest-gen implementation
+title: capact manifest generate implementation
 ---
 
-## capact alpha manifest-gen implementation
+## capact manifest generate implementation
 
 Generate new Implementation manifests
 
@@ -27,8 +27,8 @@ Generate new Implementation manifests for various tools.
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
-* [capact alpha manifest-gen implementation empty](capact_alpha_manifest-gen_implementation_empty.md)	 - Generate empty Implementation manifests
-* [capact alpha manifest-gen implementation helm](capact_alpha_manifest-gen_implementation_helm.md)	 - Generate Helm chart based manifests
-* [capact alpha manifest-gen implementation terraform](capact_alpha_manifest-gen_implementation_terraform.md)	 - Generate Terraform based manifests
+* [capact manifest generate](capact_manifest_generate.md)	 - OCF Manifests generation
+* [capact manifest generate implementation empty](capact_manifest_generate_implementation_empty.md)	 - Generate empty Implementation manifests
+* [capact manifest generate implementation helm](capact_manifest_generate_implementation_helm.md)	 - Generate Helm chart based manifests
+* [capact manifest generate implementation terraform](capact_manifest_generate_implementation_terraform.md)	 - Generate Terraform based manifests
 

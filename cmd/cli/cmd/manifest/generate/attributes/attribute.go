@@ -3,9 +3,10 @@ package attributes
 import (
 	"strings"
 
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/internal/cli/manifestgen"
+
 	"capact.io/capact/internal/cli"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
@@ -22,7 +23,7 @@ func NewAttribute() *cobra.Command {
 		Short:   "Generate new Attribute manifests",
 		Example: heredoc.WithCLIName(`
 			# Generate manifests for the cap.attribute.cloud.provider.aws Attribute
-			<cli> alpha manifest-gen attribute cap.attribute.cloud.provider.aws`, cli.Name),
+			<cli> manifest generate attribute cap.attribute.cloud.provider.aws`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("accepts one argument: [MANIFEST_PATH]")

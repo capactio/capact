@@ -1,12 +1,14 @@
-package manifestgen
+package generate
 
 import (
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/attributes"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementations"
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/interfaces"
-	gentypes "capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/types"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/attributes"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/implementations"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/interfaces"
+	gentypes "capact.io/capact/cmd/cli/cmd/manifest/generate/types"
+	"capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/internal/cli/manifestgen"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -17,10 +19,16 @@ import (
 func NewCmd() *cobra.Command {
 	var opts common.ManifestGenOptions
 	cmd := &cobra.Command{
-		Use:   "manifest-gen",
-		Short: "Manifests generation",
+		Use:   "generate",
+		Short: "OCF Manifests generation",
 		Long:  "Subcommand for various manifest generation operations",
 		Args:  cobra.MaximumNArgs(0),
+		Example: heredoc.WithCLIName(`
+			# To generate manifests interactively, run: 
+			<cli> manifest generate
+			# Then, select which manifests kinds you want to generate.
+			# If the Interface is selected, the Type kind toggles
+			# input and output Type generation for a given Interface.`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return askInteractivelyForParameters(opts)
 		},

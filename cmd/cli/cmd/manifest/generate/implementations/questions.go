@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/common"
-	"capact.io/capact/internal/cli/alpha/manifestgen"
+	"capact.io/capact/cmd/cli/cmd/manifest/generate/common"
+	"capact.io/capact/internal/cli/manifestgen"
 	"capact.io/capact/pkg/runner/helm"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"

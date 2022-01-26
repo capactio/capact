@@ -1,27 +1,27 @@
 ---
-title: capact alpha manifest-gen type
+title: capact manifest generate attribute
 ---
 
-## capact alpha manifest-gen type
+## capact manifest generate attribute
 
-Generate new Type manifests
+Generate new Attribute manifests
 
 ```
-capact alpha manifest-gen type [PATH] [flags]
+capact manifest generate attribute [PATH] [flags]
 ```
 
 ### Examples
 
 ```
-# Generate manifests for the cap.type.database.postgresql.config Type
-capact alpha manifest-gen type cap.type.database.postgresql.config
+# Generate manifests for the cap.attribute.cloud.provider.aws Attribute
+capact manifest generate attribute cap.attribute.cloud.provider.aws
 ```
 
 ### Options
 
 ```
-  -h, --help              help for type
-  -r, --revision string   Revision of the Type manifest (default "0.1.0")
+  -h, --help              help for attribute
+  -r, --revision string   Revision of the Attribute manifest (default "0.1.0")
 ```
 
 ### Options inherited from parent commands
@@ -35,5 +35,5 @@ capact alpha manifest-gen type cap.type.database.postgresql.config
 
 ### SEE ALSO
 
-* [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
+* [capact manifest generate](capact_manifest_generate.md)	 - OCF Manifests generation
 
