@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO: Use yq to manipulate values in YAML files,
+# as current approach is heavily error-prone
+
 set -e
 
 CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -31,6 +34,11 @@ release::set_capact_images_in_charts() {
   sed -E -i.bak "s/overrideTag: \".+\"/overrideTag: \"${image_tag}\"/g" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
 }
 
+release::set_dashboard_image_in_chart() {
+  local -r image_tag="$1"
+  sed -E -i.bak "s/tag: \".+\"/tag: \"${image_tag}\"/g" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
+}
+
 release::set_hub_manifest_source_branch() {
   local -r branch="$1"
   sed -E -i.bak "s/branch: .+/branch: ${branch}/g" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/charts/hub-public/values.yaml"
@@ -51,6 +59,8 @@ release::make_release_commit() {
 # required inputs:
 # RELEASE_VERSION - new version in SemVer format: x.y.z
 [ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
+# DASHBOARD_IMAGE_TAG - Dashboard image tag used for a given release
+[ -z "${DASHBOARD_IMAGE_TAG}" ] && echo "Need to set DASHBOARD_IMAGE_TAG" && exit 1;
 
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 RELEASE_VERSION_MAJOR_MINOR="$(echo "${RELEASE_VERSION}" | sed -E 's/([0-9]+\.[0-9])\.[0-9]/\1/g')"
@@ -65,6 +75,7 @@ main() {
   git checkout -B "${RELEASE_BRANCH}"
 
   release::set_capact_images_in_charts "${capact_image_tag}"
+  release::set_dashboard_image_in_chart "${capact_image_tag}"
   release::set_hub_manifest_source_branch "${RELEASE_BRANCH}"
   release::make_release_commit "${RELEASE_VERSION}" "${RELEASE_BRANCH}"
 }
