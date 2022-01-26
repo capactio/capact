@@ -33,7 +33,7 @@ release::set_capact_images_in_charts() {
 
 release::set_dashboard_image_in_chart() {
   local -r image_tag="$1"
-  yq eval -i ".global.dashboard.image.tag = \"${image_tag}\"" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
+  yq eval -i ".dashboard.image.tag = \"${image_tag}\"" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
 }
 
 release::set_hub_manifest_source_branch() {
@@ -65,6 +65,7 @@ RELEASE_BRANCH="release-${RELEASE_VERSION_MAJOR_MINOR}"
 
 main() {
   release::update_helm_charts_version "${RELEASE_VERSION}"
+  release::set_dashboard_image_in_chart "${DASHBOARD_IMAGE_TAG}"
   release::make_prepare_release_commit "${RELEASE_VERSION}" "${SOURCE_BRANCH}"
 
   local -r revision=$(git rev-parse --short=7 HEAD)  # returns at least 7 characters
@@ -72,7 +73,6 @@ main() {
   git checkout -B "${RELEASE_BRANCH}"
 
   release::set_capact_images_in_charts "${capact_image_tag}"
-  release::set_dashboard_image_in_chart "${capact_image_tag}"
   release::set_hub_manifest_source_branch "${RELEASE_BRANCH}"
   release::make_release_commit "${RELEASE_VERSION}" "${RELEASE_BRANCH}"
 }
