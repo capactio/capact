@@ -35,10 +35,10 @@ setChartVersionAndImageTagToCommitSHA() {
   readonly version="${GITHUB_SHA:0:7}"
 
   for chart in "${charts[@]}"; do
-    sed -i.bak "/^version: / s/$/-${version}/" "${DEPLOY_CHARTS_DIR}/${chart}/Chart.yaml"
+    yq eval -i ".version = .version + \"-${version}\"" "${DEPLOY_CHARTS_DIR}/${chart}/Chart.yaml"
   done
 
-  sed -i.bak "s/overrideTag: \"latest\"/overrideTag: \"${version}\"/g" "${DEPLOY_CHARTS_DIR}/capact/values.yaml"
+  yq eval -i ".global.containerRegistry.overrideTag = \"${version}\"" "${DEPLOY_CHARTS_DIR}/capact/values.yaml"
 }
 
 main() {
