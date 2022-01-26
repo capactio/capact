@@ -46,8 +46,6 @@ jobs:
           go-version: ${{env.GO_VERSION}}
       - name: Set up GoReleaser
         run: go install github.com/goreleaser/goreleaser@v1.1.0
-      - name: Install yq
-        run: sudo snap install yq --channel=v4/stable
       - name: Set up GCS
         uses: google-github-actions/setup-gcloud@master
         with:

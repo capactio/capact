@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO: Refactor this script to not use error-prone sed usage
+# See discussion https://github.com/capactio/capact/pull/617
+
 set -e
 
 CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -7,13 +10,12 @@ REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
 readonly CURRENT_DIR
 readonly REPO_ROOT_DIR
 
-
 release::update_helm_charts_version() {
   local -r release_version="$1"
   local -r deploy_dir="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
   for d in "${deploy_dir}"/*/ ; do
-    yq eval -i ".version = \"${release_version}\"" "${d}/Chart.yaml"
+    sed -i.bak "s/^version: .*/version: ${release_version}/g" "${d}/Chart.yaml"
   done
 }
 
@@ -28,17 +30,17 @@ release::make_prepare_release_commit() {
 
 release::set_capact_images_in_charts() {
   local -r image_tag="$1"
-  yq eval -i ".global.containerRegistry.overrideTag = \"${image_tag}\"" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
+  sed -E -i.bak "s/overrideTag: \".+\"/overrideTag: \"${image_tag}\"/g" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
 }
 
 release::set_dashboard_image_in_chart() {
   local -r image_tag="$1"
-  yq eval -i ".dashboard.image.tag = \"${image_tag}\"" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
+  sed -E -i.bak "s/tag: \".+\"/tag: \"${image_tag}\"/g" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/values.yaml"
 }
 
 release::set_hub_manifest_source_branch() {
   local -r branch="$1"
-  yq eval -i ".populator.manifestsLocations[0].branch = \"${branch}\"" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/charts/hub-public/values.yaml"
+  sed -E -i.bak "s/branch: .+/branch: ${branch}/g" "${REPO_ROOT_DIR}/deploy/kubernetes/charts/capact/charts/hub-public/values.yaml"
 }
 
 release::make_release_commit() {
