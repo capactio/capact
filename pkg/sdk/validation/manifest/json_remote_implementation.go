@@ -124,14 +124,14 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 	var implAdditionalInput []string
 	var workflowArtifacts []wfv1.Artifact
 
-	//1. get implementations inputs
+	//1. get interface input names
 	for _, implementsItem := range entity.Spec.Implements {
 		interfaceInput, err := v.fetchInterfaceInput(ctx, hubpublicgraphql.InterfaceReference{
 			Path:     implementsItem.Path,
 			Revision: implementsItem.Revision,
 		}, v.hub)
 		if err != nil {
-			return ValidationResult{}, errors.Wrap(err, "while getting types for implementation")
+			return ValidationResult{}, errors.Wrap(err, "while fetching Interface inputs")
 		}
 		for _, inputParameter := range interfaceInput.Parameters {
 			interfacesInputNames = append(interfacesInputNames, inputParameter.Name)
@@ -141,7 +141,7 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 		}
 	}
 
-	//2. get additional inputs
+	//2. get implementation additional inputs
 	if entity.Spec.AdditionalInput != nil {
 		for name := range entity.Spec.AdditionalInput.Parameters {
 			implAdditionalInput = append(implAdditionalInput, name)
@@ -156,14 +156,15 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 	if err != nil {
 		return ValidationResult{}, errors.Wrap(err, "while decoding Implementation arguments to Argo workflow")
 	}
-
-	idx, err := argo.GetEntrypointWorkflowIndex(workflow)
-	if err != nil {
-		return ValidationResult{}, errors.Wrap(err, "while getting entrypoint from workflow")
+	if workflow != nil && workflow.WorkflowSpec != nil {
+		idx, err := argo.GetEntrypointWorkflowIndex(workflow)
+		if err != nil {
+			return ValidationResult{}, errors.Wrap(err, "while getting entrypoint index from workflow")
+		}
+		workflowArtifacts = append(workflowArtifacts, workflow.Templates[idx].Inputs.Artifacts...)
 	}
-	workflowArtifacts = append(workflowArtifacts, workflow.Templates[idx].Inputs.Artifacts...)
 
-	//4. verify if the inputs from Implementation and Interface match with Argo workflow ones
+	//4. verify if the inputs from Implementation and Interface match with Argo workflow artifacts
 	for _, artifact := range workflowArtifacts {
 		existsInInterface := slices.Contains(interfacesInputNames, artifact.Name)
 		existsInAdditionalInput := slices.Contains(implAdditionalInput, artifact.Name)
@@ -192,9 +193,12 @@ func (v *RemoteImplementationValidator) fetchInterfaceInput(ctx context.Context,
 		return hubpublicgraphql.InterfaceInput{}, fmt.Errorf("interface %s:%s was not found in Hub", interfaceRef.Path, interfaceRef.Revision)
 	}
 
+	if iface.Spec == nil || iface.Spec.Input == nil {
+		return hubpublicgraphql.InterfaceInput{}, nil
+	}
+
 	return *iface.Spec.Input, nil
 }
-
 func decodeImplArgsToArgoWorkflow(implArgs map[string]interface{}) (*argo.Workflow, error) {
 	var decodedImplArgs = struct {
 		Workflow argo.Workflow `json:"workflow"`

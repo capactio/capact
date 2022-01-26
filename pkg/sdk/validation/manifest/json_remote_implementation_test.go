@@ -15,6 +15,8 @@ import (
 )
 
 func TestValidateInputArtifactsNames(t *testing.T) {
+	inputParametersName := "input-parameters"
+	additionalParameterName := "additional-parameters"
 	tests := map[string]struct {
 		ifaceInput          *hubpublicgraphql.InterfaceInput
 		implAdditionalInput *types.AdditionalInput
@@ -27,78 +29,78 @@ func TestValidateInputArtifactsNames(t *testing.T) {
 			},
 			implAdditionalInput: &types.AdditionalInput{
 				Parameters: map[string]types.AdditionalInputParameter{
-					"additional-parameters": {},
+					additionalParameterName: {},
 				},
 			},
 			argoArtifacts: []wfv1.Artifact{
 				{
-					Name: "input-parameters",
+					Name: inputParametersName,
 				},
 				{
-					Name:     "additional-parameters",
+					Name:     additionalParameterName,
 					Optional: true,
 				},
 			},
-			exprectedResults: newValidationResult(fmt.Errorf("unknown workflow input artifact \"%s\": there is no such input neither in Interface input, nor Implementation additional input", "input-parameters")),
+			exprectedResults: newValidationResult(fmt.Errorf("unknown workflow input artifact \"%s\": there is no such input neither in Interface input, nor Implementation additional input", inputParametersName)),
 		},
 		"When Argo input has optional input that does exist in Interface ": {
 			ifaceInput: &hubpublicgraphql.InterfaceInput{
 				Parameters: []*hubpublicgraphql.InputParameter{
 					{
-						Name: "input-parameters",
+						Name: inputParametersName,
 					},
 				},
 			},
 			implAdditionalInput: &types.AdditionalInput{},
 			argoArtifacts: []wfv1.Artifact{
 				{
-					Name:     "input-parameters",
+					Name:     inputParametersName,
 					Optional: true,
 				},
 			},
-			exprectedResults: newValidationResult(fmt.Errorf("invalid workflow input artifact \"%s\": it shouldn't be optional as it is defined as Interface input", "input-parameters")),
+			exprectedResults: newValidationResult(fmt.Errorf("invalid workflow input artifact \"%s\": it shouldn't be optional as it is defined as Interface input", inputParametersName)),
 		},
 		"When Argo input is not optional but exists in Implementation additional inputs": {
 			ifaceInput: &hubpublicgraphql.InterfaceInput{
 				Parameters: []*hubpublicgraphql.InputParameter{
 					{
-						Name: "input-parameters",
+						Name: inputParametersName,
 					},
 				},
 			},
 			implAdditionalInput: &types.AdditionalInput{
 				Parameters: map[string]types.AdditionalInputParameter{
-					"additional-parameters": {},
+					additionalParameterName: {},
 				},
 			},
 			argoArtifacts: []wfv1.Artifact{
 				{
-					Name:     "additional-parameters",
+					Name:     additionalParameterName,
 					Optional: false,
 				},
 			},
-			exprectedResults: newValidationResult(fmt.Errorf("invalid workflow input artifact \"%s\": it should be optional, as it is defined as Implementation additional input", "additional-parameters")),
+			exprectedResults: newValidationResult(fmt.Errorf("invalid workflow input artifact \"%s\": it should be optional, as it is defined as Implementation additional input", additionalParameterName)),
 		},
 		"When Argo inputs are correctly set": {
 			ifaceInput: &hubpublicgraphql.InterfaceInput{
 				Parameters: []*hubpublicgraphql.InputParameter{
 					{
-						Name: "input-parameters",
+						Name: inputParametersName,
 					},
 				},
 			},
 			implAdditionalInput: &types.AdditionalInput{
 				Parameters: map[string]types.AdditionalInputParameter{
-					"additional-parameters": {},
+					additionalParameterName: {},
 				},
 			},
 			argoArtifacts: []wfv1.Artifact{
 				{
-					Name:     "input-parameters",
+					Name:     inputParametersName,
 					Optional: false,
 				},
 				{
-					Name:     "additional-parameters",
+					Name:     additionalParameterName,
 					Optional: true,
 				},
 			},

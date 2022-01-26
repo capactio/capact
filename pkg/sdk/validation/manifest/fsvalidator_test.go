@@ -7,7 +7,6 @@ import (
 	"capact.io/capact/pkg/sdk/validation/manifest"
 
 	graphql "capact.io/capact/pkg/hub/api/graphql/public"
-	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"github.com/pkg/errors"
 
@@ -167,8 +166,8 @@ func (h *fakeHub) CheckManifestRevisionsExist(ctx context.Context, manifestRefs 
 	return h.fn(ctx, manifestRefs)
 }
 
-func (h *fakeHub) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error) {
-	return &hubpublicgraphql.InterfaceRevision{}, nil
+func (h *fakeHub) FindInterfaceRevision(ctx context.Context, ref graphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*graphql.InterfaceRevision, error) {
+	return &graphql.InterfaceRevision{}, nil
 }
 
 func fixHub(t *testing.T, result map[graphql.ManifestReference]bool, err error) *fakeHub {
