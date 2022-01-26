@@ -59,7 +59,7 @@ release::make_release_commit() {
 # RELEASE_VERSION - new version in SemVer format: x.y.z
 [ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
 # DASHBOARD_IMAGE_TAG - Dashboard image tag used for a given release
-[ -z "${DASHBOARD_IMAGE_TAG}" ] && echo "Need to set DASHBOARD_IMAGE_TAG" && exit 1;
+[[ ( -z "${DASHBOARD_IMAGE_TAG}" || "${DASHBOARD_IMAGE_TAG}" == PR-* ) ]] && echo "Need to set DASHBOARD_IMAGE_TAG that doesn't start with 'PR-' prefix" && exit 1;
 
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 RELEASE_VERSION_MAJOR_MINOR="$(echo "${RELEASE_VERSION}" | sed -E 's/([0-9]+\.[0-9])\.[0-9]/\1/g')"
