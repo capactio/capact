@@ -14,7 +14,7 @@ capact manifest generate attribute [PATH] [flags]
 
 ```
 # Generate manifests for the cap.attribute.cloud.provider.aws Attribute
-capact alpha manifest-gen attribute cap.attribute.cloud.provider.aws
+capact manifest generate attribute cap.attribute.cloud.provider.aws
 ```
 
 ### Options

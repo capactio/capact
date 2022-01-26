@@ -22,7 +22,7 @@ func NewType() *cobra.Command {
 		Short:   "Generate new Type manifests",
 		Example: heredoc.WithCLIName(`
 			# Generate manifests for the cap.type.database.postgresql.config Type
-			<cli> alpha manifest-gen type cap.type.database.postgresql.config`, cli.Name),
+			<cli> manifest generate type cap.type.database.postgresql.config`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("accepts one argument: [MANIFEST_PATH]")

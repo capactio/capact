@@ -2,7 +2,6 @@ package alpha
 
 import (
 	archiveimages "capact.io/capact/cmd/cli/cmd/alpha/archive-images"
-	"capact.io/capact/cmd/cli/cmd/manifest/generate"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +14,6 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		generate.NewCmd(),
 		archiveimages.NewCmd(),
 	)
 

@@ -26,7 +26,7 @@ func NewInterface() *cobra.Command {
 		Long:    "Generate new InterfaceGroup, Interface and associated Type manifests",
 		Example: heredoc.WithCLIName(`
 			# Generate manifests for the cap.interface.database.postgresql.install Interface
-			<cli> alpha manifest-gen interface cap.interface.database.postgresql.install`, cli.Name),
+			<cli> manifest generate interface cap.interface.database.postgresql.install`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("accepts one argument: [MANIFEST_PATH]")

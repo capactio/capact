@@ -18,13 +18,13 @@ capact manifest generate implementation terraform [MANIFEST_PATH] [TERRAFORM_MOD
 
 ```
 # Generate Implementation manifests 
-capact alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds
+capact manifest generate implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds
 
 # Generate Implementation manifests for an AWS Terraform module
-capact alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds -p aws
+capact manifest generate implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds -p aws
 	
 # Generate Implementation manifests for an GCP Terraform module
-capact alpha manifest-gen implementation terraform cap.implementation.gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp
+capact manifest generate implementation terraform cap.implementation.gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp
 ```
 
 ### Options

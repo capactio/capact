@@ -14,7 +14,7 @@ capact manifest generate interfacegroup [PATH] [flags]
 
 ```
 # Generate manifests for the cap.interface.database.postgresql InterfaceGroup
-capact alpha manifest-gen interfacegroup cap.interface.database.postgresql
+capact manifest generate interfacegroup cap.interface.database.postgresql
 ```
 
 ### Options

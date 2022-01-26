@@ -18,7 +18,7 @@ capact manifest generate interface [PATH] [flags]
 
 ```
 # Generate manifests for the cap.interface.database.postgresql.install Interface
-capact alpha manifest-gen interface cap.interface.database.postgresql.install
+capact manifest generate interface cap.interface.database.postgresql.install
 ```
 
 ### Options

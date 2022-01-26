@@ -14,7 +14,7 @@ capact manifest generate type [PATH] [flags]
 
 ```
 # Generate manifests for the cap.type.database.postgresql.config Type
-capact alpha manifest-gen type cap.type.database.postgresql.config
+capact manifest generate type cap.type.database.postgresql.config
 ```
 
 ### Options
