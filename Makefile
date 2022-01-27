@@ -206,7 +206,8 @@ release-charts: ## Release Capact Helm Charts
 release-binaries: ## Release stable Capact binaries, such as CLI, populator etc.
 	# --skip-validate is needed as we need to locally ignore GCP credentials
 	# by creating a commit, which is not pushed to the origin.
-	# That makes the goreleaser's validation fail.
+	# That makes the goreleaser's validation fail with error "it tag {tag} was not made against commit {commit hash}"
+	# Even if we not create such commit, goreleaser would fail because of git dirty state.
 	goreleaser release --skip-validate --rm-dist --timeout 60m
 
 release-latest-binaries: ## Release latest Capact binaries
