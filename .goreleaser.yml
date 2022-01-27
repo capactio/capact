@@ -23,7 +23,7 @@ builds:
       - "386"
       - amd64
       - arm64
-    ignore:
+    ignore: &build-ignore
       # upx doesn't support packing Windows Arm64 binaries - see https://github.com/upx/upx/issues/551
       # once there is more demand from the community to build such binary, we will create a separate build config for this combination
       - goos: windows
@@ -42,6 +42,7 @@ builds:
     env: *build-env
     goos: *build-goos
     goarch: *build-arch
+    ignore: *build-ignore
     hooks: *build-hooks
     main: ./cmd/populator
     binary: 'populator-{{ .Os }}-{{ .Arch }}'
