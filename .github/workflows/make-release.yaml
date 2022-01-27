@@ -67,8 +67,9 @@ jobs:
           echo "Preventing pushing to the origin..."
           git remote set-url --push origin no_push
           
-          echo "Adding ${GCP_CREDS_FILEPATH} to local .gitignore..."
-          echo "${GCP_CREDS_FILEPATH}" >> .gitignore
+          GCP_CREDS_FILENAME=$(basename $GCP_CREDS_FILEPATH)
+          echo "Adding ${GCP_CREDS_FILENAME} to local .gitignore..."
+          echo "${GCP_CREDS_FILENAME}" >> .gitignore
           
           echo "Committing the change..."
           git add .gitignore

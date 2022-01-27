@@ -204,7 +204,10 @@ release-charts: ## Release Capact Helm Charts
 .PHONY: release-charts
 
 release-binaries: ## Release stable Capact binaries, such as CLI, populator etc.
-	goreleaser release --rm-dist
+	# --skip-validate is needed as we need to locally ignore GCP credentials
+	# by creating a commit, which is not pushed to the origin.
+	# That makes the goreleaser's validation fail.
+	goreleaser release --skip-validate --rm-dist
 
 release-latest-binaries: ## Release latest Capact binaries
 	goreleaser release --snapshot --rm-dist --config .goreleaser.latest.yml
