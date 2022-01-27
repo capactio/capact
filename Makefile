@@ -207,7 +207,7 @@ release-binaries: ## Release stable Capact binaries, such as CLI, populator etc.
 	# --skip-validate is needed as we need to locally ignore GCP credentials
 	# by creating a commit, which is not pushed to the origin.
 	# That makes the goreleaser's validation fail.
-	goreleaser release --skip-validate --rm-dist
+	goreleaser release --skip-validate --rm-dist --timeout 60m
 
 release-latest-binaries: ## Release latest Capact binaries
 	goreleaser release --snapshot --rm-dist --config .goreleaser.latest.yml
