@@ -46,25 +46,49 @@ jobs:
           go-version: ${{env.GO_VERSION}}
       - name: Set up GoReleaser
         run: go install github.com/goreleaser/goreleaser@v1.1.0
-      - name: Set up GCS
-        uses: google-github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCS_CREDS }}
-          export_default_credentials: true
-      - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Push release commits and tag
         env:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
           DASHBOARD_IMAGE_TAG: "${{ github.event.inputs.dashboard_image_tag }}"
         run: ./hack/make-release.sh
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Install upx 3.96
+        run: |
+          wget https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz
+          tar -xf upx-3.96-amd64_linux.tar.xz
+          mv ./upx-3.96-amd64_linux/upx /usr/local/bin/upx
+          upx -V
+      - id: auth
+        name: Authenticate with Google Cloud platform
+        uses: google-github-actions/auth@v0.5.0
+        with:
+          create_credentials_file: true
+          cleanup_credentials: true
+          credentials_json: ${{ secrets.GCS_CREDS }}
+      - name: Ignore credentials
+        env:
+          GCP_CREDS_FILEPATH: ${{ steps.auth.outputs.credentials_file_path }}
+        run: |
+          echo "Preventing pushing to the origin..."
+          git remote set-url --push origin no_push
+          
+          GCP_CREDS_FILENAME=$(basename $GCP_CREDS_FILEPATH)
+          echo "Adding ${GCP_CREDS_FILENAME} to local .gitignore..."
+          echo "${GCP_CREDS_FILENAME}" >> .gitignore
+          
+          echo "Committing the change..."
+          git add .gitignore
+          git commit -m "Ignore credentials"
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.4.0
       - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make release-binaries
       - name: Generate release notes
         run: |
-          npm install -g github-release-notes
+          npm install -g github-release-notes@~0.17.3
           gren release -d -T "${{ secrets.GITHUB_TOKEN }}" --tags "v${{ github.event.inputs.version }}" --override
       - name: Release Helm charts
         run: make release-charts
