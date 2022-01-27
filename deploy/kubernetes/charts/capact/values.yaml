@@ -3,7 +3,7 @@ global:
   containerRegistry:
     path: ghcr.io/capactio
     # Overrides the image tag for all Capact components. Default is the sub-chart appVersion.
-    overrideTag: "latest"
+    overrideTag: "a89d7a5"
   domainName: "stage.cluster.capact.dev"
 
   database:
