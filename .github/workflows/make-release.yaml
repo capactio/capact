@@ -53,19 +53,20 @@ jobs:
         run: ./hack/make-release.sh
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Set up GCS
-        uses: google-github-actions/setup-gcloud@v0.4.0
+      - id: auth
+        name: Authenticate with Google Cloud platform
+        uses: google-github-actions/auth@v0.5.0
         with:
-          service_account_key: ${{ secrets.GCS_CREDS }}
-          export_default_credentials: true
-          credentials_file_path: ${{ env.RUNNER_TEMP }}/gcp-sa.json
+          credentials_json: ${{ secrets.GCS_CREDS }}
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.4.0
       - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make release-binaries
       - name: Generate release notes
         run: |
-          npm install -g github-release-notes
+          npm install -g github-release-notes@~0.17.3
           gren release -d -T "${{ secrets.GITHUB_TOKEN }}" --tags "v${{ github.event.inputs.version }}" --override
       - name: Release Helm charts
         run: make release-charts
