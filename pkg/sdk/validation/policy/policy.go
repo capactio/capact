@@ -6,14 +6,15 @@ import (
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/engine/k8s/policy/metadata"
-	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/validation"
 )
 
 // HubClient defines external Hub calls used by Validator.
 type HubClient interface {
-	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter hubpublicgraphql.TypeFilter) ([]*hubpublicgraphql.TypeRevision, error)
+	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
 }
 
 // Validator validates Policy metadata.
@@ -28,7 +29,7 @@ func NewValidator(hubCli HubClient) *Validator {
 
 // LoadAdditionalInputParametersSchemas returns JSONSchemas for additional parameters defined on a given Implementation.
 // It resolves TypeRefs to a given JSONSchema by calling Hub.
-func (v *Validator) LoadAdditionalInputParametersSchemas(ctx context.Context, impl hubpublicgraphql.ImplementationRevision) (validation.SchemaCollection, error) {
+func (v *Validator) LoadAdditionalInputParametersSchemas(ctx context.Context, impl gqlpublicapi.ImplementationRevision) (validation.SchemaCollection, error) {
 	if !v.hasImplAdditionalInputParams(impl) {
 		return nil, nil
 	}
@@ -48,7 +49,7 @@ func (v *Validator) LoadAdditionalInputParametersSchemas(ctx context.Context, im
 }
 
 // IsTypeRefInjectableAndEqualToImplReq returns boolean value if a given Type reference matches the one in Implementation requirement item and can be injected.
-func (v *Validator) IsTypeRefInjectableAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool {
+func (v *Validator) IsTypeRefInjectableAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *gqlpublicapi.ImplementationRequirementItem) bool {
 	// check requirement item valid
 	if reqItem == nil || reqItem.TypeRef == nil || reqItem.Alias == nil {
 		return false
@@ -73,7 +74,7 @@ func (v *Validator) IsTypeRefInjectableAndEqualToImplReq(typeRef *types.Manifest
 }
 
 // ValidateAdditionalTypeInstances validates additional input TypeInstances.
-func (v *Validator) ValidateAdditionalTypeInstances(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) validation.Result {
+func (v *Validator) ValidateAdditionalTypeInstances(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev gqlpublicapi.ImplementationRevision) validation.Result {
 	resultBldr := validation.NewResultBuilder("AdditionalTypeInstance")
 
 	for _, typeInstance := range additionalTIsInPolicy {
@@ -110,7 +111,7 @@ func (v *Validator) AreTypeInstancesMetadataResolved(in policy.Policy) bool {
 	return len(unresolvedTypeInstances) == 0
 }
 
-func (v *Validator) hasImplAdditionalInputParams(impl hubpublicgraphql.ImplementationRevision) bool {
+func (v *Validator) hasImplAdditionalInputParams(impl gqlpublicapi.ImplementationRevision) bool {
 	if impl.Spec == nil || impl.Spec.AdditionalInput == nil || impl.Spec.AdditionalInput.Parameters == nil {
 		return false
 	}
@@ -133,7 +134,7 @@ func (v *Validator) validationResultForTIMetadata(tis []metadata.TypeInstanceMet
 }
 
 // isAdditionalTypeInstanceDefinedInImpl tries to match TypeInstance name and its Type reference against Implementation's `.spec.additionalInput.typeInstances` items.
-func (v *Validator) isAdditionalTypeInstanceDefinedInImpl(typeInstance policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) bool {
+func (v *Validator) isAdditionalTypeInstanceDefinedInImpl(typeInstance policy.AdditionalTypeInstanceToInject, implRev gqlpublicapi.ImplementationRevision) bool {
 	if typeInstance.TypeRef == nil || implRev.Spec == nil || implRev.Spec.AdditionalInput == nil || len(implRev.Spec.AdditionalInput.TypeInstances) == 0 {
 		return false
 	}
@@ -155,7 +156,7 @@ func (v *Validator) isAdditionalTypeInstanceDefinedInImpl(typeInstance policy.Ad
 	return false
 }
 
-func (v *Validator) undefinedAdditionalTIError(typeInstance policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) string {
+func (v *Validator) undefinedAdditionalTIError(typeInstance policy.AdditionalTypeInstanceToInject, implRev gqlpublicapi.ImplementationRevision) string {
 	implPath := ""
 	if implRev.Metadata != nil {
 		implPath = implRev.Metadata.Path

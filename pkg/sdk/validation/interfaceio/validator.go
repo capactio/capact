@@ -6,6 +6,7 @@ import (
 
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/validation"
 
@@ -16,7 +17,7 @@ import (
 
 // HubClient defines external Hub calls used by Validator.
 type HubClient interface {
-	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error)
+	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]gqllocalapi.TypeInstanceTypeReference, error)
 }
 

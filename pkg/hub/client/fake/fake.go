@@ -92,18 +92,21 @@ func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]hubl
 	return typeInstanceTypeRefs, nil
 }
 
-// ListTypeRefRevisionsJSONSchemas returns the list of requested Types.
+// ListTypes returns the list of requested Types.
 // Only a few fields are populated.
-func (s *FileSystemClient) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter hubpublicgraphql.TypeFilter) ([]*hubpublicgraphql.TypeRevision, error) {
-	var out []*hubpublicgraphql.TypeRevision
+func (s *FileSystemClient) ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*hubpublicgraphql.Type, error) {
+	typeOpts := &public.TypeOptions{}
+	typeOpts.Apply(opts...)
+
+	var out []*hubpublicgraphql.Type
 
 	for _, typeRev := range s.Types {
 		if typeRev.Metadata == nil || typeRev.Spec == nil {
 			continue
 		}
 
-		if filter.PathPattern != nil {
-			match, err := regexp.MatchString(*filter.PathPattern, typeRev.Metadata.Path)
+		if typeOpts.Filter.PathPattern != nil {
+			match, err := regexp.MatchString(*typeOpts.Filter.PathPattern, typeRev.Metadata.Path)
 			if err != nil {
 				return nil, err
 			}
@@ -113,14 +116,17 @@ func (s *FileSystemClient) ListTypeRefRevisionsJSONSchemas(ctx context.Context, 
 		}
 
 		// populate only few fields as original method
-		out = append(out, &hubpublicgraphql.TypeRevision{
-			Revision: typeRev.Revision,
-			Metadata: &hubpublicgraphql.TypeMetadata{
-				Path: typeRev.Metadata.Path,
-			},
-			Spec: &hubpublicgraphql.TypeSpec{
-				JSONSchema: typeRev.Spec.JSONSchema,
-			},
+		out = append(out, &hubpublicgraphql.Type{
+			Path: typeRev.Metadata.Path,
+			Revisions: []*hubpublicgraphql.TypeRevision{{
+				Revision: typeRev.Revision,
+				Metadata: &hubpublicgraphql.TypeMetadata{
+					Path: typeRev.Metadata.Path,
+				},
+				Spec: &hubpublicgraphql.TypeSpec{
+					JSONSchema: typeRev.Spec.JSONSchema,
+				},
+			}},
 		})
 	}
 

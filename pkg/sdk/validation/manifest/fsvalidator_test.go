@@ -4,14 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"capact.io/capact/internal/cli/schema"
+	graphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/validation/manifest"
 
-	graphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"github.com/pkg/errors"
-
-	"capact.io/capact/internal/cli/schema"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,7 +25,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 		"Valid Implementation": {
 			manifestPath:                "testdata/valid-implementation.yaml",
 			expectedValidationErrorMsgs: []string{},
-			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
+			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
 				manifestRef("cap.sample.attribute"):                          true,
 				manifestRef("cap.type.mattermost.helm.install-input"):        true,
 				manifestRef("cap.type.database.postgresql.config"):           true,
@@ -44,7 +42,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 		"Valid Interface": {
 			manifestPath:                "testdata/valid-interface.yaml",
 			expectedValidationErrorMsgs: []string{},
-			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
+			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
 				manifestRef("cap.type.productivity.mattermost.config"):        true,
 				manifestRef("cap.type.productivity.mattermost.install-input"): true,
 			}, nil),
@@ -52,7 +50,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 		"Valid Type": {
 			manifestPath:                "testdata/valid-type.yaml",
 			expectedValidationErrorMsgs: []string{},
-			hubCli:                      fixHub(t, map[graphql.ManifestReference]bool{sampleAttr: true}, nil),
+			hubCli:                      fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{sampleAttr: true}, nil),
 		},
 		"Invalid Implementation": {
 			manifestPath: "testdata/invalid-implementation.yaml",
@@ -60,7 +58,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 				"OCFSchemaValidator: spec: appVersion is required",
 				"RemoteImplementationValidator: manifest revision 'cap.interface.cms.wordpress:0.1.0' doesn't exist in Hub",
 			},
-			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
+			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
 				manifestRef("cap.interface.cms.wordpress"): false,
 			}, nil),
 		},
@@ -69,7 +67,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 			expectedValidationErrorMsgs: []string{
 				"RemoteInterfaceValidator: manifest revision 'cap.type.productivity.mattermost.install-input:0.1.0' doesn't exist in Hub",
 			},
-			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
+			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
 				manifestRef("cap.type.productivity.mattermost.install-input"): false,
 				manifestRef("cap.type.productivity.mattermost.config"):        true,
 			}, nil),
@@ -94,7 +92,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 				`TypeValidator: spec.jsonSchema.value: invalid JSON: invalid character '}' looking for beginning of object key string`,
 				"RemoteTypeValidator: manifest revision 'cap.core.sample.attr:0.1.0' doesn't exist in Hub",
 			},
-			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
+			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
 				sampleAttr: false,
 			}, nil),
 		},
@@ -103,7 +101,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 			expectedValidationErrorMsgs: []string{
 				"RemoteInterfaceValidator: internal: while checking if manifest revisions exist: test error",
 			},
-			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
+			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
 				manifestRef("cap.type.productivity.mattermost.config"):        true,
 				manifestRef("cap.type.productivity.mattermost.install-input"): true,
 			}, errors.New("test error")),
@@ -155,32 +153,6 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 			}
 		})
 	}
-}
-
-type fakeHub struct {
-	fn func(ctx context.Context, manifestRefs []graphql.ManifestReference) (map[graphql.ManifestReference]bool, error)
-}
-
-func (h *fakeHub) CheckManifestRevisionsExist(ctx context.Context, manifestRefs []graphql.ManifestReference) (map[graphql.ManifestReference]bool, error) {
-	return h.fn(ctx, manifestRefs)
-}
-
-func fixHub(t *testing.T, result map[graphql.ManifestReference]bool, err error) *fakeHub {
-	hub := &fakeHub{
-		fn: func(ctx context.Context, manifestRefs []graphql.ManifestReference) (map[graphql.ManifestReference]bool, error) {
-			var resultManifestRefs []graphql.ManifestReference
-			for key := range result {
-				resultManifestRefs = append(resultManifestRefs, key)
-			}
-			ok := assert.ElementsMatch(t, manifestRefs, resultManifestRefs)
-			if !ok {
-				return nil, errors.New("manifest references don't match")
-			}
-
-			return result, err
-		},
-	}
-	return hub
 }
 
 func manifestRef(path string) graphql.ManifestReference {

@@ -95,7 +95,41 @@ func (c *Client) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gql
 	return out, nil
 }
 
-// ListInterfaces returns all Interfaces. By default only root fields are populated. Use options to add
+// ListTypes returns all requested Types. By default, only root fields are populated.
+// Use options to add latestRevision fields or apply additional filtering.
+func (c *Client) ListTypes(ctx context.Context, opts ...TypeOption) ([]*gqlpublicapi.Type, error) {
+	typeOpts := &TypeOptions{}
+	typeOpts.Apply(opts...)
+
+	queryFields := fmt.Sprintf(`
+			path
+			name
+			prefix
+			%s`, typeOpts.additionalFields)
+
+	req := graphql.NewRequest(fmt.Sprintf(`query ListTypes($typeFilter: TypeFilter!)  {
+		  types(filter: $typeFilter) {
+			  %s
+		  }
+		}`, queryFields))
+
+	req.Var("typeFilter", typeOpts.Filter)
+
+	var resp struct {
+		Types []*gqlpublicapi.Type `json:"types"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to list Types")
+	}
+
+	return resp.Types, nil
+}
+
+// ListInterfaces returns all Interfaces. By default, only root fields are populated. Use options to add
 // latestRevision fields or apply additional filtering.
 func (c *Client) ListInterfaces(ctx context.Context, opts ...InterfaceOption) ([]*gqlpublicapi.Interface, error) {
 	ifaceOpts := &InterfaceOptions{}

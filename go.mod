@@ -22,6 +22,7 @@ require (
 	github.com/docker/cli v20.10.9+incompatible
 	github.com/docker/docker v20.10.9+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/dustin/go-humanize v1.0.0
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
 	github.com/fatih/camelcase v1.0.0
 	github.com/fatih/color v1.12.0
