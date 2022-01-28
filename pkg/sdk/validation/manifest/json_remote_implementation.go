@@ -167,7 +167,6 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 		typesPath, expAttachedTypes := v.mapToPathAndPathRevIndex(expTypesRefs)
 
 		filter := regexutil.OrStringSlice(typesPath)
-
 		res, err := v.hub.ListTypes(ctx, public.WithTypeRevisions(typeListQueryFields), public.WithTypeFilter(gqlpublicapi.TypeFilter{
 			PathPattern: ptr.String(filter),
 		}))
