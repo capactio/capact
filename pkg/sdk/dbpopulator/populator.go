@@ -77,10 +77,6 @@ CREATE (typeSpec:TypeSpec:unpublished {
   additionalRefs: value.spec.additionalRefs})
 CREATE (typeRevision:TypeRevision:unpublished {revision: value.revision})
 
-// VirtualType allows us to find types which define spec.additionalRefs
-CREATE (vType:VirtualType:unpublished {path: "<PREFIX>"})
-CREATE (vType)-[:CONTAINS]->(type)
-
 CREATE (typeRevision)-[:SPECIFIED_BY]->(typeSpec)
 CREATE (typeRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (type)-[:CONTAINS]->(typeRevision)
@@ -89,7 +85,9 @@ WITH *, value.spec.additionalRefs as refs
 CALL {
  WITH *
  UNWIND refs AS path
-  MATCH (baseType:VirtualType:unpublished {path:path})
+	// VirtualType is used to easily find children for a given abstract node.
+  // Thanks to MERGE, it's created only if necessary
+  MERGE (baseType:VirtualType:unpublished {path:path})
   CREATE (baseType)-[:CONTAINS]->(type)
  RETURN count([]) as _tmp1
 }

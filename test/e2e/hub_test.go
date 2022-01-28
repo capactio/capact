@@ -43,7 +43,6 @@ var _ = Describe("GraphQL API", func() {
 				Expect(gotTypes).To(HaveLen(1))
 				Expect(gotTypes[0].Metadata.Path).To(Equal(fullTypePath))
 			})
-
 			It("based on a prefix of the parent node", func() {
 				const parentNode = "cap.core.type.platform.*"
 				expAssociatedPaths := []string{"cap.core.type.platform.kubernetes", "cap.type.platform.cloud-foundry"}
@@ -88,6 +87,16 @@ var _ = Describe("GraphQL API", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(len(gotTypes)).Should(BeNumerically(">=", 50))
+			})
+			It("no entries if prefix is not a regex and there is no Type with such explicit path", func() {
+				const parentNode = "cap.core.type.platform"
+
+				gotTypes, err := cli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+					PathPattern: ptr.String(parentNode),
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gotTypes).To(HaveLen(0))
 			})
 		})
 		Describe("should return ImplementationRevision", func() {

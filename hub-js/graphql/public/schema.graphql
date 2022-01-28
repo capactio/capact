@@ -576,10 +576,24 @@ type Query @additionalLabels(labels: ["published"]) {
   types(filter: TypeFilter = {}): [Type!]!
     @cypher(
       statement: """
-      OPTIONAL MATCH (this:VirtualType:published)-[:CONTAINS]->(types)
-      MATCH (types:Type:published)
-      WHERE $filter = {} OR $filter.pathPattern IS NULL OR (this.path =~ $filter.pathPattern OR types.path =~ $filter.pathPattern)
-      RETURN DISTINCT types
+      // Find all children associated with a given path pattern
+      OPTIONAL MATCH (b:VirtualType:published)-[:CONTAINS]->(children:Type:published)
+      WHERE $filter = {} OR $filter.pathPattern IS NULL OR b.path =~ $filter.pathPattern
+
+      WITH children
+
+      // Find all specific Types that matches a given pattern
+      MATCH (type:Type:published)
+         WHERE $filter = {} OR $filter.pathPattern IS NULL OR type.path =~ $filter.pathPattern
+
+      // Flat collection of specify Types and attached children
+      UNWIND [type, children] AS res
+
+			WITH res
+			// OPTIONAL MATCH may produce NULL values
+      WHERE res is NOT NULL
+			// Get rid of duplicates
+      RETURN DISTINCT res
       """
     )
   type(path: NodePath!): Type
