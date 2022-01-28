@@ -84,7 +84,7 @@ query {
 The following environment variables can be set to configure Hub:
 
 | Name                        | Required | Default                 | Description                                            |
-| --------------------------- | -------- | ----------------------- | ------------------------------------------------------ |
+|-----------------------------|----------|-------------------------|--------------------------------------------------------|
 | APP_HUB_MODE                | no       | `public`                | Mode, in which Hub is run. Must be "public" or "local" |
 | APP_GRAPH_QL_ADDR           | no       | `:8080`                 | The address, where GraphQL endpoints binds to          |
 | APP_NEO4J_ENDPOINT          | no       | `bolt://localhost:7687` | The Neo4j database Bolt protocol endpoint              |
@@ -114,6 +114,6 @@ To access Neo4j Browser, follow the steps:
    - Capact cluster:
      See the default values in [`values.yaml`](../deploy/kubernetes/charts/neo4j/values.yaml) file.
    - Docker:
-     Use values set by the `NEO4J_AUTH` enviroment variable.
+     Use values set by the `NEO4J_AUTH` environment variable.
 
 To read more about development, see the [Development guide](https://capact.io/community/development/development-guide).
