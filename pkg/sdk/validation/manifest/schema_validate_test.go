@@ -24,7 +24,7 @@ func TestValidateJSONSchema07DefinitionSuccess(t *testing.T) {
 			}`)
 
 	// when
-	res, err := validateJSONSchema07Definition(jsonSchemaCollection{
+	res, err := checkJSONSchema07Definition(jsonSchemaCollection{
 		"valid-schema": validJSONSchema,
 	})
 
@@ -59,7 +59,7 @@ func TestValidateJSONSchema07DefinitionFailures(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// when
-			res, err := validateJSONSchema07Definition(jsonSchemaCollection{
+			res, err := checkJSONSchema07Definition(jsonSchemaCollection{
 				"schema-name": tc.JSONSchema,
 			})
 

@@ -1,12 +1,13 @@
 package manifest
 
 import (
-	"capact.io/capact/internal/ptr"
-	"capact.io/capact/internal/regexutil"
-	"capact.io/capact/pkg/hub/client/public"
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/internal/regexutil"
+	"capact.io/capact/pkg/hub/client/public"
 
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -43,18 +44,18 @@ func (v *RemoteTypeValidator) Do(ctx context.Context, _ types.ManifestMetadata, 
 		})
 	}
 
-	existRes, err := checkManifestRevisionsExist(ctx, v.hub, manifestRefsToCheck)
+	resExist, err := checkManifestRevisionsExist(ctx, v.hub, manifestRefsToCheck)
 	if err != nil {
 		return ValidationResult{}, err
 	}
 
-	refsCheck, err := v.checkAdditionalRefs(ctx, entity)
+	resNodes, err := v.checkAdditionalRefs(ctx, entity)
 	if err != nil {
 		return ValidationResult{}, err
 	}
 
 	return ValidationResult{
-		Errors: append(existRes.Errors, refsCheck.Errors...),
+		Errors: append(resExist.Errors, resNodes.Errors...),
 	}, nil
 }
 

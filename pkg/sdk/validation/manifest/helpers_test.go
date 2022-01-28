@@ -47,6 +47,12 @@ func (h *fakeHub) CheckManifestRevisionsExist(ctx context.Context, manifestRefs 
 	return h.checkManifestsFn(ctx, manifestRefs)
 }
 
+func fixHub(t *testing.T, knownListTypes []*gqlpublicapi.Type, manifests map[gqlpublicapi.ManifestReference]bool, err error) *fakeHub {
+	hub := fixHubForManifestsExistence(t, manifests, err)
+	hub.knownTypes = knownListTypes
+	return hub
+}
+
 func fixHubForManifestsExistence(t *testing.T, result map[gqlpublicapi.ManifestReference]bool, err error) *fakeHub {
 	t.Helper()
 

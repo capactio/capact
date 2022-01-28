@@ -56,10 +56,14 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 			manifestPath: "testdata/invalid-implementation.yaml",
 			expectedValidationErrorMsgs: []string{
 				"OCFSchemaValidator: spec: appVersion is required",
+				"RemoteImplementationValidator: Type cap.type.platform.cloud-foundry:0.1.0 is not attached to cap.core.type.platform abstract node",
 				"RemoteImplementationValidator: manifest revision 'cap.interface.cms.wordpress:0.1.0' doesn't exist in Hub",
 			},
-			hubCli: fixHubForManifestsExistence(t, map[graphql.ManifestReference]bool{
-				manifestRef("cap.interface.cms.wordpress"): false,
+			hubCli: fixHub(t, []*graphql.Type{
+				fixGQLType("cap.type.platform.cloud-foundry", "0.1.0", ""),
+			}, map[graphql.ManifestReference]bool{
+				manifestRef("cap.interface.cms.wordpress"):     false,
+				manifestRef("cap.type.platform.cloud-foundry"): true,
 			}, nil),
 		},
 		"Invalid Interface": {
@@ -85,6 +89,16 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 				"TypeValidator: type: Must validate at least one schema (anyOf)",
 				`TypeValidator: type: type must be one of the following: "array", "boolean", "integer", "null", "number", "object", "string"`,
 			},
+		},
+		"Invalid additionalRefs in Type": {
+			manifestPath: "testdata/invalid-type_additionalRefs.yaml",
+			expectedValidationErrorMsgs: []string{
+				`TypeValidator: spec.additionalRefs: "cap.interface.postgresql" is not allowed. It can refers only to parent node under "cap.core.type." or "cap.type."`,
+				`RemoteTypeValidator: cap.core.type.platform.kubernetes cannot be used as parent node as it resolves to concrete Type`,
+			},
+			hubCli: fixHub(t, []*graphql.Type{
+				fixGQLType("cap.core.type.platform.kubernetes", "0.1.0", ""),
+			}, nil, nil),
 		},
 		"Invalid Type": {
 			manifestPath: "testdata/invalid-type.yaml",

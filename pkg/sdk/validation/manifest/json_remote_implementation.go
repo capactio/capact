@@ -107,12 +107,18 @@ func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.Manifest
 	}
 
 	// TODO: refactor after https://github.com/capactio/capact/pull/610
-	res, err := v.checkParentNodesAssociation(ctx, parentNodeTypesToCheck)
-	if !res.Valid() || err != nil {
-		return res, err
+	resAssociation, err := v.checkParentNodesAssociation(ctx, parentNodeTypesToCheck)
+	if err != nil {
+		return ValidationResult{}, err
+	}
+	resExist, err := checkManifestRevisionsExist(ctx, v.hub, manifestRefsToCheck)
+	if err != nil {
+		return ValidationResult{}, err
 	}
 
-	return checkManifestRevisionsExist(ctx, v.hub, manifestRefsToCheck)
+	return ValidationResult{
+		Errors: append(resAssociation.Errors, resExist.Errors...),
+	}, nil
 }
 
 // Name returns the validator name.
