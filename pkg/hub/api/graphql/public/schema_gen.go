@@ -2173,8 +2173,24 @@ type Query @additionalLabels(labels: ["published"]) {
   types(filter: TypeFilter = {}): [Type!]!
     @cypher(
       statement: """
-      MATCH (this:Type:published)
-      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      // Find all children associated with a given path pattern
+      OPTIONAL MATCH (b:VirtualType:published)-[:CONTAINS]->(children:Type:published)
+      WHERE $filter = {} OR $filter.pathPattern IS NULL OR $filter.pathPattern = "*" OR b.path =~ $filter.pathPattern
+
+      WITH children
+
+      // Find all specific Types that matches a given pattern
+      MATCH (type:Type:published)
+      WHERE $filter = {} OR $filter.pathPattern IS NULL OR $filter.pathPattern = "*" OR type.path =~ $filter.pathPattern
+
+      // Flat collection of specify Types and attached children
+      UNWIND [type, children] AS res
+
+			WITH res
+			// OPTIONAL MATCH may produce NULL values
+      WHERE res is NOT NULL
+			// Get rid of duplicates
+      RETURN DISTINCT res
       """
     )
   type(path: NodePath!): Type
@@ -8723,7 +8739,7 @@ func (ec *executionContext) _Query_types(ctx context.Context, field graphql.Coll
 			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
 		}
 		directive2 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this:Type:published)\nWHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "   // Find all children associated with a given path pattern\n   OPTIONAL MATCH (b:VirtualType:published)-[:CONTAINS]->(children:Type:published)\n   WHERE $filter = {} OR $filter.pathPattern IS NULL OR $filter.pathPattern = \"*\" OR b.path =~ $filter.pathPattern\n\n   WITH children\n\n   // Find all specific Types that matches a given pattern\n   MATCH (type:Type:published)\n   WHERE $filter = {} OR $filter.pathPattern IS NULL OR $filter.pathPattern = \"*\" OR type.path =~ $filter.pathPattern\n\n   // Flat collection of specify Types and attached children\n   UNWIND [type, children] AS res\n\nWITH res\n// OPTIONAL MATCH may produce NULL values\n   WHERE res is NOT NULL\n// Get rid of duplicates\n   RETURN DISTINCT res")
 			if err != nil {
 				return nil, err
 			}

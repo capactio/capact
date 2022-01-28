@@ -48,7 +48,7 @@ CREATE (attributeRevision: AttributeRevision:unpublished {revision: value.revisi
 CREATE (attributeRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (attribute)-[:CONTAINS]->(attributeRevision)
 
-WITH value, metadata 
+WITH value, metadata
 UNWIND value.metadata.maintainers as m
 MERGE (maintainer:Maintainer:unpublished {
   email: m.email,
@@ -72,12 +72,10 @@ CREATE (metadata:TypeMetadata:unpublished {
   supportURL: value.metadata.supportURL,
   iconURL: value.metadata.iconURL})
 
-CREATE (typeSpec:TypeSpec:unpublished {jsonSchema: value.spec.jsonSchema.value})
+CREATE (typeSpec:TypeSpec:unpublished {
+	jsonSchema: value.spec.jsonSchema.value,
+  additionalRefs: value.spec.additionalRefs})
 CREATE (typeRevision:TypeRevision:unpublished {revision: value.revision})
-
-// VirtualType allows us to find types which define spec.additionalRefs
-CREATE (vType:VirtualType:unpublished {path: "<PREFIX>"})
-CREATE (vType)-[:CONTAINS]->(type)
 
 CREATE (typeRevision)-[:SPECIFIED_BY]->(typeSpec)
 CREATE (typeRevision)-[:DESCRIBED_BY]->(metadata)
@@ -87,12 +85,14 @@ WITH *, value.spec.additionalRefs as refs
 CALL {
  WITH *
  UNWIND refs AS path
-  MATCH (baseType:VirtualType:unpublished {path:path})
+	// VirtualType is used to easily find children for a given abstract node.
+  // Thanks to MERGE, it's created only if necessary
+  MERGE (baseType:VirtualType:unpublished {path:path})
   CREATE (baseType)-[:CONTAINS]->(type)
  RETURN count([]) as _tmp1
 }
 
-WITH value, metadata 
+WITH value, metadata
 UNWIND value.metadata.maintainers as m
 MERGE (maintainer:Maintainer:unpublished {
   email: m.email,
@@ -130,7 +130,7 @@ CREATE (interfaceGroup:InterfaceGroup:unpublished{
 
 CREATE (interfaceGroup)-[:DESCRIBED_BY]->(metadata)
 
-WITH value, metadata 
+WITH value, metadata
 UNWIND value.metadata.maintainers as m
 MERGE (maintainer:Maintainer:unpublished {
   email: m.email,
