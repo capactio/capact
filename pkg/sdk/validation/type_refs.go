@@ -3,10 +3,10 @@ package validation
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"capact.io/capact/internal/multierror"
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/internal/regexutil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 
@@ -30,7 +30,7 @@ func ResolveTypeRefsToJSONSchemas(ctx context.Context, hubCli HubClient, inTypeR
 		return nil, nil
 	}
 
-	typeRefsPathFilter := fmt.Sprintf(`(%s)`, strings.Join(typeRefsPath, "|"))
+	typeRefsPathFilter := regexutil.OrStringSlice(typeRefsPath)
 	gotTypes, err := hubCli.ListTypes(ctx, public.WithTypeRevisions(public.TypeRevisionSpecFields|public.TypeRevisionRootFields), public.WithTypeFilter(gqlpublicapi.TypeFilter{
 		PathPattern: ptr.String(typeRefsPathFilter),
 	}))

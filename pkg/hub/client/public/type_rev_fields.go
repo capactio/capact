@@ -6,8 +6,9 @@ import "fmt"
 var typeRevisionFieldsRegistry = map[TypeRevisionQueryFields]string{
 	TypeRevisionRootFields: `
 		revision`,
-	TypeRevisionMetadataFields: typeRevisionMetadataFields,
-	TypeRevisionSpecFields:     typeRevisionSpecFields,
+	TypeRevisionMetadataFields:          typeRevisionMetadataFields,
+	TypeRevisionSpecFields:              typeRevisionSpecFields,
+	TypeRevisionSpecAdditionalRefsField: typeRevisionSpecAdditionalRefsField,
 }
 
 // typeRevisionMetadataFields for querying TypeRevision's Metadata fields.
@@ -20,6 +21,13 @@ var typeRevisionMetadataFields = fmt.Sprintf(`
 var typeRevisionSpecFields = `
       spec {
         jsonSchema
-				additionalRefs
+        additionalRefs
+      }
+`
+
+// typeRevisionSpecAdditionalRefsField for fetching TypeRevision's spec.additionalRefs field only.
+var typeRevisionSpecAdditionalRefsField = `
+      spec {
+        additionalRefs
       }
 `

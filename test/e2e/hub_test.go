@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/internal/regexutil"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	hubclient "capact.io/capact/pkg/hub/client"
@@ -70,7 +71,7 @@ var _ = Describe("GraphQL API", func() {
 			})
 			It("entries matching or regex (cap.core.type.generic.value|cap.type.platform.cloud-foundry)", func() {
 				expTypePaths := []string{"cap.core.type.generic.value", "cap.type.platform.cloud-foundry"}
-				typePathORFilter := fmt.Sprintf(`(%s)`, strings.Join(expTypePaths, "|"))
+				typePathORFilter := regexutil.OrStringSlice(expTypePaths)
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
 					PathPattern: ptr.String(typePathORFilter),
@@ -88,6 +89,16 @@ var _ = Describe("GraphQL API", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(len(gotTypes)).Should(BeNumerically(">=", 50))
+			})
+			It("no entries if prefix is not a regex and there is no Type with such explicit path", func() {
+				const parentNode = "cap.core.type.platform"
+
+				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
+					PathPattern: ptr.String(parentNode),
+				}))
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gotTypes).To(HaveLen(0))
 			})
 		})
 		Describe("should return ImplementationRevision", func() {
@@ -817,7 +828,7 @@ func allPermutations(in []string) string {
 	for p.Next() {
 		opts = append(opts, fmt.Sprintf(`"%s"`, strings.Join(in, `", "`)))
 	}
-	return fmt.Sprintf(`(%s)`, strings.Join(opts, "|"))
+	return regexutil.OrStringSlice(opts)
 }
 
 func HasOnlyExpectTypePaths(gotTypes []*gqlpublicapi.Type, expectedPaths []string) {

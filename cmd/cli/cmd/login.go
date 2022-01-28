@@ -130,16 +130,16 @@ func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 }
 
 func loginClientSide(ctx context.Context, serverURL string, creds *credstore.Credentials) error {
-	//cli, err := client.NewClusterWithCreds(serverURL, creds)
-	//if err != nil {
-	//	return err
-	//}
+	cli, err := client.NewClusterWithCreds(serverURL, creds)
+	if err != nil {
+		return err
+	}
 
 	// Only test the credentials, the actual response is irrelevant.
-	//_, err = cli.GetAction(ctx, "logintest")
-	//if err != nil {
-	//	return errors.Wrap(err, "while executing get action to test credentials")
-	//}
+	_, err = cli.GetAction(ctx, "logintest")
+	if err != nil {
+		return errors.Wrap(err, "while executing get action to test credentials")
+	}
 
 	return nil
 }

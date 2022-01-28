@@ -12,6 +12,8 @@ const (
 	TypeRevisionMetadataFields
 	// TypeRevisionSpecFields for fetching TypeRevision's spec fields only.
 	TypeRevisionSpecFields
+	// TypeRevisionSpecAdditionalRefsField for fetching TypeRevision's spec.additionalRefs field only.
+	TypeRevisionSpecAdditionalRefsField
 
 	typeRevMaxKey
 )

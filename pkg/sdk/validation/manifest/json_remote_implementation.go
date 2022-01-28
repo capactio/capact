@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/internal/regexutil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -15,12 +16,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-const ocfPathPrefix = "cap."
+const (
+	ocfPathPrefix       = "cap."
+	typeListQueryFields = public.TypeRevisionRootFields | public.TypeRevisionSpecAdditionalRefsField
+)
 
 // ParentNodesAssociation represents relations between parent node and associated other types.
 // - key holds the parent node path
 // - value holds list of associated Types
-type ParentNodesAssociation map[string][]string
+type ParentNodesAssociation map[string][]types.ManifestRef
 
 // RemoteImplementationValidator is a validator for Implementation manifest, which calls Hub in order to do validation checks.
 type RemoteImplementationValidator struct {
@@ -128,53 +132,66 @@ func (v *RemoteImplementationValidator) resolveRequiresPath(abstractPrefix strin
 	allReqItems = append(allReqItems, reqItem.AnyOf...)
 
 	for _, requiresSubItem := range allReqItems {
-		path := strings.Join([]string{abstractPrefix, requiresSubItem.Name}, ".")
-
-		// Check if item is concrete Type. If yes, it needs to be attached to parent node. For example:
-		// requires:
-		//   cap.core.type.platform:
-		//    oneOf:
-		//      - name: cap.type.platform.cloud-foundry # this MUST be attached to `cap.core.type.platform`
-		//        revision: 0.1.0
-		if strings.HasPrefix(requiresSubItem.Name, ocfPathPrefix) {
-			path = requiresSubItem.Name
-			typesThatHasParentNode[abstractPrefix] = append(typesThatHasParentNode[abstractPrefix], path)
+		ref := types.ManifestRef{
+			Path:     strings.Join([]string{abstractPrefix, requiresSubItem.Name}, "."), // default assumption
+			Revision: requiresSubItem.Revision,
 		}
 
-		typesThatShouldExist = append(typesThatShouldExist, gqlpublicapi.ManifestReference{
-			Path:     path,
-			Revision: requiresSubItem.Revision,
-		})
+		// Check if item under requires section is a concrete Type. If yes, it needs to be attached to the parent node.
+		// For example:
+		//   requires:
+		//     cap.core.type.platform:
+		//      oneOf:
+		//        - name: cap.type.platform.cloud-foundry # this MUST be attached to `cap.core.type.platform`
+		//          revision: 0.1.0
+		if strings.HasPrefix(requiresSubItem.Name, ocfPathPrefix) {
+			ref.Path = requiresSubItem.Name
+			typesThatHasParentNode[abstractPrefix] = append(typesThatHasParentNode[abstractPrefix], ref)
+		}
+
+		typesThatShouldExist = append(typesThatShouldExist, gqlpublicapi.ManifestReference(ref))
 	}
 
 	return typesThatShouldExist, typesThatHasParentNode
 }
 
-// TODO: revisions
+// checkParentNodesAssociation check whether a given Types is associated with a given parent node.
+// BEWARE: Types not found in Hub are ignored.
 func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.Context, relations ParentNodesAssociation) (ValidationResult, error) {
 	if len(relations) == 0 {
 		return ValidationResult{}, nil
 	}
 
 	var validationErrs []error
-	for abstractNode, expAttachedTypes := range relations {
-		res, err := v.hub.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
-			PathPattern: ptr.String(abstractNode),
+	for abstractNode, expTypesRefs := range relations {
+		typesPath, expAttachedTypes := v.mapToPathAndPathRevIndex(expTypesRefs)
+
+		filter := regexutil.OrStringSlice(typesPath)
+
+		res, err := v.hub.ListTypes(ctx, public.WithTypeRevisions(typeListQueryFields), public.WithTypeFilter(gqlpublicapi.TypeFilter{
+			PathPattern: ptr.String(filter),
 		}))
 		if err != nil {
 			return ValidationResult{}, errors.Wrap(err, "while fetching Types based on abstract node")
 		}
 
-		var gotAttachedTypes []string
+		gotAttachedTypes := map[string][]string{}
 		for _, item := range res {
-			gotAttachedTypes = append(gotAttachedTypes, item.Path)
+			if item == nil {
+				continue
+			}
+			for _, rev := range item.Revisions {
+				if rev.Spec == nil {
+					continue
+				}
+				gotAttachedTypes[v.key(item.Path, rev.Revision)] = rev.Spec.AdditionalRefs
+			}
 		}
 
-		missingEntries := v.detectMissingEntriesInASet(gotAttachedTypes, expAttachedTypes)
+		missingEntries := v.detectMissingChildren(gotAttachedTypes, expAttachedTypes, abstractNode)
 		if len(missingEntries) == 0 {
 			continue
 		}
-
 		validationErrs = append(validationErrs, fmt.Errorf("%s %s %s not attached to %s abstract node",
 			english.PluralWord(len(missingEntries), "Type", ""),
 			english.WordSeries(missingEntries, "and"),
@@ -186,23 +203,49 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 	return ValidationResult{Errors: validationErrs}, nil
 }
 
-func (v *RemoteImplementationValidator) detectMissingEntriesInASet(a, b []string) []string {
-	// we don't do `len(a) != len(b)` as it only informs us that there will be definitely
-	// some missing entries, but we need to find out names
+func (v *RemoteImplementationValidator) mapToPathAndPathRevIndex(in []types.ManifestRef) ([]string, []string) {
+	var (
+		paths       []string
+		pathsRevIdx []string
+	)
 
-	aSetIndex := make(map[string]struct{}, len(a))
-	for _, val := range a {
-		aSetIndex[val] = struct{}{}
+	for _, expType := range in {
+		paths = append(paths, expType.Path)
+		pathsRevIdx = append(pathsRevIdx, v.key(expType.Path, expType.Revision))
 	}
 
-	var missingEntries []string
-	for _, val := range b {
-		if _, found := aSetIndex[val]; found {
+	return paths, pathsRevIdx
+}
+
+func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes map[string][]string, expAttachedTypes []string, expParent string) []string {
+	var missingChildren []string
+
+	for _, exp := range expAttachedTypes {
+		gotParents, found := gotAttachedTypes[exp]
+		if !found {
+			// Type not found in Hub, but it's not our job to report that
 			continue
 		}
 
-		missingEntries = append(missingEntries, val)
+		if v.stringSliceContains(gotParents, expParent) {
+			continue
+		}
+
+		missingChildren = append(missingChildren, exp)
 	}
 
-	return missingEntries
+	return missingChildren
+}
+
+func (v *RemoteImplementationValidator) stringSliceContains(slice []string, elem string) bool {
+	for _, parent := range slice {
+		if parent == elem {
+			return true
+		}
+	}
+	return false
+}
+
+func (v *RemoteImplementationValidator) key(a, b string) string {
+	return fmt.Sprintf("%s:%s", a, b)
 }
