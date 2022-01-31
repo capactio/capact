@@ -37,7 +37,7 @@ func (v *TypeValidator) Do(_ context.Context, _ types.ManifestMetadata, jsonByte
 		if strings.HasPrefix(ref, coreTypePrefix) || strings.HasPrefix(ref, customTypePrefix) {
 			continue
 		}
-		resNodes = append(resNodes, fmt.Errorf("spec.additionalRefs: %q is not allowed. It can refers only to parent node under %q or %q", ref, coreTypePrefix, customTypePrefix))
+		resNodes = append(resNodes, fmt.Errorf("spec.additionalRefs: %q is not allowed. It can refer only to a parent node under %q or %q", ref, coreTypePrefix, customTypePrefix))
 	}
 
 	resSchema, err := checkJSONSchema07Definition(jsonSchemaCollection{

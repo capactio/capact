@@ -65,8 +65,8 @@ func (v *RemoteTypeValidator) checkAdditionalRefs(ctx context.Context, entity ty
 		return res, nil
 	}
 
-	// AdditionalRefs should point to a concrete path.
-	// It can point only to parent node.
+	// AdditionalRefs cannot point to a concrete path.
+	// It must point to a parent (abstract) node.
 	filter := regexutil.OrStringSlice(entity.Spec.AdditionalRefs)
 	gotTypes, err := v.hub.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
 		PathPattern: ptr.String(filter),
@@ -77,7 +77,7 @@ func (v *RemoteTypeValidator) checkAdditionalRefs(ctx context.Context, entity ty
 	}
 
 	for _, item := range gotTypes {
-		res.Errors = append(res.Errors, fmt.Errorf("%s cannot be used as parent node as it resolves to concrete Type", item.Path))
+		res.Errors = append(res.Errors, fmt.Errorf("%q cannot be used as parent node as it resolves to concrete Type", item.Path))
 	}
 	return res, nil
 }

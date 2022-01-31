@@ -56,14 +56,14 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 			manifestPath: "testdata/invalid-implementation.yaml",
 			expectedValidationErrorMsgs: []string{
 				"OCFSchemaValidator: spec: appVersion is required",
-				"RemoteImplementationValidator: Type cap.type.platform.cloud-foundry:0.1.0 is not attached to cap.core.type.platform abstract node",
+				`RemoteImplementationValidator: Type "cap.type.database.postgresql.config:0.1.0" is not attached to "cap.core.type.platform" parent node`,
 				"RemoteImplementationValidator: manifest revision 'cap.interface.cms.wordpress:0.1.0' doesn't exist in Hub",
 			},
 			hubCli: fixHub(t, []*graphql.Type{
-				fixGQLType("cap.type.platform.cloud-foundry", "0.1.0", ""),
+				fixGQLType("cap.type.database.postgresql.config", "0.1.0", ""),
 			}, map[graphql.ManifestReference]bool{
-				manifestRef("cap.interface.cms.wordpress"):     false,
-				manifestRef("cap.type.platform.cloud-foundry"): true,
+				manifestRef("cap.interface.cms.wordpress"):         false,
+				manifestRef("cap.type.database.postgresql.config"): true,
 			}, nil),
 		},
 		"Invalid Interface": {
@@ -93,8 +93,8 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 		"Invalid additionalRefs in Type": {
 			manifestPath: "testdata/invalid-type_additionalRefs.yaml",
 			expectedValidationErrorMsgs: []string{
-				`TypeValidator: spec.additionalRefs: "cap.interface.postgresql" is not allowed. It can refers only to parent node under "cap.core.type." or "cap.type."`,
-				`RemoteTypeValidator: cap.core.type.platform.kubernetes cannot be used as parent node as it resolves to concrete Type`,
+				`TypeValidator: spec.additionalRefs: "cap.interface.postgresql" is not allowed. It can refer only to a parent node under "cap.core.type." or "cap.type."`,
+				`RemoteTypeValidator: "cap.core.type.platform.kubernetes" cannot be used as parent node as it resolves to concrete Type`,
 			},
 			hubCli: fixHub(t, []*graphql.Type{
 				fixGQLType("cap.core.type.platform.kubernetes", "0.1.0", ""),

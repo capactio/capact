@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	ocfPathPrefix       = "cap."
 	typeListQueryFields = public.TypeRevisionRootFields | public.TypeRevisionSpecAdditionalRefsField
 )
 
@@ -31,6 +30,8 @@ type RemoteImplementationValidator struct {
 	hub Hub
 }
 
+type validateFn func(ctx context.Context, entity types.Implementation) (ValidationResult, error)
+
 // NewRemoteImplementationValidator creates new RemoteImplementationValidator.
 func NewRemoteImplementationValidator(hub Hub) *RemoteImplementationValidator {
 	return &RemoteImplementationValidator{
@@ -40,12 +41,26 @@ func NewRemoteImplementationValidator(hub Hub) *RemoteImplementationValidator {
 
 // Do is a method which triggers the validation.
 func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.ManifestMetadata, jsonBytes []byte) (ValidationResult, error) {
+	results := ValidationResult{}
 	var entity types.Implementation
 	err := json.Unmarshal(jsonBytes, &entity)
 	if err != nil {
 		return ValidationResult{}, errors.Wrap(err, "while unmarshalling JSON into Implementation type")
 	}
+	validateFns := []validateFn{v.checkManifestRevisionsExist, v.checkRequiresParentNodes}
 
+	for _, fn := range validateFns {
+		validationResults, err := fn(ctx, entity)
+		if err != nil {
+			return ValidationResult{}, err
+		}
+		results.Errors = append(results.Errors, validationResults.Errors...)
+	}
+
+	return results, nil
+}
+
+func (v *RemoteImplementationValidator) checkManifestRevisionsExist(ctx context.Context, entity types.Implementation) (ValidationResult, error) {
 	var manifestRefsToCheck []gqlpublicapi.ManifestReference
 
 	// Attributes
@@ -86,14 +101,9 @@ func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.Manifest
 	}
 
 	// Requires
-	parentNodeTypesToCheck := ParentNodesAssociation{}
 	for requiresKey, reqItem := range entity.Spec.Requires {
-		typesThatShouldExist, typesThatHasParentNode := v.resolveRequiresPath(requiresKey, reqItem)
+		typesThatShouldExist, _ := v.resolveRequiresPath(requiresKey, reqItem)
 		manifestRefsToCheck = append(manifestRefsToCheck, typesThatShouldExist...)
-
-		for k, v := range typesThatHasParentNode {
-			parentNodeTypesToCheck[k] = append(parentNodeTypesToCheck[k], v...)
-		}
 	}
 
 	// Imports
@@ -106,19 +116,20 @@ func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.Manifest
 		}
 	}
 
-	// TODO: refactor after https://github.com/capactio/capact/pull/610
-	resAssociation, err := v.checkParentNodesAssociation(ctx, parentNodeTypesToCheck)
-	if err != nil {
-		return ValidationResult{}, err
-	}
-	resExist, err := checkManifestRevisionsExist(ctx, v.hub, manifestRefsToCheck)
-	if err != nil {
-		return ValidationResult{}, err
+	return checkManifestRevisionsExist(ctx, v.hub, manifestRefsToCheck)
+}
+
+func (v *RemoteImplementationValidator) checkRequiresParentNodes(ctx context.Context, entity types.Implementation) (ValidationResult, error) {
+	parentNodeTypesToCheck := ParentNodesAssociation{}
+	for requiresKey, reqItem := range entity.Spec.Requires {
+		_, typesThatHasParentNode := v.resolveRequiresPath(requiresKey, reqItem)
+
+		for k, v := range typesThatHasParentNode {
+			parentNodeTypesToCheck[k] = append(parentNodeTypesToCheck[k], v...)
+		}
 	}
 
-	return ValidationResult{
-		Errors: append(resAssociation.Errors, resExist.Errors...),
-	}, nil
+	return v.checkParentNodesAssociation(ctx, parentNodeTypesToCheck)
 }
 
 // Name returns the validator name.
@@ -126,7 +137,7 @@ func (v *RemoteImplementationValidator) Name() string {
 	return "RemoteImplementationValidator"
 }
 
-func (v *RemoteImplementationValidator) resolveRequiresPath(abstractPrefix string, reqItem types.Require) ([]gqlpublicapi.ManifestReference, ParentNodesAssociation) {
+func (v *RemoteImplementationValidator) resolveRequiresPath(parentPrefix string, reqItem types.Require) ([]gqlpublicapi.ManifestReference, ParentNodesAssociation) {
 	var (
 		typesThatShouldExist   []gqlpublicapi.ManifestReference
 		typesThatHasParentNode = ParentNodesAssociation{}
@@ -139,7 +150,7 @@ func (v *RemoteImplementationValidator) resolveRequiresPath(abstractPrefix strin
 
 	for _, requiresSubItem := range allReqItems {
 		ref := types.ManifestRef{
-			Path:     strings.Join([]string{abstractPrefix, requiresSubItem.Name}, "."), // default assumption
+			Path:     strings.Join([]string{parentPrefix, requiresSubItem.Name}, "."), // default assumption
 			Revision: requiresSubItem.Revision,
 		}
 
@@ -150,9 +161,9 @@ func (v *RemoteImplementationValidator) resolveRequiresPath(abstractPrefix strin
 		//      oneOf:
 		//        - name: cap.type.platform.cloud-foundry # this MUST be attached to `cap.core.type.platform`
 		//          revision: 0.1.0
-		if strings.HasPrefix(requiresSubItem.Name, ocfPathPrefix) {
+		if strings.HasPrefix(requiresSubItem.Name, types.OCFPathPrefix) {
 			ref.Path = requiresSubItem.Name
-			typesThatHasParentNode[abstractPrefix] = append(typesThatHasParentNode[abstractPrefix], ref)
+			typesThatHasParentNode[parentPrefix] = append(typesThatHasParentNode[parentPrefix], ref)
 		}
 
 		typesThatShouldExist = append(typesThatShouldExist, gqlpublicapi.ManifestReference(ref))
@@ -169,7 +180,7 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 	}
 
 	var validationErrs []error
-	for abstractNode, expTypesRefs := range relations {
+	for parentNode, expTypesRefs := range relations {
 		typesPath, expAttachedTypes := v.mapToPathAndPathRevIndex(expTypesRefs)
 
 		filter := regexutil.OrStringSlice(typesPath)
@@ -177,7 +188,7 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 			PathPattern: ptr.String(filter),
 		}))
 		if err != nil {
-			return ValidationResult{}, errors.Wrap(err, "while fetching Types based on abstract node")
+			return ValidationResult{}, errors.Wrap(err, "while fetching Types based on parent node")
 		}
 
 		gotAttachedTypes := map[string][]string{}
@@ -193,15 +204,15 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 			}
 		}
 
-		missingEntries := v.detectMissingChildren(gotAttachedTypes, expAttachedTypes, abstractNode)
+		missingEntries := v.detectMissingChildren(gotAttachedTypes, expAttachedTypes, parentNode)
 		if len(missingEntries) == 0 {
 			continue
 		}
-		validationErrs = append(validationErrs, fmt.Errorf("%s %s %s not attached to %s abstract node",
+		validationErrs = append(validationErrs, fmt.Errorf("%s %s %s not attached to %q parent node",
 			english.PluralWord(len(missingEntries), "Type", ""),
 			english.WordSeries(missingEntries, "and"),
 			english.PluralWord(len(missingEntries), "is", "are"),
-			abstractNode,
+			parentNode,
 		))
 	}
 
@@ -236,7 +247,7 @@ func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes m
 			continue
 		}
 
-		missingChildren = append(missingChildren, exp)
+		missingChildren = append(missingChildren, fmt.Sprintf("%q", exp))
 	}
 
 	return missingChildren

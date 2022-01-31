@@ -44,7 +44,7 @@ func TestCheckParentNodesAssociation(t *testing.T) {
 				},
 			},
 
-			expErrors: []error{errors.New("Type cap.type.platform.cloud-foundry:0.2.0 is not attached to cap.core.type.platform abstract node")},
+			expErrors: []error{errors.New(`Type "cap.type.platform.cloud-foundry:0.2.0" is not attached to "cap.core.type.platform" parent node`)},
 		},
 		"should detect that one Type is not attached to parent node (singular)": {
 			knownTypes: []*gqlpublicapi.Type{
@@ -58,7 +58,7 @@ func TestCheckParentNodesAssociation(t *testing.T) {
 				},
 			},
 
-			expErrors: []error{errors.New("Type cap.type.platform.cloud-foundry:0.1.0 is not attached to cap.core.type.platform abstract node")},
+			expErrors: []error{errors.New(`Type "cap.type.platform.cloud-foundry:0.1.0" is not attached to "cap.core.type.platform" parent node`)},
 		},
 		"should detect that both Types are not attached to parent node (plural)": {
 			knownTypes: []*gqlpublicapi.Type{
@@ -75,7 +75,7 @@ func TestCheckParentNodesAssociation(t *testing.T) {
 				},
 			},
 
-			expErrors: []error{errors.New("Types cap.type.platform.cloud-foundry:0.1.0, cap.type.platform.nomad:0.1.0 and cap.type.platform.mesos:0.1.0 are not attached to cap.core.type.platform abstract node")},
+			expErrors: []error{errors.New(`Types "cap.type.platform.cloud-foundry:0.1.0", "cap.type.platform.nomad:0.1.0" and "cap.type.platform.mesos:0.1.0" are not attached to "cap.core.type.platform" parent node`)},
 		},
 
 		"should not report problems with parents for unknown Types": {

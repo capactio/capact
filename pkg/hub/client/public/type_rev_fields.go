@@ -11,22 +11,22 @@ var typeRevisionFieldsRegistry = map[TypeRevisionQueryFields]string{
 	TypeRevisionSpecAdditionalRefsField: typeRevisionSpecAdditionalRefsField,
 }
 
-// typeRevisionMetadataFields for querying TypeRevision's Metadata fields.
+// typeRevisionMetadataFields specifies TypeRevision's Metadata fields.
 var typeRevisionMetadataFields = fmt.Sprintf(`
       metadata {
         %s
       }`, genericMetadataFields)
 
-// typeRevisionSpecFields for fetching TypeRevision's spec fields only.
-var typeRevisionSpecFields = `
+// typeRevisionSpecFields specifies TypeRevision's spec fields only.
+const typeRevisionSpecFields = `
       spec {
         jsonSchema
         additionalRefs
       }
 `
 
-// typeRevisionSpecAdditionalRefsField for fetching TypeRevision's spec.additionalRefs field only.
-var typeRevisionSpecAdditionalRefsField = `
+// typeRevisionSpecAdditionalRefsField specifies TypeRevision's spec.additionalRefs field only.
+const typeRevisionSpecAdditionalRefsField = `
       spec {
         additionalRefs
       }

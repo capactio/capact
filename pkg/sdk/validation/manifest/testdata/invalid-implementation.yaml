@@ -22,7 +22,7 @@ spec:
   requires:
     cap.core.type.platform:
       oneOf:
-        - name: cap.type.platform.cloud-foundry
+        - name: cap.type.database.postgresql.config
           revision: 0.1.0
 
   implements:
