@@ -1,0 +1,43 @@
+ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: Interface
+metadata:
+  prefix: "cap.interface.{{ .Prefix }}"
+  name: "{{ .Name }}"
+  displayName: "{{ .Name }}"
+  description: "{{ .Name }} action for {{ .Prefix }}"
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
+  maintainers:
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
+
+spec:
+  input:
+    parameters:
+      input-parameters:
+        typeRef:
+          path: {{if .InputRef.Path}}{{ .InputRef.Path }}{{else}}cap.type. # TODO(ContentDeveloper): Put here the path of the input Type{{end}}
+          revision: {{if .InputRef.Revision}}{{ .InputRef.Revision }}{{else}}0.1.0{{end}}
+    typeInstances: {}
+
+  output:
+    typeInstances:
+    {{- if .OutputRef.Path}}
+      config:
+        typeRef:
+          path: {{ .OutputRef.Path }}
+          revision: {{if .OutputRef.Revision}}{{ .OutputRef.Revision }}{{else}}0.1.0{{end}}
+    {{else}} {} # TODO(ContentDeveloper): Configure here the output typeInstance if needed{{end}}

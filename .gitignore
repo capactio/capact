@@ -53,10 +53,6 @@ coverage.txt
 # Backup files
 *.bak
 
-# UUID file created by `setup-gcloud` GitHub Action when `export_default_credentials` is enabled
-# Read more at https://github.com/GoogleCloudPlatform/github-actions/tree/master/setup-gcloud
-/[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*
-
 # Vim
 *.swp
 *.swo

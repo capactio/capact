@@ -1,0 +1,72 @@
+ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.{{ .Prefix }}"
+  name: {{ .Name }}
+  displayName: "{{ .Name }} Action"
+  description: "{{ .Name }} Action"
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
+  maintainers:
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
+  license:
+    name: "{{ .Metadata.License.Name }}"
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      additional-parameters:
+        typeRef:
+          path: cap.type.{{ .Prefix }}.{{ .AdditionalInputName }}
+          revision: 0.1.0
+
+  outputTypeInstanceRelations:
+      config: {}
+
+  implements:
+    - path: {{if .InterfaceRef.Path}}{{ .InterfaceRef.Path }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
+      revision: {{if .InterfaceRef.Revision}}{{ .InterfaceRef.Revision }}{{else}}0.1.0{{end}}
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: {{ .Name }}
+        templates:
+          - name: {{ .Name }}
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+              outputs:
+                artifacts: [] # TODO(ContentDeveloper): Define output artifacts if needed
+            steps: [] # TODO(ContentDeveloper): Define steps for the workflow template

@@ -1,0 +1,25 @@
+ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: InterfaceGroup
+metadata:
+  prefix: "cap.interface{{ if .Prefix }}.{{ .Prefix }}{{ end }}"
+  name: "{{ .Name }}"
+  displayName: "{{ .Name }}"
+  description: "{{ .Name }} related Interfaces"
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
+  maintainers:
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}

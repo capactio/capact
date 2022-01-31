@@ -1,0 +1,31 @@
+ocfVersion: 0.0.1
+revision: 0.2.0
+kind: Type
+metadata:
+  prefix: "cap.type.group"
+  name: test-input
+  displayName: Input for group.test
+  description: Input for the "group.test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  iconURL: https://example.com/icon.png
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "required": [],
+        "properties": {
+          "example": {
+            "$id": "#/properties/example",
+            "type": "string",
+            "description": "Example field"
+          }
+        }
+      }

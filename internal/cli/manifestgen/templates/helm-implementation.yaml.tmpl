@@ -1,0 +1,145 @@
+ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.{{ .Prefix }}"
+  name: {{ .Name }}
+  displayName: "{{ .Name }} Action"
+  description: "{{ .Name }} Action"
+  {{- if .Metadata.DocumentationURL }}
+  documentationURL: {{.Metadata.DocumentationURL}}
+  {{- end}}
+  {{- if .Metadata.SupportURL }}
+  supportURL: {{.Metadata.SupportURL}}
+  {{- end}}
+  {{- if .Metadata.IconURL }}
+  iconURL: {{.Metadata.IconURL}}
+  {{- end}}
+  {{- if .Metadata.Maintainers }}
+  maintainers:
+  {{- range .Metadata.Maintainers }}
+    - email: {{.Email}}
+      name: {{.Name}}
+      url: {{.URL}}
+  {{- end}}
+  {{- end}}
+  license:
+    name: "{{ .Metadata.License.Name }}"
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      additional-parameters:
+        typeRef:
+          path: "cap.type.{{ .Prefix }}.{{ .Name }}-input-parameters"
+          revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    config:
+      uses:
+        - helm-release
+
+  implements:
+    - path: {{if .InterfaceRef.Path}}{{ .InterfaceRef.Path }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
+      revision: {{if .InterfaceRef.Revision}}{{ .InterfaceRef.Revision }}{{else}}0.1.0{{end}}
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: deploy
+        templates:
+          - name: deploy
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+            outputs:
+              artifacts: []
+            steps:
+              - - name: prepare-parameters
+                  template: prepare-parameters
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{`{{inputs.artifacts.input-parameters}}`}}"
+                      - name: additional-parameters
+                        from: "{{`{{inputs.artifacts.additional-parameters}}`}}"
+                        optional: true
+
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{`{{steps.prepare-parameters.outputs.artifacts.merged}}`}}"
+                      - name: configuration
+                        raw:
+                          data:
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "{{ .HelmChartName }}"
+                              repo: "{{ .HelmRepoURL }}"
+                              version: "{{ .HelmChartVersion }}"
+                            values: # TODO(ContentDeveloper): Adjust the input values to use parameters from the Interface
+{{ .ValuesYAML | indent 30 }}
+                            output:
+                              goTemplate: |
+                                # TODO(ContentDeveloper): Add output template in YAML
+
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: helm-release
+                      from: helm-release
+                    - name: config
+                      from: additional
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{`{{steps.create-helm-args.outputs.artifacts.render}}`}}"
+                      - name: runner-context
+                        from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
+
+          - name: prepare-parameters
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: /yamls/input.yaml
+                - name: additional-parameters
+                  path: /yamls/additionalinput.yaml
+                  optional: true
+            container:
+              image: ghcr.io/capactio/pr/infra/merger:PR-428
+            outputs:
+              artifacts:
+              - name: merged
+                path: /merged.yaml

@@ -1,0 +1,14 @@
+ocfVersion: 0.0.1
+revision: 0.2.0
+kind: InterfaceGroup
+metadata:
+  prefix: "cap.interface"
+  name: "grouptest"
+  displayName: "grouptest"
+  description: "grouptest related Interfaces"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com

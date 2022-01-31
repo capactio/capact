@@ -1,0 +1,15 @@
+ocfVersion: 0.0.1
+revision: 0.2.0
+kind: InterfaceGroup
+metadata:
+  prefix: "cap.interface"
+  name: "group"
+  displayName: "group"
+  description: "group related Interfaces"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  iconURL: https://example.com/icon.png
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com

@@ -1,5 +1,7 @@
 package capact
 
+import "fmt"
+
 // Using Yaml as a string. It's more readable than bunch map[string]interface{}
 // Not using `embed` package as it does not support `..`
 const (
@@ -54,16 +56,13 @@ cert-manager:
     enabled: true
     fsGroup: 1001
 `
+)
 
-	capactLocalClusterOverridesYAML = `
+var (
+	capactLocalClusterOverridesYAML = fmt.Sprintf(`
 global:
-  domainName: "capact.local"
-gateway:
-  ingress:
-    annotations:
-      cors:
-        enabled: true
-`
+  domainName: "%s"
+`, localDomain)
 )
 
 const (

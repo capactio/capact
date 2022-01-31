@@ -60,3 +60,19 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Get Dashboard URL
+*/}}
+{{- define "capact.dashboardURL" -}}
+{{- if .Values.dashboard.ingress.enabled }}
+{{- printf "https://%s.%s" .Values.dashboard.ingress.host .Values.global.domainName }}
+{{- else }}
+{{/*
+TODO: Naive temporary implementation. After upgrade to Helm 3.7 or newer, use simply:
+    {{- printf "http://%s.%s:%d" (include "dashboard.fullname" .Subcharts.dashboard) .Release.Namespace .Values.dashboard.service.port }}
+    See issue: https://github.com/helm/helm/pull/9957
+*/}}
+{{- printf "http://%s-dashboard.%s:%d" .Release.Name .Release.Namespace .Values.dashboard.service.port }}
+{{- end }}
+{{- end }}
