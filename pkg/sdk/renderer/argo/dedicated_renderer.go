@@ -75,7 +75,11 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedHubClien
 	return r
 }
 
-func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) (*Workflow, *WorkflowStep) {
+func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) (*Workflow, *WorkflowStep, error) {
+	if workflow.WorkflowSpec == nil {
+		return nil, nil, fmt.Errorf("workflowSpec for Argo cannot be empty")
+	}
+
 	r.entrypointStep = &WorkflowStep{
 		WorkflowStep: &wfv1.WorkflowStep{
 			Name:     "start-entrypoint",
@@ -98,7 +102,7 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) (*Wor
 	workflow.Entrypoint = r.rootTemplate.Name
 	workflow.Templates = append(workflow.Templates, r.rootTemplate)
 
-	return workflow, r.entrypointStep
+	return workflow, r.entrypointStep, nil
 }
 
 func (r *dedicatedRenderer) AppendAdditionalInputTypeInstances(typeInstances []types.InputTypeInstanceRef) {
@@ -395,6 +399,9 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 	workflow, err := r.createWorkflow(implementation)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "while unmarshaling Argo Workflow from OCF Implementation")
+	}
+	if workflow.WorkflowSpec == nil {
+		return nil, nil, fmt.Errorf("workflowSpec for Argo cannot be empty")
 	}
 
 	artifactsNameMapping := map[string]string{}

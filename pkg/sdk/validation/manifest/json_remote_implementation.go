@@ -152,7 +152,7 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 	}
 
 	//3. get inputs from entrypoint workflow template
-	workflow, err := decodeImplArgsToArgoWorkflow(entity.Spec.Action.Args)
+	workflow, err := v.decodeImplArgsToArgoWorkflow(entity.Spec.Action.Args)
 	if err != nil {
 		return ValidationResult{}, errors.Wrap(err, "while decoding Implementation arguments to Argo workflow")
 	}
@@ -161,7 +161,7 @@ func (v *RemoteImplementationValidator) validateInputArtifactsNames(ctx context.
 		if err != nil {
 			return ValidationResult{}, errors.Wrap(err, "while getting entrypoint index from workflow")
 		}
-		workflowArtifacts = append(workflowArtifacts, workflow.Templates[idx].Inputs.Artifacts...)
+		workflowArtifacts = workflow.Templates[idx].Inputs.Artifacts
 	}
 
 	//4. verify if the inputs from Implementation and Interface match with Argo workflow artifacts
@@ -199,7 +199,8 @@ func (v *RemoteImplementationValidator) fetchInterfaceInput(ctx context.Context,
 
 	return *iface.Spec.Input, nil
 }
-func decodeImplArgsToArgoWorkflow(implArgs map[string]interface{}) (*argo.Workflow, error) {
+
+func (v *RemoteImplementationValidator) decodeImplArgsToArgoWorkflow(implArgs map[string]interface{}) (*argo.Workflow, error) {
 	var decodedImplArgs = struct {
 		Workflow argo.Workflow `json:"workflow"`
 	}{}
