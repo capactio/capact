@@ -303,7 +303,11 @@ enum ActionStatusPhase {
 }
 
 input PolicyInput {
-  rules: [RulesForInterfaceInput!]!
+	interface: InterfacePolicyInput
+}
+
+input InterfacePolicyInput {
+	rules: [RulesForInterfaceInput!]!
 }
 
 input RulesForInterfaceInput {
@@ -345,7 +349,11 @@ input PolicyRuleImplementationConstraintsInput {
 }
 
 type Policy {
-  rules: [RulesForInterface!]!
+  interface: InterfacePolicy
+}
+
+type InterfacePolicy {
+	rules: [RulesForInterface!]!
 }
 
 type RulesForInterface {

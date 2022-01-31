@@ -21,23 +21,25 @@ func TestToPolicy(t *testing.T) {
 func workflowPolicyWithAdditionalInput(input map[string]interface{}) WorkflowPolicy {
 	implementation := "cap.implementation.bitnami.postgresql.install"
 	return WorkflowPolicy{
-		Rules: WorkflowRulesList{
-			WorkflowRulesForInterface{
-				Interface: WorkflowInterfaceRef{
-					ManifestRef: &types.ManifestRefWithOptRevision{
-						Path: "cap.interface.database.postgresql.install",
-					},
-				},
-				OneOf: []WorkflowRule{
-					{
-						ImplementationConstraints: ImplementationConstraints{
-							Path: &implementation,
+		Interface: WorkflowInterfacePolicy{
+			Rules: WorkflowRulesList{
+				WorkflowRulesForInterface{
+					Interface: WorkflowInterfaceRef{
+						ManifestRef: &types.ManifestRefWithOptRevision{
+							Path: "cap.interface.database.postgresql.install",
 						},
-						Inject: &WorkflowInjectData{
-							AdditionalParameters: []AdditionalParametersToInject{
-								{
-									Name:  "additional-parameters",
-									Value: input,
+					},
+					OneOf: []WorkflowRule{
+						{
+							ImplementationConstraints: ImplementationConstraints{
+								Path: &implementation,
+							},
+							Inject: &WorkflowInjectData{
+								AdditionalParameters: []AdditionalParametersToInject{
+									{
+										Name:  "additional-parameters",
+										Value: input,
+									},
 								},
 							},
 						},
@@ -51,21 +53,23 @@ func workflowPolicyWithAdditionalInput(input map[string]interface{}) WorkflowPol
 func policyWithAdditionalInput(input map[string]interface{}) Policy {
 	implementation := "cap.implementation.bitnami.postgresql.install"
 	return Policy{
-		Rules: RulesList{
-			RulesForInterface{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.interface.database.postgresql.install",
-				},
-				OneOf: []Rule{
-					{
-						ImplementationConstraints: ImplementationConstraints{
-							Path: &implementation,
-						},
-						Inject: &InjectData{
-							AdditionalParameters: []AdditionalParametersToInject{
-								{
-									Name:  "additional-parameters",
-									Value: input,
+		Interface: InterfacePolicy{
+			Rules: RulesList{
+				RulesForInterface{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.interface.database.postgresql.install",
+					},
+					OneOf: []Rule{
+						{
+							ImplementationConstraints: ImplementationConstraints{
+								Path: &implementation,
+							},
+							Inject: &InjectData{
+								AdditionalParameters: []AdditionalParametersToInject{
+									{
+										Name:  "additional-parameters",
+										Value: input,
+									},
 								},
 							},
 						},

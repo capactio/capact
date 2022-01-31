@@ -102,6 +102,10 @@ type ComplexityRoot struct {
 		TypeRef func(childComplexity int) int
 	}
 
+	InterfacePolicy struct {
+		Rules func(childComplexity int) int
+	}
+
 	ManifestReference struct {
 		Path     func(childComplexity int) int
 		Revision func(childComplexity int) int
@@ -128,7 +132,7 @@ type ComplexityRoot struct {
 	}
 
 	Policy struct {
-		Rules func(childComplexity int) int
+		Interface func(childComplexity int) int
 	}
 
 	PolicyRule struct {
@@ -436,6 +440,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InputTypeInstanceToProvide.TypeRef(childComplexity), true
 
+	case "InterfacePolicy.rules":
+		if e.complexity.InterfacePolicy.Rules == nil {
+			break
+		}
+
+		return e.complexity.InterfacePolicy.Rules(childComplexity), true
+
 	case "ManifestReference.path":
 		if e.complexity.ManifestReference.Path == nil {
 			break
@@ -562,12 +573,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OutputTypeInstanceDetails.TypeRef(childComplexity), true
 
-	case "Policy.rules":
-		if e.complexity.Policy.Rules == nil {
+	case "Policy.interface":
+		if e.complexity.Policy.Interface == nil {
 			break
 		}
 
-		return e.complexity.Policy.Rules(childComplexity), true
+		return e.complexity.Policy.Interface(childComplexity), true
 
 	case "PolicyRule.implementationConstraints":
 		if e.complexity.PolicyRule.ImplementationConstraints == nil {
@@ -1081,7 +1092,11 @@ enum ActionStatusPhase {
 }
 
 input PolicyInput {
-  rules: [RulesForInterfaceInput!]!
+	interface: InterfacePolicyInput
+}
+
+input InterfacePolicyInput {
+	rules: [RulesForInterfaceInput!]!
 }
 
 input RulesForInterfaceInput {
@@ -1123,7 +1138,11 @@ input PolicyRuleImplementationConstraintsInput {
 }
 
 type Policy {
-  rules: [RulesForInterface!]!
+  interface: InterfacePolicy
+}
+
+type InterfacePolicy {
+	rules: [RulesForInterface!]!
 }
 
 type RulesForInterface {
@@ -2523,6 +2542,41 @@ func (ec *executionContext) _InputTypeInstanceToProvide_typeRef(ctx context.Cont
 	return ec.marshalNManifestReference2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _InterfacePolicy_rules(ctx context.Context, field graphql.CollectedField, obj *InterfacePolicy) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InterfacePolicy",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rules, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*RulesForInterface)
+	fc.Result = res
+	return ec.marshalNRulesForInterface2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ManifestReference_path(ctx context.Context, field graphql.CollectedField, obj *ManifestReference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3024,7 +3078,7 @@ func (ec *executionContext) _OutputTypeInstanceDetails_typeRef(ctx context.Conte
 	return ec.marshalNManifestReference2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_rules(ctx context.Context, field graphql.CollectedField, obj *Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_interface(ctx context.Context, field graphql.CollectedField, obj *Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3042,21 +3096,18 @@ func (ec *executionContext) _Policy_rules(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rules, nil
+		return obj.Interface, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*RulesForInterface)
+	res := resTmp.(*InterfacePolicy)
 	fc.Result = res
-	return ec.marshalNRulesForInterface2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceᚄ(ctx, field.Selections, res)
+	return ec.marshalOInterfacePolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PolicyRule_implementationConstraints(ctx context.Context, field graphql.CollectedField, obj *PolicyRule) (ret graphql.Marshaler) {
@@ -5096,6 +5147,26 @@ func (ec *executionContext) unmarshalInputInputTypeInstanceData(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInterfacePolicyInput(ctx context.Context, obj interface{}) (InterfacePolicyInput, error) {
+	var it InterfacePolicyInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "rules":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rules"))
+			it.Rules, err = ec.unmarshalNRulesForInterfaceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputManifestReferenceInput(ctx context.Context, obj interface{}) (ManifestReferenceInput, error) {
 	var it ManifestReferenceInput
 	var asMap = obj.(map[string]interface{})
@@ -5130,11 +5201,11 @@ func (ec *executionContext) unmarshalInputPolicyInput(ctx context.Context, obj i
 
 	for k, v := range asMap {
 		switch k {
-		case "rules":
+		case "interface":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rules"))
-			it.Rules, err = ec.unmarshalNRulesForInterfaceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceInputᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interface"))
+			it.Interface, err = ec.unmarshalOInterfacePolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicyInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5632,6 +5703,33 @@ func (ec *executionContext) _InputTypeInstanceToProvide(ctx context.Context, sel
 	return out
 }
 
+var interfacePolicyImplementors = []string{"InterfacePolicy"}
+
+func (ec *executionContext) _InterfacePolicy(ctx context.Context, sel ast.SelectionSet, obj *InterfacePolicy) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, interfacePolicyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InterfacePolicy")
+		case "rules":
+			out.Values[i] = ec._InterfacePolicy_rules(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var manifestReferenceImplementors = []string{"ManifestReference"}
 
 func (ec *executionContext) _ManifestReference(ctx context.Context, sel ast.SelectionSet, obj *ManifestReference) graphql.Marshaler {
@@ -5797,11 +5895,8 @@ func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, o
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Policy")
-		case "rules":
-			out.Values[i] = ec._Policy_rules(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "interface":
+			out.Values[i] = ec._Policy_interface(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7409,6 +7504,21 @@ func (ec *executionContext) unmarshalOInputTypeInstanceData2ᚕᚖcapactᚗioᚋ
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalOInterfacePolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicy(ctx context.Context, sel ast.SelectionSet, v *InterfacePolicy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._InterfacePolicy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInterfacePolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicyInput(ctx context.Context, v interface{}) (*InterfacePolicyInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputInterfacePolicyInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOJSON2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx context.Context, v interface{}) (*JSON, error) {

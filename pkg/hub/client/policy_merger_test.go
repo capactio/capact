@@ -27,48 +27,50 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		{
 			name: "only global policy",
 			global: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"name": "capact",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"name": "capact",
+													},
 												},
 											},
 										},
-									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.gcp.auth.service-account",
-												Revision: "0.1.0",
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.gcp.auth.service-account",
+													Revision: "0.1.0",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -80,48 +82,50 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			action: policy.ActionPolicy{},
 			expected: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"name": "capact",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"name": "capact",
+													},
 												},
 											},
 										},
-									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.gcp.auth.service-account",
-												Revision: "0.1.0",
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.gcp.auth.service-account",
+													Revision: "0.1.0",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -136,47 +140,49 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		{
 			name: "only action policy",
 			action: policy.ActionPolicy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"address": "1.2.3.4",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"address": "1.2.3.4",
+													},
 												},
 											},
 										},
-									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -188,47 +194,49 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			global: policy.Policy{},
 			expected: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"address": "1.2.3.4",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"address": "1.2.3.4",
+													},
 												},
 											},
 										},
-									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -243,48 +251,50 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		{
 			name: "action first then global for the same interface",
 			action: policy.ActionPolicy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"address": "1.2.3.4",
-													"alias":   "karpatka",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"address": "1.2.3.4",
+														"alias":   "karpatka",
+													},
 												},
 											},
 										},
-									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123-111",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123-111",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -295,56 +305,58 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 				},
 			},
 			global: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"name":  "capact",
-													"alias": "capactio",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"name":  "capact",
+														"alias": "capactio",
+													},
+												},
+											},
+										},
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123-222",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
+												},
+											},
+										},
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional-global",
+													Name: "additional-global",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
 												},
 											},
 										},
 									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123-222",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
-											},
-										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional-global",
-												Name: "additional-global",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
-											},
-										},
-									},
 								},
-							},
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &secondImplementationPath,
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &secondImplementationPath,
+									},
 								},
 							},
 						},
@@ -352,57 +364,59 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 				},
 			},
 			expected: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"host": map[string]interface{}{
-													"name":    "capact",
-													"address": "1.2.3.4",
-													"alias":   "karpatka",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"host": map[string]interface{}{
+														"name":    "capact",
+														"address": "1.2.3.4",
+														"alias":   "karpatka",
+													},
+												},
+											},
+										},
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123-111",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
+												},
+											},
+										},
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
 												},
 											},
 										},
 									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123-111",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
-											},
-										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
-											},
-										},
-									},
 								},
-							},
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &secondImplementationPath,
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &secondImplementationPath,
+									},
 								},
 							},
 						},
@@ -414,15 +428,17 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		{
 			name: "action first then global for different interfaces - only rules",
 			action: policy.ActionPolicy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
 								},
 							},
 						},
@@ -430,15 +446,17 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 				},
 			},
 			global: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: secondInterfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &secondImplementationPath,
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: secondInterfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &secondImplementationPath,
+									},
 								},
 							},
 						},
@@ -446,27 +464,29 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 				},
 			},
 			expected: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
 								},
 							},
 						},
-					},
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: secondInterfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &secondImplementationPath,
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: secondInterfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &secondImplementationPath,
+									},
 								},
 							},
 						},
@@ -478,47 +498,49 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		{
 			name: "merge type instances and additional input",
 			action: policy.ActionPolicy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"additional-input": map[string]interface{}{
-													"a": 1,
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"additional-input": map[string]interface{}{
+														"a": 1,
+													},
 												},
 											},
 										},
-									},
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123-111",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123-111",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -529,37 +551,39 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 				},
 			},
 			global: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "123-321-123",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.x",
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
+									},
+									Inject: &policy.InjectData{
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "123-321-123",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.x",
+												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional-global",
-												Name: "additional-global",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample-global",
-												Revision: "0.1.0",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional-global",
+													Name: "additional-global",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample-global",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -570,66 +594,68 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 				},
 			},
 			expected: policy.Policy{
-				Rules: policy.RulesList{
-					policy.RulesForInterface{
-						Interface: types.ManifestRefWithOptRevision{
-							Path: interfacePath,
-						},
-						OneOf: []policy.Rule{
-							{
-								ImplementationConstraints: policy.ImplementationConstraints{
-									Path: &implementationPath,
-								},
-								Inject: &policy.InjectData{
-									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "123-321-123",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.x",
-											},
-										},
-										{
-											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-												ID:          "1314-142-123-111",
-												Description: ptr.String("Sample TI"),
-											},
-											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
-											},
-										},
+				Interface: policy.InterfacePolicy{
+					Rules: policy.RulesList{
+						policy.RulesForInterface{
+							Interface: types.ManifestRefWithOptRevision{
+								Path: interfacePath,
+							},
+							OneOf: []policy.Rule{
+								{
+									ImplementationConstraints: policy.ImplementationConstraints{
+										Path: &implementationPath,
 									},
-									AdditionalParameters: []policy.AdditionalParametersToInject{
-										{
-											Name: "additional-parameters",
-											Value: map[string]interface{}{
-												"additional-input": map[string]interface{}{
-													"a": 1,
+									Inject: &policy.InjectData{
+										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "123-321-123",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.x",
+												},
+											},
+											{
+												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+													ID:          "1314-142-123-111",
+													Description: ptr.String("Sample TI"),
+												},
+												TypeRef: &types.ManifestRef{
+													Path: "cap.type.gcp.auth.service-account",
 												},
 											},
 										},
-									},
-									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional-global",
-												Name: "additional-global",
-											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample-global",
-												Revision: "0.1.0",
+										AdditionalParameters: []policy.AdditionalParametersToInject{
+											{
+												Name: "additional-parameters",
+												Value: map[string]interface{}{
+													"additional-input": map[string]interface{}{
+														"a": 1,
+													},
+												},
 											},
 										},
-										{
-											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-												ID:   "additional1",
-												Name: "additional",
+										AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional-global",
+													Name: "additional-global",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample-global",
+													Revision: "0.1.0",
+												},
 											},
-											TypeRef: &types.ManifestRef{
-												Path:     "cap.type.sample",
-												Revision: "0.1.0",
+											{
+												AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+													ID:   "additional1",
+													Name: "additional",
+												},
+												TypeRef: &types.ManifestRef{
+													Path:     "cap.type.sample",
+													Revision: "0.1.0",
+												},
 											},
 										},
 									},
@@ -684,23 +710,25 @@ func TestNestedWorkflowPolicy(t *testing.T) {
 func workflowPolicyWithAdditionalInput(input map[string]interface{}) policy.WorkflowPolicy {
 	implementation := "cap.implementation.bitnami.postgresql.install"
 	return policy.WorkflowPolicy{
-		Rules: policy.WorkflowRulesList{
-			policy.WorkflowRulesForInterface{
-				Interface: policy.WorkflowInterfaceRef{
-					ManifestRef: &types.ManifestRefWithOptRevision{
-						Path: "cap.interface.database.postgresql.install",
-					},
-				},
-				OneOf: []policy.WorkflowRule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{
-							Path: &implementation,
+		Interface: policy.WorkflowInterfacePolicy{
+			Rules: policy.WorkflowRulesList{
+				policy.WorkflowRulesForInterface{
+					Interface: policy.WorkflowInterfaceRef{
+						ManifestRef: &types.ManifestRefWithOptRevision{
+							Path: "cap.interface.database.postgresql.install",
 						},
-						Inject: &policy.WorkflowInjectData{
-							AdditionalParameters: []policy.AdditionalParametersToInject{
-								{
-									Name:  "additional-parameters",
-									Value: input,
+					},
+					OneOf: []policy.WorkflowRule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{
+								Path: &implementation,
+							},
+							Inject: &policy.WorkflowInjectData{
+								AdditionalParameters: []policy.AdditionalParametersToInject{
+									{
+										Name:  "additional-parameters",
+										Value: input,
+									},
 								},
 							},
 						},

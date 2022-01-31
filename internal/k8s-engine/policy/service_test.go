@@ -32,8 +32,8 @@ func TestService_Update(t *testing.T) {
 	svc, k8sCli := newServiceWithFakeClient(t, cfgMap)
 
 	// change few properties in model
-	model.Rules[0].Interface.Path = "cap.interface.updated.path"
-	model.Rules[1].OneOf = []policy.Rule{
+	model.Interface.Rules[0].Interface.Path = "cap.interface.updated.path"
+	model.Interface.Rules[1].OneOf = []policy.Rule{
 		{
 			ImplementationConstraints: policy.ImplementationConstraints{
 				Requires: &[]types.ManifestRefWithOptRevision{

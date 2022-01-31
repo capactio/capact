@@ -14,92 +14,94 @@ import (
 
 func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 	return &policy.Policy{
-		Rules: policy.RulesList{
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.*",
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id1",
+		Interface: policy.InterfacePolicy{
+			Rules: policy.RulesList{
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.*",
+					},
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID: "id1",
+										},
+									},
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID:          "id2",
+											Description: ptr.String("ID 2"),
+										},
 									},
 								},
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID:          "id2",
-										Description: ptr.String("ID 2"),
+								AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id1",
+											Name: "ID1",
+										},
+									},
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id3",
+											Name: "ID3",
+										},
 									},
 								},
 							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id1",
-										Name: "ID1",
+						},
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID: "id4",
+										},
 									},
 								},
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id3",
-										Name: "ID3",
+								AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id5",
+											Name: "ID5",
+										},
+									},
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id6",
+											Name: "ID6",
+										},
 									},
 								},
 							},
 						},
 					},
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id4",
-									},
-								},
-							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id5",
-										Name: "ID5",
-									},
-								},
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id6",
-										Name: "ID6",
-									},
-								},
-							},
-						},
+				},
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.interface.productivity.mattermost.install",
 					},
-				},
-			},
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.interface.productivity.mattermost.install",
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id7",
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID: "id7",
+										},
 									},
 								},
-							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id8",
-										Name: "ID8",
+								AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id8",
+											Name: "ID8",
+										},
 									},
 								},
 							},
@@ -113,128 +115,130 @@ func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 
 func fixComplexPolicyWithTypeRef() *policy.Policy {
 	return &policy.Policy{
-		Rules: policy.RulesList{
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.*",
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id1",
+		Interface: policy.InterfacePolicy{
+			Rules: policy.RulesList{
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.*",
+					},
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID: "id1",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type1",
+											Revision: "0.1.0",
+										},
 									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type1",
-										Revision: "0.1.0",
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID:          "id2",
+											Description: ptr.String("ID 2"),
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type2",
+											Revision: "0.2.0",
+										},
 									},
 								},
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID:          "id2",
-										Description: ptr.String("ID 2"),
+								AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id1",
+											Name: "ID1",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type1",
+											Revision: "0.1.0",
+										},
 									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type2",
-										Revision: "0.2.0",
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id3",
+											Name: "ID3",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type3",
+											Revision: "0.3.0",
+										},
 									},
 								},
 							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id1",
-										Name: "ID1",
-									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type1",
-										Revision: "0.1.0",
+						},
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID: "id4",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type4",
+											Revision: "0.4.0",
+										},
 									},
 								},
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id3",
-										Name: "ID3",
+								AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id5",
+											Name: "ID5",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type5",
+											Revision: "0.5.0",
+										},
 									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type3",
-										Revision: "0.3.0",
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id6",
+											Name: "ID6",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type6",
+											Revision: "0.6.0",
+										},
 									},
 								},
 							},
 						},
 					},
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id4",
-									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type4",
-										Revision: "0.4.0",
-									},
-								},
-							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id5",
-										Name: "ID5",
-									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type5",
-										Revision: "0.5.0",
-									},
-								},
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id6",
-										Name: "ID6",
-									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type6",
-										Revision: "0.6.0",
-									},
-								},
-							},
-						},
+				},
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.interface.productivity.mattermost.install",
 					},
-				},
-			},
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.interface.productivity.mattermost.install",
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id7",
-									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type7",
-										Revision: "0.7.0",
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+											ID: "id7",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type7",
+											Revision: "0.7.0",
+										},
 									},
 								},
-							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id8",
-										Name: "ID8",
-									},
-									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type8",
-										Revision: "0.8.0",
+								AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+									{
+										AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+											ID:   "id8",
+											Name: "ID8",
+										},
+										TypeRef: &types.ManifestRef{
+											Path:     "cap.type.type8",
+											Revision: "0.8.0",
+										},
 									},
 								},
 							},

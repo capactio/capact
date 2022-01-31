@@ -47,7 +47,9 @@ func (m TypeInstanceMetadata) String(withKind bool) string {
 // TypeInstanceIDsWithUnresolvedMetadataForPolicy filters TypeInstances that have unresolved metadata.
 func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInstanceMetadata {
 	var tis []TypeInstanceMetadata
-	for _, rule := range in.Rules {
+
+	// Interface
+	for _, rule := range in.Interface.Rules {
 		for _, ruleItem := range rule.OneOf {
 			tis = append(tis, TypeInstanceIDsWithUnresolvedMetadataForRule(ruleItem)...)
 		}
