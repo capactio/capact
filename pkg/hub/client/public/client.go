@@ -57,24 +57,25 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
-// ListTypeRefRevisionsJSONSchemas returns the list of requested Types.
-// Only a few fields are populated. Check the query fields for more information.
-func (c *Client) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
-	req := graphql.NewRequest(`query ListTypeRefsJSONSchemas($typeFilter: TypeFilter!)  {
-		  types(filter: $typeFilter) {
-			  revisions {
-			    revision
-			    metadata {
-			  	  path
-			    }
-			    spec {
-			  	  jsonSchema
-			    }
-			  }
-		  }
-		}`)
+// ListTypes returns all requested Types. By default, only root fields are populated.
+// Use options to add latestRevision fields or apply additional filtering.
+func (c *Client) ListTypes(ctx context.Context, opts ...TypeOption) ([]*gqlpublicapi.Type, error) {
+	typeOpts := &TypeOptions{}
+	typeOpts.Apply(opts...)
 
-	req.Var("typeFilter", filter)
+	queryFields := fmt.Sprintf(`
+			path
+			name
+			prefix
+			%s`, typeOpts.additionalFields)
+
+	req := graphql.NewRequest(fmt.Sprintf(`query ListTypes($typeFilter: TypeFilter!)  {
+		  types(filter: $typeFilter) {
+			  %s
+		  }
+		}`, queryFields))
+
+	req.Var("typeFilter", typeOpts.Filter)
 
 	var resp struct {
 		Types []*gqlpublicapi.Type `json:"types"`
@@ -87,15 +88,10 @@ func (c *Client) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gql
 		return nil, errors.Wrap(err, "while executing query to list Types")
 	}
 
-	var out []*gqlpublicapi.TypeRevision
-	for _, t := range resp.Types {
-		out = append(out, t.Revisions...)
-	}
-
-	return out, nil
+	return resp.Types, nil
 }
 
-// ListInterfaces returns all Interfaces. By default only root fields are populated. Use options to add
+// ListInterfaces returns all Interfaces. By default, only root fields are populated. Use options to add
 // latestRevision fields or apply additional filtering.
 func (c *Client) ListInterfaces(ctx context.Context, opts ...InterfaceOption) ([]*gqlpublicapi.Interface, error) {
 	ifaceOpts := &InterfaceOptions{}

@@ -1,6 +1,9 @@
 // Package types holds manually added types.
 package types
 
+// OCFPathPrefix defines path prefix that all OCF manifest must have.
+const OCFPathPrefix = "cap."
+
 // InterfaceRef holds the full path and revision to the Interface
 type InterfaceRef ManifestRefWithOptRevision
 

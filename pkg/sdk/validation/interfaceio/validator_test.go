@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-
 	"capact.io/capact/internal/cli/heredoc"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,13 +56,13 @@ func TestValidateInterfaceInputParameters(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(interfaceRevisionRaw, iface))
 
 	tests := map[string]struct {
-		givenHubTypeInstances []*gqlpublicapi.TypeRevision
+		givenHubTypeInstances []*gqlpublicapi.Type
 		givenParameters       types.ParametersCollection
 		expectedIssues        string
 	}{
 		"Happy path JSON": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"input-parameters": `{"key": true}`,
@@ -71,8 +71,8 @@ func TestValidateInterfaceInputParameters(t *testing.T) {
 			},
 		},
 		"Happy path YAML": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"input-parameters": `key: true`,
@@ -81,8 +81,8 @@ func TestValidateInterfaceInputParameters(t *testing.T) {
 			},
 		},
 		"Not found `aws-creds`": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"input-parameters": `{"key": true}`,
@@ -93,8 +93,8 @@ func TestValidateInterfaceInputParameters(t *testing.T) {
         	            	    * required but missing input parameters`),
 		},
 		"Invalid parameters": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"input-parameters": `{"key": "true"}`,
@@ -112,7 +112,7 @@ func TestValidateInterfaceInputParameters(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			// given
 			ctx := context.Background()
-			fakeCli := &fakeHubCli{
+			fakeCli := &validation.FakeHubCli{
 				Types: tc.givenHubTypeInstances,
 			}
 
@@ -157,7 +157,7 @@ func TestValidateParametersNoop(t *testing.T) {
 			// given
 			ctx := context.Background()
 
-			validator := NewValidator(&fakeHubCli{})
+			validator := NewValidator(&validation.FakeHubCli{})
 
 			// when
 			ifaceSchemas, err := validator.LoadInputParametersSchemas(ctx, tc.givenIface)
@@ -274,7 +274,7 @@ func TestValidateTypeInstances(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			// given
 			ctx := context.Background()
-			fakeCli := &fakeHubCli{
+			fakeCli := &validation.FakeHubCli{
 				IDsTypeRefs: tc.givenHubTypeInstances,
 			}
 
@@ -320,7 +320,7 @@ func TestValidateTypeInstancesNoop(t *testing.T) {
 			// given
 			ctx := context.Background()
 
-			validator := NewValidator(&fakeHubCli{})
+			validator := NewValidator(&validation.FakeHubCli{})
 
 			// when
 			ifaceTypes, err := validator.LoadInputTypeInstanceRefs(ctx, tc.givenIface)
@@ -334,41 +334,5 @@ func TestValidateTypeInstancesNoop(t *testing.T) {
 			require.NoError(t, err)
 			assert.NoError(t, result.ErrorOrNil())
 		})
-	}
-}
-
-type fakeHubCli struct {
-	Types                                []*gqlpublicapi.TypeRevision
-	IDsTypeRefs                          map[string]gqllocalapi.TypeInstanceTypeReference
-	ListTypeRefRevisionsJSONSchemasError error
-}
-
-func (f *fakeHubCli) FindTypeInstancesTypeRef(_ context.Context, ids []string) (map[string]gqllocalapi.TypeInstanceTypeReference, error) {
-	return f.IDsTypeRefs, nil
-}
-
-func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
-	return f.Types, f.ListTypeRefRevisionsJSONSchemasError
-}
-
-func fixAWSCredsTypeRev() *gqlpublicapi.TypeRevision {
-	return &gqlpublicapi.TypeRevision{
-		Metadata: &gqlpublicapi.TypeMetadata{
-			Path: "cap.type.aws.auth.creds",
-		},
-		Revision: "0.1.0",
-		Spec: &gqlpublicapi.TypeSpec{
-			JSONSchema: heredoc.Doc(`
-                    {
-                      "$schema": "http://json-schema.org/draft-07/schema",
-                      "type": "object",
-                      "required": [ "key" ],
-                      "properties": {
-                        "key": {
-                          "type": "string"
-                        }
-                      }
-                    }`),
-		},
 	}
 }

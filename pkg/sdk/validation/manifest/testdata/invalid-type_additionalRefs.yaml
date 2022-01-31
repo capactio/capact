@@ -1,0 +1,54 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.database.postgresql
+  displayName: PostgreSQL config
+  description: Defines configuration for PostgreSQL
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+spec:
+  additionalRefs:
+    - cap.interface.postgresql
+    - cap.core.type.platform.kubernetes
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for Mattermost configuration",
+        "required": [
+          "version"
+        ],
+        "definitions": {
+          "semVer": {
+            "type": "string",
+            "minLength": 5,
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+            "title": "Semantic Versioning version",
+            "examples": [
+              "1.19.0",
+              "2.0.1-alpha1"
+            ]
+          },
+          "hostname": {
+            "type": "string",
+            "format": "hostname",
+            "title": "Hostname"
+          }
+        },
+        "properties": {
+          "version": {
+            "$ref": "#/definitions/semVer"
+          },
+          "host": {
+            "$ref": "#/definitions/hostname"
+          }
+        },
+        "additionalProperties": true
+      }
