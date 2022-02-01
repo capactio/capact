@@ -3,14 +3,135 @@ package manifest_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer/argo"
 	"capact.io/capact/pkg/sdk/validation/manifest"
+	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestValidateInputArtifactsNames(t *testing.T) {
+	inputParametersName := "input-parameters"
+	additionalParameterName := "additional-parameters"
+	tests := map[string]struct {
+		ifaceInput          *gqlpublicapi.InterfaceInput
+		implAdditionalInput *types.AdditionalInput
+		argoArtifacts       []wfv1.Artifact
+		exprectedErrors     []error
+	}{
+		"When Argo input does not exist in the Interface and Implementation": {
+			ifaceInput: &gqlpublicapi.InterfaceInput{
+				Parameters: []*gqlpublicapi.InputParameter{},
+			},
+			implAdditionalInput: &types.AdditionalInput{
+				Parameters: map[string]types.AdditionalInputParameter{
+					additionalParameterName: {},
+				},
+			},
+			argoArtifacts: []wfv1.Artifact{
+				{
+					Name: inputParametersName,
+				},
+				{
+					Name:     additionalParameterName,
+					Optional: true,
+				},
+			},
+			exprectedErrors: []error{fmt.Errorf("unknown workflow input artifact \"%s\": there is no such input neither in Interface input, nor Implementation additional input", inputParametersName)},
+		},
+		"When Argo input has optional input that does exist in Interface ": {
+			ifaceInput: &gqlpublicapi.InterfaceInput{
+				Parameters: []*gqlpublicapi.InputParameter{
+					{
+						Name: inputParametersName,
+					},
+				},
+			},
+			implAdditionalInput: &types.AdditionalInput{},
+			argoArtifacts: []wfv1.Artifact{
+				{
+					Name:     inputParametersName,
+					Optional: true,
+				},
+			},
+			exprectedErrors: []error{fmt.Errorf("invalid workflow input artifact \"%s\": it shouldn't be optional as it is defined as Interface input", inputParametersName)},
+		},
+		"When Argo input is not optional but exists in Implementation additional inputs": {
+			ifaceInput: &gqlpublicapi.InterfaceInput{
+				Parameters: []*gqlpublicapi.InputParameter{
+					{
+						Name: inputParametersName,
+					},
+				},
+			},
+			implAdditionalInput: &types.AdditionalInput{
+				Parameters: map[string]types.AdditionalInputParameter{
+					additionalParameterName: {},
+				},
+			},
+			argoArtifacts: []wfv1.Artifact{
+				{
+					Name:     additionalParameterName,
+					Optional: false,
+				},
+			},
+			exprectedErrors: []error{fmt.Errorf("invalid workflow input artifact \"%s\": it should be optional, as it is defined as Implementation additional input", additionalParameterName)},
+		},
+		"When Argo inputs are correctly set": {
+			ifaceInput: &gqlpublicapi.InterfaceInput{
+				Parameters: []*gqlpublicapi.InputParameter{
+					{
+						Name: inputParametersName,
+					},
+				},
+			},
+			implAdditionalInput: &types.AdditionalInput{
+				Parameters: map[string]types.AdditionalInputParameter{
+					additionalParameterName: {},
+				},
+			},
+			argoArtifacts: []wfv1.Artifact{
+				{
+					Name:     inputParametersName,
+					Optional: false,
+				},
+				{
+					Name:     additionalParameterName,
+					Optional: true,
+				},
+			},
+			exprectedErrors: nil,
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			ctx := context.Background()
+			hubCli := fakeHub{
+				interfaceRevision: &gqlpublicapi.InterfaceRevision{
+					Spec: &gqlpublicapi.InterfaceSpec{
+						Input: tc.ifaceInput,
+					},
+				},
+			}
+			validator := manifest.NewRemoteImplementationValidator(&hubCli)
+			implementation := fixImplementation(tc.argoArtifacts, tc.implAdditionalInput)
+
+			// when
+			result, err := validator.ValidateInputArtifactsNames(ctx, implementation)
+
+			// then
+			require.NoError(t, err)
+			assert.Equal(t, tc.exprectedErrors, result.Errors)
+		})
+	}
+}
 
 func TestCheckParentNodesAssociation(t *testing.T) {
 	tests := map[string]struct {
@@ -119,5 +240,39 @@ func fixGQLType(path, rev, parent string) *gqlpublicapi.Type {
 					AdditionalRefs: []string{parent},
 				},
 			}},
+	}
+}
+func fixImplementation(inputArtifacts []wfv1.Artifact, implAdditionalInput *types.AdditionalInput) types.Implementation {
+	workflow := argo.Workflow{
+		WorkflowSpec: &wfv1.WorkflowSpec{
+			Entrypoint: "test",
+		},
+		Templates: []*argo.Template{
+			{
+				Template: &wfv1.Template{
+					Name: "test",
+					Inputs: wfv1.Inputs{
+						Artifacts: inputArtifacts,
+					},
+				},
+			},
+		},
+	}
+
+	return types.Implementation{
+		Spec: types.ImplementationSpec{
+			Implements: []types.Implement{
+				{
+					Path:     "cap.interface.test.impl",
+					Revision: "0.1.0",
+				},
+			},
+			Action: types.Action{
+				Args: map[string]interface{}{
+					"workflow": workflow,
+				},
+			},
+			AdditionalInput: implAdditionalInput,
+		},
 	}
 }
