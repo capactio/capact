@@ -4,18 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
+
 	"github.com/pkg/errors"
 )
 
 // Hub is an interface for Hub GraphQL client methods needed for the remote validation.
 type Hub interface {
-	CheckManifestRevisionsExist(ctx context.Context, manifestRefs []hubpublicgraphql.ManifestReference) (map[hubpublicgraphql.ManifestReference]bool, error)
-	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
+	CheckManifestRevisionsExist(ctx context.Context, manifestRefs []gqlpublicapi.ManifestReference) (map[gqlpublicapi.ManifestReference]bool, error)
+	FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...public.InterfaceRevisionOption) (*gqlpublicapi.InterfaceRevision, error)
+	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
 }
 
-func checkManifestRevisionsExist(ctx context.Context, hub Hub, manifestRefsToCheck []hubpublicgraphql.ManifestReference) (ValidationResult, error) {
+func checkManifestRevisionsExist(ctx context.Context, hub Hub, manifestRefsToCheck []gqlpublicapi.ManifestReference) (ValidationResult, error) {
 	if len(manifestRefsToCheck) == 0 {
 		return ValidationResult{}, nil
 	}

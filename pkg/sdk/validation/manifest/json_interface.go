@@ -40,7 +40,7 @@ func (v *InterfaceValidator) Do(_ context.Context, _ types.ManifestMetadata, jso
 		toValidate[key] = param.JSONSchema.Value
 	}
 
-	return validateJSONSchema07Definition(toValidate)
+	return checkJSONSchema07Definition(toValidate)
 }
 
 // Name returns the validator name.

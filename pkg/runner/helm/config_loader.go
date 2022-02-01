@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -73,7 +74,7 @@ func setKubeconfigEnvIfTypeInstanceExists(path string, log *zap.Logger) error {
 }
 
 func extractKubeconfigFromTI(path string) ([]byte, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}

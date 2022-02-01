@@ -6,7 +6,7 @@
   "implementationPath": "cap.implementation.mattermost.mattermost-team-edition.install",
   "implementationsPathPattern": "cap.implementation.gcp.*",
   "typePath": "cap.core.type.networking.hostname",
-  "typesPathPattern": "cap.core.type.*",
+  "typesPathPattern": "cap.core.type.platform.*",
   "attributePath": "cap.core.attribute.workload.stateless",
   "attributesPathPattern": "cap.core.attribute.workload.*"
 }

@@ -287,15 +287,24 @@ CALL {
 WITH *, value.spec.requires as requires
 CALL {
  WITH value, spec, requires
- UNWIND keys(requires) as r
-  CREATE (implementationRequirement:ImplementationRequirement:unpublished{prefix: r})
+ UNWIND keys(requires) as prefix
+  CREATE (implementationRequirement:ImplementationRequirement:unpublished{prefix: prefix})
   CREATE (spec)-[:REQUIRES]->(implementationRequirement)
   WITH *
-  UNWIND keys(requires[r]) as of
-   UNWIND requires[r][of] as listItem
-    MATCH (type:Type:unpublished{path: apoc.text.join([r, listItem.name], ".")})-[:CONTAINS]->(typeRevision:TypeRevision {revision: listItem.revision})
+  UNWIND keys(requires[prefix]) as of
+   UNWIND requires[prefix][of] as listItem
+		// if concrete type then don't add prefix
+		WITH *
+		CALL apoc.when(
+			listItem.name  STARTS WITH "cap.",
+			'RETURN $name as path',
+			'RETURN apoc.text.join([$prefix, $name], ".") as path',
+			{prefix:prefix, name:listItem.name})
+		YIELD value as resolve
+		WITH *
+    MATCH (type:Type:unpublished{path: resolve.path })-[:CONTAINS]->(typeRevision:TypeRevision {revision: listItem.revision})
     MERGE (typeReference:TypeReference:unpublished{
-      path: apoc.text.join([r, listItem.name], "."),
+      path: resolve.path,
       revision: listItem.revision})
     CREATE (item:ImplementationRequirementItem:unpublished {valueConstraints: listItem.valueConstraints, alias: listItem.alias})
     CREATE (item)-[:REFERENCES_TYPE]->(typeReference)

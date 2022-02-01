@@ -10,9 +10,9 @@ import (
 // jsonSchemaCollection defines JSONSchema collection index by the name.
 type jsonSchemaCollection map[string]string
 
-// validateJSONSchema07Definition validate a given JSONSchema collection.
+// checkJSONSchema07Definition validate a given JSONSchema collection.
 // Fast return on internal error, otherwise returns aggregated ValidationResult for all schemas.
-func validateJSONSchema07Definition(schemas jsonSchemaCollection) (ValidationResult, error) {
+func checkJSONSchema07Definition(schemas jsonSchemaCollection) (ValidationResult, error) {
 	result := ValidationResult{}
 
 	schemaLoader := gojsonschema.NewReferenceLoader("http://json-schema.org/draft-07/schema")

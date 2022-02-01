@@ -39,7 +39,7 @@ func NewGet() *cobra.Command {
 		Example: heredoc.WithCLIName(`
 			# Show all Interfaces in table format:
 			<cli> hub interfaces get
-			
+
 			# Show "cap.interface.database.postgresql.install" Interface in JSON format:
 			<cli> hub interfaces get cap.interface.database.postgresql.install -ojson
 		`, cli.Name),

@@ -7,10 +7,11 @@ import (
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
-	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/validation"
 	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
@@ -229,14 +230,14 @@ func TestValidator_ValidateAdditionalInputParameters(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(implementationRevisionRaw, &impl))
 
 	tests := map[string]struct {
-		givenHubTypeInstances []*gqlpublicapi.TypeRevision
+		givenHubTypeInstances []*gqlpublicapi.Type
 		givenParameters       types.ParametersCollection
 		expectedIssues        string
 	}{
 		"Happy path JSON": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
-				fixAWSElasticsearchTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
+				validation.AWSElasticsearchTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"additional-parameters": `{"key": "true"}`,
@@ -244,9 +245,9 @@ func TestValidator_ValidateAdditionalInputParameters(t *testing.T) {
 			},
 		},
 		"Happy path YAML": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
-				fixAWSElasticsearchTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
+				validation.AWSElasticsearchTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"additional-parameters": `key: "true"`,
@@ -254,9 +255,9 @@ func TestValidator_ValidateAdditionalInputParameters(t *testing.T) {
 			},
 		},
 		"Not found `db-settings`": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
-				fixAWSElasticsearchTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
+				validation.AWSElasticsearchTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"db-settings": `{"key": true}`,
@@ -266,9 +267,9 @@ func TestValidator_ValidateAdditionalInputParameters(t *testing.T) {
 			        * Unknown parameter. Cannot validate it against JSONSchema.`),
 		},
 		"Invalid parameters": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
-				fixAWSElasticsearchTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
+				validation.AWSElasticsearchTypeRevFixture(),
 			},
 			givenParameters: types.ParametersCollection{
 				"additional-parameters": `{"key": true}`,
@@ -286,7 +287,7 @@ func TestValidator_ValidateAdditionalInputParameters(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			// given
 			ctx := context.Background()
-			fakeCli := &fakeHubCli{
+			fakeCli := &validation.FakeHubCli{
 				Types: tc.givenHubTypeInstances,
 			}
 
@@ -374,7 +375,7 @@ func TestValidator_ValidateAdditionalTypeInstances(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
-			fakeCli := &fakeHubCli{}
+			fakeCli := &validation.FakeHubCli{}
 			validator := policyvalidation.NewValidator(fakeCli)
 
 			// when
@@ -426,16 +427,6 @@ func TestValidator_AreTypeInstancesMetadataResolved(t *testing.T) {
 			assert.Equal(t, tc.ExpectedResult, res)
 		})
 	}
-}
-
-type fakeHubCli struct {
-	Types                                []*gqlpublicapi.TypeRevision
-	IDsTypeRefs                          map[string]gqllocalapi.TypeInstanceTypeReference
-	ListTypeRefRevisionsJSONSchemasError error
-}
-
-func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
-	return f.Types, f.ListTypeRefRevisionsJSONSchemasError
 }
 
 func fixImplementationRevisionWithAdditionalInputParams(additionalTI []*gqlpublicapi.InputTypeInstance) gqlpublicapi.ImplementationRevision {

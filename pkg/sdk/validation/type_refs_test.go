@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"capact.io/capact/internal/cli/heredoc"
-	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/validation"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,10 +16,10 @@ import (
 func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 	// given
 	tests := map[string]struct {
-		givenTypeRefs                           validation.TypeRefCollection
-		givenHubTypeInstances                   []*gqlpublicapi.TypeRevision
-		givenListTypeRefRevisionsJSONSchemasErr error
-		expectedErrorMsg                        string
+		givenTypeRefs         validation.TypeRefCollection
+		givenHubTypeInstances []*gqlpublicapi.Type
+		givenListTypesErr     error
+		expectedErrorMsg      string
 	}{
 		"Not existing TypeRef": {
 			givenHubTypeInstances: nil,
@@ -36,8 +36,8 @@ func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 		          	* TypeRef "cap.type.aws.auth.creds:0.1.0" was not found in Hub`),
 		},
 		"Not existing Revision": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				fixAWSCredsTypeRev(),
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				validation.AWSCredsTypeRevFixture(),
 			},
 			givenTypeRefs: validation.TypeRefCollection{
 				"aws-creds": {
@@ -52,10 +52,10 @@ func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 		          	* TypeRef "cap.type.aws.auth.creds:1.1.1" was not found in Hub`),
 		},
 		"Unexpected JSONSchema type": {
-			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
-				func() *gqlpublicapi.TypeRevision {
-					ti := fixAWSCredsTypeRev()
-					ti.Spec.JSONSchema = 123 // change type to int, but should be string
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				func() *gqlpublicapi.Type {
+					ti := validation.AWSCredsTypeRevFixture()
+					ti.Revisions[0].Spec.JSONSchema = 123 // change type to int, but should be string
 					return ti
 				}(),
 			},
@@ -72,7 +72,7 @@ func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 		          	* unexpected JSONSchema type for "cap.type.aws.auth.creds:0.1.0": expected string, got int`),
 		},
 		"Hub call error": {
-			givenListTypeRefRevisionsJSONSchemasErr: errors.New("hub error for testing purposes"),
+			givenListTypesErr: errors.New("hub error for testing purposes"),
 			givenTypeRefs: validation.TypeRefCollection{
 				"aws-creds": {},
 			},
@@ -83,9 +83,9 @@ func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			// given
 			ctx := context.Background()
-			fakeCli := &fakeHubCli{
-				Types:                                tc.givenHubTypeInstances,
-				ListTypeRefRevisionsJSONSchemasError: tc.givenListTypeRefRevisionsJSONSchemasErr,
+			fakeCli := &validation.FakeHubCli{
+				Types:          tc.givenHubTypeInstances,
+				ListTypesError: tc.givenListTypesErr,
 			}
 
 			// when
@@ -95,40 +95,4 @@ func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 			assert.EqualError(t, err, tc.expectedErrorMsg)
 		})
 	}
-}
-
-func fixAWSCredsTypeRev() *gqlpublicapi.TypeRevision {
-	return &gqlpublicapi.TypeRevision{
-		Metadata: &gqlpublicapi.TypeMetadata{
-			Path: "cap.type.aws.auth.creds",
-		},
-		Revision: "0.1.0",
-		Spec: &gqlpublicapi.TypeSpec{
-			JSONSchema: heredoc.Doc(`
-                    {
-                      "$schema": "http://json-schema.org/draft-07/schema",
-                      "type": "object",
-                      "required": [ "key" ],
-                      "properties": {
-                        "key": {
-                          "type": "string"
-                        }
-                      }
-                    }`),
-		},
-	}
-}
-
-type fakeHubCli struct {
-	Types                                []*gqlpublicapi.TypeRevision
-	IDsTypeRefs                          map[string]gqllocalapi.TypeInstanceTypeReference
-	ListTypeRefRevisionsJSONSchemasError error
-}
-
-func (f *fakeHubCli) FindTypeInstancesTypeRef(_ context.Context, _ []string) (map[string]gqllocalapi.TypeInstanceTypeReference, error) {
-	return f.IDsTypeRefs, nil
-}
-
-func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, _ gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
-	return f.Types, f.ListTypeRefRevisionsJSONSchemasError
 }

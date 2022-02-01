@@ -3,17 +3,19 @@ package validation
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"capact.io/capact/internal/multierror"
 	"capact.io/capact/internal/ptr"
+	"capact.io/capact/internal/regexutil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
+
 	"github.com/pkg/errors"
 )
 
 // HubClient defines Hub methods needed for ResolveTypeRefsToJSONSchemas.
 type HubClient interface {
-	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error)
+	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
 }
 
 // ResolveTypeRefsToJSONSchemas resolves Type references to theirs JSON schemas.
@@ -28,21 +30,28 @@ func ResolveTypeRefsToJSONSchemas(ctx context.Context, hubCli HubClient, inTypeR
 		return nil, nil
 	}
 
-	typeRefsPathFilter := fmt.Sprintf(`(%s)`, strings.Join(typeRefsPath, "|"))
-	gotTypes, err := hubCli.ListTypeRefRevisionsJSONSchemas(ctx, gqlpublicapi.TypeFilter{
+	typeRefsPathFilter := regexutil.OrStringSlice(typeRefsPath)
+	gotTypes, err := hubCli.ListTypes(ctx, public.WithTypeRevisions(public.TypeRevisionSpecFields|public.TypeRevisionRootFields), public.WithTypeFilter(gqlpublicapi.TypeFilter{
 		PathPattern: ptr.String(typeRefsPathFilter),
-	})
+	}))
 	if err != nil {
 		return nil, errors.Wrap(err, "while fetching JSONSchemas for input TypeRefs")
 	}
 
 	indexedTypes := map[string]interface{}{}
-	for _, rev := range gotTypes {
-		if rev == nil || rev.Spec == nil {
+	for _, gotType := range gotTypes {
+		if gotType == nil {
 			continue
 		}
-		key := fmt.Sprintf("%s:%s", rev.Metadata.Path, rev.Revision)
-		indexedTypes[key] = rev.Spec.JSONSchema
+
+		for _, rev := range gotType.Revisions {
+			if rev == nil || rev.Spec == nil {
+				continue
+			}
+
+			key := fmt.Sprintf("%s:%s", gotType.Path, rev.Revision)
+			indexedTypes[key] = rev.Spec.JSONSchema
+		}
 	}
 
 	var (
