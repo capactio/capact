@@ -7,7 +7,10 @@ import (
 	"path/filepath"
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
+	"capact.io/capact/pkg/sdk/validation/manifest"
+
 	"capact.io/capact/pkg/hub/client/local"
+	"capact.io/capact/pkg/hub/client/public"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
@@ -25,17 +28,19 @@ type UploadConfig struct {
 // Upload implements the Action interface.
 // It is used to upload TypeInstances to the Local Hub.
 type Upload struct {
-	log    *zap.Logger
-	client *local.Client
-	cfg    UploadConfig
+	log          *zap.Logger
+	localClient  *local.Client
+	publicClient *public.Client
+	cfg          UploadConfig
 }
 
 // NewUploadAction returns a new Upload instance.
-func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {
+func NewUploadAction(log *zap.Logger, localClient *local.Client, publicClient *public.Client, cfg UploadConfig) Action {
 	return &Upload{
-		log:    log,
-		client: client,
-		cfg:    cfg,
+		log:          log,
+		localClient:  localClient,
+		publicClient: publicClient,
+		cfg:          cfg,
 	}
 }
 
@@ -83,6 +88,19 @@ func (u *Upload) Do(ctx context.Context) error {
 		return errors.Wrap(err, "while rendering CreateTypeInstancesInput")
 	}
 
+	for _, ti := range payload.TypeInstances {
+		u.log.Info(fmt.Sprintf("Validating TypeInstance... %s", *ti.Alias))
+		u.log.Info(fmt.Sprintf("ti %+v", *ti))
+		u.log.Info(fmt.Sprintf("TypeRef %+v", *ti.TypeRef))
+		validationResult, err := manifest.ValidateTI(ctx, ti, u.publicClient)
+		if err != nil {
+			return err
+		}
+		if len(validationResult.Errors) > 0 {
+			return fmt.Errorf("%s", validationResult.Errors)
+		}
+	}
+
 	u.log.Info("Uploading TypeInstances to Hub...", zap.Int("TypeInstance count", len(payload.TypeInstances)))
 
 	uploadOutput, err := u.uploadTypeInstances(ctx, payload)
@@ -112,5 +130,5 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 }
 
 func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) ([]graphqllocal.CreateTypeInstanceOutput, error) {
-	return u.client.CreateTypeInstances(ctx, in)
+	return u.localClient.CreateTypeInstances(ctx, in)
 }

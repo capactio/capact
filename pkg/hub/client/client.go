@@ -35,6 +35,7 @@ type Local interface {
 // Public interface aggregates methods to interact with Capact Public Hub.
 type Public interface {
 	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*hubpublicgraphql.Type, error)
+	FindTypeRevision(ctx context.Context, ref hubpublicgraphql.TypeReference, opts ...public.TypeRevisionOption) (*hubpublicgraphql.TypeRevision, error)
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
 	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.ListImplementationRevisionsForInterfaceOption) ([]hubpublicgraphql.ImplementationRevision, error)

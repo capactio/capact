@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"capact.io/capact/pkg/httputil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"github.com/avast/retry-go"
 
@@ -23,6 +24,15 @@ type Client struct {
 // NewClient creates a public client with a given GraphQL custom client instance.
 func NewClient(cli *graphql.Client) *Client {
 	return &Client{client: cli}
+}
+
+// NewDefaultClient creates ready to use client with default values.
+func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
+	httpClient := httputil.NewClient(opts...)
+	clientOpt := graphql.WithHTTPClient(httpClient)
+	client := graphql.NewClient(endpoint, clientOpt)
+
+	return NewClient(client)
 }
 
 // FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
@@ -89,6 +99,36 @@ func (c *Client) ListTypes(ctx context.Context, opts ...TypeOption) ([]*gqlpubli
 	}
 
 	return resp.Types, nil
+}
+
+func (c *Client) FindTypeRevision(ctx context.Context, ref gqlpublicapi.TypeReference, opts ...TypeRevisionOption) (*gqlpublicapi.TypeRevision, error) {
+	findOpts := &TypeRevisionOptions{}
+	findOpts.Apply(opts...)
+
+	query, params := c.typeQueryForRef(findOpts.fields, ref)
+	req := graphql.NewRequest(fmt.Sprintf(`query FindTypeRevision($typePath: NodePath!, %s) {
+		  type(path: $typePath) {
+				%s
+		  }
+		}`, params.Query(), query))
+
+	req.Var("typePath", ref.Path)
+	params.PopulateVars(req)
+
+	var resp struct {
+		Type struct {
+			Revision *gqlpublicapi.TypeRevision `json:"rev"`
+		} `json:"type"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to fetch Hub Type Revision")
+	}
+
+	return resp.Type.Revision, nil
 }
 
 // ListInterfaces returns all Interfaces. By default, only root fields are populated. Use options to add
@@ -354,5 +394,33 @@ func (c *Client) specificInterfaceRevision(fields string, rev string) (string, A
 
 	return specificRevision, Args{
 		"$interfaceRev: Version!": rev,
+	}
+}
+
+func (c *Client) typeQueryForRef(fields string, ref gqlpublicapi.TypeReference) (string, Args) {
+	if ref.Revision == "" {
+		return c.latestTypeRevision(fields)
+	}
+
+	return c.specificTypeRevision(fields, ref.Revision)
+}
+
+func (c *Client) latestTypeRevision(fields string) (string, Args) {
+	latestRevision := fmt.Sprintf(`
+			rev: latestRevision {
+				%s
+			}`, fields)
+
+	return latestRevision, Args{}
+}
+
+func (c *Client) specificTypeRevision(fields string, rev string) (string, Args) {
+	specificRevision := fmt.Sprintf(`
+			rev: revision(revision: $typeRev) {
+				%s
+			}`, fields)
+
+	return specificRevision, Args{
+		"$typeRev: Version!": rev,
 	}
 }
