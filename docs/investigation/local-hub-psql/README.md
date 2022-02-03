@@ -36,7 +36,6 @@ To avoid implementing and maintaining our own solution, we could save time and u
 
 This is more actively developed than [AgensGraph](#agensgraphhttpsgithubcombitnine-ossagensgraph), however it is at a very early stage.
 
-
 ## GraphQL server implementation
 
 Assuming that we know how we want to represent graph in PostgreSQL, we still need to find an effective way how to bootstrap GraphQL server on top of it. Here are some of the solutions I checked:
@@ -68,10 +67,11 @@ There are not many solutions when we would like to use Go as the language for ou
 - custom resolvers which call external REST APIs (missing documentation, the only mention is in [Readme](https://github.com/dosco/graphjin/wiki#features))
 - adding business logic without external server with JS is possible, but it works not like we want to: [client must specify special directive to run a given JS script](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#adding-business-logic-with-javascript)
 - you can insert/update nested properties
-  - this is not well documented (missing DB schemas)
-  - it breaks GraphQL contract: introspection is not available, this is a custom logic beyond GraphQL
+  - it breaks GraphQL contract: introspection is not available, this is a custom logic beyond GraphQL schema
+  - this is not well documented (missing DB schemas - I needed to guess how to provide such relation)
   - See [nested insert](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#nested-insert) and [nested update](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#nested-update)
   - See the PoC to see how counterintuitive it is
+- Another GraphQL compliance problem: When using mutations, the data must be passed as variables _since GraphJins compiles the query into an prepared statement in the database for maximum speed._ ([Source](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#custom-functions))
 - high level of entry: missing documentation (e.g. custom resolvers, table column mapping)
 
 ### Node.JS

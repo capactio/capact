@@ -16,7 +16,7 @@ Navigate to [http://localhost:8080/](http://localhost:8080/) and run queries and
 
 > **NOTE**: Copy and paste queries and mutations one by one. I'm not sure why, but if you paste the full snippet below, then executing a given named query/mutation fails with `OpQuery: invalid query` error. I didn't investigate it further as there were no point to do so.
 
-Queries:
+### Queries
 
 ```graphql
 query tis {
@@ -66,14 +66,11 @@ mutation createTINested {
         }
     }
 }
-
 ```
 
-Variables:
+### Variables
 
-> **NOTE:** The mutation input has to be passed as variables, as:
-> _When using mutations, the data must be passed as variables since GraphJins compiles the query into an prepared statement in the database for maximum speed._
-> [Source](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#custom-functions)
+> **NOTE:** For `tiNested` variables: I needed to guess how to do the nested insert as documentation lacks such guidance. Apparently, you need to provide database name as the property and GraphJin will set proper references. This is counter-intuitive and also against GraphQL contract.
 
 ```json
 {
