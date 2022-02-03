@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
-	"capact.io/capact/pkg/sdk/validation/manifest"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/hub/client/public"
@@ -88,16 +89,21 @@ func (u *Upload) Do(ctx context.Context) error {
 		return errors.Wrap(err, "while rendering CreateTypeInstancesInput")
 	}
 
+	u.log.Info("Validating TypeInstances")
+
 	for _, ti := range payload.TypeInstances {
-		u.log.Info(fmt.Sprintf("Validating TypeInstance... %s", *ti.Alias))
-		u.log.Info(fmt.Sprintf("ti %+v", *ti))
-		u.log.Info(fmt.Sprintf("TypeRef %+v", *ti.TypeRef))
-		validationResult, err := manifest.ValidateTI(ctx, ti, u.publicClient)
+		validationResult, err := validation.ValidateTI(ctx, &validation.TypeInstanceValidation{
+			Value: ti.Value,
+			TypeRef: types.TypeRef{
+				Path:     ti.TypeRef.Path,
+				Revision: ti.TypeRef.Revision,
+			},
+		}, u.publicClient)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while validating TypeInstance")
 		}
-		if len(validationResult.Errors) > 0 {
-			return fmt.Errorf("%s", validationResult.Errors)
+		if validationResult.Len() > 0 {
+			return validationResult.ErrorOrNil()
 		}
 	}
 

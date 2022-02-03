@@ -13,6 +13,7 @@ import (
 // Hub is an interface for Hub GraphQL client methods needed for the remote validation.
 type Hub interface {
 	CheckManifestRevisionsExist(ctx context.Context, manifestRefs []gqlpublicapi.ManifestReference) (map[gqlpublicapi.ManifestReference]bool, error)
+	FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...public.InterfaceRevisionOption) (*gqlpublicapi.InterfaceRevision, error)
 	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
 }
 

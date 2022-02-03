@@ -59,10 +59,6 @@ func (r *ValidationResult) Error() string {
 		errMsgs = append(errMsgs, err.Error())
 	}
 
-	if r.Path == "" {
-		return fmt.Sprintf("\n    * %s\n", strings.Join(errMsgs, "\n    * "))
-	}
-
 	return fmt.Sprintf("%q:\n    * %s\n", r.Path, strings.Join(errMsgs, "\n    * "))
 }
 

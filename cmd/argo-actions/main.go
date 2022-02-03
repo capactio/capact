@@ -53,7 +53,7 @@ func main() {
 
 	case argoactions.UpdateAction:
 		log := logger.With(zap.String("Action", argoactions.UpdateAction))
-		action = argoactions.NewUpdateAction(log, localClient, cfg.UpdateConfig)
+		action = argoactions.NewUpdateAction(log, localClient, publicClient, cfg.UpdateConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)

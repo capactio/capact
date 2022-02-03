@@ -13,8 +13,9 @@ import (
 )
 
 type fakeHub struct {
-	checkManifestsFn func(ctx context.Context, manifestRefs []gqlpublicapi.ManifestReference) (map[gqlpublicapi.ManifestReference]bool, error)
-	knownTypes       []*gqlpublicapi.Type
+	checkManifestsFn  func(ctx context.Context, manifestRefs []gqlpublicapi.ManifestReference) (map[gqlpublicapi.ManifestReference]bool, error)
+	knownTypes        []*gqlpublicapi.Type
+	interfaceRevision *gqlpublicapi.InterfaceRevision
 }
 
 func (h *fakeHub) ListTypes(_ context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error) {
@@ -47,6 +48,10 @@ func (h *fakeHub) CheckManifestRevisionsExist(ctx context.Context, manifestRefs 
 	return h.checkManifestsFn(ctx, manifestRefs)
 }
 
+func (h *fakeHub) FindInterfaceRevision(_ context.Context, _ gqlpublicapi.InterfaceReference, _ ...public.InterfaceRevisionOption) (*gqlpublicapi.InterfaceRevision, error) {
+	return h.interfaceRevision, nil
+}
+
 func fixHub(t *testing.T, knownListTypes []*gqlpublicapi.Type, manifests map[gqlpublicapi.ManifestReference]bool, err error) *fakeHub {
 	hub := fixHubForManifestsExistence(t, manifests, err)
 	hub.knownTypes = knownListTypes
@@ -69,6 +74,7 @@ func fixHubForManifestsExistence(t *testing.T, result map[gqlpublicapi.ManifestR
 
 			return result, err
 		},
+		interfaceRevision: &gqlpublicapi.InterfaceRevision{},
 	}
 	return hub
 }

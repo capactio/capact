@@ -13,8 +13,8 @@ import (
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-
-	"capact.io/capact/pkg/sdk/validation/manifest"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -100,12 +100,19 @@ func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.
 		}
 
 		for _, ti := range out.TypeInstances {
-			validationResult, err := manifest.ValidateTI(ctx, ti, hubCli)
+			validationResult, err := validation.ValidateTI(ctx, &validation.TypeInstanceValidation{
+				Alias: ti.Alias,
+				Value: ti.Value,
+				TypeRef: types.TypeRef{
+					Path:     ti.TypeRef.Path,
+					Revision: ti.TypeRef.Revision,
+				},
+			}, hubCli)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while validating TypeInstance")
 			}
-			if len(validationResult.Errors) > 0 {
-				return fmt.Errorf("%s", validationResult.Errors)
+			if validationResult.Len() > 0 {
+				return validationResult.ErrorOrNil()
 			}
 		}
 

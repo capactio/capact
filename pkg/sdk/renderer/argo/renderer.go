@@ -116,7 +116,10 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// 3.1 Add our own root step and replace entrypoint
-	rootWorkflow, entrypointStep := dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
+	rootWorkflow, entrypointStep, err := dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
+	if err != nil {
+		return nil, errors.Wrap(err, "while wrapping entrypoint with root step")
+	}
 
 	// 4. Add user input
 	if err := dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow); err != nil {
