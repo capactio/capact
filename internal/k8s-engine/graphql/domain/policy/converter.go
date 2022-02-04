@@ -34,13 +34,14 @@ func (c *Converter) interfaceFromGraphQLInput(in *graphql.InterfacePolicyInput) 
 	var rules policy.RulesList
 
 	for _, gqlRule := range in.Rules {
+		iface := c.manifestRefFromGraphQLInput(gqlRule.Interface)
 		policyRules, err := c.policyRulesFromGraphQLInput(gqlRule.OneOf)
 		if err != nil {
-			return policy.InterfacePolicy{}, err
+			return policy.InterfacePolicy{}, errors.Wrapf(err, "while converting 'OneOf' rules for %q", iface.String())
 		}
 
 		rules = append(rules, policy.RulesForInterface{
-			Interface: c.manifestRefFromGraphQLInput(gqlRule.Interface),
+			Interface: iface,
 			OneOf:     policyRules,
 		})
 	}
