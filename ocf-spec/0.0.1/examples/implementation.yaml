@@ -61,7 +61,7 @@ spec:
           alias: k8s
           valueConstraints:
             version: "1.14.x, 1.15.x"
-        - name: cap.type.platform.cloudFoundry
+        - name: cap.type.platform.nomad
           revision: 0.0.1
           valueConstraints:
             version: "2.33.0, 2.34.x"

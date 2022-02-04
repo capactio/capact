@@ -264,7 +264,7 @@ func (v *RemoteImplementationValidator) resolveRequiresPath(parentPrefix string,
 		//   requires:
 		//     cap.core.type.platform:
 		//      oneOf:
-		//        - name: cap.type.platform.cloud-foundry # this MUST be attached to `cap.core.type.platform`
+		//        - name: cap.type.platform.nomad # this MUST be attached to `cap.core.type.platform`
 		//          revision: 0.1.0
 		if strings.HasPrefix(requiresSubItem.Name, types.OCFPathPrefix) {
 			ref.Path = requiresSubItem.Name
