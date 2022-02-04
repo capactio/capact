@@ -2,6 +2,13 @@
 
 This document aggregates raw notes from a short investigation as a part of the [#626](https://github.com/capactio/capact/issues/626) issue.
 
+## Goal
+
+The goal of this investigation is to find an efficient way to implement Local Hub backed with PostgreSQL. We believe that PostgreSQL could be a good replacement to Neo4j, to resolve problems with high resource consumption and licensing.  
+Ideally, we want to implement Local Hub in Go, but we will also consider Node.js if there are convenient libraries and framework that highly increase development pace.
+
+The investigation influences how we will implement the initial version of the [Delegated Storage](../../proposal/20211207-delegated-storage.md) concept. 
+
 ## Graph solutions for PostgreSQL
 
 In PostgreSQL it may be time-consuming to create graph relation for TypeInstances by our own. See:
@@ -42,14 +49,14 @@ Assuming that we know how we want to represent graph in PostgreSQL, we still nee
 
 ## Go
 
-There are not many solutions when we would like to use Go as the language for our Local Hub:
+There are not many solutions when we would like to use Go as the language for our Local Hub.
 
 ### [GraphJin](https://github.com/dosco/graphjin)
 
-- written in Go (but it doesn't help much - read on)
+- Written in Go (but it doesn't help much - read on)
 - You can use YAML config or Go struct config if you build your custom Docker image
-- write custom query resolvers as [SQL functions](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#custom-functions)
-- generates GraphQL API which is not user friendly. For example insert/update/patch/delete operations is actually one mutation:
+- Write custom query resolvers as [SQL functions](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#custom-functions)
+- Generates GraphQL API which is not user friendly. For example insert/update/patch/delete operations is actually one mutation:
 
    ```graphql
    mutation {
@@ -62,26 +69,31 @@ There are not many solutions when we would like to use Go as the language for ou
 
   Read more in the [docs](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL)
 
-- you can't customize generated resolvers
-    - no way to customize names and behavior of the queries and mutations
-- custom resolvers which call external REST APIs (missing documentation, the only mention is in [Readme](https://github.com/dosco/graphjin/wiki#features))
-- adding business logic without external server with JS is possible, but it works not like we want to: [client must specify special directive to run a given JS script](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#adding-business-logic-with-javascript)
-- you can insert/update nested properties
-  - it breaks GraphQL contract: introspection is not available, this is a custom logic beyond GraphQL schema
-  - this is not well documented (missing DB schemas - I needed to guess how to provide such relation)
+- You can't customize generated resolvers
+    - No way to customize names and behavior of the queries and mutations
+- Custom resolvers which call external REST APIs (missing documentation, the only mention is in [Readme](https://github.com/dosco/graphjin/wiki#features))
+- Adding business logic without external server with JS is possible, but it works not like we want to: [client must specify special directive to run a given JS script](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#adding-business-logic-with-javascript)
+- You can insert/update nested properties
+  - It breaks GraphQL contract: introspection is not available, this is a custom logic beyond GraphQL schema
+  - This is not well documented (missing DB schemas - I needed to guess how to provide such relation)
   - See [nested insert](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#nested-insert) and [nested update](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#nested-update)
   - See the PoC to see how counterintuitive it is
 - Another GraphQL compliance problem: When using mutations, the data must be passed as variables _since GraphJins compiles the query into an prepared statement in the database for maximum speed._ ([Source](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL#custom-functions))
-- high level of entry: missing documentation (e.g. custom resolvers, table column mapping)
+- High level of entry: missing documentation (e.g. custom resolvers, table column mapping)
+- Currently only one company is featured as the one which uses GraphJin on production. The author of GraphJin is the founder of the featured company. I couldn't find any other significant usages across GitHub repos, apart from repos aggregating Go/GraphQL tooling.
+
+In my opinion, lack of GraphQL spec compliance and limited customizability doesn't make GraphJin the best choice for us.
 
 ### Node.JS
+
+While we prefer Go for Local Hub implementation, especially if we want to implement first Delegated Storage backends as built-in Local Hub logic, there is a larger number of libraries for Node.js. Also, some of them seem to be more customizable.
 
 #### [PostGraphile](https://github.com/graphile/postgraphile)
 
 - Quite user-friendly GraphQL API generated from DB schema - for example, see [CRUD mutations](https://www.graphile.org/postgraphile/crud-mutations/)
-- custom [queries](https://www.graphile.org/postgraphile/custom-queries/) and [mutations](https://www.graphile.org/postgraphile/custom-mutations/) with SQL functions
-- ability to customize fields mapping with ["smart comments"](https://www.graphile.org/postgraphile/smart-comments/)
-- ability to have mutation to create related entities with a [separate plugin](https://github.com/mlipscombe/postgraphile-plugin-nested-mutations)
+- Custom [queries](https://www.graphile.org/postgraphile/custom-queries/) and [mutations](https://www.graphile.org/postgraphile/custom-mutations/) with SQL functions
+- Ability to customize fields mapping with ["smart comments"](https://www.graphile.org/postgraphile/smart-comments/)
+- Ability to have mutation to create related entities with a [separate plugin](https://github.com/mlipscombe/postgraphile-plugin-nested-mutations)
 
 I didn't test it by myself, but it seems like the best option, comparing to [Hasura](#hasurahttpsgithubcomhasuragraphql-engine) and [Graphjin](#graphjinhttpsgithubcomdoscographjin) - see the [thread on hacker news](https://news.ycombinator.com/item?id=22433478).
 However, I believe the GraphQL-first solution would be better for us than database-schema-first one.
@@ -109,6 +121,8 @@ This solution looks promising, as it simplifies the boilerplate we need to write
 
 ## Implementation ideas
 
+This paragraph describes how we can actually implement Local Hub, based on knowledge from previous sections, that there are two separate problems: graph representation in PostgreSQL, and choosing a library for efficiently implement GraphQL API for PostgreSQL-backed service.
+
 ### Own simple graph implementation in PostgreSQL
 
 - Implement Local Hub in Go with [gqlgen](https://github.com/99designs/gqlgen), [gorm](https://github.com/go-gorm/gorm) and our own graph implementation
@@ -128,5 +142,11 @@ The abandoned Go client could be problematic in near future; we can't use Apache
 
 ### Decision
 
-We decided to reevaluate `dgraph` first. If `dgraph` suits our needs, we will replace the graph database in Local Hub.
-If not, then we will keep the Local Hub implemented in Node.js with Neo4j database for the time being, and implement [Delegated Storage](../../proposal/20211207-delegated-storage.md) as an extension for the current codebase. Then, we will revisit the Local and Public Hub rewrite once again. 
+We decided to reevaluate [dgraph](https://github.com/dgraph-io/dgraph) first.
+
+- If `dgraph` suits our needs, we will replace the graph database in Local Hub, implementing it in Go. The Delegated Storage backends will be initially implemented as built-in Local Hub functionality.
+- If not, then:
+
+  1. We will keep the Local Hub implemented in Node.js with Neo4j database for the time being, and implement Delegated Storage as an extension (custom GraphQL resolvers) for the current TypeScript codebase. The storage backends will be implemented as external Go services communicated via gRPC + Protocol Buffers, as the proposal says. 
+  2. Once the Delegated Storage is implemented, we will switch to PostgreSQL as database storage, and refactor Local Hub to use [JoinMonster](#joinmonsterhttpsgithubcomjoin-monsterjoin-monster) or some newer GraphQL-first alternative if it is founded. To implement graph relations, we will use a dedicated PostgreSQL extension, such as [ltree](https://www.postgresql.org/docs/current/ltree.html) and write our custom GraphQL resolvers to resolve `uses` and `usedBy` TypeInstance relations.
+
