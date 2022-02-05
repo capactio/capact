@@ -137,6 +137,14 @@ type InputTypeInstanceToProvide struct {
 	TypeRef *ManifestReference `json:"typeRef"`
 }
 
+type InterfacePolicy struct {
+	Rules []*RulesForInterface `json:"rules"`
+}
+
+type InterfacePolicyInput struct {
+	Rules []*RulesForInterfaceInput `json:"rules"`
+}
+
 type ManifestReference struct {
 	Path     string `json:"path"`
 	Revision string `json:"revision"`
@@ -156,11 +164,11 @@ type OutputTypeInstanceDetails struct {
 }
 
 type Policy struct {
-	Rules []*RulesForInterface `json:"rules"`
+	Interface *InterfacePolicy `json:"interface"`
 }
 
 type PolicyInput struct {
-	Rules []*RulesForInterfaceInput `json:"rules"`
+	Interface *InterfacePolicyInput `json:"interface"`
 }
 
 type PolicyRuleImplementationConstraintsInput struct {

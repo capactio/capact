@@ -13,13 +13,18 @@ import (
 
 // WorkflowPolicy represents a Workflow step policy.
 type WorkflowPolicy struct {
+	Interface WorkflowInterfacePolicy `json:"interface"`
+}
+
+// WorkflowInterfacePolicy represent an Interface policy.
+type WorkflowInterfacePolicy struct {
 	Rules WorkflowRulesList `json:"rules"`
 }
 
 // WorkflowRulesList holds the list of the rules in the policy.
 type WorkflowRulesList []WorkflowRulesForInterface
 
-// WorkflowInterfaceRef represents an reference to an Interface
+// WorkflowInterfaceRef represents a reference to an Interface
 // in the workflow step policy.
 // The Interface can be provided either using the full path and revision
 // or using an alias from the imported Interfaces in the Implementation.
@@ -54,7 +59,7 @@ type WorkflowInjectData struct {
 // ResolveImports is used to resolve the Manifest Reference for the rules,
 // if the Interface reference is provided using an alias.
 func (p *WorkflowPolicy) ResolveImports(imports []*hubpublicapi.ImplementationImport) error {
-	for i, r := range p.Rules {
+	for i, r := range p.Interface.Rules {
 		if r.Interface.Alias == nil || *r.Interface.Alias == "" {
 			continue
 		}
@@ -62,8 +67,8 @@ func (p *WorkflowPolicy) ResolveImports(imports []*hubpublicapi.ImplementationIm
 		if err != nil {
 			return errors.Wrap(err, "while resolving Action path")
 		}
-		p.Rules[i].Interface.ManifestRef.Path = actionRef.Path
-		p.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
+		p.Interface.Rules[i].Interface.ManifestRef.Path = actionRef.Path
+		p.Interface.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
 	}
 	return nil
 }

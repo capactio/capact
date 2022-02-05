@@ -17,27 +17,46 @@ func NewConverter() *Converter {
 
 // FromGraphQLInput coverts Graphql Policy data to model.
 func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, error) {
+	ifaceRules, err := c.interfaceFromGraphQLInput(in.Interface)
+	if err != nil {
+		return policy.Policy{}, err
+	}
+
+	return policy.Policy{
+		Interface: ifaceRules,
+	}, nil
+}
+
+func (c *Converter) interfaceFromGraphQLInput(in *graphql.InterfacePolicyInput) (policy.InterfacePolicy, error) {
+	if in == nil {
+		return policy.InterfacePolicy{}, nil
+	}
 	var rules policy.RulesList
 
 	for _, gqlRule := range in.Rules {
+		iface := c.manifestRefFromGraphQLInput(gqlRule.Interface)
 		policyRules, err := c.policyRulesFromGraphQLInput(gqlRule.OneOf)
 		if err != nil {
-			return policy.Policy{}, errors.Wrap(err, "while getting Policy rules")
+			return policy.InterfacePolicy{}, errors.Wrapf(err, "while converting 'OneOf' rules for %q", iface.String())
 		}
 
 		rules = append(rules, policy.RulesForInterface{
-			Interface: c.manifestRefFromGraphQLInput(gqlRule.Interface),
+			Interface: iface,
 			OneOf:     policyRules,
 		})
 	}
 
-	return policy.Policy{
-		Rules: rules,
-	}, nil
+	return policy.InterfacePolicy{Rules: rules}, nil
 }
 
 // ToGraphQL converts Policy model representation to GraphQL DTO.
 func (c *Converter) ToGraphQL(in policy.Policy) graphql.Policy {
+	return graphql.Policy{
+		Interface: c.interfaceToGraphQL(in.Interface),
+	}
+}
+
+func (c *Converter) interfaceToGraphQL(in policy.InterfacePolicy) *graphql.InterfacePolicy {
 	var gqlRules []*graphql.RulesForInterface
 
 	for _, rule := range in.Rules {
@@ -47,7 +66,7 @@ func (c *Converter) ToGraphQL(in policy.Policy) graphql.Policy {
 		})
 	}
 
-	return graphql.Policy{
+	return &graphql.InterfacePolicy{
 		Rules: gqlRules,
 	}
 }

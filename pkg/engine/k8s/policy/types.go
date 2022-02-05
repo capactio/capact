@@ -30,10 +30,15 @@ const (
 
 // Policy holds the policy properties.
 type Policy struct {
+	Interface InterfacePolicy `json:"interface"`
+}
+
+// InterfacePolicy holds the Policy for Interfaces.
+type InterfacePolicy struct {
 	Rules RulesList `json:"rules"`
 }
 
-// ActionPolicy holds the Action policy properties.
+// ActionPolicy holds the Policy injected during Action creation properties.
 type ActionPolicy Policy
 
 // RulesList holds the list of the rules in the policy.

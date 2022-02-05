@@ -14,12 +14,12 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 	for _, p := range e.policyOrder {
 		switch p {
 		case policy.Global:
-			applyPolicy(&currentPolicy, e.globalPolicy)
+			applyInterfacePolicy(&currentPolicy.Interface, e.globalPolicy.Interface)
 		case policy.Action:
-			applyPolicy(&currentPolicy, e.actionPolicy)
+			applyInterfacePolicy(&currentPolicy.Interface, e.actionPolicy.Interface)
 		case policy.Workflow:
 			for _, wp := range e.workflowStepPolicies {
-				applyPolicy(&currentPolicy, wp)
+				applyInterfacePolicy(&currentPolicy.Interface, wp.Interface)
 			}
 		}
 	}
@@ -29,7 +29,7 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 // from new policy we are checking if there are the same rules. If yes we fill missing data,
 // if not we add a rule to the end
 // current policy is a higher priority policy
-func applyPolicy(currentPolicy *policy.Policy, newPolicy policy.Policy) {
+func applyInterfacePolicy(currentPolicy *policy.InterfacePolicy, newPolicy policy.InterfacePolicy) {
 	for _, newRuleForInterface := range newPolicy.Rules {
 		policyRuleIndex := getIndexOfPolicyRule(currentPolicy, newRuleForInterface)
 		if policyRuleIndex == -1 {
@@ -71,7 +71,7 @@ func mergeRules(rule *policy.Rule, newRule policy.Rule) {
 	}
 }
 
-func getIndexOfPolicyRule(p *policy.Policy, rule policy.RulesForInterface) int {
+func getIndexOfPolicyRule(p *policy.InterfacePolicy, rule policy.RulesForInterface) int {
 	for i, ruleForInterface := range p.Rules {
 		if isForSameInterface(ruleForInterface, rule) {
 			return i

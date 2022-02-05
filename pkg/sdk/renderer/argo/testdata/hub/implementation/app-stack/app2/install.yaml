@@ -100,20 +100,21 @@ spec:
               - - name: install-db
                   capact-action: postgresql.install
                   capact-policy:
-                    rules:
-                      - interface: postgresql.install
-                        oneOf:
-                          - implementationConstraints:
-                              attributes:
-                              - path: cap.attribute.cloud.provider.aws
-                              requires:
-                              - path: cap.type.aws.auth.credentials
-                                revision: 0.1.0
-                            inject:
-                              additionalParameters: # Injects additional parameters for the Implementation
-                                - name: additional-parameters # Name must match one of the parameter defined under `additionalInput.parameters` in the Implementation
-                                  value:
-                                    region: eu-west-2
+                    interface:
+                      rules:
+                        - interface: postgresql.install
+                          oneOf:
+                            - implementationConstraints:
+                                attributes:
+                                - path: cap.attribute.cloud.provider.aws
+                                requires:
+                                - path: cap.type.aws.auth.credentials
+                                  revision: 0.1.0
+                              inject:
+                                additionalParameters: # Injects additional parameters for the Implementation
+                                  - name: additional-parameters # Name must match one of the parameter defined under `additionalInput.parameters` in the Implementation
+                                    value:
+                                      region: eu-west-2
                   capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql

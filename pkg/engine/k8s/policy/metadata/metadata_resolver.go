@@ -67,14 +67,14 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 		return multiErr
 	}
 
-	r.resolveTypeRefsForRequiredTypeInstances(policy, res)
-	r.resolveTypeRefsForAdditionalTypeInstances(policy, res)
+	r.setTypeRefsForRequiredTypeInstances(policy, res)
+	r.setTypeRefsForAdditionalTypeInstances(policy, res)
 
 	return nil
 }
 
-func (r *Resolver) resolveTypeRefsForRequiredTypeInstances(policy *policy.Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
-	for ruleIdx, rule := range policy.Rules {
+func (r *Resolver) setTypeRefsForRequiredTypeInstances(policy *policy.Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
+	for ruleIdx, rule := range policy.Interface.Rules {
 		for ruleItemIdx, ruleItem := range rule.OneOf {
 			if ruleItem.Inject == nil {
 				continue
@@ -85,7 +85,7 @@ func (r *Resolver) resolveTypeRefsForRequiredTypeInstances(policy *policy.Policy
 					continue
 				}
 
-				policy.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
+				policy.Interface.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
 					Path:     typeRef.Path,
 					Revision: typeRef.Revision,
 				}
@@ -94,8 +94,8 @@ func (r *Resolver) resolveTypeRefsForRequiredTypeInstances(policy *policy.Policy
 	}
 }
 
-func (r *Resolver) resolveTypeRefsForAdditionalTypeInstances(policy *policy.Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
-	for ruleIdx, rule := range policy.Rules {
+func (r *Resolver) setTypeRefsForAdditionalTypeInstances(policy *policy.Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
+	for ruleIdx, rule := range policy.Interface.Rules {
 		for ruleItemIdx, ruleItem := range rule.OneOf {
 			if ruleItem.Inject == nil {
 				continue
@@ -106,7 +106,7 @@ func (r *Resolver) resolveTypeRefsForAdditionalTypeInstances(policy *policy.Poli
 					continue
 				}
 
-				policy.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.AdditionalTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
+				policy.Interface.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.AdditionalTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
 					Path:     typeRef.Path,
 					Revision: typeRef.Revision,
 				}

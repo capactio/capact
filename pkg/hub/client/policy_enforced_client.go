@@ -262,7 +262,7 @@ func (e *PolicyEnforcedClient) Policy() policy.Policy {
 }
 
 func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef hubpublicgraphql.InterfaceReference) policy.RulesForInterface {
-	rulesMap := e.rulesMapForPolicy(e.Policy())
+	rulesMap := e.interfaceRulesMapForPolicy(e.Policy())
 
 	ruleKeysToCheck := []string{
 		fmt.Sprintf("%s:%s", interfaceRef.Path, interfaceRef.Revision),
@@ -443,9 +443,9 @@ func (e *PolicyEnforcedClient) constantTypeInstanceValues() []*hubpublicgraphql.
 	}
 }
 
-func (e *PolicyEnforcedClient) rulesMapForPolicy(p policy.Policy) map[string]policy.RulesForInterface {
+func (e *PolicyEnforcedClient) interfaceRulesMapForPolicy(p policy.Policy) map[string]policy.RulesForInterface {
 	rulesMap := map[string]policy.RulesForInterface{}
-	for _, rule := range p.Rules {
+	for _, rule := range p.Interface.Rules {
 		key := rule.Interface.Path
 		if rule.Interface.Revision != nil {
 			key = fmt.Sprintf("%s:%s", key, *rule.Interface.Revision)

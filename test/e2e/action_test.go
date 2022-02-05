@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package e2e
@@ -12,24 +13,21 @@ import (
 	"time"
 
 	"capact.io/capact/internal/ptr"
+	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
+	engine "capact.io/capact/pkg/engine/client"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	hubclient "capact.io/capact/pkg/hub/client"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-
-	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
-	engine "capact.io/capact/pkg/engine/client"
 )
 
-const globalPolicyConfigMapKey = "cluster-policy.yaml"
-const globalPolicyTokenToReplace = "requiredTypeInstances: []"
-const globalPolicyRequiredTypeInstancesFmt = `requiredTypeInstances: [{ "id": "%s", "description": "Test TypeInstance" }]`
+const (
+	actionPassingPath = "cap.interface.capactio.capact.validation.action.passing"
+)
 
 func getActionName() string {
 	return fmt.Sprintf("e2e-test-%d-%s", GinkgoParallelNode(), strconv.Itoa(rand.Intn(10000)))
@@ -47,6 +45,9 @@ var _ = Describe("Action", func() {
 		engineClient = getEngineGraphQLClient()
 		hubClient = getHubGraphQLClient()
 		actionName = getActionName()
+
+		// Ensure Test Policy
+		updateGlobalPolicy(ctx, engineClient, nil)
 	})
 
 	AfterEach(func() {
@@ -123,9 +124,11 @@ var _ = Describe("Action", func() {
 			waitForActionDeleted(ctx, engineClient, actionName)
 
 			By("4. Modifying Policy to make Implementation B picked for next run...")
-			globalPolicyRequiredTypeInstances := fmt.Sprintf(globalPolicyRequiredTypeInstancesFmt, injectedTypeInstanceID)
-			cfgMapCleanupFn := updateGlobalPolicyConfigMap(ctx, globalPolicyTokenToReplace, globalPolicyRequiredTypeInstances)
-			defer cfgMapCleanupFn()
+			globalPolicyRequiredTypeInstances := enginegraphql.RequiredTypeInstanceReferenceInput{
+				ID:          injectedTypeInstanceID,
+				Description: ptr.String("Test TypeInstance"),
+			}
+			updateGlobalPolicy(ctx, engineClient, &globalPolicyRequiredTypeInstances)
 
 			By("5. Expecting Implementation B is picked based on test policy...")
 			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
@@ -386,18 +389,15 @@ func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hu
 	return createdTypeInstance, cleanupFn
 }
 
-func updateGlobalPolicyConfigMap(ctx context.Context, stringToFind, stringToReplace string) func() {
-	err := replaceInGlobalPolicyConfigMap(ctx, stringToFind, stringToReplace)
-	Expect(err).ToNot(HaveOccurred())
-
-	cleanupFn := func() {
-		err := replaceInGlobalPolicyConfigMap(ctx, stringToReplace, stringToFind)
-		if err != nil {
-			log(errors.Wrap(err, "while cleaning up ConfigMap with cluster policy").Error())
-		}
+func updateGlobalPolicy(ctx context.Context, client *engine.Client, reqTypeInstance *enginegraphql.RequiredTypeInstanceReferenceInput) {
+	var reqInput []*enginegraphql.RequiredTypeInstanceReferenceInput
+	// nils element are not handled by GraphQL
+	if reqTypeInstance != nil {
+		reqInput = append(reqInput, reqTypeInstance)
 	}
-
-	return cleanupFn
+	p := PolicyInputTestFixture(reqInput)
+	_, err := client.UpdatePolicy(ctx, p)
+	Expect(err).ToNot(HaveOccurred())
 }
 
 func assertUploadedTypeInstance(ctx context.Context, hubClient *hubclient.Client, testValue string) {
@@ -434,36 +434,6 @@ func assertOutputTypeInstancesInActionStatus(ctx context.Context, engineClient *
 	}, 10*time.Second).Should(match)
 }
 
-func replaceInGlobalPolicyConfigMap(ctx context.Context, stringToFind, stringToReplace string) error {
-	k8sCfg, err := config.GetConfig()
-	if err != nil {
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(k8sCfg)
-	if err != nil {
-		return err
-	}
-
-	cfgMapCli := clientset.CoreV1().ConfigMaps(cfg.ClusterPolicy.Namespace)
-
-	globalPolicyCfgMap, err := cfgMapCli.Get(ctx, cfg.ClusterPolicy.Name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	oldContent := globalPolicyCfgMap.Data[globalPolicyConfigMapKey]
-	newContent := strings.ReplaceAll(oldContent, stringToFind, stringToReplace)
-	globalPolicyCfgMap.Data[globalPolicyConfigMapKey] = newContent
-
-	_, err = cfgMapCli.Update(ctx, globalPolicyCfgMap, metav1.UpdateOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func getTypeInstanceWithValue(typeInstances []hublocalgraphql.TypeInstance, testValue string) (*hublocalgraphql.TypeInstance, error) {
 	for _, ti := range typeInstances {
 		values, ok := ti.LatestResourceVersion.Spec.Value.(map[string]interface{})
@@ -489,4 +459,49 @@ func mapToInputParameters(params map[string]interface{}) (*enginegraphql.JSON, e
 
 	res := enginegraphql.JSON(marshaled)
 	return &res, nil
+}
+
+func PolicyInputTestFixture(reqInput []*enginegraphql.RequiredTypeInstanceReferenceInput) *enginegraphql.PolicyInput {
+	manifestRef := func(path string) []*enginegraphql.ManifestReferenceInput {
+		return []*enginegraphql.ManifestReferenceInput{
+			{
+				Path: path,
+			},
+		}
+	}
+
+	return &enginegraphql.PolicyInput{
+		Interface: &enginegraphql.InterfacePolicyInput{
+			Rules: []*enginegraphql.RulesForInterfaceInput{
+				{
+					Interface: manifestRef(actionPassingPath)[0],
+					OneOf: []*enginegraphql.PolicyRuleInput{
+						{
+							ImplementationConstraints: &enginegraphql.PolicyRuleImplementationConstraintsInput{
+								Requires:   manifestRef("cap.type.capactio.capact.validation.single-key"),
+								Attributes: manifestRef("cap.attribute.capactio.capact.validation.policy.most-preferred"),
+							},
+							Inject: &enginegraphql.PolicyRuleInjectDataInput{
+								RequiredTypeInstances: reqInput,
+							},
+						},
+						{
+							ImplementationConstraints: &enginegraphql.PolicyRuleImplementationConstraintsInput{
+								Path: ptr.String("cap.implementation.capactio.capact.validation.action.passing-a"),
+							},
+						},
+					},
+				},
+				// allow all others
+				{
+					Interface: manifestRef("cap.*")[0],
+					OneOf: []*enginegraphql.PolicyRuleInput{
+						{
+							ImplementationConstraints: &enginegraphql.PolicyRuleImplementationConstraintsInput{},
+						},
+					},
+				},
+			},
+		},
+	}
 }

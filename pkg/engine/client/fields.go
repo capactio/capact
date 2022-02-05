@@ -69,35 +69,37 @@ var actionFields = fmt.Sprintf(`
 `, policyFields)
 
 const policyFields = `
-	rules {
-		interface {
-			path
-			revision
-		}
-		oneOf {
-			implementationConstraints {
-				requires {
-					path
-					revision
-				}
-				attributes {
-					path
-					revision
-				}
+	interface {
+		rules {
+			interface {
 				path
+				revision
 			}
-			inject {
-				requiredTypeInstances {
-					id
-					description
+			oneOf {
+				implementationConstraints {
+					requires {
+						path
+						revision
+					}
+					attributes {
+						path
+						revision
+					}
+					path
 				}
-				additionalParameters {
-					name
-					value
-				}
-				additionalTypeInstances {
-					name
-					id
+				inject {
+					requiredTypeInstances {
+						id
+						description
+					}
+					additionalParameters {
+						name
+						value
+					}
+					additionalTypeInstances {
+						name
+						id
+					}
 				}
 			}
 		}

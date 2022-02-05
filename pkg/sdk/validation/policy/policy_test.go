@@ -187,11 +187,11 @@ func TestValidator_ValidateTypeInstanceMetadata(t *testing.T) {
 		},
 		{
 			Name:  "Valid",
-			Input: fixPolicyWithTypeRef().Rules[0].OneOf[0],
+			Input: fixPolicyWithTypeRef().Interface.Rules[0].OneOf[0],
 		},
 		{
 			Name:  "Invalid",
-			Input: fixPolicyWithoutTypeRef().Rules[0].OneOf[0],
+			Input: fixPolicyWithoutTypeRef().Interface.Rules[0].OneOf[0],
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
 				- Metadata for "AdditionalTypeInstance":

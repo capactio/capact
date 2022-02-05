@@ -1,6 +1,8 @@
 // Package types holds manually added types.
 package types
 
+import "fmt"
+
 // OCFPathPrefix defines path prefix that all OCF manifest must have.
 const OCFPathPrefix = "cap."
 
@@ -27,6 +29,18 @@ type ManifestRefWithOptRevision struct {
 	Path string `json:"path"`
 	// Version of the manifest content in the SemVer format.
 	Revision *string `json:"revision"`
+}
+
+func (in *ManifestRefWithOptRevision) String() string {
+	if in == nil {
+		return ""
+	}
+	out := in.Path
+	if in.Revision != nil && *in.Revision != "" {
+		out = fmt.Sprintf("%s:%s", out, *in.Revision)
+	}
+
+	return out
 }
 
 // InputTypeInstanceRef holds input TypeInstance reference.

@@ -6,10 +6,4 @@ metadata:
   {{- include "engine.labels" . | nindent 4 }}
 data:
   cluster-policy.yaml: |
-    apiVersion: 0.2.0
-
-    rules:
-      {{- if .Values.testSetup.enabled }}
-      {{- toYaml .Values.testSetup.globalPolicyRules | nindent 8 }}
-      {{- end }}
-      {{- toYaml .Values.globalPolicyRules | nindent 8 }}
+		{{- toYaml .Values.globalPolicy | nindent 4 }}

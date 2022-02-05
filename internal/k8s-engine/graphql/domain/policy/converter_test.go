@@ -23,6 +23,23 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	assert.Equal(t, expectedModel, actualModel)
 }
 
+func TestConverter_FromGraphQLInput_Failure(t *testing.T) {
+	// given
+	gqlInput := fixGQLInput()
+
+	// simulate wrong additional params format
+	gqlInput.Interface.Rules[0].OneOf[0].Inject.AdditionalParameters[0].Value = "string"
+
+	expErrMsg := `while converting 'OneOf' rules for "cap.interface.database.postgresql.install:0.1.0": while getting Policy inject data: while converting additional parameters: additional input cannot be converted to map[string]interface{}`
+	c := policy.NewConverter()
+
+	// when
+	_, err := c.FromGraphQLInput(gqlInput)
+
+	// then
+	assert.EqualError(t, err, expErrMsg)
+}
+
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 	// given
 	input := fixModel()

@@ -302,33 +302,35 @@ func fixGQLInputActionPolicy() *graphql.PolicyInput {
 	}
 
 	return &graphql.PolicyInput{
-		Rules: []*graphql.RulesForInterfaceInput{
-			{
-				Interface: &graphql.ManifestReferenceInput{
-					Path: "cap.interface.dummy",
-				},
-				OneOf: []*graphql.PolicyRuleInput{
-					{
-						ImplementationConstraints: &graphql.PolicyRuleImplementationConstraintsInput{
-							Path: ptr.String("cap.implementation.dummy"),
-						},
-						Inject: &graphql.PolicyRuleInjectDataInput{
-							RequiredTypeInstances: []*graphql.RequiredTypeInstanceReferenceInput{
-								{
-									ID:          "policy-ti-id",
-									Description: ptr.String("Sample description"),
-								},
+		Interface: &graphql.InterfacePolicyInput{
+			Rules: []*graphql.RulesForInterfaceInput{
+				{
+					Interface: &graphql.ManifestReferenceInput{
+						Path: "cap.interface.dummy",
+					},
+					OneOf: []*graphql.PolicyRuleInput{
+						{
+							ImplementationConstraints: &graphql.PolicyRuleImplementationConstraintsInput{
+								Path: ptr.String("cap.implementation.dummy"),
 							},
-							AdditionalParameters: []*graphql.AdditionalParameterInput{
-								{
-									Name:  "additional-parameters",
-									Value: additionalInput,
+							Inject: &graphql.PolicyRuleInjectDataInput{
+								RequiredTypeInstances: []*graphql.RequiredTypeInstanceReferenceInput{
+									{
+										ID:          "policy-ti-id",
+										Description: ptr.String("Sample description"),
+									},
 								},
-							},
-							AdditionalTypeInstances: []*graphql.AdditionalTypeInstanceReferenceInput{
-								{
-									Name: "additional-ti",
-									ID:   "additional-ti-id",
+								AdditionalParameters: []*graphql.AdditionalParameterInput{
+									{
+										Name:  "additional-parameters",
+										Value: additionalInput,
+									},
+								},
+								AdditionalTypeInstances: []*graphql.AdditionalTypeInstanceReferenceInput{
+									{
+										Name: "additional-ti",
+										ID:   "additional-ti-id",
+									},
 								},
 							},
 						},
@@ -430,7 +432,7 @@ func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1
 		sec.StringData["parameter-input-parameters"] = `{"param":"one"}`
 	}
 	if policyEnabled {
-		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}],"additionalTypeInstances":[{"name":"additional-ti","id":"additional-ti-id"}]}}]}]}`
+		sec.StringData["action-policy.json"] = `{"interface":{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}],"additionalTypeInstances":[{"name":"additional-ti","id":"additional-ti-id"}]}}]}]}}`
 	}
 
 	return sec

@@ -47,7 +47,7 @@ var _ = Describe("GraphQL API", func() {
 
 			It("based on a prefix of the parent node", func() {
 				const parentNode = "cap.core.type.platform.*"
-				expAssociatedPaths := []string{"cap.core.type.platform.kubernetes", "cap.type.platform.cloud-foundry"}
+				expAssociatedPaths := []string{"cap.core.type.platform.kubernetes", "cap.type.platform.nomad"}
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
 					PathPattern: ptr.String(parentNode),
@@ -58,7 +58,7 @@ var _ = Describe("GraphQL API", func() {
 				HasOnlyExpectTypePaths(gotTypes, expAssociatedPaths)
 			})
 			It("only child node if full path name specified", func() {
-				const fullTypePath = "cap.type.platform.cloud-foundry"
+				const fullTypePath = "cap.type.platform.nomad"
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
 					PathPattern: ptr.String(fullTypePath),
@@ -69,8 +69,8 @@ var _ = Describe("GraphQL API", func() {
 				Expect(gotTypes).To(HaveLen(1))
 				Expect(gotTypes[0].Path).To(Equal(fullTypePath))
 			})
-			It("entries matching or regex (cap.core.type.generic.value|cap.type.platform.cloud-foundry)", func() {
-				expTypePaths := []string{"cap.core.type.generic.value", "cap.type.platform.cloud-foundry"}
+			It("entries matching or regex (cap.core.type.generic.value|cap.type.platform.nomad)", func() {
+				expTypePaths := []string{"cap.core.type.generic.value", "cap.type.platform.nomad"}
 				typePathORFilter := regexutil.OrStringSlice(expTypePaths)
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
