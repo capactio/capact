@@ -73,6 +73,37 @@ func fixGQLInput() graphql.PolicyInput {
 				},
 			},
 		},
+		TypeInstance: &graphql.TypeInstancePolicyInput{
+			Rules: []*graphql.RulesForTypeInstanceInput{
+				{
+					TypeRef: &graphql.ManifestReferenceInput{
+						Path:     "cap.type.aws.auth.credentials",
+						Revision: ptr.String("0.1.0"),
+					},
+					Backend: &graphql.TypeInstanceBackendInput{
+						ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+						Description: ptr.String("Vault TI"),
+					},
+				},
+				{
+					TypeRef: &graphql.ManifestReferenceInput{
+						Path: "cap.type.aws.*",
+					},
+					Backend: &graphql.TypeInstanceBackendInput{
+						ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+					},
+				},
+				{
+					TypeRef: &graphql.ManifestReferenceInput{
+						Path: "cap.*",
+					},
+					Backend: &graphql.TypeInstanceBackendInput{
+						ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+						Description: ptr.String("Default Capact PostgreSQL backend"),
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -142,13 +173,44 @@ func fixGQL() graphql.Policy {
 				},
 			},
 		},
+		TypeInstance: &graphql.TypeInstancePolicy{
+			Rules: []*graphql.RulesForTypeInstance{
+				{
+					TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
+						Path:     "cap.type.aws.auth.credentials",
+						Revision: ptr.String("0.1.0"),
+					},
+					Backend: &graphql.TypeInstanceBackend{
+						ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+						Description: ptr.String("Vault TI"),
+					},
+				},
+				{
+					TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
+						Path: "cap.type.aws.*",
+					},
+					Backend: &graphql.TypeInstanceBackend{
+						ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+					},
+				},
+				{
+					TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
+						Path: "cap.*",
+					},
+					Backend: &graphql.TypeInstanceBackend{
+						ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+						Description: ptr.String("Default Capact PostgreSQL backend"),
+					},
+				},
+			},
+		},
 	}
 }
 
 func fixModel() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -172,7 +234,7 @@ func fixModel() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
 											Description: ptr.String("Sample description"),
 										},
@@ -210,6 +272,43 @@ func fixModel() policy.Policy {
 					OneOf: []policy.Rule{
 						{
 							ImplementationConstraints: policy.ImplementationConstraints{},
+						},
+					},
+				},
+			},
+		},
+		TypeInstance: policy.TypeInstancePolicy{
+			Rules: []policy.RulesForTypeInstance{
+				{
+					TypeRef: types.ManifestRefWithOptRevision{
+						Path:     "cap.type.aws.auth.credentials",
+						Revision: ptr.String("0.1.0"),
+					},
+					Backend: policy.TypeInstanceBackend{
+						TypeInstanceReference: policy.TypeInstanceReference{
+							ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+							Description: ptr.String("Vault TI"),
+						},
+					},
+				},
+				{
+					TypeRef: types.ManifestRefWithOptRevision{
+						Path: "cap.type.aws.*",
+					},
+					Backend: policy.TypeInstanceBackend{
+						TypeInstanceReference: policy.TypeInstanceReference{
+							ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+						},
+					},
+				},
+				{
+					TypeRef: types.ManifestRefWithOptRevision{
+						Path: "cap.*",
+					},
+					Backend: policy.TypeInstanceBackend{
+						TypeInstanceReference: policy.TypeInstanceReference{
+							ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+							Description: ptr.String("Default Capact PostgreSQL backend"),
 						},
 					},
 				},

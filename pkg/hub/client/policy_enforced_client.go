@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"sync"
 
-	"capact.io/capact/pkg/engine/k8s/policy/metadata"
-	"capact.io/capact/pkg/sdk/validation"
-
+	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
+	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -25,6 +25,7 @@ type HubClient interface {
 	ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error)
 	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
+	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*hubpublicgraphql.Type, error)
 }
 
 // PolicyIOValidator defines validator used for PolicyEnforcedClient.
@@ -33,7 +34,7 @@ type PolicyIOValidator interface {
 	ValidateTypeInstancesMetadata(in policy.Policy) validation.Result
 	ValidateTypeInstancesMetadataForRule(in policy.Rule) validation.Result
 	ValidateAdditionalTypeInstances(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) validation.Result
-	IsTypeRefInjectableAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool
+	IsTypeRefInjectableAndEqualToImplReq(typeRef *types.TypeRef, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool
 	LoadAdditionalInputParametersSchemas(context.Context, hubpublicgraphql.ImplementationRevision) (validation.SchemaCollection, error)
 	ValidateAdditionalInputParameters(ctx context.Context, paramsSchemas validation.SchemaCollection, parameters types.ParametersCollection) (validation.Result, error)
 }
@@ -104,9 +105,65 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 	return implementations, rule, nil
 }
 
+// ListTypeInstancesBackendsBasedOnPolicy returns default backends defined in Policy and those specified explicitly in a given policy rule.
+func (e *PolicyEnforcedClient) ListTypeInstancesBackendsBasedOnPolicy(_ context.Context, rule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (policy.TypeInstanceBackendCollection, error) {
+	out := policy.TypeInstanceBackendCollection{}
+
+	// TODO(storage): set default Hub storage
+	// TODO(storage): but should we really set the default? In this case it's always required on type instance creation.
+	// if not, it can be empty and Local Hub will save it in own core storage.
+	out.SetDefault(policy.TypeInstanceBackend{
+		TypeInstanceReference: policy.TypeInstanceReference{
+			ID:          "123123123123",
+			Description: ptr.String("Default Capact Hub storage"),
+		},
+	})
+
+	// 1. Global Defaults based on TypeRefs
+	for _, rule := range e.mergedPolicy.TypeInstance.Rules {
+		out.SetByTypeRef(rule.TypeRef, rule.Backend)
+	}
+
+	// TODO(https://github.com/capactio/capact/issues/624):
+	// 2. Global defaults based on required TypeInstance injection
+	// e.mergedPolicy.Interface.Defaults
+
+	//3. Override defaults with specific Interface Policy rule
+	inject, err := e.listRequiredTypeInstancesToInjectBasedOnPolicy(rule, implRev)
+	if err != nil {
+		return policy.TypeInstanceBackendCollection{}, err
+	}
+
+	for alias, rule := range inject {
+		out.SetByAlias(alias, policy.TypeInstanceBackend(rule))
+	}
+
+	return out, nil
+}
+
 // ListRequiredTypeInstancesToInjectBasedOnPolicy returns the required TypeInstance references,
 // which have to be injected into the Action, based on the current policy rules.
 func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {
+	var typeInstancesToInject []types.InputTypeInstanceRef
+	inject, err := e.listRequiredTypeInstancesToInjectBasedOnPolicy(policyRule, implRev)
+	if err != nil {
+		return nil, err
+	}
+
+	for alias, typeInstance := range inject {
+		typeInstancesToInject = append(typeInstancesToInject, types.InputTypeInstanceRef{
+			Name: alias,
+			ID:   typeInstance.ID,
+		})
+	}
+
+	return typeInstancesToInject, nil
+}
+
+// requiredTypeInstanceToInject holds required TypeInstances for injection indexed by alias.
+type requiredTypeInstanceToInject map[string]policy.RequiredTypeInstanceToInject
+
+func (e *PolicyEnforcedClient) listRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (requiredTypeInstanceToInject, error) {
 	requiredTIs := policyRule.RequiredTypeInstancesToInject()
 	if len(requiredTIs) == 0 {
 		return nil, nil
@@ -116,20 +173,18 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 		return nil, e.wrapValidationResultError(res.ErrorOrNil(), "while validating Policy rule")
 	}
 
-	var typeInstancesToInject []types.InputTypeInstanceRef
+	typeInstancesToInject := requiredTypeInstanceToInject{}
 	for _, typeInstance := range requiredTIs {
 		alias, found := e.findAliasForTypeInstance(typeInstance, implRev)
 		if !found {
 			// Implementation doesn't require such TypeInstance, skip injecting it
 			continue
 		}
-
-		typeInstanceToInject := types.InputTypeInstanceRef{
-			Name: alias,
-			ID:   typeInstance.ID,
+		if _, found := typeInstancesToInject[alias]; found {
+			return nil, fmt.Errorf("found duplicated alias %q entry under requires property", alias)
 		}
 
-		typeInstancesToInject = append(typeInstancesToInject, typeInstanceToInject)
+		typeInstancesToInject[alias] = typeInstance
 	}
 
 	return typeInstancesToInject, nil

@@ -30,19 +30,20 @@ const (
 
 // Policy holds the policy properties.
 type Policy struct {
-	Interface InterfacePolicy `json:"interface"`
+	Interface    InterfacePolicy    `json:"interface"`
+	TypeInstance TypeInstancePolicy `json:"typeInstance"`
 }
 
 // InterfacePolicy holds the Policy for Interfaces.
 type InterfacePolicy struct {
-	Rules RulesList `json:"rules"`
+	Rules InterfaceRulesList `json:"rules"`
 }
 
 // ActionPolicy holds the Policy injected during Action creation properties.
 type ActionPolicy Policy
 
-// RulesList holds the list of the rules in the policy.
-type RulesList []RulesForInterface
+// InterfaceRulesList holds the list of the rules in the Interface policy.
+type InterfaceRulesList []RulesForInterface
 
 // RulesForInterface holds a single policy rule for an Interface.
 // +kubebuilder:object:generate=true
@@ -110,33 +111,24 @@ type ImplementationConstraints struct {
 // RequiredTypeInstanceToInject holds a RequiredTypeInstances to be injected to the Action.
 // +kubebuilder:object:generate=true
 type RequiredTypeInstanceToInject struct {
-	// RequiredTypeInstanceReference is a reference to TypeInstance provided by user.
-	RequiredTypeInstanceReference `json:",inline"`
-
-	// TypeRef refers to a given Type.
-	TypeRef *types.ManifestRef `json:"typeRef"`
+	TypeInstanceReference `json:",inline"`
 }
 
-// RequiredTypeInstanceReference is a reference to TypeInstance provided by user.
+// TypeInstanceReference holds TypeInstance ID with TypeRef that is resolved in runtime.
 // +kubebuilder:object:generate=true
-type RequiredTypeInstanceReference struct {
+type TypeInstanceReference struct {
 	// ID is the TypeInstance identifier.
 	ID string `json:"id"`
 
-	// Description contains user's description for a given RequiredTypeInstanceToInject.
+	// Description contains user's description for a given TypeInstance.
 	Description *string `json:"description,omitempty"`
-}
 
-// UnmarshalJSON unmarshalls RequiredTypeInstanceToInject from bytes. It ignores all fields apart from RequiredTypeInstanceReference files.
-func (in *RequiredTypeInstanceToInject) UnmarshalJSON(bytes []byte) error {
-	var out RequiredTypeInstanceReference
-	if err := json.Unmarshal(bytes, &out); err != nil {
-		return err
-	}
+	// TypeRef refers to a given Type. Ignores if present in Policy as this is resolved only in runtime
+	// based on real data stored in Hub.
+	TypeRef *types.TypeRef `json:"-"`
 
-	in.RequiredTypeInstanceReference = out
-
-	return nil
+	// ExtendsHubStorage must be set to `true` if TypeRef is a child of `cap.core.type.hub.storage` node.
+	ExtendsHubStorage bool `json:"-"`
 }
 
 // AdditionalTypeInstanceToInject is used to represent additional TypeInstance injection for a given Implementation.

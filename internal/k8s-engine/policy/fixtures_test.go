@@ -33,7 +33,7 @@ func fixCfgMap(t *testing.T, in policy.Policy) *v1.ConfigMap {
 func fixModel() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -57,7 +57,7 @@ func fixModel() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
 											Description: ptr.String("Sample description"),
 										},

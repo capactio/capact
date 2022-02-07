@@ -34,15 +34,31 @@ func TestValidator_ValidateTypeInstancesMetadata(t *testing.T) {
 			Input: fixPolicyWithTypeRef(),
 		},
 		{
-			Name:  "Invalid",
+			Name:  "Policy Without TypeRefs",
 			Input: fixPolicyWithoutTypeRef(),
 			ExpectedErrMessage: ptr.String(
 				heredoc.Docf(`
 				- Metadata for "AdditionalTypeInstance":
 				    * missing Type reference for ID: "id3", name: "id-3"
+				- Metadata for "BackendTypeInstance":
+				    * missing Type reference for ID: "00fd161c-01bd-47a6-9872-47490e11f996", description: "Vault TI"
+				    * missing Type reference for ID: "31bb8355-10d7-49ce-a739-4554d8a40b63"
+				    * missing Type reference for ID: "a36ed738-dfe7-45ec-acd1-8e44e8db893b", description: "Default Capact PostgreSQL backend"
 				- Metadata for "RequiredTypeInstance":
 				    * missing Type reference for ID: "id"
 				    * missing Type reference for ID: "id2", description: "ID 2"`,
+				),
+			),
+		},
+		{
+			Name:  "Policy with wrong backends for Types",
+			Input: fixPolicyWithWrongBackendForTypeRef(),
+			ExpectedErrMessage: ptr.String(
+				heredoc.Docf(`
+				- Metadata for "BackendTypeInstance":
+				    * Type reference ID: "00fd161c-01bd-47a6-9872-47490e11f996", description: "Vault TI" is not a Hub storage
+				    * Type reference ID: "31bb8355-10d7-49ce-a739-4554d8a40b63" is not a Hub storage
+				    * Type reference ID: "a36ed738-dfe7-45ec-acd1-8e44e8db893b", description: "Default Capact PostgreSQL backend" is not a Hub storage`,
 				),
 			),
 		},
@@ -73,7 +89,7 @@ func TestValidator_IsTypeRefInjectableAndEqualToImplReq(t *testing.T) {
 	validator := policyvalidation.NewValidator(nil)
 	tests := []struct {
 		Name           string
-		TypeRef        *types.ManifestRef
+		TypeRef        *types.TypeRef
 		ReqItem        *gqlpublicapi.ImplementationRequirementItem
 		ExpectedResult bool
 	}{
@@ -91,7 +107,7 @@ func TestValidator_IsTypeRefInjectableAndEqualToImplReq(t *testing.T) {
 		},
 		{
 			Name: "Empty ReqItem",
-			TypeRef: &types.ManifestRef{
+			TypeRef: &types.TypeRef{
 				Path:     "path",
 				Revision: "revision",
 			},
@@ -100,7 +116,7 @@ func TestValidator_IsTypeRefInjectableAndEqualToImplReq(t *testing.T) {
 		},
 		{
 			Name: "Different path",
-			TypeRef: &types.ManifestRef{
+			TypeRef: &types.TypeRef{
 				Path:     "path1",
 				Revision: "1.0.0",
 			},
@@ -115,7 +131,7 @@ func TestValidator_IsTypeRefInjectableAndEqualToImplReq(t *testing.T) {
 		},
 		{
 			Name: "Different revision",
-			TypeRef: &types.ManifestRef{
+			TypeRef: &types.TypeRef{
 				Path:     "path",
 				Revision: "1.0.0",
 			},
@@ -130,7 +146,7 @@ func TestValidator_IsTypeRefInjectableAndEqualToImplReq(t *testing.T) {
 		},
 		{
 			Name: "Equal but empty alias",
-			TypeRef: &types.ManifestRef{
+			TypeRef: &types.TypeRef{
 				Path:     "path",
 				Revision: "revision",
 			},
@@ -144,7 +160,7 @@ func TestValidator_IsTypeRefInjectableAndEqualToImplReq(t *testing.T) {
 		},
 		{
 			Name: "Equal",
-			TypeRef: &types.ManifestRef{
+			TypeRef: &types.TypeRef{
 				Path:     "path",
 				Revision: "revision",
 			},

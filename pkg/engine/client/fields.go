@@ -104,4 +104,16 @@ const policyFields = `
 			}
 		}
 	}
+	typeInstance {
+		rules {
+			typeRef {
+				path
+				revision
+			}
+			backend {
+				id
+				description
+			}
+		}
+	}
 `

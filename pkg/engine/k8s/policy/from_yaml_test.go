@@ -48,7 +48,7 @@ func loadInput(t *testing.T, path string) string {
 func fixValidPolicy() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -77,7 +77,7 @@ func fixValidPolicy() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "sample-uuid",
 											Description: ptr.String("Google Cloud Platform Service Account"),
 										},

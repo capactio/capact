@@ -37,19 +37,26 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 		{
 			Name:     "Unresolved TypeRefs",
 			Input:    fixComplexPolicyWithoutTypeRef(),
-			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 9},
+			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 12},
 			Expected: fixComplexPolicyWithTypeRef(),
 		},
 		{
-			Name:   "Partial result",
-			Input:  fixComplexPolicyWithoutTypeRef(),
-			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 9, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}, "id8": {}}},
+			Name:  "Partial result",
+			Input: fixComplexPolicyWithoutTypeRef(),
+			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 12, IgnoreIDs: map[string]struct{}{
+				"id2": {}, "id4": {}, // required
+				"id8": {},             // additional
+				"id9": {}, "id11": {}, // backend
+			},
+			},
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
-				3 errors occurred:
+				5 errors occurred:
 					* missing Type reference for RequiredTypeInstance (ID: "id2", description: "ID 2")
 					* missing Type reference for RequiredTypeInstance (ID: "id4")
-					* missing Type reference for AdditionalTypeInstance (ID: "id8", name: "ID8")`,
+					* missing Type reference for AdditionalTypeInstance (ID: "id8", name: "ID8")
+					* missing Type reference for BackendTypeInstance (ID: "id9", description: "ID 9")
+					* missing Type reference for BackendTypeInstance (ID: "id11", description: "ID 11")`,
 				),
 			),
 		},

@@ -29,14 +29,20 @@ type ParallelSteps []*WorkflowStep
 // It extends the Argo WorkflowStep and adds Capact specific properties.
 type WorkflowStep struct {
 	*wfv1.WorkflowStep
-	CapactWhen                *string                  `json:"capact-when,omitempty"`
-	CapactAction              *string                  `json:"capact-action,omitempty"`
-	CapactPolicy              *policy.WorkflowPolicy   `json:"capact-policy,omitempty"`
-	CapactTypeInstanceOutputs []TypeInstanceDefinition `json:"capact-outputTypeInstances,omitempty"`
-	CapactTypeInstanceUpdates []TypeInstanceDefinition `json:"capact-updateTypeInstances,omitempty"`
+	CapactWhen                *string                     `json:"capact-when,omitempty"`
+	CapactAction              *string                     `json:"capact-action,omitempty"`
+	CapactPolicy              *policy.WorkflowPolicy      `json:"capact-policy,omitempty"`
+	CapactTypeInstanceOutputs []CapactTypeInstanceOutputs `json:"capact-outputTypeInstances,omitempty"`
+	CapactTypeInstanceUpdates []TypeInstanceDefinition    `json:"capact-updateTypeInstances,omitempty"`
 
 	// internal fields
 	typeInstanceOutputs map[string]*string
+}
+
+// CapactTypeInstanceOutputs holds data defined for `capact-outputTypeInstances` field on step level.
+type CapactTypeInstanceOutputs struct {
+	TypeInstanceDefinition `json:",inline"`
+	Backend                *string `json:"backend,omitempty"`
 }
 
 // TypeInstanceDefinition represents a TypeInstance,

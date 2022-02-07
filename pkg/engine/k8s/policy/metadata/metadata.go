@@ -12,6 +12,7 @@ type typeInstanceKind string
 const (
 	requiredTypeInstance   typeInstanceKind = "RequiredTypeInstance"
 	additionalTypeInstance typeInstanceKind = "AdditionalTypeInstance"
+	backendTypeInstance    typeInstanceKind = "BackendTypeInstance"
 )
 
 // TypeInstanceMetadata defines metadata for required and additional TypeInstances defined in Policy.
@@ -53,6 +54,19 @@ func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInst
 		for _, ruleItem := range rule.OneOf {
 			tis = append(tis, TypeInstanceIDsWithUnresolvedMetadataForRule(ruleItem)...)
 		}
+	}
+
+	// TypeInstances backends
+	for _, rule := range in.TypeInstance.Rules {
+		if rule.Backend.TypeRef != nil && rule.Backend.TypeRef.Path != "" && rule.Backend.TypeRef.Revision != "" {
+			continue
+		}
+
+		tis = append(tis, TypeInstanceMetadata{
+			ID:          rule.Backend.ID,
+			Description: rule.Backend.Description,
+			Kind:        backendTypeInstance,
+		})
 	}
 
 	return tis

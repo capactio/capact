@@ -304,8 +304,25 @@ enum ActionStatusPhase {
 
 input PolicyInput {
 	interface: InterfacePolicyInput
+    typeInstance: TypeInstancePolicyInput
 }
 
+# TypeInstance Policy Input
+input TypeInstancePolicyInput {
+    rules: [RulesForTypeInstanceInput!]!
+}
+
+input RulesForTypeInstanceInput {
+    typeRef: ManifestReferenceInput!
+    backend:     TypeInstanceBackendInput!
+}
+
+input TypeInstanceBackendInput {
+    id: ID!
+    description: String
+}
+
+# Interface Policy Input
 input InterfacePolicyInput {
 	rules: [RulesForInterfaceInput!]!
 }
@@ -350,8 +367,25 @@ input PolicyRuleImplementationConstraintsInput {
 
 type Policy {
   interface: InterfacePolicy
+  typeInstance: TypeInstancePolicy
 }
 
+# TypeInstance Policy
+type TypeInstancePolicy {
+    rules: [RulesForTypeInstance!]!
+}
+
+type RulesForTypeInstance {
+    typeRef: ManifestReferenceWithOptionalRevision!
+    backend:     TypeInstanceBackend!
+}
+
+type TypeInstanceBackend {
+    id: ID!
+    description: String
+}
+
+# Interface Policy
 type InterfacePolicy {
 	rules: [RulesForInterface!]!
 }

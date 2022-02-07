@@ -9,7 +9,7 @@ import (
 func fixPolicyWithTypeRef() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path: "cap.*",
@@ -20,22 +20,22 @@ func fixPolicyWithTypeRef() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID: "id",
-										},
-										TypeRef: &types.ManifestRef{
-											Path:     "cap.type.sample",
-											Revision: "0.1.0",
+											TypeRef: &types.TypeRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
+											},
 										},
 									},
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "id2",
 											Description: ptr.String("ID 2"),
-										},
-										TypeRef: &types.ManifestRef{
-											Path:     "cap.type.sample2",
-											Revision: "0.2.0",
+											TypeRef: &types.TypeRef{
+												Path:     "cap.type.sample2",
+												Revision: "0.2.0",
+											},
 										},
 									},
 								},

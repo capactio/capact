@@ -31,7 +31,9 @@ type CreateTypeInstanceInput struct {
 	CreatedBy  *string                         `json:"createdBy"`
 	TypeRef    *TypeInstanceTypeReferenceInput `json:"typeRef"`
 	Attributes []*AttributeReferenceInput      `json:"attributes"`
-	Value      interface{}                     `json:"value"`
+	// If not provided, TypeInstance value is stored as static value in Local Hub core storage.
+	Backend *TypeInstanceBackendInput `json:"backend"`
+	Value   interface{}               `json:"value"`
 }
 
 type CreateTypeInstanceOutput struct {
@@ -61,6 +63,14 @@ type TypeInstance struct {
 	PreviousResourceVersion *TypeInstanceResourceVersion   `json:"previousResourceVersion"`
 	ResourceVersion         *TypeInstanceResourceVersion   `json:"resourceVersion"`
 	ResourceVersions        []*TypeInstanceResourceVersion `json:"resourceVersions"`
+}
+
+type TypeInstanceBackend struct {
+	ID string `json:"id"`
+}
+
+type TypeInstanceBackendInput struct {
+	ID string `json:"id"`
 }
 
 type TypeInstanceFilter struct {
@@ -99,6 +109,7 @@ type TypeInstanceResourceVersion struct {
 	CreatedBy       *string                              `json:"createdBy"`
 	Metadata        *TypeInstanceResourceVersionMetadata `json:"metadata"`
 	Spec            *TypeInstanceResourceVersionSpec     `json:"spec"`
+	Backend         *TypeInstanceBackend                 `json:"backend"`
 }
 
 type TypeInstanceResourceVersionMetadata struct {

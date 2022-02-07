@@ -164,11 +164,13 @@ type OutputTypeInstanceDetails struct {
 }
 
 type Policy struct {
-	Interface *InterfacePolicy `json:"interface"`
+	Interface    *InterfacePolicy    `json:"interface"`
+	TypeInstance *TypeInstancePolicy `json:"typeInstance"`
 }
 
 type PolicyInput struct {
-	Interface *InterfacePolicyInput `json:"interface"`
+	Interface    *InterfacePolicyInput    `json:"interface"`
+	TypeInstance *TypeInstancePolicyInput `json:"typeInstance"`
 }
 
 type PolicyRuleImplementationConstraintsInput struct {
@@ -206,10 +208,38 @@ type RulesForInterfaceInput struct {
 	OneOf     []*PolicyRuleInput      `json:"oneOf"`
 }
 
+type RulesForTypeInstance struct {
+	TypeRef *ManifestReferenceWithOptionalRevision `json:"typeRef"`
+	Backend *TypeInstanceBackend                   `json:"backend"`
+}
+
+type RulesForTypeInstanceInput struct {
+	TypeRef *ManifestReferenceInput   `json:"typeRef"`
+	Backend *TypeInstanceBackendInput `json:"backend"`
+}
+
 // Additional Action status from the Runner
 type RunnerStatus struct {
 	// Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 	Status interface{} `json:"status"`
+}
+
+type TypeInstanceBackend struct {
+	ID          string  `json:"id"`
+	Description *string `json:"description"`
+}
+
+type TypeInstanceBackendInput struct {
+	ID          string  `json:"id"`
+	Description *string `json:"description"`
+}
+
+type TypeInstancePolicy struct {
+	Rules []*RulesForTypeInstance `json:"rules"`
+}
+
+type TypeInstancePolicyInput struct {
+	Rules []*RulesForTypeInstanceInput `json:"rules"`
 }
 
 // Stores user information

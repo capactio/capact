@@ -22,8 +22,11 @@ func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, err
 		return policy.Policy{}, err
 	}
 
+	typeInstanceRules := c.typeInstanceFromGraphQLInput(in.TypeInstance)
+
 	return policy.Policy{
-		Interface: ifaceRules,
+		Interface:    ifaceRules,
+		TypeInstance: typeInstanceRules,
 	}, nil
 }
 
@@ -31,7 +34,7 @@ func (c *Converter) interfaceFromGraphQLInput(in *graphql.InterfacePolicyInput) 
 	if in == nil {
 		return policy.InterfacePolicy{}, nil
 	}
-	var rules policy.RulesList
+	var rules policy.InterfaceRulesList
 
 	for _, gqlRule := range in.Rules {
 		iface := c.manifestRefFromGraphQLInput(gqlRule.Interface)
@@ -49,10 +52,58 @@ func (c *Converter) interfaceFromGraphQLInput(in *graphql.InterfacePolicyInput) 
 	return policy.InterfacePolicy{Rules: rules}, nil
 }
 
+func (c *Converter) typeInstanceFromGraphQLInput(in *graphql.TypeInstancePolicyInput) policy.TypeInstancePolicy {
+	if in == nil {
+		return policy.TypeInstancePolicy{}
+	}
+	var rules []policy.RulesForTypeInstance
+
+	for _, gqlRule := range in.Rules {
+		gqlRef, gqlBackend := gqlRule.TypeRef, gqlRule.Backend
+		if gqlRef == nil || gqlBackend == nil {
+			continue
+		}
+
+		ref := types.ManifestRefWithOptRevision(*gqlRef)
+		rules = append(rules, policy.RulesForTypeInstance{
+			TypeRef: ref,
+			Backend: policy.TypeInstanceBackend{
+				TypeInstanceReference: policy.TypeInstanceReference{
+					ID:          gqlBackend.ID,
+					Description: gqlBackend.Description,
+				},
+			},
+		})
+	}
+
+	return policy.TypeInstancePolicy{Rules: rules}
+}
+
 // ToGraphQL converts Policy model representation to GraphQL DTO.
 func (c *Converter) ToGraphQL(in policy.Policy) graphql.Policy {
 	return graphql.Policy{
-		Interface: c.interfaceToGraphQL(in.Interface),
+		Interface:    c.interfaceToGraphQL(in.Interface),
+		TypeInstance: c.typeInstanceToGraphQL(in.TypeInstance),
+	}
+}
+
+func (c *Converter) typeInstanceToGraphQL(in policy.TypeInstancePolicy) *graphql.TypeInstancePolicy {
+	var gqlRules []*graphql.RulesForTypeInstance
+
+	for _, rule := range in.Rules {
+		ref := graphql.ManifestReferenceWithOptionalRevision(rule.TypeRef)
+
+		gqlRules = append(gqlRules, &graphql.RulesForTypeInstance{
+			TypeRef: &ref,
+			Backend: &graphql.TypeInstanceBackend{
+				ID:          rule.Backend.ID,
+				Description: rule.Backend.Description,
+			},
+		})
+	}
+
+	return &graphql.TypeInstancePolicy{
+		Rules: gqlRules,
 	}
 }
 
@@ -243,7 +294,7 @@ func (c *Converter) requiredTypeInstancesToInjectFromGraphQLInput(in []*graphql.
 	var out []policy.RequiredTypeInstanceToInject
 	for _, item := range in {
 		out = append(out, policy.RequiredTypeInstanceToInject{
-			RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+			TypeInstanceReference: policy.TypeInstanceReference{
 				ID:          item.ID,
 				Description: item.Description,
 			},
