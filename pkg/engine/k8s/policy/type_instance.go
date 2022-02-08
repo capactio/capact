@@ -31,15 +31,8 @@ type TypeInstanceBackend struct {
 
 // TypeInstanceBackendCollection knows which Backend should be used for a given TypeInstance based on the TypeRef.
 type TypeInstanceBackendCollection struct {
-	byTypeRef      map[string]TypeInstanceBackend
-	byAlias        map[string]TypeInstanceBackend
-	defaultBackend TypeInstanceBackend
-}
-
-// SetDefault sets the default storage backend.
-// TODO(storage): probably not needed anymore.
-func (t *TypeInstanceBackendCollection) SetDefault(backend TypeInstanceBackend) {
-	t.defaultBackend = backend
+	byTypeRef map[string]TypeInstanceBackend
+	byAlias   map[string]TypeInstanceBackend
 }
 
 // SetByTypeRef associates a given TypeRef with a given storage backend instance.
@@ -64,14 +57,14 @@ func (t *TypeInstanceBackendCollection) SetByTypeRef(ref types.ManifestRefWithOp
 //    - cap.*
 //
 // If both methods fail, default backend is returned.
-func (t TypeInstanceBackendCollection) GetByTypeRef(typeRef types.TypeRef) TypeInstanceBackend {
+func (t TypeInstanceBackendCollection) GetByTypeRef(typeRef types.TypeRef) (TypeInstanceBackend, bool) {
 	// 1. Try the explicit TypeRef
 	backend, found := t.byTypeRef[t.key(types.ManifestRefWithOptRevision{
 		Path:     typeRef.Path,
 		Revision: ptr.String(typeRef.Revision),
 	})]
 	if found {
-		return backend
+		return backend, true
 	}
 
 	// 2. Try to find matching pattern for a given TypeRef.
@@ -93,13 +86,13 @@ func (t TypeInstanceBackendCollection) GetByTypeRef(typeRef types.TypeRef) TypeI
 		for _, pattern := range keyPatterns {
 			backend, found := t.byTypeRef[pattern]
 			if found {
-				return backend
+				return backend, true
 			}
 		}
 		iterations++
 	}
 
-	return t.defaultBackend
+	return TypeInstanceBackend{}, false
 }
 
 // SetByAlias associates a given alias with a given storage backend instance.

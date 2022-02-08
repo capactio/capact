@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
@@ -108,16 +107,6 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 // ListTypeInstancesBackendsBasedOnPolicy returns default backends defined in Policy and those specified explicitly in a given policy rule.
 func (e *PolicyEnforcedClient) ListTypeInstancesBackendsBasedOnPolicy(_ context.Context, rule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (policy.TypeInstanceBackendCollection, error) {
 	out := policy.TypeInstanceBackendCollection{}
-
-	// TODO(storage): set default Hub storage
-	// TODO(storage): but should we really set the default? In this case it's always required on type instance creation.
-	// if not, it can be empty and Local Hub will save it in own core storage.
-	out.SetDefault(policy.TypeInstanceBackend{
-		TypeInstanceReference: policy.TypeInstanceReference{
-			ID:          "123123123123",
-			Description: ptr.String("Default Capact Hub storage"),
-		},
-	})
 
 	// 1. Global Defaults based on TypeRefs
 	for _, rule := range e.mergedPolicy.TypeInstance.Rules {

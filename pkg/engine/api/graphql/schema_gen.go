@@ -1150,7 +1150,7 @@ enum ActionStatusPhase {
 
 input PolicyInput {
 	interface: InterfacePolicyInput
-    typeInstance: TypeInstancePolicyInput
+	typeInstance: TypeInstancePolicyInput
 }
 
 # TypeInstance Policy Input

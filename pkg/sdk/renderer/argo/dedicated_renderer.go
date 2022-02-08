@@ -1022,15 +1022,6 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 		})
 
 		// setup uses
-
-		// with backend
-		// TODO(storage): isn't it better to move it to Local Hub? IMO YES.
-		r.typeInstancesToOutput.relations = append(r.typeInstancesToOutput.relations, OutputTypeInstanceRelation{
-			From: artifactName,
-			To:   ptr.String(backend.ID),
-		})
-
-		// with other artifacts
 		for _, uses := range item.Uses {
 			usesArtifactName, ok := artifactNamesMap[uses]
 			if !ok {
@@ -1058,11 +1049,12 @@ func (*dedicatedRenderer) selectBackendAlias(upperStep, resolvedStep string) (st
 }
 
 func (*dedicatedRenderer) selectBackend(alias string, typeRef types.TypeRef, backends policy.TypeInstanceBackendCollection) (policy.TypeInstanceBackend, error) {
-	if alias == "" { // alias not set, get the cluster defaults
-		return backends.GetByTypeRef(typeRef), nil
+	if alias == "" { // alias not set, get the Policy default based on TypeRef
+		backend, _ := backends.GetByTypeRef(typeRef)
+		return backend, nil
 	}
 
-	// when alias is specified, required TypeInstance needs to be injected
+	// when alias is specified, required TypeInstance needs to be injected and be of Hub storage type
 	backend, found := backends.GetByAlias(alias)
 	if !found {
 		return policy.TypeInstanceBackend{}, fmt.Errorf("cannot find backend storage for specified %s alias", alias)

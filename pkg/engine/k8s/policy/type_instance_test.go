@@ -25,12 +25,14 @@ func TestTypeInstanceBackendCollection_GetByTypeRef(t *testing.T) {
 	tests := map[string]struct {
 		givenTypeRef types.TypeRef
 		expBackend   policy.TypeInstanceBackend
+		expFound     bool
 	}{
 		"Should match exact type ref": {
 			givenTypeRef: types.TypeRef{
 				Path:     "cap.type.capactio.examples.message",
 				Revision: "0.1.0",
 			},
+			expFound:   true,
 			expBackend: fixTypeInstanceBackend("ID1"),
 		},
 		"Should match pattern cap.type.capactio.examples.*": {
@@ -38,6 +40,7 @@ func TestTypeInstanceBackendCollection_GetByTypeRef(t *testing.T) {
 				Path:     "cap.type.capactio.examples.other-that-message",
 				Revision: "0.1.0",
 			},
+			expFound:   true,
 			expBackend: fixTypeInstanceBackend("ID2"),
 		},
 		"Should match pattern cap.type.capactio.examples.*:0.2.0": {
@@ -45,6 +48,7 @@ func TestTypeInstanceBackendCollection_GetByTypeRef(t *testing.T) {
 				Path:     "cap.type.capactio.examples.other-that-message",
 				Revision: "0.2.0",
 			},
+			expFound:   true,
 			expBackend: fixTypeInstanceBackend("ID3"),
 		},
 		"Should match generic cap.* with revision": {
@@ -52,6 +56,7 @@ func TestTypeInstanceBackendCollection_GetByTypeRef(t *testing.T) {
 				Path:     "cap.type.aws.examples",
 				Revision: "0.1.0",
 			},
+			expFound:   true,
 			expBackend: fixTypeInstanceBackend("ID5"),
 		},
 		"Should match generic cap.* with different revision": {
@@ -59,13 +64,24 @@ func TestTypeInstanceBackendCollection_GetByTypeRef(t *testing.T) {
 				Path:     "cap.type.aws.examples",
 				Revision: "0.2.0",
 			},
+			expFound:   true,
 			expBackend: fixTypeInstanceBackend("ID4"),
+		},
+
+		"Should not found backend for unknown path": {
+			givenTypeRef: types.TypeRef{
+				Path:     "some.not.registered.type.ref",
+				Revision: "0.2.0",
+			},
+			expFound: false,
 		},
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
-			gotBackend := data.GetByTypeRef(tc.givenTypeRef)
+			gotBackend, gotFound := data.GetByTypeRef(tc.givenTypeRef)
+
 			assert.Equal(t, tc.expBackend, gotBackend)
+			assert.Equal(t, tc.expFound, gotFound)
 		})
 	}
 }

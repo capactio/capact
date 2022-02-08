@@ -146,7 +146,6 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 			},
 			Attributes: []*graphqllocal.AttributeReferenceInput{},
 			Backend: &graphqllocal.TypeInstanceBackendInput{
-				// TODO: remove this and instead
 				ID: ti.Backend.ID,
 			},
 		})
