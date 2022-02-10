@@ -13,7 +13,6 @@ import (
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/pkg/errors"
@@ -99,24 +98,15 @@ func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.
 			return err
 		}
 
-		for _, ti := range out.TypeInstances {
-			validationResult, err := validation.ValidateTI(ctx, &validation.TypeInstanceValidation{
-				Alias: ti.Alias,
-				Value: ti.Value,
-				TypeRef: types.TypeRef{
-					Path:     ti.TypeRef.Path,
-					Revision: ti.TypeRef.Revision,
-				},
-			}, hubCli)
-			if err != nil {
-				return errors.Wrap(err, "while validating TypeInstance")
-			}
-			if validationResult.Len() > 0 {
-				return validationResult.ErrorOrNil()
-			}
-		}
-
 		typeInstanceToCreate = mergeCreateTypeInstances(typeInstanceToCreate, out)
+	}
+
+	validationResult, err := validation.ValidateTypeInstancesToCreate(ctx, hubCli, typeInstanceToCreate)
+	if err != nil {
+		return errors.Wrap(err, "while validating TypeInstances")
+	}
+	if validationResult.Len() > 0 {
+		return validationResult.ErrorOrNil()
 	}
 
 	// HACK: UsesRelations are required on GQL side so at least empty array needs to be send

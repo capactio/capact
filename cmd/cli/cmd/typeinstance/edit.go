@@ -9,7 +9,6 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -61,28 +60,12 @@ func editTI(ctx context.Context, opts editOptions, w io.Writer) error {
 		return err
 	}
 
-	for _, ti := range typeInstanceToUpdate {
-		if ti.TypeInstance == nil {
-			continue
-		}
-		currentTI, err := hubCli.FindTypeInstance(ctx, ti.ID)
-		if err != nil {
-			return errors.Wrapf(err, "while finding TypeInstance %s", ti.ID)
-		}
-
-		validationResult, err := validation.ValidateTI(ctx, &validation.TypeInstanceValidation{
-			Value: ti.TypeInstance.Value,
-			TypeRef: types.TypeRef{
-				Path:     currentTI.TypeRef.Path,
-				Revision: currentTI.TypeRef.Revision,
-			},
-		}, hubCli)
-		if err != nil {
-			return errors.Wrap(err, "while validating TypeInstance")
-		}
-		if validationResult.Len() > 0 {
-			return validationResult.ErrorOrNil()
-		}
+	validationResult, err := validation.ValidateTypeInstanceToUpdate(ctx, hubCli, typeInstanceToUpdate)
+	if err != nil {
+		return errors.Wrap(err, "while validating TypeInstance")
+	}
+	if validationResult.Len() > 0 {
+		return validationResult.ErrorOrNil()
 	}
 
 	_, err = hubCli.UpdateTypeInstances(ctx, typeInstanceToUpdate)

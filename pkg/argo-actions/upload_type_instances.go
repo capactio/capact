@@ -7,11 +7,9 @@ import (
 	"path/filepath"
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/validation"
 
-	"capact.io/capact/pkg/hub/client/local"
-	"capact.io/capact/pkg/hub/client/public"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
@@ -29,19 +27,17 @@ type UploadConfig struct {
 // Upload implements the Action interface.
 // It is used to upload TypeInstances to the Local Hub.
 type Upload struct {
-	log          *zap.Logger
-	localClient  *local.Client
-	publicClient *public.Client
-	cfg          UploadConfig
+	log    *zap.Logger
+	client *hubclient.Client
+	cfg    UploadConfig
 }
 
 // NewUploadAction returns a new Upload instance.
-func NewUploadAction(log *zap.Logger, localClient *local.Client, publicClient *public.Client, cfg UploadConfig) Action {
+func NewUploadAction(log *zap.Logger, client *hubclient.Client, cfg UploadConfig) Action {
 	return &Upload{
-		log:          log,
-		localClient:  localClient,
-		publicClient: publicClient,
-		cfg:          cfg,
+		log:    log,
+		client: client,
+		cfg:    cfg,
 	}
 }
 
@@ -91,20 +87,12 @@ func (u *Upload) Do(ctx context.Context) error {
 
 	u.log.Info("Validating TypeInstances")
 
-	for _, ti := range payload.TypeInstances {
-		validationResult, err := validation.ValidateTI(ctx, &validation.TypeInstanceValidation{
-			Value: ti.Value,
-			TypeRef: types.TypeRef{
-				Path:     ti.TypeRef.Path,
-				Revision: ti.TypeRef.Revision,
-			},
-		}, u.publicClient)
-		if err != nil {
-			return errors.Wrap(err, "while validating TypeInstance")
-		}
-		if validationResult.Len() > 0 {
-			return validationResult.ErrorOrNil()
-		}
+	validationResult, err := validation.ValidateTypeInstancesToCreate(ctx, u.client, payload)
+	if err != nil {
+		return errors.Wrap(err, "while validating TypeInstances")
+	}
+	if validationResult.Len() > 0 {
+		return validationResult.ErrorOrNil()
 	}
 
 	u.log.Info("Uploading TypeInstances to Hub...", zap.Int("TypeInstance count", len(payload.TypeInstances)))
@@ -136,5 +124,5 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 }
 
 func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) ([]graphqllocal.CreateTypeInstanceOutput, error) {
-	return u.localClient.CreateTypeInstances(ctx, in)
+	return u.client.Local.CreateTypeInstances(ctx, in)
 }

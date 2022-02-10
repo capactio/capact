@@ -1,59 +1,69 @@
-package validation_test
+package validation
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
-	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"capact.io/capact/pkg/sdk/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateTI(t *testing.T) {
+func TestValidateTypeInstances(t *testing.T) {
 	tests := map[string]struct {
-		types        []*gqlpublicapi.Type
-		typeInstance validation.TypeInstanceValidation
-		expError     error
+		schemaCollection       SchemaCollection
+		typeInstanceCollection []typeInstanceData
+		expError               error
 	}{
 		"When TypeInstance values do not contain the required property": {
-			types: []*gqlpublicapi.Type{validation.AWSCredsTypeRevFixture()},
-			typeInstance: validation.TypeInstanceValidation{
-				TypeRef: types.TypeRef{
-					Path:     "cap.type.aws.auth.creds",
-					Revision: "0.1.0",
-				},
-				Value: map[string]interface{}{
-					"test1": "test",
-					"test2": "test",
+			schemaCollection: SchemaCollection{
+				"cap.type.aws.auth.creds:0.1.0": {
+					Value:    fmt.Sprintf("%v", AWSCredsTypeRevFixture().Revisions[0].Spec.JSONSchema),
+					Required: false,
 				},
 			},
-			expError: fmt.Errorf("%s", "- TypeInstance value \"\":\n    * (root): key is required"),
+			typeInstanceCollection: []typeInstanceData{
+				{
+					typeRefWithRevision: "cap.type.aws.auth.creds:0.1.0",
+					value: map[string]interface{}{
+						"test1": "test",
+						"test2": "test",
+					},
+					alias: pointerToAlias("aws-creds"),
+				},
+			},
+			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance with alias aws-creds\":\n    * (root): key is required"),
 		},
 		"When TypeInstance value does not meet Type property constraints": {
-			types: []*gqlpublicapi.Type{validation.AWSElasticsearchTypeRevFixture()},
-			typeInstance: validation.TypeInstanceValidation{
-				TypeRef: types.TypeRef{
-					Path:     "cap.type.aws.elasticsearch.install-input",
-					Revision: "0.1.0",
-				},
-				Value: map[string]interface{}{
-					"replicas": 5,
+			schemaCollection: SchemaCollection{
+				"cap.type.aws.elasticsearch.install-input:0.1.0": {
+					Value:    fmt.Sprintf("%v", AWSElasticsearchTypeRevFixture().Revisions[0].Spec.JSONSchema),
+					Required: false,
 				},
 			},
-			expError: fmt.Errorf("%s", "- TypeInstance value \"\":\n    * replicas: Invalid type. Expected: string, given: integer"),
+			typeInstanceCollection: []typeInstanceData{
+				{
+					typeRefWithRevision: "cap.type.aws.elasticsearch.install-input:0.1.0",
+					value: map[string]interface{}{
+						"replicas": 5,
+					},
+					id: "5605af48-c34f-4bdc-b2d8-53c679bdfa5a",
+				},
+			},
+			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance with id 5605af48-c34f-4bdc-b2d8-53c679bdfa5a\":\n    * replicas: Invalid type. Expected: string, given: integer"),
 		},
 		"When TypeInstance contain the required property": {
-			types: []*gqlpublicapi.Type{validation.AWSCredsTypeRevFixture()},
-			typeInstance: validation.TypeInstanceValidation{
-				TypeRef: types.TypeRef{
-					Path:     "cap.type.aws.auth.creds",
-					Revision: "0.1.0",
+			schemaCollection: SchemaCollection{
+				"cap.type.aws.auth.creds:0.1.0": {
+					Value:    fmt.Sprintf("%v", AWSCredsTypeRevFixture().Revisions[0].Spec.JSONSchema),
+					Required: false,
 				},
-				Value: map[string]interface{}{
-					"key": "aaa",
+			},
+			typeInstanceCollection: []typeInstanceData{
+				{
+					typeRefWithRevision: "cap.type.aws.auth.creds:0.1.0",
+					value: map[string]interface{}{
+						"key": "aaa",
+					},
 				},
 			},
 			expError: nil,
@@ -62,17 +72,16 @@ func TestValidateTI(t *testing.T) {
 
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
-			// given
-			hubCli := validation.FakeHubCli{
-				Types: tc.types,
-			}
-
 			// when
-			validationResults, err := validation.ValidateTI(context.Background(), &tc.typeInstance, &hubCli)
+			validationResults, err := validateTypeInstances(tc.schemaCollection, tc.typeInstanceCollection)
 
 			// then
 			require.NoError(t, err)
 			assert.Equal(t, tc.expError, validationResults.ErrorOrNil())
 		})
 	}
+}
+
+func pointerToAlias(alias string) *string {
+	return &alias
 }

@@ -8,6 +8,7 @@ import (
 
 	"capact.io/capact/internal/logger"
 	argoactions "capact.io/capact/pkg/argo-actions"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/hub/client/public"
 
@@ -42,6 +43,12 @@ func main() {
 	localClient := local.NewDefaultClient(cfg.LocalHubEndpoint)
 	publicClient := public.NewDefaultClient(cfg.PublicHubEndpoint)
 
+	// TODO: Consider using connection `hubclient.New` and route requests through Gateway
+	client := hubclient.Client{
+		Local:  localClient,
+		Public: publicClient,
+	}
+
 	switch cfg.Action {
 	case argoactions.DownloadAction:
 		log := logger.With(zap.String("Action", argoactions.DownloadAction))
@@ -49,11 +56,11 @@ func main() {
 
 	case argoactions.UploadAction:
 		log := logger.With(zap.String("Action", argoactions.UploadAction))
-		action = argoactions.NewUploadAction(log, localClient, publicClient, cfg.UploadConfig)
+		action = argoactions.NewUploadAction(log, &client, cfg.UploadConfig)
 
 	case argoactions.UpdateAction:
 		log := logger.With(zap.String("Action", argoactions.UpdateAction))
-		action = argoactions.NewUpdateAction(log, localClient, publicClient, cfg.UpdateConfig)
+		action = argoactions.NewUpdateAction(log, &client, cfg.UpdateConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)
