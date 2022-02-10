@@ -26,7 +26,7 @@ type TypeInstanceValidationHubClient interface {
 
 // ValidateTypeInstancesToCreate  is responsible for validating TypeInstance which do not exist and will be created.
 func ValidateTypeInstancesToCreate(ctx context.Context, client TypeInstanceValidationHubClient, typeInstance *graphqllocal.CreateTypeInstancesInput) (Result, error) {
-	var typeInstanceCollection []typeInstanceData
+	var typeInstanceCollection []*typeInstanceData
 	typeRefCollection := TypeRefCollection{}
 
 	for _, ti := range typeInstance.TypeInstances {
@@ -41,7 +41,7 @@ func ValidateTypeInstancesToCreate(ctx context.Context, client TypeInstanceValid
 		typeRefCollection[name] = TypeRef{
 			TypeRef: typeRef,
 		}
-		typeInstanceCollection = append(typeInstanceCollection, typeInstanceData{
+		typeInstanceCollection = append(typeInstanceCollection, &typeInstanceData{
 			alias:               ti.Alias,
 			value:               ti.Value,
 			typeRefWithRevision: name,
@@ -80,12 +80,12 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 		idToTypeNameMap[id] = name
 	}
 
-	var typeInstanceCollection []typeInstanceData
+	var typeInstanceCollection []*typeInstanceData
 	for _, ti := range typeInstanceToUpdate {
 		if ti.TypeInstance == nil {
 			continue
 		}
-		typeInstanceCollection = append(typeInstanceCollection, typeInstanceData{
+		typeInstanceCollection = append(typeInstanceCollection, &typeInstanceData{
 			id:                  ti.ID,
 			value:               ti.TypeInstance.Value,
 			typeRefWithRevision: idToTypeNameMap[ti.ID],
@@ -100,7 +100,7 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 	return validateTypeInstances(schemasCollection, typeInstanceCollection)
 }
 
-func validateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollection []typeInstanceData) (Result, error) {
+func validateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollection []*typeInstanceData) (Result, error) {
 	resultBldr := NewResultBuilder("Validation TypeInstances")
 
 	for _, ti := range typeInstanceCollection {

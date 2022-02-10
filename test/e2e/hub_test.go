@@ -250,7 +250,7 @@ var _ = Describe("GraphQL API", func() {
 			// create TypeInstance
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
 				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-					Path:     "cap.type.capactio.capact.ti",
+					Path:     "cap.type.capactio.capact.validation.single-key",
 					Revision: "0.1.0",
 				},
 				Attributes: []*gqllocalapi.AttributeReferenceInput{
@@ -260,7 +260,7 @@ var _ = Describe("GraphQL API", func() {
 					},
 				},
 				Value: map[string]interface{}{
-					"foo": "bar",
+					"key": "bar",
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -281,14 +281,14 @@ var _ = Describe("GraphQL API", func() {
 				},
 				Spec: &gqllocalapi.TypeInstanceResourceVersionSpec{
 					Value: map[string]interface{}{
-						"foo": "bar",
+						"key": "bar",
 					},
 				},
 			}
 			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
 				ID: createdTypeInstance.ID,
 				TypeRef: &gqllocalapi.TypeInstanceTypeReference{
-					Path:     "cap.type.capactio.capact.ti",
+					Path:     "cap.type.capactio.capact.validation.single-key",
 					Revision: "0.1.0",
 				},
 				Uses:                    []*gqllocalapi.TypeInstance{},
@@ -639,7 +639,7 @@ func includes(ids []string, expID string) bool {
 func typeInstance(ver string) *gqllocalapi.CreateTypeInstanceInput {
 	return &gqllocalapi.CreateTypeInstanceInput{
 		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.sample-v" + ver,
+			Path:     "cap.type.capactio.capact.validation.single-key",
 			Revision: "0.1.0",
 		},
 		Attributes: []*gqllocalapi.AttributeReferenceInput{
@@ -649,7 +649,7 @@ func typeInstance(ver string) *gqllocalapi.CreateTypeInstanceInput {
 			},
 		},
 		Value: map[string]interface{}{
-			"sample-v" + ver: true,
+			"key": "sample-v" + ver,
 		},
 	}
 }

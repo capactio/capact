@@ -11,7 +11,7 @@ import (
 func TestValidateTypeInstances(t *testing.T) {
 	tests := map[string]struct {
 		schemaCollection       SchemaCollection
-		typeInstanceCollection []typeInstanceData
+		typeInstanceCollection []*typeInstanceData
 		expError               error
 	}{
 		"When TypeInstance values do not contain the required property": {
@@ -21,7 +21,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					Required: false,
 				},
 			},
-			typeInstanceCollection: []typeInstanceData{
+			typeInstanceCollection: []*typeInstanceData{
 				{
 					typeRefWithRevision: "cap.type.aws.auth.creds:0.1.0",
 					value: map[string]interface{}{
@@ -40,7 +40,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					Required: false,
 				},
 			},
-			typeInstanceCollection: []typeInstanceData{
+			typeInstanceCollection: []*typeInstanceData{
 				{
 					typeRefWithRevision: "cap.type.aws.elasticsearch.install-input:0.1.0",
 					value: map[string]interface{}{
@@ -58,7 +58,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					Required: false,
 				},
 			},
-			typeInstanceCollection: []typeInstanceData{
+			typeInstanceCollection: []*typeInstanceData{
 				{
 					typeRefWithRevision: "cap.type.aws.auth.creds:0.1.0",
 					value: map[string]interface{}{
