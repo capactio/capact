@@ -1,6 +1,6 @@
-import { readFileSync } from "fs";
-import { makeAugmentedSchema, neo4jgraphql } from "neo4j-graphql-js";
-import { Driver, Transaction } from "neo4j-driver";
+import {readFileSync} from "fs";
+import {makeAugmentedSchema, neo4jgraphql} from "neo4j-graphql-js";
+import {Driver, Transaction} from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
@@ -54,7 +54,7 @@ export const schema = makeAugmentedSchema({
         args: CreateTypeInstancesArgs,
         context: ContextWithDriver
       ) => {
-        const { typeInstances, usesRelations } = args.in;
+        const {typeInstances, usesRelations} = args.in;
 
         const aliases = typeInstances
           .filter((x) => x.alias !== undefined)
@@ -116,7 +116,7 @@ export const schema = makeAugmentedSchema({
 
                RETURN ti.id as uuid, typeInstance.alias as alias
               `,
-                { typeInstances }
+                {typeInstances}
               );
 
               if (
@@ -142,7 +142,7 @@ export const schema = makeAugmentedSchema({
                 {}
               );
               const usesRelationsParams = usesRelations.map(
-                ({ from, to }: { from: string; to: string }) => ({
+                ({from, to}: { from: string; to: string }) => ({
                   from: aliasMappings[from] || from,
                   to: aliasMappings[to] || to,
                 })
@@ -203,7 +203,7 @@ export const schema = makeAugmentedSchema({
                 );
                 break;
               case UpdateTypeInstanceErrorCode.NotFound: {
-                const ids = args.in.map(({ id }) => id);
+                const ids = args.in.map(({id}) => id);
                 const notFoundIDs = ids.filter(
                   (x) => !customErr.ids.includes(x)
                 );
@@ -271,7 +271,7 @@ export const schema = makeAugmentedSchema({
                     }
 
                     RETURN $id`,
-                { id: args.id, ownerID: args.ownerID || null }
+                {id: args.id, ownerID: args.ownerID || null}
               );
               return args.id;
             }
@@ -404,7 +404,7 @@ async function switchLocking(
           ) YIELD value as lockingProcess
 
           RETURN  allIDs, lockedIDs, lockingProcess`,
-    { in: args.in }
+    {in: args.in}
   );
 
   if (!instanceLockedByOthers.records.length) {
@@ -479,28 +479,29 @@ function tryToExtractCustomError(
   return null;
 }
 
-export async function ensureCoreStorageTypeInstance(context: ContextWithDriver, uri: string) {
+export async function ensureCoreStorageTypeInstance(context: ContextWithDriver) {
   const neo4jSession = context.driver.session();
   const value = {
-    uri: uri
+    acceptValue: false,
+    contextSchema: null,
   }
   try {
     await neo4jSession.writeTransaction(
       async (tx: Transaction) => {
         await tx.run(`
-							MERGE (ti:TypeInstance {id: "318b99bd-9b26-4bc1-8259-0a7ff5dae61c"})
-							MERGE (typeRef:TypeInstanceTypeReference {path: "cap.core.type.hub.storage.neo4j", revision: "0.1.0"})
-							MERGE (backend:TypeInstanceBackendReference {abstract: true, id: ti.id, description: "Built-in Hub storage"})
-							MERGE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: "core"})
-							MERGE (spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($value)})
+				    MERGE (ti:TypeInstance {id: "318b99bd-9b26-4bc1-8259-0a7ff5dae61c"})
+				    MERGE (typeRef:TypeInstanceTypeReference {path: "cap.core.type.hub.storage.neo4j", revision: "0.1.0"})
+				    MERGE (backend:TypeInstanceBackendReference {abstract: true, id: ti.id, description: "Built-in Hub storage"})
+				    MERGE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: "core"})
+				    MERGE (spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($value)})
 
-							MERGE (ti)-[:OF_TYPE]->(typeRef)
-							MERGE (ti)-[:STORED_IN]->(backend)
-							MERGE (ti)-[:CONTAINS]->(tir)
-							MERGE (tir)-[:DESCRIBED_BY]->(metadata:TypeInstanceResourceVersionMetadata)
-							MERGE (tir)-[:SPECIFIED_BY]->(spec)
+				    MERGE (ti)-[:OF_TYPE]->(typeRef)
+				    MERGE (ti)-[:STORED_IN]->(backend)
+				    MERGE (ti)-[:CONTAINS]->(tir)
+				    MERGE (tir)-[:DESCRIBED_BY]->(metadata:TypeInstanceResourceVersionMetadata)
+				    MERGE (tir)-[:SPECIFIED_BY]->(spec)
 
-							RETURN ti
+				    RETURN ti
 					`, {value});
       }
     );

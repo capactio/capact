@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"capact.io/capact/internal/ptr"
-
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
@@ -40,7 +39,7 @@ func (t *TypeInstanceBackendCollection) SetByTypeRef(ref types.ManifestRefWithOp
 	if t.byTypeRef == nil {
 		t.byTypeRef = map[string]TypeInstanceBackend{}
 	}
-	t.byTypeRef[t.key(ref)] = backend
+	t.byTypeRef[ref.String()] = backend
 }
 
 // GetByTypeRef returns storage backend for a given TypeRef.
@@ -56,13 +55,13 @@ func (t *TypeInstanceBackendCollection) SetByTypeRef(ref types.ManifestRefWithOp
 //    - cap.*:0.1.0
 //    - cap.*
 //
-// If both methods fail, default backend is returned.
 func (t TypeInstanceBackendCollection) GetByTypeRef(typeRef types.TypeRef) (TypeInstanceBackend, bool) {
 	// 1. Try the explicit TypeRef
-	backend, found := t.byTypeRef[t.key(types.ManifestRefWithOptRevision{
+	key := types.ManifestRefWithOptRevision{
 		Path:     typeRef.Path,
 		Revision: ptr.String(typeRef.Revision),
-	})]
+	}
+	backend, found := t.byTypeRef[key.String()]
 	if found {
 		return backend, true
 	}
@@ -119,11 +118,4 @@ func (t *TypeInstanceBackendCollection) GetAll() map[string]TypeInstanceBackend 
 		out[k] = v
 	}
 	return out
-}
-
-func (t TypeInstanceBackendCollection) key(typeRef types.ManifestRefWithOptRevision) string {
-	if typeRef.Revision != nil && *typeRef.Revision != "" {
-		return fmt.Sprintf("%s:%s", typeRef.Path, *typeRef.Revision)
-	}
-	return typeRef.Path
 }

@@ -46,7 +46,7 @@ readonly CAPACT_USE_TEST_SETUP="false"
 #
 
 readonly CAPACT_INCREASE_RESOURCE_LIMITS="true"
-readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL="github.com/capactio/hub-manifests"
+readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL="github.com/mszostok/os-hub-manifests"
 # The git ref to checkout. It can point to a commit SHA, a branch name, or a tag.
 # If you want to use your forked version, remember to update CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL  respectively.
-readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF="main"
+readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF="policy-syntax/type-instances"

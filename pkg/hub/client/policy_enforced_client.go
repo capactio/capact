@@ -110,7 +110,6 @@ func (e *PolicyEnforcedClient) ListTypeInstancesBackendsBasedOnPolicy(_ context.
 
 	// 1. Global Defaults based on TypeRefs
 	for _, rule := range e.mergedPolicy.TypeInstance.Rules {
-		// ensure that rule.TypeRef.Revision is resolved!
 		out.SetByTypeRef(rule.TypeRef, rule.Backend)
 	}
 

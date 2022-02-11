@@ -43,7 +43,7 @@ async function main() {
   logger.info("Starting Hub", {mode: config.hubMode});
 
   if (config.hubMode === HubMode.Local) {
-    await ensureCoreStorageTypeInstance({driver}, `http://${bindAddress}:${bindPort}/graphql`)
+    await ensureCoreStorageTypeInstance({driver})
     logger.info("Successfully registered TypeInstance for core backend storage");
   }
 

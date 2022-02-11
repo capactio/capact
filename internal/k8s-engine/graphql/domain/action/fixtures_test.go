@@ -53,12 +53,21 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 						Path:     "path1",
 						Revision: "0.1.0",
 					},
+					Backend: &graphql.TypeInstanceBackendDetails{
+						ID:       "id11",
+						Abstract: true,
+					},
 				},
 				{
 					ID: "id2",
 					TypeRef: &graphql.ManifestReference{
 						Path:     "path2",
 						Revision: "0.1.0",
+					},
+
+					Backend: &graphql.TypeInstanceBackendDetails{
+						ID:       "id22",
+						Abstract: false,
 					},
 				},
 			},
@@ -167,12 +176,20 @@ func fixK8sAction(t *testing.T, name, namespace string) v1alpha1.Action {
 							Path:     "path1",
 							Revision: ptr.String("0.1.0"),
 						},
+						Backend: v1alpha1.TypeInstanceBackend{
+							ID:       "id11",
+							Abstract: true,
+						},
 					},
 					{
 						ID: "id2",
 						TypeRef: &v1alpha1.ManifestReference{
 							Path:     "path2",
 							Revision: ptr.String("0.1.0"),
+						},
+						Backend: v1alpha1.TypeInstanceBackend{
+							ID:       "id22",
+							Abstract: false,
 						},
 					},
 				},
@@ -338,6 +355,37 @@ func fixGQLInputActionPolicy() *graphql.PolicyInput {
 				},
 			},
 		},
+		TypeInstance: &graphql.TypeInstancePolicyInput{
+			Rules: []*graphql.RulesForTypeInstanceInput{
+				{
+					TypeRef: &graphql.ManifestReferenceInput{
+						Path:     "cap.type.aws.auth.credentials",
+						Revision: ptr.String("0.1.0"),
+					},
+					Backend: &graphql.TypeInstanceBackendRuleInput{
+						ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+						Description: ptr.String("Vault TI"),
+					},
+				},
+				{
+					TypeRef: &graphql.ManifestReferenceInput{
+						Path: "cap.type.aws.*",
+					},
+					Backend: &graphql.TypeInstanceBackendRuleInput{
+						ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+					},
+				},
+				{
+					TypeRef: &graphql.ManifestReferenceInput{
+						Path: "cap.*",
+					},
+					Backend: &graphql.TypeInstanceBackendRuleInput{
+						ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+						Description: ptr.String("Default Capact PostgreSQL backend"),
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -432,7 +480,7 @@ func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1
 		sec.StringData["parameter-input-parameters"] = `{"param":"one"}`
 	}
 	if policyEnabled {
-		sec.StringData["action-policy.json"] = `{"interface":{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}],"additionalTypeInstances":[{"name":"additional-ti","id":"additional-ti-id"}]}}]}]}}`
+		sec.StringData["action-policy.json"] = `{"interface":{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}],"additionalTypeInstances":[{"name":"additional-ti","id":"additional-ti-id"}]}}]}]},"typeInstance":{"rules":[{"typeRef":{"path":"cap.type.aws.auth.credentials","revision":"0.1.0"},"backend":{"id":"00fd161c-01bd-47a6-9872-47490e11f996","description":"Vault TI"}},{"typeRef":{"path":"cap.type.aws.*","revision":null},"backend":{"id":"31bb8355-10d7-49ce-a739-4554d8a40b63","description":null}},{"typeRef":{"path":"cap.*","revision":null},"backend":{"id":"a36ed738-dfe7-45ec-acd1-8e44e8db893b","description":"Default Capact PostgreSQL backend"}}]}}`
 	}
 
 	return sec
