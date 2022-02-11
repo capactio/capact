@@ -79,19 +79,23 @@ export const schema = makeAugmentedSchema({
                WITH *
                CALL apoc.do.when(
                    typeInstance.backend.id IS NOT NULL,
-                   'RETURN $in.backend.id as id',
+                   '
+                    WITH false as abstract
+                    RETURN $in.backend.id as id, abstract
+                   ',
                    '
                     // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.
+                    WITH true as abstract
                     MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: "cap.core.type.hub.storage.neo4j", revision: "0.1.0"})
-                    RETURN backend.id as id
+                    RETURN backend.id as id, abstract
                    ',
                    {in: typeInstance}
                ) YIELD value as backend
-               MATCH (backendTI:TypeInstance {id: backend.id})-[:STORED_IN]->(backendTIRef)
+               MATCH (backendTI:TypeInstance {id: backend.id})
                CREATE (ti)-[:USES]->(backendTI)
                // TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check
                // if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.
-               MERGE (storageRef:TypeInstanceBackendReference {abstract: backendTIRef.abstract, id: backendTI.id})
+               MERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})
                CREATE (ti)-[:STORED_IN]->(storageRef)
 
 							 // TypeRef

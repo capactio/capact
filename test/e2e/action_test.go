@@ -47,64 +47,26 @@ var _ = Describe("Action", func() {
 		hubClient = getHubGraphQLClient()
 		actionName = getActionName()
 
-		// Ensure Test Policy
+		// Ensure default Test Policy
 		setGlobalTestPolicy(ctx, engineClient)
 	})
 
 	AfterEach(func() {
 		// cleanup Action
 		engineClient.DeleteAction(ctx, actionName)
-		//engineClient.DeleteAction(ctx, failingActionName)
+		engineClient.DeleteAction(ctx, failingActionName)
 	})
 	const actionPath = "cap.interface.capactio.capact.validation.action.passing"
 
 	Context("Action execution", func() {
-		It("should pick proper Implementation B", func() {
-			actionPath := "cap.interface.capactio.capact.validation.action.passing"
-			testValue := "Implementation B"
 
-			By("1. Preparing input Type Instances")
-			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(testValue)
-			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
-			defer downloadTICleanup()
-			By("1.2 Create TypeInstance which is required for Implementation B to be picked based on Policy")
-			typeInstanceValue := getTypeInstanceInputForPolicy()
-			typeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
-			defer tiCleanupFn()
-			injectedTypeInstanceID := typeInstance.ID
-
-			inputData := &enginegraphql.ActionInputData{
-				TypeInstances: []*enginegraphql.InputTypeInstanceData{
-					{Name: "testInput", ID: downloadTI.ID},
-				},
-			}
-			builtinStorage := getBuiltinStorageTypeInstance(ctx, hubClient)
-
-			By("2. Modifying Policy to make Implementation B picked for next run...")
-			globalPolicyRequiredTypeInstances := enginegraphql.RequiredTypeInstanceReferenceInput{
-				ID:          injectedTypeInstanceID,
-				Description: ptr.String("Test TypeInstance"),
-			}
-			setGlobalTestPolicy(ctx, engineClient, prependInjectRuleForPassingActionInterface(globalPolicyRequiredTypeInstances))
-
-			By("3. Expecting Implementation B is picked based on test policy...")
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
-			assertActionRenderedWorkflowContains(action, "echo 'Implementation B'")
-			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
-
-			By("4. Check Uploaded TypeInstances")
-			assertUploadedTypeInstance(ctx, hubClient, testValue, builtinStorage.Backend)
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, HaveLen(1))
-		})
-
-		It("should pick Implementation A with default Policy", func() {
-			testValue := "Implementation A"
+		It("should pick Implementation A with empty inject Policy", func() {
+			implIndicatorValue := "Implementation A"
 
 			By("1. Preparing input Type Instances")
 
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(testValue)
+			download := getTypeInstanceInputForDownload(implIndicatorValue)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
@@ -120,8 +82,8 @@ var _ = Describe("Action", func() {
 
 			inputData := &enginegraphql.ActionInputData{
 				TypeInstances: []*enginegraphql.InputTypeInstanceData{
-					{Name: "testUpdate", ID: updateTI.ID},
 					{Name: "testInput", ID: downloadTI.ID},
+					{Name: "testUpdate", ID: updateTI.ID},
 				},
 			}
 
@@ -134,49 +96,107 @@ var _ = Describe("Action", func() {
 				},
 				Backend: &enginegraphql.TypeInstanceBackendDetails{
 					ID:       builtinStorage.ID,
-					Abstract: builtinStorage.Backend.Abstract,
+					Abstract: true,
 				},
 			}
 			By("2. Expecting Implementation A is picked and builtin storage is used...")
 
 			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
-			assertActionRenderedWorkflowContains(action, "echo 'Implementation A'")
+			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
-			By("3. Check TypeInstances")
 			By("3.1 Check uploaded TypeInstances")
-			assertUploadedTypeInstance(ctx, hubClient, testValue, &hublocalgraphql.TypeInstanceBackend{ID: builtinStorage.ID, Abstract: true})
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElement(expUpdatedTI), HaveLen(2)))
+			uploadedTI, cleanup := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanup() // We need to clean it up as it's not deleted when Action is deleted.
+			Expect(uploadedTI.Backend).Should(Equal(&hublocalgraphql.TypeInstanceBackendReference{ID: builtinStorage.ID, Abstract: true}))
 
 			By("3.2 Check updated TypeInstances")
-			updateTI, err := hubClient.FindTypeInstance(ctx, updateTI.ID)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(updateTI).ToNot(BeNil())
+			getTypeInstanceByIDAndValue(ctx, hubClient, updateTI.ID, implIndicatorValue)
 
-			_, err = getTypeInstanceWithValue([]hublocalgraphql.TypeInstance{*updateTI}, testValue)
-			Expect(err).ToNot(HaveOccurred())
+			By("3.3 Check Action output TypeInstances")
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTI, uploadedTI), HaveLen(2)))
 
-			By("3.3 Deleting Action...")
-			err = engineClient.DeleteAction(ctx, actionName)
+			By("4. Deleting Action...")
+			err := engineClient.DeleteAction(ctx, actionName)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("3.4 Waiting for Action deleted")
+			By("5. Waiting for Action deleted")
 			waitForActionDeleted(ctx, engineClient, actionName)
 
-			By("4. Modifying Policy to change backend storage for uploaded TypeInstance via TypeRef...")
+			By("6. Modifying Policy to change backend storage for uploaded TypeInstance via TypeRef...")
 			setGlobalTestPolicy(ctx, engineClient, withHelmBackendForUploadTypeRef(helmStorageTI.ID))
 
-			By("5. Expecting Implementation A is picked and the Helm storage is used for uploaded TypeInstance...")
+			By("7. Expecting Implementation A is picked and the Helm storage is used for uploaded TypeInstance...")
 			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
-			assertActionRenderedWorkflowContains(action, "echo 'Implementation A'")
+			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
-			By("6. Check Uploaded TypeInstances")
-			assertUploadedTypeInstance(ctx, hubClient, testValue, &hublocalgraphql.TypeInstanceBackend{ID: helmStorageTI.ID, Abstract: false})
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(
-				HaveLen(2),
-				ContainElement(expUpdatedTI),
-			))
+			By("8.1 Check uploaded TypeInstances")
+			uploadedTI, cleanup = getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanup() // We need to clean it up as it's not deleted when Action is deleted.
+			Expect(uploadedTI.Backend).Should(Equal(&hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}))
+
+			By("8.2 Check Action output TypeInstances")
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTI, uploadedTI), HaveLen(2)))
+
+		})
+
+		It("should pick proper Implementation B", func() {
+			implIndicatorValue := "Implementation B"
+
+			By("1. Preparing input Type Instances")
+			By("1.1 Creating TypeInstance which will be downloaded")
+			download := getTypeInstanceInputForDownload(implIndicatorValue)
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
+			defer downloadTICleanup()
+
+			By("1.2 Creating TypeInstance which will be downloaded and updated")
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
+			defer updateTICleanup()
+
+			By("1.3 Creating TypeInstance that describes Helm storage")
+			helmStorage := getTypeInstanceHelmStorage()
+			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
+			defer helmStorageTICleanup()
+
+			By("1.4 Create TypeInstance which is required for Implementation B to be picked based on Policy")
+			typeInstanceValue := getTypeInstanceInputForPolicy()
+			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
+			defer tiCleanupFn()
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: []*enginegraphql.InputTypeInstanceData{
+					{Name: "testInput", ID: downloadTI.ID},
+					{Name: "testUpdate", ID: updateTI.ID},
+				},
+			}
+
+			By("2. Modifying Policy to pick Implementation B...")
+			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
+				{
+					ID:          injectTypeInstance.ID,
+					Description: ptr.String("Test TypeInstance"),
+				},
+				{
+					ID:          helmStorageTI.ID,
+					Description: ptr.String("Helm backend TypeInstance"),
+				},
+			}
+			setGlobalTestPolicy(ctx, engineClient, prependInjectRuleForPassingActionInterface(globalPolicyRequiredTypeInstances))
+
+			By("3. Expecting Implementation B is picked and injected Helm storage is used...")
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
+			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
+			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
+
+			By("4.1 Check uploaded TypeInstances")
+			uploadedTI, cleanup := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanup() // We need to clean it up as it's not deleted when Action is deleted.
+			Expect(uploadedTI.Backend).Should(Equal(&hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}))
+
+			By("4.2 Check Action output TypeInstances")
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTI), HaveLen(2)))
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -413,11 +433,11 @@ func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *en
 	return action
 }
 
-func assertActionRenderedWorkflowContains(action *enginegraphql.Action, stringToFind string) {
+func assertActionRenderedWorkflowContains(action *enginegraphql.Action, toFindFormat string, toFindArgs ...interface{}) {
 	jsonBytes, err := json.Marshal(action.RenderedAction)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(
-		strings.Contains(string(jsonBytes), stringToFind),
+		strings.Contains(string(jsonBytes), fmt.Sprintf(toFindFormat, toFindArgs...)),
 	).To(BeTrue())
 }
 
@@ -481,10 +501,7 @@ func withHelmBackendForUploadTypeRef(backendID string) policyOption {
 	}
 }
 
-func prependInjectRuleForPassingActionInterface(in enginegraphql.RequiredTypeInstanceReferenceInput) policyOption {
-	reqInput := []*enginegraphql.RequiredTypeInstanceReferenceInput{
-		&in,
-	}
+func prependInjectRuleForPassingActionInterface(reqInput []*enginegraphql.RequiredTypeInstanceReferenceInput) policyOption {
 	manifestRef := func(path string) []*enginegraphql.ManifestReferenceInput {
 		return []*enginegraphql.ManifestReferenceInput{
 			{
@@ -523,7 +540,17 @@ func setGlobalTestPolicy(ctx context.Context, client *engine.Client, opts ...pol
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func assertUploadedTypeInstance(ctx context.Context, hubClient *hubclient.Client, expValue string, expBackend *hublocalgraphql.TypeInstanceBackend) {
+func getTypeInstanceByIDAndValue(ctx context.Context, hubClient *hubclient.Client, id, expValue string) *hublocalgraphql.TypeInstance {
+	updateTI, err := hubClient.FindTypeInstance(ctx, id)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(updateTI).ToNot(BeNil())
+	_, err = getTypeInstanceWithValue([]hublocalgraphql.TypeInstance{*updateTI}, expValue)
+	Expect(err).ToNot(HaveOccurred())
+
+	return updateTI
+}
+
+func getUploadedTypeInstanceByValue(ctx context.Context, hubClient *hubclient.Client, expValue string) (*hublocalgraphql.TypeInstance, func()) {
 	uploaded, err := hubClient.ListTypeInstances(ctx, &hublocalgraphql.TypeInstanceFilter{
 		TypeRef: &hublocalgraphql.TypeRefFilterInput{
 			Path:     "cap.type.capactio.capact.validation.upload",
@@ -536,10 +563,10 @@ func assertUploadedTypeInstance(ctx context.Context, hubClient *hubclient.Client
 	ti, err := getTypeInstanceWithValue(uploaded, expValue)
 	Expect(err).ToNot(HaveOccurred())
 
-	Expect(ti.Backend).Should(Equal(expBackend))
-
-	err = hubClient.DeleteTypeInstance(ctx, ti.ID)
-	Expect(err).ToNot(HaveOccurred())
+	return ti, func() {
+		err = hubClient.DeleteTypeInstance(ctx, ti.ID)
+		Expect(err).ToNot(HaveOccurred())
+	}
 }
 
 func getBuiltinStorageTypeInstance(ctx context.Context, hubClient *hubclient.Client) hublocalgraphql.TypeInstance {
@@ -553,39 +580,6 @@ func getBuiltinStorageTypeInstance(ctx context.Context, hubClient *hubclient.Cli
 	Expect(coreStorage).Should(HaveLen(1))
 
 	return coreStorage[0]
-}
-
-func matchOutputTypeInstanceOnTypeRef(expected *enginegraphql.OutputTypeInstanceDetails) types.GomegaMatcher {
-	return &outputTypeInstanceOnTypeRefMatcher{
-		expected: expected,
-	}
-}
-
-type outputTypeInstanceOnTypeRefMatcher struct {
-	expected *enginegraphql.OutputTypeInstanceDetails
-}
-
-func (matcher *outputTypeInstanceOnTypeRefMatcher) Match(actual interface{}) (success bool, err error) {
-	response, ok := actual.([]*enginegraphql.OutputTypeInstanceDetails)
-	if !ok {
-		return false, fmt.Errorf("MatchOutputTypeInstanceOnTypeRef matcher expects an enginegraphql.OutputTypeInstanceDetails")
-	}
-
-	for idx := range response {
-		response[idx].ID = ""
-	}
-	// ignore IDs
-	matcher.expected.ID = ""
-
-	return ContainElement(matcher.expected).Match(response)
-}
-
-func (matcher *outputTypeInstanceOnTypeRefMatcher) FailureMessage(actual interface{}) (message string) {
-	return fmt.Sprintf("Expected\n\t%#v\nto contain element matching\n\t%#v", actual, matcher.expected)
-}
-
-func (matcher *outputTypeInstanceOnTypeRefMatcher) NegatedFailureMessage(actual interface{}) (message string) {
-	return fmt.Sprintf("Expected\n\t%#v\nnot to contain element matching\n\t%#v", actual, matcher.expected)
 }
 
 func assertOutputTypeInstancesInActionStatus(ctx context.Context, engineClient *engine.Client, actionName string,

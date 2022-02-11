@@ -58,7 +58,7 @@ type TypeInstance struct {
 	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`
 	UsedBy                  []*TypeInstance                `json:"usedBy"`
-	Backend                 *TypeInstanceBackend           `json:"backend"`
+	Backend                 *TypeInstanceBackendReference  `json:"backend"`
 	LatestResourceVersion   *TypeInstanceResourceVersion   `json:"latestResourceVersion"`
 	FirstResourceVersion    *TypeInstanceResourceVersion   `json:"firstResourceVersion"`
 	PreviousResourceVersion *TypeInstanceResourceVersion   `json:"previousResourceVersion"`
@@ -66,13 +66,13 @@ type TypeInstance struct {
 	ResourceVersions        []*TypeInstanceResourceVersion `json:"resourceVersions"`
 }
 
-type TypeInstanceBackend struct {
-	ID       string `json:"id"`
-	Abstract bool   `json:"abstract"`
-}
-
 type TypeInstanceBackendInput struct {
 	ID string `json:"id"`
+}
+
+type TypeInstanceBackendReference struct {
+	ID       string `json:"id"`
+	Abstract bool   `json:"abstract"`
 }
 
 type TypeInstanceFilter struct {
