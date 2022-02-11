@@ -159,6 +159,7 @@ func (r *Resolver) setTypeRefsForAdditionalTypeInstances(policy *policy.Policy, 
 	}
 }
 
+// TODO(storage) set also rule.TypeRef.Revision..
 func (r *Resolver) setTypeRefsForBackendTypeInstances(policy *policy.Policy, typeRefs map[string]TypeRefWithAdditionalRefs) {
 	for ruleIdx, rule := range policy.TypeInstance.Rules {
 		typeRef, exists := typeRefs[rule.Backend.ID]

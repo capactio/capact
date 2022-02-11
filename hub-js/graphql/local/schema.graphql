@@ -44,6 +44,7 @@ type TypeInstance {
     @relation(name: "OF_TYPE", direction: "OUT")
   uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
   usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
+  backend: TypeInstanceBackendReference! @relation(name: "STORED_IN", direction: "OUT")
 
   latestResourceVersion: TypeInstanceResourceVersion
     @cypher(
@@ -73,8 +74,6 @@ type TypeInstanceResourceVersion {
     @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeInstanceResourceVersionSpec!
     @relation(name: "SPECIFIED_BY", direction: "OUT")
-  # TODO: can be changed to TypeInstance, and a proper relation set
-  backend: TypeInstanceBackend!
 }
 
 type TypeInstanceResourceVersionMetadata {
@@ -97,8 +96,9 @@ type TypeInstanceResourceVersionSpec {
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
 }
 
-type TypeInstanceBackend {
-    id: String!
+type TypeInstanceBackendReference {
+  id: String!
+  abstract: Boolean!
 }
 
 type TypeInstanceTypeReference {
@@ -356,17 +356,37 @@ type Mutation {
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
     @cypher(
       statement: """
-      WITH apoc.convert.toJson($in.value) as value
-      MERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
-
       CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+
+      // Backend
+      WITH *
+      CALL apoc.do.when(
+          $in.backend.id IS NOT NULL,
+          'RETURN $in.backend.id as id',
+          '
+           // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.
+           MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: "cap.core.type.hub.storage.neo4j"})
+           RETURN backend.id as id
+          ',
+          {in: $in}
+      ) YIELD value as backend
+      MATCH (backendTI:TypeInstance {id: backend.id})-[:STORED_IN]->(backendTIRef)
+      CREATE (ti)-[:USES]->(backendTI)
+      // TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check
+      // if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.
+      MERGE (storageRef:TypeInstanceBackendReference {abstract: backendTIRef.abstract, id: backendTIRef.id})
+      CREATE (ti)-[:STORED_IN]->(storageRef)
+
+      // TypeRef
+      MERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
       CREATE (ti)-[:OF_TYPE]->(typeRef)
 
+      // Revision
       CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
-      CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})
+      CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($in.value)})
 
       FOREACH (attr in $in.attributes |
         MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})

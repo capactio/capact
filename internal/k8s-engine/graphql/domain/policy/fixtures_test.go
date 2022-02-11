@@ -80,7 +80,7 @@ func fixGQLInput() graphql.PolicyInput {
 						Path:     "cap.type.aws.auth.credentials",
 						Revision: ptr.String("0.1.0"),
 					},
-					Backend: &graphql.TypeInstanceBackendInput{
+					Backend: &graphql.TypeInstanceBackendRuleInput{
 						ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
 						Description: ptr.String("Vault TI"),
 					},
@@ -89,7 +89,7 @@ func fixGQLInput() graphql.PolicyInput {
 					TypeRef: &graphql.ManifestReferenceInput{
 						Path: "cap.type.aws.*",
 					},
-					Backend: &graphql.TypeInstanceBackendInput{
+					Backend: &graphql.TypeInstanceBackendRuleInput{
 						ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
 					},
 				},
@@ -97,7 +97,7 @@ func fixGQLInput() graphql.PolicyInput {
 					TypeRef: &graphql.ManifestReferenceInput{
 						Path: "cap.*",
 					},
-					Backend: &graphql.TypeInstanceBackendInput{
+					Backend: &graphql.TypeInstanceBackendRuleInput{
 						ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
 						Description: ptr.String("Default Capact PostgreSQL backend"),
 					},
@@ -180,7 +180,7 @@ func fixGQL() graphql.Policy {
 						Path:     "cap.type.aws.auth.credentials",
 						Revision: ptr.String("0.1.0"),
 					},
-					Backend: &graphql.TypeInstanceBackend{
+					Backend: &graphql.TypeInstanceBackendRule{
 						ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
 						Description: ptr.String("Vault TI"),
 					},
@@ -189,7 +189,7 @@ func fixGQL() graphql.Policy {
 					TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
 						Path: "cap.type.aws.*",
 					},
-					Backend: &graphql.TypeInstanceBackend{
+					Backend: &graphql.TypeInstanceBackendRule{
 						ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
 					},
 				},
@@ -197,7 +197,7 @@ func fixGQL() graphql.Policy {
 					TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
 						Path: "cap.*",
 					},
-					Backend: &graphql.TypeInstanceBackend{
+					Backend: &graphql.TypeInstanceBackendRule{
 						ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
 						Description: ptr.String("Default Capact PostgreSQL backend"),
 					},

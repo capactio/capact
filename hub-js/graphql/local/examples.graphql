@@ -167,6 +167,10 @@ fragment TypeInstance on TypeInstance {
     revision
   }
   lockedBy
+  backend {
+    id
+    abstract
+  }
 
   latestResourceVersion {
     ...TypeInstanceResourceVersion

@@ -66,7 +66,7 @@ The main goal is to support the following use-cases:
         Other backends:
         - AWS Secrets Manager
         - Google Key Management
-    
+
 - Store and retrieve dynamic data
     - Examples:
         - Kubernetes cluster (e.g. Flux's Helm releases or Kubernetes Secrets)
@@ -126,7 +126,7 @@ Also, the additional, nice-to-have goals are:
       path: cap.type.helm.storage
     spec:
       additionalRefs:
-        - "cap.core.type.hub.storage" 
+        - "cap.core.type.hub.storage"
       jsonSchema:
         value: |- # JSON schema with:
           {
@@ -186,7 +186,7 @@ Also, the additional, nice-to-have goals are:
     - Register a storage backend by creating such TypeInstance.
 
     Regardless the option, at the end there is one TypeInstance produced:
-      
+
       ```yaml
       id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16
       typeRef:
@@ -243,7 +243,7 @@ Also, the additional, nice-to-have goals are:
         # no url as it is known for Hub (Hub is already connected with PostgreSQL)
         acceptValue: true
         contextSchema: null
-    backend: 
+    backend:
       abstract: true # Special keyword which specifies the built-in storage option which stores already all other metadata.
     ```
 
@@ -253,7 +253,7 @@ Also, the additional, nice-to-have goals are:
 
       The property indicates that Hub queries the PostgreSQL database directly.
 
-    - It is the default backend for static TypeInstance values. To learn more, read the [Configuring storage backends](#configuring-storage-backends) paragraph.    
+    - It is the default backend for static TypeInstance values. To learn more, read the [Configuring storage backends](#configuring-storage-backends) paragraph.
 
 ## Workflow syntax - Create
 
@@ -270,7 +270,7 @@ Also, the additional, nice-to-have goals are:
     ```
 
     - This workflow cannot be run unless there is a `helm-release` storage backend installed (where `helm-release` is only workflow alias).
-    - If there are no specific storage backend requirements set, the default backend will be used. To learn more, read the [Configuring default storage backends](#configuring-default-storage-backends) paragraph.    
+    - If there are no specific storage backend requirements set, the default backend will be used. To learn more, read the [Configuring default storage backends](#configuring-default-storage-backends) paragraph.
 
 1. Content Developer outputs one of the following Argo workflow artifacts:
 
@@ -297,7 +297,7 @@ Also, the additional, nice-to-have goals are:
         However, the `context` are backend-specific properties, which means Content Developer need to explicitly specify the backend as described later.
 
     1. To save a specific value with additional parameters:
-    
+
         For example, for an implementation of Kubernetes secrets storage backend, which actually creates and updates these secrets during TypeInstance creation:
 
         ```yaml
@@ -312,8 +312,8 @@ Also, the additional, nice-to-have goals are:
         The storage backend has to have `contextSchema` specified, as well as the `acceptValue` property set to `true`.
 
     In that way, someday we will be able to extend such approach with additional properties:
-    
-    ```yaml    
+
+    ```yaml
     instrumentation: # someday - if we want to unify the approach
       health:
         endpoint: foo.bar/healthz
@@ -329,7 +329,7 @@ Also, the additional, nice-to-have goals are:
     capact-outputTypeInstances:
       - name: mattermost-config
         from: additional
-        # no backend definition -> use default storage backend
+        # no backend definition -> stored in built-in Local Hub storage (done by Local Hub)
 
     # option 2 - specific backend (defined in `Implementation.spec.requires` property)
     capact-outputTypeInstances:
@@ -381,7 +381,7 @@ Also, the additional, nice-to-have goals are:
             value: {
               backend: {
                 id: "3ef2e4ac-9070-4093-a3ce-142139fd4a16",
-                context: {
+                context: { ## TODO: support that! currently only ID.
                   name: "release-name",
                   namespace: "release-namespace",
                 }
@@ -389,7 +389,7 @@ Also, the additional, nice-to-have goals are:
             }
           }
         ],
-        usesRelations: [
+        usesRelations: [ ## TODO: this relation is created by Local Hub. It always need to be done as the **Uninstalling storage backends** depends on that.
           {
             from: "helm-release",
             to: "3ef2e4ac-9070-4093-a3ce-142139fd4a16"
@@ -407,7 +407,7 @@ Also, the additional, nice-to-have goals are:
 
     1. Hub resolves details about the service (TypeInstance details)
     1. If the TypeInstance value is provided:
-        
+
         1. Hub checks whether the storage backend accepts TypeInstance value (`acceptValue` property). If not, and the value has been provided, it returns error.
         1. Hub validates the TypeInstance value against Type JSON Schema.
 
@@ -448,8 +448,8 @@ Also, the additional, nice-to-have goals are:
         backend:
           context: # additional parameters that might be modified via the service handling `onCreate` hook
             name: release-name
-            namespace: release-namespace 
-      backend: 
+            namespace: release-namespace
+      backend:  ## TODO(storage-: It was done like that currently,  Based on that this
         id: 3ef2e4ac-9070-4093-a3ce-142139fd4a16 # helm-release backend - resolved UUID based on the injected TypeInstance
       ```
 
@@ -509,7 +509,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
 
     message OnUpdateRequest {
       string typeinstance_id = 1;
-      
+
       OnUpdateData old_data = 2;
       OnUpdateData new_data = 3;
     }
@@ -568,7 +568,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
       rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
       rpc OnLock(OnLockUnlockRequest) returns (OnLockUnlockResponse);
       rpc OnUnlock(OnLockUnlockRequest) returns (OnLockUnlockResponse);
-    } 
+    }
     ```
 
     </details>
@@ -656,7 +656,7 @@ The storage backends configuration consists of two different parts: default back
     interface:
       rules:
         - interface:
-            path: cap.interface.database.postgresql.install 
+            path: cap.interface.database.postgresql.install
           oneOf:
             - implementationConstraints:
                   # constraints to select Bitnami PostgreSQL installation, for example:
@@ -664,7 +664,7 @@ The storage backends configuration consists of two different parts: default back
               inject:
                 requiredTypeInstances:
                   - id: b4cf15d2-79b1-45ee-9729-6b83289ecabc # Different TypeInstance of `cap.type.helm.storage` Type - it will be used instead of the one from `interface.rules.default.inject`
-                    description: "Helm Release storage"         
+                    description: "Helm Release storage"
 
       default: # properties applied to all rules above
         inject:
@@ -777,7 +777,7 @@ query ListTypeInstances {
         }
         value # url + contextSchema
       }
-      
+
     }
   }
 }
@@ -935,7 +935,7 @@ To avoid implementing a special storage backend service every time we have such 
                     }
                   },
                   "additionalProperties": true
-                }        
+                }
               }
             },
             "acceptValue": { # specifies if a given storage backend (app) accepts TypeInstance value while creating/updating TypeInstance, or just context.
@@ -1014,7 +1014,7 @@ To avoid implementing a special storage backend service every time we have such 
             },
             "additionalProperties": true
           }
-    backend: 
+    backend:
       id: a36ed738-dfe7-45ec-acd1-8e44e8db893b # PostgreSQL backend
     ```
 
@@ -1067,7 +1067,7 @@ To avoid implementing a special storage backend service every time we have such 
             mattermost:
               relatedTypeInstanceAlias: mattermost-config # kept for better readability
               typeInstanceID: b895d2d4-d0e0-4f7c-9666-4c3d197d1795 # resolved ID based on `relatedTypeInstanceAlias`. It will be used for further template rendering
-    backend: 
+    backend:
       id: abd48b8c-99bd-40a7-99c0-047bd69f1db8 # capact-gotemplate backend - resolved UUID
     ```
 
@@ -1107,7 +1107,7 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
     As described in proposal, every storage backend Type should follow the convention of having JSON schema with `uri` and `contextSchema` properties.
 
     That could be possible if we implement an ability to define validating JSON schema for Type nodes (e.g. `cap.core.type.hub.storage`), and use such schemas to validate Types attached to these nodes (via `spec.additionalRefs` property). For example, the `cap.core.hub.storage` node could have JSON Schema defined, which validates Type values (JSON schema) attached to such node. In the end, that would be JSON schema validating another JSON schema.
-    
+
     **Reason:** It is possible, but it's complex and brings too little benefits for now to implement it.
 
 1. Adding optional `TypeInstance.metadata.name` or `alias`, which is unique across all TypeInstances and immutable regardless resourceVersion. It would allow easier referencing storage backends in the `TypeInstance.spec.backend` field:
@@ -1152,7 +1152,7 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
       - name: helm-release
         from: helm-release # values
         backend: vault
-        context: "{{steps.foo.output.artifacts.foo}}" 
+        context: "{{steps.foo.output.artifacts.foo}}"
 
     # option 3 - register something which already exist as external TypeInstance - based on context
     capact-outputTypeInstances:
@@ -1166,8 +1166,8 @@ Unfortunately, that won't be possible anymore, and instead we should get all the
 ### Storage backend service implementation
 
 1. Using Actions as a way to do CRUD operations (separate Interface/Implementation per Create/Update/Get/Delete operation)
- 
-    **Reason:** While the idea may seem exciting, that would be really time consuming and ineffective. We are too far from the point at where we can think about such solution. 
+
+    **Reason:** While the idea may seem exciting, that would be really time consuming and ineffective. We are too far from the point at where we can think about such solution.
 
 ### Configuring default storage backends
 
@@ -1236,7 +1236,7 @@ Once approved, we need to address the following list of items:
 1. Update Policy
     - Add new properties
     - Handle common TypeInstance injections
-1. Update documentation 
+1. Update documentation
     - Policy
     - Content Development guide
     - Type features

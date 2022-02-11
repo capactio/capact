@@ -159,8 +159,9 @@ type ManifestReferenceInput struct {
 
 // Describes output TypeInstance of an Action
 type OutputTypeInstanceDetails struct {
-	ID      string             `json:"id"`
-	TypeRef *ManifestReference `json:"typeRef"`
+	ID      string                      `json:"id"`
+	TypeRef *ManifestReference          `json:"typeRef"`
+	Backend *TypeInstanceBackendDetails `json:"backend"`
 }
 
 type Policy struct {
@@ -210,12 +211,12 @@ type RulesForInterfaceInput struct {
 
 type RulesForTypeInstance struct {
 	TypeRef *ManifestReferenceWithOptionalRevision `json:"typeRef"`
-	Backend *TypeInstanceBackend                   `json:"backend"`
+	Backend *TypeInstanceBackendRule               `json:"backend"`
 }
 
 type RulesForTypeInstanceInput struct {
-	TypeRef *ManifestReferenceInput   `json:"typeRef"`
-	Backend *TypeInstanceBackendInput `json:"backend"`
+	TypeRef *ManifestReferenceInput       `json:"typeRef"`
+	Backend *TypeInstanceBackendRuleInput `json:"backend"`
 }
 
 // Additional Action status from the Runner
@@ -224,12 +225,17 @@ type RunnerStatus struct {
 	Status interface{} `json:"status"`
 }
 
-type TypeInstanceBackend struct {
+type TypeInstanceBackendDetails struct {
+	ID       string `json:"id"`
+	Abstract bool   `json:"abstract"`
+}
+
+type TypeInstanceBackendRule struct {
 	ID          string  `json:"id"`
 	Description *string `json:"description"`
 }
 
-type TypeInstanceBackendInput struct {
+type TypeInstanceBackendRuleInput struct {
 	ID          string  `json:"id"`
 	Description *string `json:"description"`
 }

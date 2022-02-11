@@ -18,6 +18,10 @@ var actionFields = fmt.Sprintf(`
 	output {
 		typeInstances {
 			id
+			backend {
+				id
+				abstract
+			}
 			typeRef {
 				path
 				revision

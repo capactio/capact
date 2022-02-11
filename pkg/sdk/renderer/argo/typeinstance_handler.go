@@ -137,7 +137,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	}
 
 	for _, ti := range output.typeInstances {
-		payload.TypeInstances = append(payload.TypeInstances, &graphqllocal.CreateTypeInstanceInput{
+		gqlTI := &graphqllocal.CreateTypeInstanceInput{
 			Alias:     ti.ArtifactName,
 			CreatedBy: &ownerID,
 			TypeRef: &graphqllocal.TypeInstanceTypeReferenceInput{
@@ -145,10 +145,13 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 				Revision: ti.TypeInstance.TypeRef.Revision,
 			},
 			Attributes: []*graphqllocal.AttributeReferenceInput{},
-			Backend: &graphqllocal.TypeInstanceBackendInput{
+		}
+		if ti.Backend.ID != "" {
+			gqlTI.Backend = &graphqllocal.TypeInstanceBackendInput{
 				ID: ti.Backend.ID,
-			},
-		})
+			}
+		}
+		payload.TypeInstances = append(payload.TypeInstances, gqlTI)
 
 		artifacts = append(artifacts, wfv1.Artifact{
 			Name: *ti.ArtifactName,
@@ -162,7 +165,6 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	}
 
 	for _, relation := range output.relations {
-		// TODO(https://github.com/capactio/capact/issues/604): add relations to used Backend TypeInstance.
 		payload.UsesRelations = append(payload.UsesRelations, &graphqllocal.TypeInstanceUsesRelationInput{
 			From: *relation.From,
 			To:   *relation.To,

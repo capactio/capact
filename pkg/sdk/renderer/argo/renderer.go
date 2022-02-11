@@ -17,8 +17,6 @@ import (
 )
 
 const (
-	// UserInputName is exported so we can use that as a reference in `capact act create` validation process.
-	UserInputName = "input-parameters"
 	runnerContext = "runner-context"
 )
 
@@ -189,11 +187,9 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		return nil, errors.Wrap(err, "while resolving TypeInstance backend based on Policy")
 	}
 
-	r.log.Debug("AAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaa")
 	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts, typeInstancesBackends, newArtifactMappings); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
-	r.log.Debug("AAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaaAaaaaaa")
 
 	// 10. Render rootWorkflow templates
 	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, RootImplementation{

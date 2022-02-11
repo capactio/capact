@@ -95,7 +95,7 @@ func (c *Converter) typeInstanceToGraphQL(in policy.TypeInstancePolicy) *graphql
 
 		gqlRules = append(gqlRules, &graphql.RulesForTypeInstance{
 			TypeRef: &ref,
-			Backend: &graphql.TypeInstanceBackend{
+			Backend: &graphql.TypeInstanceBackendRule{
 				ID:          rule.Backend.ID,
 				Description: rule.Backend.Description,
 			},

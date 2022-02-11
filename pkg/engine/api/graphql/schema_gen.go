@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 	}
 
 	OutputTypeInstanceDetails struct {
+		Backend func(childComplexity int) int
 		ID      func(childComplexity int) int
 		TypeRef func(childComplexity int) int
 	}
@@ -178,7 +179,12 @@ type ComplexityRoot struct {
 		Status func(childComplexity int) int
 	}
 
-	TypeInstanceBackend struct {
+	TypeInstanceBackendDetails struct {
+		Abstract func(childComplexity int) int
+		ID       func(childComplexity int) int
+	}
+
+	TypeInstanceBackendRule struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 	}
@@ -574,6 +580,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdatePolicy(childComplexity, args["in"].(PolicyInput)), true
 
+	case "OutputTypeInstanceDetails.backend":
+		if e.complexity.OutputTypeInstanceDetails.Backend == nil {
+			break
+		}
+
+		return e.complexity.OutputTypeInstanceDetails.Backend(childComplexity), true
+
 	case "OutputTypeInstanceDetails.id":
 		if e.complexity.OutputTypeInstanceDetails.ID == nil {
 			break
@@ -738,19 +751,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RunnerStatus.Status(childComplexity), true
 
-	case "TypeInstanceBackend.description":
-		if e.complexity.TypeInstanceBackend.Description == nil {
+	case "TypeInstanceBackendDetails.abstract":
+		if e.complexity.TypeInstanceBackendDetails.Abstract == nil {
 			break
 		}
 
-		return e.complexity.TypeInstanceBackend.Description(childComplexity), true
+		return e.complexity.TypeInstanceBackendDetails.Abstract(childComplexity), true
 
-	case "TypeInstanceBackend.id":
-		if e.complexity.TypeInstanceBackend.ID == nil {
+	case "TypeInstanceBackendDetails.id":
+		if e.complexity.TypeInstanceBackendDetails.ID == nil {
 			break
 		}
 
-		return e.complexity.TypeInstanceBackend.ID(childComplexity), true
+		return e.complexity.TypeInstanceBackendDetails.ID(childComplexity), true
+
+	case "TypeInstanceBackendRule.description":
+		if e.complexity.TypeInstanceBackendRule.Description == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceBackendRule.Description(childComplexity), true
+
+	case "TypeInstanceBackendRule.id":
+		if e.complexity.TypeInstanceBackendRule.ID == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceBackendRule.ID(childComplexity), true
 
 	case "TypeInstancePolicy.rules":
 		if e.complexity.TypeInstancePolicy.Rules == nil {
@@ -1103,6 +1130,12 @@ Describes output TypeInstance of an Action
 type OutputTypeInstanceDetails {
   id: ID!
   typeRef: ManifestReference!
+  backend: TypeInstanceBackendDetails!
+}
+
+type TypeInstanceBackendDetails {
+  id: String!
+  abstract: Boolean!
 }
 
 """
@@ -1149,33 +1182,33 @@ enum ActionStatusPhase {
 }
 
 input PolicyInput {
-	interface: InterfacePolicyInput
-	typeInstance: TypeInstancePolicyInput
+  interface: InterfacePolicyInput
+  typeInstance: TypeInstancePolicyInput
 }
 
 # TypeInstance Policy Input
 input TypeInstancePolicyInput {
-    rules: [RulesForTypeInstanceInput!]!
+  rules: [RulesForTypeInstanceInput!]!
 }
 
 input RulesForTypeInstanceInput {
-    typeRef: ManifestReferenceInput!
-    backend:     TypeInstanceBackendInput!
+  typeRef: ManifestReferenceInput!
+  backend: TypeInstanceBackendRuleInput!
 }
 
-input TypeInstanceBackendInput {
-    id: ID!
-    description: String
+input TypeInstanceBackendRuleInput {
+  id: ID!
+  description: String
 }
 
 # Interface Policy Input
 input InterfacePolicyInput {
-	rules: [RulesForInterfaceInput!]!
+  rules: [RulesForInterfaceInput!]!
 }
 
 input RulesForInterfaceInput {
   interface: ManifestReferenceInput!
-  oneOf:     [PolicyRuleInput!]!
+  oneOf:   [PolicyRuleInput!]!
 }
 
 input PolicyRuleInput {
@@ -1190,8 +1223,8 @@ input PolicyRuleInjectDataInput {
 }
 
 input AdditionalParameterInput {
-    name: String!
-    value: Any!
+  name: String!
+  value: Any!
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -1218,27 +1251,27 @@ type Policy {
 
 # TypeInstance Policy
 type TypeInstancePolicy {
-    rules: [RulesForTypeInstance!]!
+  rules: [RulesForTypeInstance!]!
 }
 
 type RulesForTypeInstance {
-    typeRef: ManifestReferenceWithOptionalRevision!
-    backend:     TypeInstanceBackend!
+  typeRef: ManifestReferenceWithOptionalRevision!
+  backend: TypeInstanceBackendRule!
 }
 
-type TypeInstanceBackend {
-    id: ID!
-    description: String
+type TypeInstanceBackendRule {
+  id: ID!
+  description: String
 }
 
 # Interface Policy
 type InterfacePolicy {
-	rules: [RulesForInterface!]!
+  rules: [RulesForInterface!]!
 }
 
 type RulesForInterface {
   interface: ManifestReferenceWithOptionalRevision!
-  oneOf:     [PolicyRule!]!
+  oneOf:   [PolicyRule!]!
 }
 
 type PolicyRule {
@@ -1258,8 +1291,8 @@ type AdditionalTypeInstanceReference {
 }
 
 type AdditionalParameter {
-    name: String!
-    value: Any!
+  name: String!
+  value: Any!
 }
 
 type PolicyRuleImplementationConstraints {
@@ -3169,6 +3202,41 @@ func (ec *executionContext) _OutputTypeInstanceDetails_typeRef(ctx context.Conte
 	return ec.marshalNManifestReference2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _OutputTypeInstanceDetails_backend(ctx context.Context, field graphql.CollectedField, obj *OutputTypeInstanceDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "OutputTypeInstanceDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Backend, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TypeInstanceBackendDetails)
+	fc.Result = res
+	return ec.marshalNTypeInstanceBackendDetails2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendDetails(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Policy_interface(ctx context.Context, field graphql.CollectedField, obj *Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3878,9 +3946,9 @@ func (ec *executionContext) _RulesForTypeInstance_backend(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*TypeInstanceBackend)
+	res := resTmp.(*TypeInstanceBackendRule)
 	fc.Result = res
-	return ec.marshalNTypeInstanceBackend2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackend(ctx, field.Selections, res)
+	return ec.marshalNTypeInstanceBackendRule2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRule(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RunnerStatus_status(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
@@ -3915,7 +3983,7 @@ func (ec *executionContext) _RunnerStatus_status(ctx context.Context, field grap
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TypeInstanceBackend_id(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackend) (ret graphql.Marshaler) {
+func (ec *executionContext) _TypeInstanceBackendDetails_id(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3923,7 +3991,77 @@ func (ec *executionContext) _TypeInstanceBackend_id(ctx context.Context, field g
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "TypeInstanceBackend",
+		Object:     "TypeInstanceBackendDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceBackendDetails_abstract(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceBackendDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Abstract, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceBackendRule_id(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendRule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceBackendRule",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -3950,7 +4088,7 @@ func (ec *executionContext) _TypeInstanceBackend_id(ctx context.Context, field g
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TypeInstanceBackend_description(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackend) (ret graphql.Marshaler) {
+func (ec *executionContext) _TypeInstanceBackendRule_description(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendRule) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3958,7 +4096,7 @@ func (ec *executionContext) _TypeInstanceBackend_description(ctx context.Context
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "TypeInstanceBackend",
+		Object:     "TypeInstanceBackendRule",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -5692,7 +5830,7 @@ func (ec *executionContext) unmarshalInputRulesForTypeInstanceInput(ctx context.
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backend"))
-			it.Backend, err = ec.unmarshalNTypeInstanceBackendInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendInput(ctx, v)
+			it.Backend, err = ec.unmarshalNTypeInstanceBackendRuleInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRuleInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5702,8 +5840,8 @@ func (ec *executionContext) unmarshalInputRulesForTypeInstanceInput(ctx context.
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputTypeInstanceBackendInput(ctx context.Context, obj interface{}) (TypeInstanceBackendInput, error) {
-	var it TypeInstanceBackendInput
+func (ec *executionContext) unmarshalInputTypeInstanceBackendRuleInput(ctx context.Context, obj interface{}) (TypeInstanceBackendRuleInput, error) {
+	var it TypeInstanceBackendRuleInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -6252,6 +6390,11 @@ func (ec *executionContext) _OutputTypeInstanceDetails(ctx context.Context, sel 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "backend":
+			out.Values[i] = ec._OutputTypeInstanceDetails_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6557,24 +6700,56 @@ func (ec *executionContext) _RunnerStatus(ctx context.Context, sel ast.Selection
 	return out
 }
 
-var typeInstanceBackendImplementors = []string{"TypeInstanceBackend"}
+var typeInstanceBackendDetailsImplementors = []string{"TypeInstanceBackendDetails"}
 
-func (ec *executionContext) _TypeInstanceBackend(ctx context.Context, sel ast.SelectionSet, obj *TypeInstanceBackend) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstanceBackendImplementors)
+func (ec *executionContext) _TypeInstanceBackendDetails(ctx context.Context, sel ast.SelectionSet, obj *TypeInstanceBackendDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstanceBackendDetailsImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("TypeInstanceBackend")
+			out.Values[i] = graphql.MarshalString("TypeInstanceBackendDetails")
 		case "id":
-			out.Values[i] = ec._TypeInstanceBackend_id(ctx, field, obj)
+			out.Values[i] = ec._TypeInstanceBackendDetails_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "abstract":
+			out.Values[i] = ec._TypeInstanceBackendDetails_abstract(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var typeInstanceBackendRuleImplementors = []string{"TypeInstanceBackendRule"}
+
+func (ec *executionContext) _TypeInstanceBackendRule(ctx context.Context, sel ast.SelectionSet, obj *TypeInstanceBackendRule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstanceBackendRuleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TypeInstanceBackendRule")
+		case "id":
+			out.Values[i] = ec._TypeInstanceBackendRule_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "description":
-			out.Values[i] = ec._TypeInstanceBackend_description(ctx, field, obj)
+			out.Values[i] = ec._TypeInstanceBackendRule_description(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7538,18 +7713,28 @@ func (ec *executionContext) marshalNTimestamp2capactᚗioᚋcapactᚋpkgᚋengin
 	return v
 }
 
-func (ec *executionContext) marshalNTypeInstanceBackend2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackend(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceBackend) graphql.Marshaler {
+func (ec *executionContext) marshalNTypeInstanceBackendDetails2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendDetails(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceBackendDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._TypeInstanceBackend(ctx, sel, v)
+	return ec._TypeInstanceBackendDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTypeInstanceBackendInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendInput(ctx context.Context, v interface{}) (*TypeInstanceBackendInput, error) {
-	res, err := ec.unmarshalInputTypeInstanceBackendInput(ctx, v)
+func (ec *executionContext) marshalNTypeInstanceBackendRule2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRule(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceBackendRule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TypeInstanceBackendRule(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTypeInstanceBackendRuleInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRuleInput(ctx context.Context, v interface{}) (*TypeInstanceBackendRuleInput, error) {
+	res, err := ec.unmarshalInputTypeInstanceBackendRuleInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
