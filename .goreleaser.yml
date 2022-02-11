@@ -84,7 +84,7 @@ brews:
     tap: *homebrew-tap
     commit_author: *homebrew-commit-author
     test: |
-      system "#{bin}/populator version"
+      system "#{bin}/populator help"
 
 dockers:
   - dockerfile: Dockerfile.cli
