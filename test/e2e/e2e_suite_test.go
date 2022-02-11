@@ -59,8 +59,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 	originalGlobalPolicy = input
 
-	//waitTillServiceEndpointsAreReady()
-	//waitTillDataIsPopulated()
+	waitTillServiceEndpointsAreReady()
+	waitTillDataIsPopulated()
 })
 
 var _ = AfterSuite(func() {

@@ -480,14 +480,14 @@ function tryToExtractCustomError(
 }
 
 export async function ensureCoreStorageTypeInstance(context: ContextWithDriver, uri: string) {
-	const neo4jSession = context.driver.session();
-	const value = {
-		uri: uri
-	}
-	try {
-		await neo4jSession.writeTransaction(
-			async (tx: Transaction) => {
-				await tx.run(`
+  const neo4jSession = context.driver.session();
+  const value = {
+    uri: uri
+  }
+  try {
+    await neo4jSession.writeTransaction(
+      async (tx: Transaction) => {
+        await tx.run(`
 							MERGE (ti:TypeInstance {id: "318b99bd-9b26-4bc1-8259-0a7ff5dae61c"})
 							MERGE (typeRef:TypeInstanceTypeReference {path: "cap.core.type.hub.storage.neo4j", revision: "0.1.0"})
 							MERGE (backend:TypeInstanceBackendReference {abstract: true, id: ti.id, description: "Built-in Hub storage"})
@@ -502,12 +502,12 @@ export async function ensureCoreStorageTypeInstance(context: ContextWithDriver, 
 
 							RETURN ti
 					`, {value});
-			}
-		);
-	} catch (e) {
-		const err = e as Error;
-		throw new Error(`while ensuring TypeInstance for core backend storage: ${err.message}`);
-	} finally {
-		await neo4jSession.close();
-	}
+      }
+    );
+  } catch (e) {
+    const err = e as Error;
+    throw new Error(`while ensuring TypeInstance for core backend storage: ${err.message}`);
+  } finally {
+    await neo4jSession.close();
+  }
 }

@@ -4,7 +4,6 @@
 package e2e
 
 import (
-	"capact.io/capact/internal/cli/heredoc"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/ptr"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	engine "capact.io/capact/pkg/engine/client"
@@ -27,7 +27,10 @@ import (
 )
 
 const (
-	actionPassingPath = "cap.interface.capactio.capact.validation.action.passing"
+	actionPassingPath      = "cap.interface.capactio.capact.validation.action.passing"
+	uploadTypePath         = "cap.type.capactio.capact.validation.upload"
+	builtinStorageTypePath = "cap.core.type.hub.storage.neo4j"
+	singleKeyTypePath      = "cap.type.capactio.capact.validation.single-key"
 )
 
 func getActionName() string {
@@ -329,7 +332,7 @@ func getActionFunc(ctx context.Context, cl *engine.Client, name string) func() (
 func getTypeInstanceInputForPolicy() *hublocalgraphql.CreateTypeInstanceInput {
 	return &hublocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.capactio.capact.validation.single-key",
+			Path:     singleKeyTypePath,
 			Revision: "0.1.0",
 		},
 		Attributes: []*hublocalgraphql.AttributeReferenceInput{
@@ -488,7 +491,7 @@ func withHelmBackendForUploadTypeRef(backendID string) policyOption {
 			Rules: []*enginegraphql.RulesForTypeInstanceInput{
 				{
 					TypeRef: &enginegraphql.ManifestReferenceInput{
-						Path:     "cap.type.capactio.capact.validation.upload",
+						Path:     uploadTypePath,
 						Revision: ptr.String("0.1.0"),
 					},
 					Backend: &enginegraphql.TypeInstanceBackendRuleInput{
@@ -517,7 +520,7 @@ func prependInjectRuleForPassingActionInterface(reqInput []*enginegraphql.Requir
 			policy.Interface.Rules[idx].OneOf = append([]*enginegraphql.PolicyRuleInput{
 				{
 					ImplementationConstraints: &enginegraphql.PolicyRuleImplementationConstraintsInput{
-						Requires:   manifestRef("cap.type.capactio.capact.validation.single-key"),
+						Requires:   manifestRef(singleKeyTypePath),
 						Attributes: manifestRef("cap.attribute.capactio.capact.validation.policy.most-preferred"),
 					},
 					Inject: &enginegraphql.PolicyRuleInjectDataInput{
@@ -553,7 +556,7 @@ func getTypeInstanceByIDAndValue(ctx context.Context, hubClient *hubclient.Clien
 func getUploadedTypeInstanceByValue(ctx context.Context, hubClient *hubclient.Client, expValue string) (*hublocalgraphql.TypeInstance, func()) {
 	uploaded, err := hubClient.ListTypeInstances(ctx, &hublocalgraphql.TypeInstanceFilter{
 		TypeRef: &hublocalgraphql.TypeRefFilterInput{
-			Path:     "cap.type.capactio.capact.validation.upload",
+			Path:     uploadTypePath,
 			Revision: ptr.String("0.1.0"),
 		},
 	})
@@ -572,7 +575,7 @@ func getUploadedTypeInstanceByValue(ctx context.Context, hubClient *hubclient.Cl
 func getBuiltinStorageTypeInstance(ctx context.Context, hubClient *hubclient.Client) hublocalgraphql.TypeInstance {
 	coreStorage, err := hubClient.ListTypeInstances(ctx, &hublocalgraphql.TypeInstanceFilter{
 		TypeRef: &hublocalgraphql.TypeRefFilterInput{
-			Path:     "cap.core.type.hub.storage.neo4j",
+			Path:     builtinStorageTypePath,
 			Revision: ptr.String("0.1.0"),
 		},
 	})
