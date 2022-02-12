@@ -63,9 +63,11 @@ var _ = Describe("Action", func() {
 
 	Context("Action execution", func() {
 
-		It("should pick Implementation A with empty inject Policy", func() {
+		It("should pick Implementation A", func() {
 			implIndicatorValue := "Implementation A"
 
+			// TODO: This can be extracted after switching to ginkgo v2
+			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 
 			By("1.1 Creating TypeInstance which will be downloaded")
@@ -144,9 +146,11 @@ var _ = Describe("Action", func() {
 
 		})
 
-		It("should pick proper Implementation B", func() {
+		It("should pick Implementation B", func() {
 			implIndicatorValue := "Implementation B"
 
+			// TODO: This can be extracted after switching to ginkgo v2
+			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
 			download := getTypeInstanceInputForDownload(implIndicatorValue)
