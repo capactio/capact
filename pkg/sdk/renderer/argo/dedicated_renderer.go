@@ -1004,13 +1004,15 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 			return errors.Wrapf(err, "while resolving backend alias for %s", step.Name)
 		}
 
+		log := r.log.With(zap.String("artifactName", *artifactName))
+		log.Debug("Available TypeInstance Backend", zap.Any("backends", backends.GetAll()))
+
 		backend, err := r.selectBackend(backendAlias, typeRef, backends)
 		if err != nil {
-			return errors.Wrapf(err, "while resolving backend ID for %s", step.Name)
+			return errors.Wrapf(err, "while resolving backend ID for %s", name)
 		}
 
-		log := r.log.With(zap.String("artifactName", *artifactName))
-		log.Debug("Selected TypeInstance Backend", zap.Any("backend", backend), zap.Any("backends", backends.GetAll()))
+		log.Debug("Selected TypeInstance Backend", zap.Any("backend", backend))
 
 		// add output
 		r.typeInstancesToOutput.typeInstances = append(r.typeInstancesToOutput.typeInstances, OutputTypeInstance{
