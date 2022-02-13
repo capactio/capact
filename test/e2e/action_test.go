@@ -35,6 +35,7 @@ const (
 )
 
 func getActionName() string {
+	rand.Seed(time.Now().UTC().UnixNano())
 	return fmt.Sprintf("e2e-test-%d-%s", GinkgoParallelNode(), strconv.Itoa(rand.Intn(10000)))
 }
 
