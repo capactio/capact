@@ -244,11 +244,11 @@ capact::install() {
     fi
 
     if [ -n "${HUB_MANIFESTS_SOURCE_REPO_REF:-}" ]; then
-      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
+      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocations[0].branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
     if [ -n "${HUB_MANIFESTS_SOURCE_REPO_URL:-}" ]; then
-      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.repository=${HUB_MANIFESTS_SOURCE_REPO_URL}"
+      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocations[0].repository=${HUB_MANIFESTS_SOURCE_REPO_URL}"
     fi
 
     if [ -n "${DOCKER_REPOSITORY:-}" ]; then
