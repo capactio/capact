@@ -49,4 +49,4 @@ readonly CAPACT_INCREASE_RESOURCE_LIMITS="true"
 readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL="github.com/mszostok/os-hub-manifests"
 # The git ref to checkout. It can point to a commit SHA, a branch name, or a tag.
 # If you want to use your forked version, remember to update CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL  respectively.
-readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF="policy-syntax/type-instances"
+readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF="42fe61d2bee271c9829adc37c9fa64047fa81085"
