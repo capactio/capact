@@ -296,7 +296,7 @@ var _ = Describe("GraphQL API", func() {
 					ID:       builtinStorage.ID,
 					Abstract: true,
 				},
-				Uses:                    []*gqllocalapi.TypeInstance{},
+				Uses:                    []*gqllocalapi.TypeInstance{&builtinStorage},
 				UsedBy:                  []*gqllocalapi.TypeInstance{},
 				LatestResourceVersion:   rev,
 				FirstResourceVersion:    rev,
@@ -334,8 +334,8 @@ var _ = Describe("GraphQL API", func() {
 			expectedChild := expectedChildTypeInstance(*childTiID, builtinStorage.ID)
 			expectedParent := expectedParentTypeInstance(*parentTiID, builtinStorage.ID)
 			expectedChild.UsedBy = []*gqllocalapi.TypeInstance{expectedParentTypeInstance(*parentTiID, builtinStorage.ID)}
-			expectedChild.Uses = []*gqllocalapi.TypeInstance{}
-			expectedParent.Uses = []*gqllocalapi.TypeInstance{expectedChildTypeInstance(*childTiID, builtinStorage.ID)}
+			expectedChild.Uses = []*gqllocalapi.TypeInstance{&builtinStorage}
+			expectedParent.Uses = []*gqllocalapi.TypeInstance{expectedChildTypeInstance(*childTiID, builtinStorage.ID), &builtinStorage}
 			expectedParent.UsedBy = []*gqllocalapi.TypeInstance{}
 
 			assertTypeInstance(ctx, cli, *childTiID, expectedChild)

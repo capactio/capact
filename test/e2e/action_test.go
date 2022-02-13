@@ -18,6 +18,7 @@ import (
 	engine "capact.io/capact/pkg/engine/client"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	hubclient "capact.io/capact/pkg/hub/client"
+	"capact.io/capact/pkg/hub/client/local"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -93,17 +94,8 @@ var _ = Describe("Action", func() {
 			}
 
 			builtinStorage := getBuiltinStorageTypeInstance(ctx, hubClient)
-			expUpdatedTI := &enginegraphql.OutputTypeInstanceDetails{
-				ID: updateTI.ID,
-				TypeRef: &enginegraphql.ManifestReference{
-					Path:     updateTI.TypeRef.Path,
-					Revision: updateTI.TypeRef.Revision,
-				},
-				Backend: &enginegraphql.TypeInstanceBackendDetails{
-					ID:       builtinStorage.ID,
-					Abstract: true,
-				},
-			}
+			expUpdatedTIOutput := mapToOutputTypeInstanceDetails(updateTI, builtinStorage.Backend)
+
 			By("2. Expecting Implementation A is picked and builtin storage is used...")
 
 			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
@@ -111,18 +103,20 @@ var _ = Describe("Action", func() {
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
 			By("3.1 Check uploaded TypeInstances")
-			uploadedTI, cleanup := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanup() // We need to clean it up as it's not deleted when Action is deleted.
-			Expect(uploadedTI.Backend).Should(Equal(&hublocalgraphql.TypeInstanceBackendReference{ID: builtinStorage.ID, Abstract: true}))
+			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: builtinStorage.ID, Abstract: true}
+			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("3.2 Check updated TypeInstances")
 			getTypeInstanceByIDAndValue(ctx, hubClient, updateTI.ID, implIndicatorValue)
 
 			By("3.3 Check Action output TypeInstances")
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTI, uploadedTI), HaveLen(2)))
+			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTIOutput, uploadedTIOutput), HaveLen(2)))
 
 			By("4. Deleting Action...")
 			err := engineClient.DeleteAction(ctx, actionName)
+			cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
 			Expect(err).ToNot(HaveOccurred())
 
 			By("5. Waiting for Action deleted")
@@ -137,13 +131,14 @@ var _ = Describe("Action", func() {
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
 			By("8.1 Check uploaded TypeInstances")
-			uploadedTI, cleanup = getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanup() // We need to clean it up as it's not deleted when Action is deleted.
-			Expect(uploadedTI.Backend).Should(Equal(&hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}))
+			expUploadTIBackend = &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+			uploadedTI, cleanupUploaded = getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
+			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("8.2 Check Action output TypeInstances")
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTI, uploadedTI), HaveLen(2)))
-
+			uploadedTIOutput = mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTIOutput, uploadedTIOutput), HaveLen(2)))
 		})
 
 		It("should pick Implementation B", func() {
@@ -198,12 +193,14 @@ var _ = Describe("Action", func() {
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
 			By("4.1 Check uploaded TypeInstances")
-			uploadedTI, cleanup := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanup() // We need to clean it up as it's not deleted when Action is deleted.
-			Expect(uploadedTI.Backend).Should(Equal(&hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}))
+			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
+			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("4.2 Check Action output TypeInstances")
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTI), HaveLen(2)))
+			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -308,6 +305,20 @@ var _ = Describe("Action", func() {
 		)
 	})
 })
+
+func mapToOutputTypeInstanceDetails(ti *hublocalgraphql.TypeInstance, backend *hublocalgraphql.TypeInstanceBackendReference) *enginegraphql.OutputTypeInstanceDetails {
+	return &enginegraphql.OutputTypeInstanceDetails{
+		ID: ti.ID,
+		TypeRef: &enginegraphql.ManifestReference{
+			Path:     ti.TypeRef.Path,
+			Revision: ti.TypeRef.Revision,
+		},
+		Backend: &enginegraphql.TypeInstanceBackendDetails{
+			ID:       backend.ID,
+			Abstract: backend.Abstract,
+		},
+	}
+}
 
 func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
 	return func() (enginegraphql.ActionStatusPhase, error) {
@@ -582,7 +593,7 @@ func getBuiltinStorageTypeInstance(ctx context.Context, hubClient *hubclient.Cli
 			Path:     builtinStorageTypePath,
 			Revision: ptr.String("0.1.0"),
 		},
-	})
+	}, local.WithFields(local.TypeInstanceAllFields))
 	Expect(err).ToNot(HaveOccurred())
 	Expect(coreStorage).Should(HaveLen(1))
 
