@@ -63,6 +63,9 @@ type Config struct {
 
 	Logger logger.Config
 
+	LocalHubEndpoint  string `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
+	PublicHubEndpoint string `envconfig:"default=http://capact-hub-public.capact-system/graphql"`
+
 	GraphQLGateway struct {
 		Endpoint string `envconfig:"default=http://capact-gateway/graphql"`
 		Username string
@@ -107,7 +110,7 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	hubClient := getHubClient(&cfg)
-	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
+	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage, cfg.LocalHubEndpoint, cfg.PublicHubEndpoint)
 	interfaceIOValidator := actionvalidation.NewValidator(hubClient)
 	policyIOValidator := policyvalidation.NewValidator(hubClient)
 	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)

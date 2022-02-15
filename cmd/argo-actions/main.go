@@ -40,19 +40,16 @@ func main() {
 	logger, err := logger.New(cfg.Logger)
 	exitOnError(err, "while creating zap logger")
 
-	localClient := local.NewDefaultClient(cfg.LocalHubEndpoint)
-	publicClient := public.NewDefaultClient(cfg.PublicHubEndpoint)
-
 	// TODO: Consider using connection `hubclient.New` and route requests through Gateway
 	client := hubclient.Client{
-		Local:  localClient,
-		Public: publicClient,
+		Local:  local.NewDefaultClient(cfg.LocalHubEndpoint),
+		Public: public.NewDefaultClient(cfg.PublicHubEndpoint),
 	}
 
 	switch cfg.Action {
 	case argoactions.DownloadAction:
 		log := logger.With(zap.String("Action", argoactions.DownloadAction))
-		action = argoactions.NewDownloadAction(log, localClient, cfg.DownloadConfig)
+		action = argoactions.NewDownloadAction(log, &client, cfg.DownloadConfig)
 
 	case argoactions.UploadAction:
 		log := logger.With(zap.String("Action", argoactions.UploadAction))

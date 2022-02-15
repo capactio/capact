@@ -14,7 +14,7 @@ func createFakeDedicatedRendererObject(t *testing.T) *dedicatedRenderer {
 	require.NoError(t, err)
 
 	genUUID := func() string { return "uuid" }
-	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7", "", "")
 	typeInstanceHandler.SetGenUUID(genUUID)
 
 	policyIOValidator := policyvalidation.NewValidator(fakeCli)

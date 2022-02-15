@@ -5,17 +5,30 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"capact.io/capact/internal/ptr"
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
 
-type typeInstanceData struct {
-	alias               *string
-	id                  string
-	value               interface{}
-	typeRefWithRevision string
+// TypeInstanceEssentialData contains essential TypeInstance Data for validation purpose.
+type TypeInstanceEssentialData struct {
+	Value   interface{}
+	TypeRef types.ManifestRef
+	Alias   *string
+	ID      *string
+}
+
+func (ti *TypeInstanceEssentialData) String() string {
+	return fmt.Sprintf("ID: %s,Alias: %s", ti.stringPtrToString(ti.ID), ti.stringPtrToString(ti.Alias))
+}
+
+func (ti *TypeInstanceEssentialData) stringPtrToString(p *string) string {
+	if p != nil {
+		return *p
+	}
+	return ""
 }
 
 // TypeInstanceValidationHubClient defines Hub methods needed for validation of TypeInstances.
@@ -26,25 +39,24 @@ type TypeInstanceValidationHubClient interface {
 
 // ValidateTypeInstancesToCreate  is responsible for validating TypeInstance which do not exist and will be created.
 func ValidateTypeInstancesToCreate(ctx context.Context, client TypeInstanceValidationHubClient, typeInstance *graphqllocal.CreateTypeInstancesInput) (Result, error) {
-	var typeInstanceCollection []*typeInstanceData
+	var typeInstanceCollection []*TypeInstanceEssentialData
 	typeRefCollection := TypeRefCollection{}
 
 	for _, ti := range typeInstance.TypeInstances {
-		if ti == nil {
+		if ti == nil || ti.TypeRef == nil {
 			continue
 		}
-		typeRef := types.TypeRef{
+		manifestRef := types.ManifestRef{
 			Path:     ti.TypeRef.Path,
 			Revision: ti.TypeRef.Revision,
 		}
-		name := getManifestPathWithRevision(ti.TypeRef.Path, ti.TypeRef.Revision)
-		typeRefCollection[name] = TypeRef{
-			TypeRef: typeRef,
+		typeRefCollection[manifestRef.String()] = TypeRef{
+			TypeRef: types.TypeRef(manifestRef),
 		}
-		typeInstanceCollection = append(typeInstanceCollection, &typeInstanceData{
-			alias:               ti.Alias,
-			value:               ti.Value,
-			typeRefWithRevision: name,
+		typeInstanceCollection = append(typeInstanceCollection, &TypeInstanceEssentialData{
+			Alias:   ti.Alias,
+			Value:   ti.Value,
+			TypeRef: manifestRef,
 		})
 	}
 
@@ -52,13 +64,12 @@ func ValidateTypeInstancesToCreate(ctx context.Context, client TypeInstanceValid
 	if err != nil {
 		return nil, errors.Wrapf(err, "while resolving TypeRefs to JSON Schemas")
 	}
-	return validateTypeInstances(schemasCollection, typeInstanceCollection)
+	return ValidateTypeInstances(schemasCollection, typeInstanceCollection)
 }
 
-// ValidateTypeInstanceToUpdate  is responsible for validating TypeInstance which exists and will be updated.
+// ValidateTypeInstanceToUpdate is responsible for validating TypeInstance which exists and will be updated.
 func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValidationHubClient, typeInstanceToUpdate []graphqllocal.UpdateTypeInstancesInput) (Result, error) {
 	var typeInstanceIds []string
-	idToTypeNameMap := map[string]string{}
 	for _, ti := range typeInstanceToUpdate {
 		typeInstanceIds = append(typeInstanceIds, ti.ID)
 	}
@@ -69,26 +80,29 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 	}
 
 	typeRefCollection := TypeRefCollection{}
-	for id, typeReference := range typeInstancesTypeRef {
-		name := getManifestPathWithRevision(typeReference.Path, typeReference.Revision)
-		typeRefCollection[name] = TypeRef{
-			TypeRef: types.TypeRef{
-				Path:     typeReference.Path,
-				Revision: typeReference.Revision,
-			},
+	for _, typeReference := range typeInstancesTypeRef {
+		manifestRef := types.ManifestRef{
+			Path:     typeReference.Path,
+			Revision: typeReference.Revision,
 		}
-		idToTypeNameMap[id] = name
+		typeRefCollection[manifestRef.String()] = TypeRef{
+			TypeRef: types.TypeRef(manifestRef),
+		}
 	}
 
-	var typeInstanceCollection []*typeInstanceData
+	var typeInstanceCollection []*TypeInstanceEssentialData
 	for _, ti := range typeInstanceToUpdate {
 		if ti.TypeInstance == nil {
 			continue
 		}
-		typeInstanceCollection = append(typeInstanceCollection, &typeInstanceData{
-			id:                  ti.ID,
-			value:               ti.TypeInstance.Value,
-			typeRefWithRevision: idToTypeNameMap[ti.ID],
+		typeRef, ok := typeInstancesTypeRef[ti.ID]
+		if !ok {
+			return nil, errors.Wrapf(err, "while finding TypeInstance Type reference for id %s", ti.ID)
+		}
+		typeInstanceCollection = append(typeInstanceCollection, &TypeInstanceEssentialData{
+			ID:      ptr.String(ti.ID),
+			Value:   ti.TypeInstance.Value,
+			TypeRef: types.ManifestRef(typeRef),
 		})
 	}
 
@@ -97,25 +111,26 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 		return nil, errors.Wrapf(err, "while resolving TypeRefs to JSON Schemas")
 	}
 
-	return validateTypeInstances(schemasCollection, typeInstanceCollection)
+	return ValidateTypeInstances(schemasCollection, typeInstanceCollection)
 }
 
-func validateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollection []*typeInstanceData) (Result, error) {
+//ValidateTypeInstances is responsible for validating TypeInstance.
+func ValidateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollection []*TypeInstanceEssentialData) (Result, error) {
 	resultBldr := NewResultBuilder("Validation TypeInstances")
 
 	for _, ti := range typeInstanceCollection {
-		if _, ok := ti.value.(map[string]interface{}); !ok {
+		if _, ok := ti.Value.(map[string]interface{}); !ok {
 			return Result{}, errors.New("could not create map from TypeInstance Value")
 		}
-		valuesJSON, err := json.Marshal(ti.value)
+		valuesJSON, err := json.Marshal(ti.Value)
 		if err != nil {
 			return Result{}, errors.Wrap(err, "while converting TypeInstance value to JSON bytes")
 		}
-		if _, ok := schemaCollection[ti.typeRefWithRevision]; !ok {
-			return Result{}, fmt.Errorf("could not find Schema for type %s", ti.typeRefWithRevision)
+		if _, ok := schemaCollection[ti.TypeRef.String()]; !ok {
+			return Result{}, fmt.Errorf("could not find Schema for type %s", ti.TypeRef.String())
 		}
 
-		schemaLoader := gojsonschema.NewStringLoader(schemaCollection[ti.typeRefWithRevision].Value)
+		schemaLoader := gojsonschema.NewStringLoader(schemaCollection[ti.TypeRef.String()].Value)
 		dataLoader := gojsonschema.NewBytesLoader(valuesJSON)
 
 		result, err := gojsonschema.Validate(schemaLoader, dataLoader)
@@ -124,20 +139,11 @@ func validateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollec
 		}
 		if !result.Valid() {
 			for _, err := range result.Errors() {
-				msg := ""
-				if ti.alias != nil {
-					msg = fmt.Sprintf("TypeInstance with alias %s", *ti.alias)
-				} else if ti.id != "" {
-					msg = fmt.Sprintf("TypeInstance with id %s", ti.id)
-				}
+				msg := fmt.Sprintf("TypeInstance(%s)", ti.String())
 				resultBldr.ReportIssue(msg, err.String())
 			}
 		}
 	}
 
 	return resultBldr.Result(), nil
-}
-
-func getManifestPathWithRevision(path string, revision string) string {
-	return path + ":" + revision
 }

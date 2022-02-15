@@ -36,7 +36,7 @@ func TestRenderHappyPath(t *testing.T) {
 
 	policy := policy.NewAllowAll()
 	genUUID := func() string { return "uuid" } // it has to be static because of parallel testing
-	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7", "http://capact-hub-local.capact-system/graphql ", "http://capact-hub-public.capact-system/graphql")
 	typeInstanceHandler.SetGenUUID(genUUID)
 
 	ownerID := "default/action"
@@ -294,7 +294,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			genUUID := genUUIDFn(strconv.Itoa(tc))
-			typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
+			typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7", "http://capact-hub-local.capact-system/graphql ", "http://capact-hub-public.capact-system/graphql")
 			typeInstanceHandler.SetGenUUID(genUUID)
 
 			interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
@@ -341,7 +341,7 @@ func TestRendererMaxDepth(t *testing.T) {
 	require.NoError(t, err)
 
 	policy := policy.NewAllowAll()
-	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7", "http://capact-hub-local.capact-system/graphql ", "http://capact-hub-public.capact-system/graphql")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
@@ -380,7 +380,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	require.NoError(t, err)
 
 	policy := policy.NewDenyAll()
-	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7", "http://capact-hub-local.capact-system/graphql ", "http://capact-hub-public.capact-system/graphql")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
