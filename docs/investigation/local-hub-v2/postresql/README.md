@@ -4,10 +4,10 @@ This document aggregates raw notes from a short investigation as a part of the [
 
 ## Goal
 
-The goal of this investigation is to find an efficient way to implement Local Hub backed with PostgreSQL. We believe that PostgreSQL could be a good replacement to Neo4j, to resolve problems with high resource consumption and licensing.  
+The goal of this investigation is to find an efficient way to implement Local Hub backed with PostgreSQL. We believe that PostgreSQL could be a good replacement to Neo4j, to resolve problems with high resource consumption and licensing.
 Ideally, we want to implement Local Hub in Go, but we will also consider Node.js if there are convenient libraries and framework that highly increase development pace.
 
-The investigation influences how we will implement the initial version of the [Delegated Storage](../../proposal/20211207-delegated-storage.md) concept. 
+The investigation influences how we will implement the initial version of the [Delegated Storage](../../../proposal/20211207-delegated-storage.md) concept.
 
 ## Graph solutions for PostgreSQL
 
@@ -31,13 +31,13 @@ To avoid implementing and maintaining our own solution, we could save time and u
 
 #### [Apache AGE](https://github.com/apache/incubator-age)
 
-- PostgreSQL extension with OpenCypher implementation 
+- PostgreSQL extension with OpenCypher implementation
 - Missing support for apoc; we would still need to rewrite our queries
 - Inspired by AgensGraph
 - PostgreSQL 11 only support (until 2022 Q1, as the docs say)
 - Drivers:
   - [Official Golang driver](https://github.com/apache/incubator-age/tree/master/drivers/golang) seems to be at a very early stage
-  - [Unofficial Golang driver](https://github.com/rhizome-ai/apache-age-go) is at a very early stage (`v.0.0.4`), created by a single person, and can't be considered right now 
+  - [Unofficial Golang driver](https://github.com/rhizome-ai/apache-age-go) is at a very early stage (`v.0.0.4`), created by a single person, and can't be considered right now
 - [NodeJS client](https://github.com/apache/incubator-age/tree/master/drivers/nodejs) is very simple, introduced around a year ago with [not many changes over time](https://github.com/apache/incubator-age/commits/master/drivers/nodejs)
 - We cannot treat it as a replacement of Neo4j and simply use different DB with the [`neo4j-graphql`](https://github.com/neo4j/graphql) library, as it uses different driver with different protocol (bolt).
 
@@ -64,7 +64,7 @@ There are not many solutions when we would like to use Go as the language for ou
        id
        name
      }
-   }     
+   }
    ```
 
   Read more in the [docs](https://github.com/dosco/graphjin/wiki/Guide-to-GraphQL)
@@ -130,7 +130,7 @@ This paragraph describes how we can actually implement Local Hub, based on knowl
 
 We can use [ltree](https://www.postgresql.org/docs/current/ltree.html) extension. However, in general, implementing and maintaining our own graph solution doesn't seem like the most efficient approach. Also, IMHO it won't scale well when we would like to rewrite our Public Hub as well.
 
-### Use existing graph implementation for PostgreSQL 
+### Use existing graph implementation for PostgreSQL
 
 - Implement Local Hub in Go with AgensGraph, using official, abandoned Go client, [gorm](https://github.com/go-gorm/gorm) and our own custom OpenCypher queries
 
@@ -147,6 +147,6 @@ We decided to reevaluate [dgraph](https://github.com/dgraph-io/dgraph) first.
 - If `dgraph` suits our needs, we will replace the graph database in Local Hub, implementing it in Go. The Delegated Storage backends will be initially implemented as built-in Local Hub functionality.
 - If not, then:
 
-  1. We will keep the Local Hub implemented in Node.js with Neo4j database for the time being, and implement Delegated Storage as an extension (custom GraphQL resolvers) for the current TypeScript codebase. The storage backends will be implemented as external Go services communicated via gRPC + Protocol Buffers, as the proposal says. 
+  1. We will keep the Local Hub implemented in Node.js with Neo4j database for the time being, and implement Delegated Storage as an extension (custom GraphQL resolvers) for the current TypeScript codebase. The storage backends will be implemented as external Go services communicated via gRPC + Protocol Buffers, as the proposal says.
   2. Once the Delegated Storage is implemented, we will switch to PostgreSQL as database storage, and refactor Local Hub to use [JoinMonster](#joinmonsterhttpsgithubcomjoin-monsterjoin-monster) or some newer GraphQL-first alternative if it is founded. To implement graph relations, we will use a dedicated PostgreSQL extension, such as [ltree](https://www.postgresql.org/docs/current/ltree.html) and write our custom GraphQL resolvers to resolve `uses` and `usedBy` TypeInstance relations.
 
