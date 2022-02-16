@@ -1040,29 +1040,31 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 	return nil
 }
 
-func (*dedicatedRenderer) selectBackendAlias(upperStep, resolvedStep string) (string, error) {
+func (*dedicatedRenderer) selectBackendAlias(upperStep, resolvedStep string) (*string, error) {
 	if upperStep != "" && resolvedStep != "" {
-		return "", errors.Errorf("cannot override backend on capact-outputTypeInstances")
+		return nil, errors.Errorf("cannot override backend on capact-outputTypeInstances")
 	}
-	if upperStep != "" {
-		return upperStep, nil
+	for _, alias := range []string{upperStep, resolvedStep} {
+		if alias != "" {
+			return &alias, nil
+		}
 	}
-	return resolvedStep, nil
+	return nil, nil
 }
 
-func (*dedicatedRenderer) selectBackend(alias string, typeRef types.TypeRef, backends policy.TypeInstanceBackendCollection) (policy.TypeInstanceBackend, error) {
-	if alias == "" { // alias not set, get the Policy default based on TypeRef
+func (*dedicatedRenderer) selectBackend(alias *string, typeRef types.TypeRef, backends policy.TypeInstanceBackendCollection) (policy.TypeInstanceBackend, error) {
+	if alias == nil { // alias not set, get the Policy default based on TypeRef
 		backend, _ := backends.GetByTypeRef(typeRef)
 		return backend, nil
 	}
 
 	// when alias is specified, required TypeInstance needs to be injected and be of Hub storage type
-	backend, found := backends.GetByAlias(alias)
+	backend, found := backends.GetByAlias(*alias)
 	if !found {
-		return policy.TypeInstanceBackend{}, fmt.Errorf("cannot find backend storage for specified %s alias", alias)
+		return policy.TypeInstanceBackend{}, fmt.Errorf("cannot find backend storage for specified %q alias", *alias)
 	}
 	if !backend.ExtendsHubStorage {
-		return policy.TypeInstanceBackend{}, fmt.Errorf("TypeInstance with %q alias is not a Hub storage", alias)
+		return policy.TypeInstanceBackend{}, fmt.Errorf("TypeInstance with %q alias is not a Hub storage", *alias)
 	}
 
 	return backend, nil

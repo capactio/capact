@@ -8,7 +8,6 @@ import (
 
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
-	typesutil "capact.io/capact/pkg/hub/client/public/facade/types"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 
@@ -281,7 +280,7 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 
 	var validationErrs []error
 	for parentNode, expTypesRefs := range relations {
-		gotAttachedTypes, err := typesutil.ListAdditionalRefs(ctx, v.hub, expTypesRefs)
+		gotAttachedTypes, err := public.ListAdditionalRefs(ctx, v.hub, expTypesRefs)
 		if err != nil {
 			return ValidationResult{}, errors.Wrap(err, "while fetching Types based on parent node")
 		}
@@ -301,7 +300,7 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 	return ValidationResult{Errors: validationErrs}, nil
 }
 
-func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes typesutil.ListAdditionalRefsOutput, expAttachedTypes []types.TypeRef, expParent string) []string {
+func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes public.ListAdditionalRefsOutput, expAttachedTypes []types.TypeRef, expParent string) []string {
 	var missingChildren []string
 
 	for _, exp := range expAttachedTypes {

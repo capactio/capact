@@ -10,7 +10,6 @@ import (
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
-	typesutil "capact.io/capact/pkg/hub/client/public/facade/types"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	multierr "github.com/hashicorp/go-multierror"
 
@@ -92,7 +91,7 @@ type TypeRefWithAdditionalRefs struct {
 
 func (r *Resolver) enrichWithParentNodes(ctx context.Context, refs map[string]hublocalgraphql.TypeInstanceTypeReference) (map[string]TypeRefWithAdditionalRefs, error) {
 	typesPath := r.mapToTypeRefs(refs)
-	gotAttachedTypes, err := typesutil.ListAdditionalRefs(ctx, r.hubCli, typesPath)
+	gotAttachedTypes, err := public.ListAdditionalRefs(ctx, r.hubCli, typesPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "while fetching Types")
 	}
@@ -159,7 +158,6 @@ func (r *Resolver) setTypeRefsForAdditionalTypeInstances(policy *policy.Policy, 
 	}
 }
 
-// TODO(storage) set also rule.TypeRef.Revision..
 func (r *Resolver) setTypeRefsForBackendTypeInstances(policy *policy.Policy, typeRefs map[string]TypeRefWithAdditionalRefs) {
 	for ruleIdx, rule := range policy.TypeInstance.Rules {
 		typeRef, exists := typeRefs[rule.Backend.ID]

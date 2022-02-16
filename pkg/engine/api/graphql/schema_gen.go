@@ -1208,7 +1208,7 @@ input InterfacePolicyInput {
 
 input RulesForInterfaceInput {
   interface: ManifestReferenceInput!
-  oneOf:   [PolicyRuleInput!]!
+  oneOf: [PolicyRuleInput!]!
 }
 
 input PolicyRuleInput {
@@ -1271,7 +1271,7 @@ type InterfacePolicy {
 
 type RulesForInterface {
   interface: ManifestReferenceWithOptionalRevision!
-  oneOf:   [PolicyRule!]!
+  oneOf: [PolicyRule!]!
 }
 
 type PolicyRule {

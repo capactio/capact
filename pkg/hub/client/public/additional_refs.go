@@ -1,4 +1,4 @@
-package types
+package public
 
 import (
 	"context"
@@ -6,18 +6,17 @@ import (
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/internal/regexutil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
-	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	"github.com/pkg/errors"
 )
 
 // listAdditionalRefsFields defines preset for response fields required for collection Type's spec.additionalRefs
-const listAdditionalRefsFields = public.TypeRevisionRootFields | public.TypeRevisionSpecAdditionalRefsField
+const listAdditionalRefsFields = TypeRevisionRootFields | TypeRevisionSpecAdditionalRefsField
 
 // ListAdditionalRefsClient defines external Hub calls used by ListAdditionalRefs.
 type ListAdditionalRefsClient interface {
-	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
+	ListTypes(ctx context.Context, opts ...TypeOption) ([]*gqlpublicapi.Type, error)
 }
 
 // ListAdditionalRefsOutput holds Type's spec.additionalRefs entry indexed by TypeRef key.
@@ -30,9 +29,9 @@ type ListAdditionalRefsOutput map[types.TypeRef][]string
 func ListAdditionalRefs(ctx context.Context, cli ListAdditionalRefsClient, reqTypes []types.TypeRef) (ListAdditionalRefsOutput, error) {
 	filter := regexutil.OrStringSlice(mapToPaths(reqTypes))
 
-	opts := []public.TypeOption{
-		public.WithTypeRevisions(listAdditionalRefsFields),
-		public.WithTypeFilter(gqlpublicapi.TypeFilter{
+	opts := []TypeOption{
+		WithTypeRevisions(listAdditionalRefsFields),
+		WithTypeFilter(gqlpublicapi.TypeFilter{
 			PathPattern: ptr.String(filter),
 		}),
 	}

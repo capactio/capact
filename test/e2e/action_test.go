@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	actionPassingPath      = "cap.interface.capactio.capact.validation.action.passing"
-	uploadTypePath         = "cap.type.capactio.capact.validation.upload"
-	builtinStorageTypePath = "cap.core.type.hub.storage.neo4j"
-	singleKeyTypePath      = "cap.type.capactio.capact.validation.single-key"
+	actionPassingInterfacePath = "cap.interface.capactio.capact.validation.action.passing"
+	uploadTypePath             = "cap.type.capactio.capact.validation.upload"
+	builtinStorageTypePath     = "cap.core.type.hub.storage.neo4j"
+	singleKeyTypePath          = "cap.type.capactio.capact.validation.single-key"
 )
 
 func getActionName() string {
@@ -61,7 +61,6 @@ var _ = Describe("Action", func() {
 		engineClient.DeleteAction(ctx, actionName)
 		engineClient.DeleteAction(ctx, failingActionName)
 	})
-	const actionPath = "cap.interface.capactio.capact.validation.action.passing"
 
 	Context("Action execution", func() {
 
@@ -83,7 +82,7 @@ var _ = Describe("Action", func() {
 			defer updateTICleanup()
 
 			By("1.3 Creating TypeInstance that describes Helm storage")
-			helmStorage := getTypeInstanceHelmStorage()
+			helmStorage := fixHelmStorageTypeInstanceCreateInput()
 			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
 			defer helmStorageTICleanup()
 
@@ -99,7 +98,7 @@ var _ = Describe("Action", func() {
 
 			By("2. Expecting Implementation A is picked and builtin storage is used...")
 
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
@@ -127,7 +126,7 @@ var _ = Describe("Action", func() {
 			setGlobalTestPolicy(ctx, engineClient, withHelmBackendForUploadTypeRef(helmStorageTI.ID))
 
 			By("7. Expecting Implementation A is picked and the Helm storage is used for uploaded TypeInstance...")
-			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
+			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
@@ -159,7 +158,7 @@ var _ = Describe("Action", func() {
 			defer updateTICleanup()
 
 			By("1.3 Creating TypeInstance that describes Helm storage")
-			helmStorage := getTypeInstanceHelmStorage()
+			helmStorage := fixHelmStorageTypeInstanceCreateInput()
 			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
 			defer helmStorageTICleanup()
 
@@ -189,7 +188,7 @@ var _ = Describe("Action", func() {
 			setGlobalTestPolicy(ctx, engineClient, prependInjectRuleForPassingActionInterface(globalPolicyRequiredTypeInstances))
 
 			By("3. Expecting Implementation B is picked and injected Helm storage is used...")
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
@@ -395,7 +394,7 @@ func getTypeInstanceInputForUpdate() *hublocalgraphql.CreateTypeInstanceInput {
 	}
 }
 
-func getTypeInstanceHelmStorage() *hublocalgraphql.CreateTypeInstanceInput {
+func fixHelmStorageTypeInstanceCreateInput() *hublocalgraphql.CreateTypeInstanceInput {
 	return &hublocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.helm.storage",
@@ -530,7 +529,7 @@ func prependInjectRuleForPassingActionInterface(reqInput []*enginegraphql.Requir
 	}
 	return func(policy *enginegraphql.PolicyInput) {
 		for idx, rule := range policy.Interface.Rules {
-			if rule.Interface.Path != actionPassingPath {
+			if rule.Interface.Path != actionPassingInterfacePath {
 				continue
 			}
 			policy.Interface.Rules[idx].OneOf = append([]*enginegraphql.PolicyRuleInput{
@@ -656,7 +655,7 @@ func fixGQLTestPolicyInput() *enginegraphql.PolicyInput {
 		Interface: &enginegraphql.InterfacePolicyInput{
 			Rules: []*enginegraphql.RulesForInterfaceInput{
 				{
-					Interface: manifestRef(actionPassingPath),
+					Interface: manifestRef(actionPassingInterfacePath),
 					OneOf: []*enginegraphql.PolicyRuleInput{
 						{
 							ImplementationConstraints: &enginegraphql.PolicyRuleImplementationConstraintsInput{

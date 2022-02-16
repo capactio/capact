@@ -113,7 +113,7 @@ func (e *PolicyEnforcedClient) ListTypeInstancesBackendsBasedOnPolicy(_ context.
 		out.SetByTypeRef(rule.TypeRef, rule.Backend)
 	}
 
-	// TODO(https://github.com/capactio/capact/issues/624):
+	// TODO(https://github.com/capactio/capact/issues/635):
 	// 2. Global defaults based on required TypeInstance injection
 	// e.mergedPolicy.Interface.Defaults
 
