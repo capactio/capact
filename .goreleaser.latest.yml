@@ -47,12 +47,6 @@ changelog:
 
 dist: bin
 
-blobs:
-  -
-    provider: gs
-    bucket: capactio-binaries
-    folder: '{{ .Tag }}'
-
 release:
   # You can disable this pipe in order to not upload any artifacts.
   # Defaults to false.

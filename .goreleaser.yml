@@ -111,12 +111,6 @@ changelog:
 
 dist: bin
 
-blobs:
-  -
-    provider: gs
-    bucket: capactio-binaries
-    folder: '{{ .Tag }}'
-
 release:
   github:
     owner: capactio

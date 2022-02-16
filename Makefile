@@ -216,7 +216,7 @@ release-latest-binaries: ## Release latest Capact binaries
 	# https://goreleaser.com/limitations/semver/
 	#
 	# Update binaries
-	gsutil -m rsync ./bin/ gs://capactio-binaries/latest/
+	gsutil -m rsync -x "goreleaserdocker.*" -r ./bin/ gs://capactio-binaries/latest/
 	# By default Google sets `cache-control: public, max-age=3600`.
 	# We need to change to ensure the file is not cached by http clients, so latest version is always downloaded
 	# source: https://cloud.google.com/storage/docs/caching#performance_considerations
