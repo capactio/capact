@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"capact.io/capact/internal/ptr"
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
@@ -21,14 +22,17 @@ type TypeInstanceEssentialData struct {
 }
 
 func (ti *TypeInstanceEssentialData) String() string {
-	return fmt.Sprintf("ID: %s,Alias: %s", ti.stringPtrToString(ti.ID), ti.stringPtrToString(ti.Alias))
-}
-
-func (ti *TypeInstanceEssentialData) stringPtrToString(p *string) string {
-	if p != nil {
-		return *p
+	if ti == nil {
+		return ""
 	}
-	return ""
+	var tiMetadata []string
+	if ti.ID != nil {
+		tiMetadata = append(tiMetadata, fmt.Sprintf("ID: %s", *ti.ID))
+	}
+	if ti.Alias != nil {
+		tiMetadata = append(tiMetadata, fmt.Sprintf("Alias: %s", *ti.Alias))
+	}
+	return strings.Join(tiMetadata, ", ")
 }
 
 // TypeInstanceValidationHubClient defines Hub methods needed for validation of TypeInstances.
@@ -97,7 +101,7 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 		}
 		typeRef, ok := typeInstancesTypeRef[ti.ID]
 		if !ok {
-			return nil, errors.Wrapf(err, "while finding TypeInstance Type reference for id %s", ti.ID)
+			return nil, errors.Wrapf(err, "while finding TypeInstance Type reference for id %q", ti.ID)
 		}
 		typeInstanceCollection = append(typeInstanceCollection, &TypeInstanceEssentialData{
 			ID:      ptr.String(ti.ID),
@@ -127,7 +131,7 @@ func ValidateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollec
 			return Result{}, errors.Wrap(err, "while converting TypeInstance value to JSON bytes")
 		}
 		if _, ok := schemaCollection[ti.TypeRef.String()]; !ok {
-			return Result{}, fmt.Errorf("could not find Schema for type %s", ti.TypeRef.String())
+			return Result{}, fmt.Errorf("could not find Schema for type %q", ti.TypeRef.String())
 		}
 
 		schemaLoader := gojsonschema.NewStringLoader(schemaCollection[ti.TypeRef.String()].Value)

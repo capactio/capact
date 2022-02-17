@@ -248,7 +248,7 @@ args:
         - name: APP_DOWNLOAD_CONFIG
           value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp-sa.yaml}'
         - name: APP_LOCAL_HUB_ENDPOINT
-          value: 'http://capact-hub-local.capact-system/graphql '
+          value: http://capact-hub-local.capact-system/graphql
         - name: APP_PUBLIC_HUB_ENDPOINT
           value: http://capact-hub-public.capact-system/graphql
         image: alpine:3.7
@@ -300,7 +300,7 @@ args:
         - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
           value: /upload/typeInstances
         - name: APP_LOCAL_HUB_ENDPOINT
-          value: 'http://capact-hub-local.capact-system/graphql '
+          value: http://capact-hub-local.capact-system/graphql
         - name: APP_PUBLIC_HUB_ENDPOINT
           value: http://capact-hub-public.capact-system/graphql
         image: alpine:3.7

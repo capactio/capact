@@ -31,12 +31,11 @@ func TestValidateTypeInstances(t *testing.T) {
 					},
 					Value: map[string]interface{}{
 						"test1": "test",
-						"test2": "test",
 					},
 					Alias: ptr.String("aws-creds"),
 				},
 			},
-			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(ID: ,Alias: aws-creds)\":\n    * (root): key is required"),
+			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(Alias: aws-creds)\":\n    * (root): key is required"),
 		},
 		"When TypeInstance value does not meet Type property constraints": {
 			schemaCollection: SchemaCollection{
@@ -57,9 +56,9 @@ func TestValidateTypeInstances(t *testing.T) {
 					ID: ptr.String("5605af48-c34f-4bdc-b2d8-53c679bdfa5a"),
 				},
 			},
-			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(ID: 5605af48-c34f-4bdc-b2d8-53c679bdfa5a,Alias: )\":\n    * replicas: Invalid type. Expected: string, given: integer"),
+			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(ID: 5605af48-c34f-4bdc-b2d8-53c679bdfa5a)\":\n    * replicas: Invalid type. Expected: string, given: integer"),
 		},
-		"When TypeInstance contain the required property": {
+		"When TypeInstance contains the required property": {
 			schemaCollection: SchemaCollection{
 				"cap.type.aws.auth.creds:0.1.0": {
 					Value:    fmt.Sprintf("%v", AWSCredsTypeRevFixture().Revisions[0].Spec.JSONSchema),
@@ -108,7 +107,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					Alias: ptr.String("aws-creds-2"),
 				},
 			},
-			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(ID: ,Alias: aws-creds)\":\n    * (root): key is required\n- Validation TypeInstances \"TypeInstance(ID: ,Alias: aws-creds-2)\":\n    * (root): key is required"),
+			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(Alias: aws-creds)\":\n    * (root): key is required\n- Validation TypeInstances \"TypeInstance(Alias: aws-creds-2)\":\n    * (root): key is required"),
 		},
 	}
 
