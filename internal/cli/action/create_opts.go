@@ -304,12 +304,13 @@ func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 	prompt := &survey.Editor{
 		Message: "Please type one-time Action policy in YAML format",
 		Default: heredoc.Doc(fmt.Sprintf(`
-      rules:
-        - interface:
-            path: "%s"
-          oneOf:
-            - implementationConstraints:
-                path: ""
+      interface:
+        rules:
+          - interface:
+              path: "%s"
+            oneOf:
+              - implementationConstraints:
+                  path: ""
     `, ifacePath)),
 		AppendDefault: true,
 		HideDefault:   true,

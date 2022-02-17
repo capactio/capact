@@ -34,9 +34,9 @@ func GetEntrypointWorkflowIndex(w *Workflow) (int, error) {
 	return 0, NewEntrypointWorkflowIndexNotFoundError(w.Entrypoint)
 }
 
-func findTypeInstanceTypeRef(typeInstanceName string, impl *hubpublicgraphql.ImplementationRevision, iface *hubpublicgraphql.InterfaceRevision) (*hubpublicgraphql.TypeReference, error) {
+func findTypeInstanceTypeRef(typeInstanceName string, impl *hubpublicgraphql.ImplementationRevision, iface *hubpublicgraphql.InterfaceRevision) (types.TypeRef, error) {
 	if iface == nil {
-		return nil, NewTypeReferenceNotFoundError(typeInstanceName)
+		return types.TypeRef{}, NewTypeReferenceNotFoundError(typeInstanceName)
 	}
 
 	var toSearch []*hubpublicgraphql.OutputTypeInstance
@@ -51,15 +51,15 @@ func findTypeInstanceTypeRef(typeInstanceName string, impl *hubpublicgraphql.Imp
 
 	for i := range toSearch {
 		ti := toSearch[i]
-		if ti.Name == typeInstanceName {
-			return ti.TypeRef, nil
+		if ti.Name == typeInstanceName && ti.TypeRef != nil {
+			return types.TypeRef(*ti.TypeRef), nil
 		}
 	}
 
-	return nil, NewTypeReferenceNotFoundError(typeInstanceName)
+	return types.TypeRef{}, NewTypeReferenceNotFoundError(typeInstanceName)
 }
 
-func findOutputTypeInstance(step *WorkflowStep, typeInstanceName string) *TypeInstanceDefinition {
+func findOutputTypeInstance(step *WorkflowStep, typeInstanceName string) *CapactTypeInstanceOutputs {
 	for _, output := range step.CapactTypeInstanceOutputs {
 		if output.From == typeInstanceName {
 			return &output

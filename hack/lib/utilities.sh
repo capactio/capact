@@ -220,7 +220,8 @@ capact::install() {
     export ENABLE_ADDING_TRUSTED_CERT=${ENABLE_ADDING_TRUSTED_CERT:-"true"}
     export HUB_MANIFESTS_SOURCE_REPO_REF=${HUB_MANIFESTS_SOURCE_REPO_REF:-${CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF}}
     export HUB_MANIFESTS_SOURCE_REPO_URL=${HUB_MANIFESTS_SOURCE_REPO_URL:-${CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL}}
-    export COMPONENTS="neo4j,ingress-nginx,argo,cert-manager,capact"
+    export COMPONENTS=${COMPONENTS:-"neo4j,ingress-nginx,argo,cert-manager,capact"}
+    export BUILD_IMAGES_LIST=${BUILD_IMAGES_LIST:-"argo-actions,argo-runner,e2e-test,gateway,hub-js,k8s-engine,populator"}
     export INGRESS_CONTROLLER_OVERRIDES=${INGRESS_CONTROLLER_OVERRIDES:=""}
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
     export CAPACT_INSTALL_ADDITIONAL_OPTS=""
@@ -243,11 +244,11 @@ capact::install() {
     fi
 
     if [ -n "${HUB_MANIFESTS_SOURCE_REPO_REF:-}" ]; then
-      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
+      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocations[0].branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
     if [ -n "${HUB_MANIFESTS_SOURCE_REPO_URL:-}" ]; then
-      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.repository=${HUB_MANIFESTS_SOURCE_REPO_URL}"
+      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocations[0].repository=${HUB_MANIFESTS_SOURCE_REPO_URL}"
     fi
 
     if [ -n "${DOCKER_REPOSITORY:-}" ]; then
@@ -255,7 +256,7 @@ capact::install() {
     fi
 
     if [[ "${BUILD_IMAGES:-"true"}" == "false" ]]; then
-      BUILD_IMAGES_FLAG=--build-image=""
+      BUILD_IMAGES_LIST=""
     fi
 
     if [ -n "${CAPACT_HELM_REPO:-}" ]; then
@@ -277,7 +278,7 @@ capact::install() {
         --update-hosts-file="${ENABLE_HOSTS_UPDATE}" \
         --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
         --install-component="${COMPONENTS}" \
-        ${BUILD_IMAGES_FLAG:-} \
+        --build-image="${BUILD_IMAGES_LIST}" \
         --version="${CAPACT_VERSION}" \
         ${CAPACT_INSTALL_ADDITIONAL_OPTS}
 }

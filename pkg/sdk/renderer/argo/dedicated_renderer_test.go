@@ -3,9 +3,11 @@ package argo
 import (
 	"testing"
 
+	"capact.io/capact/internal/logger"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/fake"
 	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +24,7 @@ func createFakeDedicatedRendererObject(t *testing.T) *dedicatedRenderer {
 	opts := []RendererOption{}
 	maxDepth := 20
 
-	return newDedicatedRenderer(maxDepth, policyEnforcedClient, typeInstanceHandler, opts...)
+	return newDedicatedRenderer(logger.Noop(), maxDepth, policyEnforcedClient, typeInstanceHandler, opts...)
 }
 
 func TestCapactWhenContainDashes(t *testing.T) {

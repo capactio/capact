@@ -32,52 +32,54 @@ func fixCfgMap(t *testing.T, in policy.Policy) *v1.ConfigMap {
 
 func fixModel() policy.Policy {
 	return policy.Policy{
-		Rules: policy.RulesList{
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path:     "cap.interface.database.postgresql.install",
-					Revision: ptr.String("0.1.0"),
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{
-							Requires: &[]types.ManifestRefWithOptRevision{
-								{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+		Interface: policy.InterfacePolicy{
+			Rules: policy.InterfaceRulesList{
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path:     "cap.interface.database.postgresql.install",
+						Revision: ptr.String("0.1.0"),
+					},
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{
+								Requires: &[]types.ManifestRefWithOptRevision{
+									{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
+								},
+								Attributes: &[]types.ManifestRefWithOptRevision{
+									{
+										Path: "cap.attribute.cloud.provider.gcp",
+									},
 								},
 							},
-							Attributes: &[]types.ManifestRefWithOptRevision{
-								{
-									Path: "cap.attribute.cloud.provider.gcp",
-								},
-							},
-						},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
-										Description: ptr.String("Sample description"),
+							Inject: &policy.InjectData{
+								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+									{
+										TypeInstanceReference: policy.TypeInstanceReference{
+											ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
+											Description: ptr.String("Sample description"),
+										},
 									},
 								},
 							},
 						},
-					},
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{
-							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{
+								Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
+							},
 						},
 					},
 				},
-			},
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.*",
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.*",
+					},
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+						},
 					},
 				},
 			},

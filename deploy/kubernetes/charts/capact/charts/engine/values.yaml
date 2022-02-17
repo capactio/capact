@@ -60,67 +60,57 @@ affinity: {}
 
 # order from highest priority to the lowest
 policyOrder: "ACTION,GLOBAL,WORKFLOW"
-globalPolicyRules:
+globalPolicy:
 # Insert Interface paths with Implementations. For example:
-#
-#  - interface:
-#      # Rules for exact path and revision (looked up in first place)
-#      path: "cap.interface.database.postgresql.install"
-#      revision: "0.1.0"
-#    oneOf:
-#      - implementationConstraints:
-#          requires:
-#            - path: "cap.type.gcp.auth.service-account"
-#              # any revision
-#          attributes:
-#            - path: "cap.attribute.cloud.provider.gcp"
-#              # any revision
-#        inject:
-#         typeInstances:
-#           - id: "{uuid}"
-#             typeRef:
-#               path: "cap.type.gcp.auth.service-account"
-#               revision: "0.1.0"
-#      - implementationConstraints:
-#          attributes:
-#           - path: cap.attribute.cloud.provider.aws
-#             # any revision
-#      - implementationConstraints:
-#          path: cap.implementation.bitnami.postgresql.install
-#  - interface:
-#      # Rules for exact path in any revision (looked up in second place)
-#      path: "cap.interface.database.postgresql.install"
-#    oneOf:
-#      - implementationConstraints:
-#          requires:
-#            - path: "cap.type.gcp.auth.service-account"
-#              # any revision
-#          attributes:
-#            - path: "cap.attribute.cloud.provider.gcp"
-#              # any revision
+#  interface:
+#    rules:
+#      - interface:
+#          # Rules for exact path and revision (looked up in first place)
+#          path: "cap.interface.database.postgresql.install"
+#          revision: "0.1.0"
+#        oneOf:
+#          - implementationConstraints:
+#              requires:
+#                - path: "cap.type.gcp.auth.service-account"
+#                  # any revision
+#              attributes:
+#                - path: "cap.attribute.cloud.provider.gcp"
+#                  # any revision
+#            inject:
+#             typeInstances:
+#               - id: "{uuid}"
+#                 typeRef:
+#                   path: "cap.type.gcp.auth.service-account"
+#                   revision: "0.1.0"
+#          - implementationConstraints:
+#              attributes:
+#               - path: cap.attribute.cloud.provider.aws
+#                 # any revision
+#          - implementationConstraints:
+#              path: cap.implementation.bitnami.postgresql.install
+#      - interface:
+#          # Rules for exact path in any revision (looked up in second place)
+#          path: "cap.interface.database.postgresql.install"
+#        oneOf:
+#          - implementationConstraints:
+#              requires:
+#                - path: "cap.type.gcp.auth.service-account"
+#                  # any revision
+#              attributes:
+#                - path: "cap.attribute.cloud.provider.gcp"
+#                  # any revision
+  interface:
+    rules:
+      - interface:
+          # any other Interface (looked up in third place, if there is no rule for `path` and `revision` or `path`)
+          path: "cap.*"
+        oneOf:
+          - implementationConstraints: # prefer Implementation for Kubernetes
+              requires:
+                - path: "cap.core.type.platform.kubernetes"
+                  # any revision
+          - implementationConstraints: {} # fallback to any Implementation
 
-        - interface:
-            # any other Interface (looked up in third place, if there is no rule for `path` and `revision` or `path`)
-            path: "cap.*"
-          oneOf:
-            - implementationConstraints: # prefer Implementation for Kubernetes
-                requires:
-                  - path: "cap.core.type.platform.kubernetes"
-                    # any revision
-            - implementationConstraints: {} # fallback to any Implementation
-
-testSetup:
-  enabled: false
-  globalPolicyRules:
-    - interface:
-        path: "cap.interface.capactio.capact.validation.action.passing"
-      oneOf:
-        - implementationConstraints:
-            requires:
-              - path: "cap.type.capactio.capact.validation.single-key"
-            attributes:
-              - path: "cap.attribute.capactio.capact.validation.policy.most-preferred"
-          inject:
-            requiredTypeInstances: [] # DO NOT MODIFY this line, as it is found and replaced during integration tests
-        - implementationConstraints:
-            path: cap.implementation.capactio.capact.validation.action.passing-a
+## Currently, not used but setting this filed is supported by all scripts and CLI.
+#testSetup:
+#  enabled: false

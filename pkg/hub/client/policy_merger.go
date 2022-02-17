@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"capact.io/capact/internal/maps"
-
+	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
 )
 
@@ -14,12 +14,16 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 	for _, p := range e.policyOrder {
 		switch p {
 		case policy.Global:
-			applyPolicy(&currentPolicy, e.globalPolicy)
+			applyInterfacePolicy(&currentPolicy.Interface, e.globalPolicy.Interface)
+			applyTypeInstancePolicy(&currentPolicy.TypeInstance, e.globalPolicy.TypeInstance)
 		case policy.Action:
-			applyPolicy(&currentPolicy, e.actionPolicy)
+			applyInterfacePolicy(&currentPolicy.Interface, e.actionPolicy.Interface)
+			applyTypeInstancePolicy(&currentPolicy.TypeInstance, e.actionPolicy.TypeInstance)
 		case policy.Workflow:
 			for _, wp := range e.workflowStepPolicies {
-				applyPolicy(&currentPolicy, wp)
+				// ignore TypeInstance Policy on Workflow as it's not supported,
+				// see: policy.WorkflowPolicy type.
+				applyInterfacePolicy(&currentPolicy.Interface, wp.Interface)
 			}
 		}
 	}
@@ -29,9 +33,9 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 // from new policy we are checking if there are the same rules. If yes we fill missing data,
 // if not we add a rule to the end
 // current policy is a higher priority policy
-func applyPolicy(currentPolicy *policy.Policy, newPolicy policy.Policy) {
+func applyInterfacePolicy(currentPolicy *policy.InterfacePolicy, newPolicy policy.InterfacePolicy) {
 	for _, newRuleForInterface := range newPolicy.Rules {
-		policyRuleIndex := getIndexOfPolicyRule(currentPolicy, newRuleForInterface)
+		policyRuleIndex := getIndexOfInterfacePolicyRule(currentPolicy, newRuleForInterface)
 		if policyRuleIndex == -1 {
 			newRuleForInterface := newRuleForInterface.DeepCopy()
 			currentPolicy.Rules = append(currentPolicy.Rules, *newRuleForInterface)
@@ -71,7 +75,7 @@ func mergeRules(rule *policy.Rule, newRule policy.Rule) {
 	}
 }
 
-func getIndexOfPolicyRule(p *policy.Policy, rule policy.RulesForInterface) int {
+func getIndexOfInterfacePolicyRule(p *policy.InterfacePolicy, rule policy.RulesForInterface) int {
 	for i, ruleForInterface := range p.Rules {
 		if isForSameInterface(ruleForInterface, rule) {
 			return i
@@ -161,4 +165,36 @@ func mergeAdditionalParameters(current, overwrite []policy.AdditionalParametersT
 		}
 	}
 	return out
+}
+
+func applyTypeInstancePolicy(currentPolicy *policy.TypeInstancePolicy, newPolicy policy.TypeInstancePolicy) {
+	for _, newRule := range newPolicy.Rules {
+		policyRuleIndex := getIndexOfTypeInstancePolicyRule(currentPolicy, newRule)
+		if policyRuleIndex == -1 {
+			newRuleForInterface := newRule.DeepCopy()
+			currentPolicy.Rules = append(currentPolicy.Rules, *newRuleForInterface)
+			continue
+		}
+
+		// override
+		currentPolicy.Rules[policyRuleIndex] = newRule
+	}
+}
+
+func getIndexOfTypeInstancePolicyRule(current *policy.TypeInstancePolicy, newRule policy.RulesForTypeInstance) int {
+	for i, currentRule := range current.Rules {
+		if currentRule.TypeRef.Path != newRule.TypeRef.Path {
+			continue
+		}
+		curRev := ptr.StringPtrToString(currentRule.TypeRef.Revision)
+		newRev := ptr.StringPtrToString(newRule.TypeRef.Revision)
+
+		if curRev != newRev {
+			continue
+		}
+
+		return i
+	}
+
+	return -1
 }

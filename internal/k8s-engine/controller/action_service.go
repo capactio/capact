@@ -43,6 +43,8 @@ const (
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
+
+	listTypeInstanceFields = local.TypeInstanceRootFields | local.TypeInstanceTypeRefFields | local.TypeInstanceBackendFields
 )
 
 type (
@@ -591,20 +593,25 @@ func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *
 
 	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
 		CreatedBy: &ownerID,
-	}, local.WithFields(local.TypeInstanceRootFields|local.TypeInstanceTypeRefFields))
+	}, local.WithFields(listTypeInstanceFields))
 	if err != nil {
 		return nil, errors.Wrap(err, "while listing TypeInstances")
 	}
 
 	var res []v1alpha1.OutputTypeInstanceDetails
 	for _, ti := range typeInstances {
-		res = append(res, v1alpha1.OutputTypeInstanceDetails{
+		out := v1alpha1.OutputTypeInstanceDetails{
 			ID: ti.ID,
 			TypeRef: &v1alpha1.ManifestReference{
 				Path:     v1alpha1.NodePath(ti.TypeRef.Path),
 				Revision: &ti.TypeRef.Revision,
 			},
-		})
+		}
+		if ti.Backend != nil {
+			out.Backend = v1alpha1.TypeInstanceBackend(*ti.Backend)
+		}
+
+		res = append(res, out)
 	}
 
 	return res, nil

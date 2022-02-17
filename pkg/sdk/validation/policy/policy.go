@@ -49,7 +49,7 @@ func (v *Validator) LoadAdditionalInputParametersSchemas(ctx context.Context, im
 }
 
 // IsTypeRefInjectableAndEqualToImplReq returns boolean value if a given Type reference matches the one in Implementation requirement item and can be injected.
-func (v *Validator) IsTypeRefInjectableAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *gqlpublicapi.ImplementationRequirementItem) bool {
+func (v *Validator) IsTypeRefInjectableAndEqualToImplReq(typeRef *types.TypeRef, reqItem *gqlpublicapi.ImplementationRequirementItem) bool {
 	// check requirement item valid
 	if reqItem == nil || reqItem.TypeRef == nil || reqItem.Alias == nil {
 		return false
@@ -96,13 +96,13 @@ func (v *Validator) ValidateAdditionalInputParameters(ctx context.Context, param
 // ValidateTypeInstancesMetadata validates that every TypeInstance has metadata resolved.
 func (v *Validator) ValidateTypeInstancesMetadata(in policy.Policy) validation.Result {
 	unresolvedTypeInstances := metadata.TypeInstanceIDsWithUnresolvedMetadataForPolicy(in)
-	return v.validationResultForTIMetadata(unresolvedTypeInstances)
+	return v.validationResultForTIMetadata(unresolvedTypeInstances, in.TypeInstance.Rules)
 }
 
 // ValidateTypeInstancesMetadataForRule validates whether the TypeInstance injection metadata are resolved.
 func (v *Validator) ValidateTypeInstancesMetadataForRule(in policy.Rule) validation.Result {
 	unresolvedTypeInstances := metadata.TypeInstanceIDsWithUnresolvedMetadataForRule(in)
-	return v.validationResultForTIMetadata(unresolvedTypeInstances)
+	return v.validationResultForTIMetadata(unresolvedTypeInstances, nil)
 }
 
 // AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
@@ -119,15 +119,28 @@ func (v *Validator) hasImplAdditionalInputParams(impl gqlpublicapi.Implementatio
 	return true
 }
 
-func (v *Validator) validationResultForTIMetadata(tis []metadata.TypeInstanceMetadata) validation.Result {
-	if len(tis) == 0 {
-		return validation.Result{}
-	}
-
+func (v *Validator) validationResultForTIMetadata(tis []metadata.TypeInstanceMetadata, rules []policy.RulesForTypeInstance) validation.Result {
 	resultBldr := validation.NewResultBuilder("Metadata for")
 
+	unresolvedIDs := map[string]struct{}{}
 	for _, ti := range tis {
 		resultBldr.ReportIssue(string(ti.Kind), "missing Type reference for %s", ti.String(false))
+		unresolvedIDs[ti.ID] = struct{}{}
+	}
+
+	for _, rule := range rules {
+		if _, unresolved := unresolvedIDs[rule.Backend.ID]; unresolved {
+			continue // Type was not resolved, so `ExtendsHubStorage` has zero value
+		}
+
+		if rule.Backend.ExtendsHubStorage {
+			continue
+		}
+		ref := metadata.TypeInstanceMetadata{
+			ID:          rule.Backend.ID,
+			Description: rule.Backend.Description,
+		}
+		resultBldr.ReportIssue("BackendTypeInstance", "Type reference %s is not a Hub storage", ref.String(false))
 	}
 
 	return resultBldr.Result()

@@ -18,6 +18,10 @@ var actionFields = fmt.Sprintf(`
 	output {
 		typeInstances {
 			id
+			backend {
+				id
+				abstract
+			}
 			typeRef {
 				path
 				revision
@@ -69,36 +73,50 @@ var actionFields = fmt.Sprintf(`
 `, policyFields)
 
 const policyFields = `
-	rules {
-		interface {
-			path
-			revision
-		}
-		oneOf {
-			implementationConstraints {
-				requires {
-					path
-					revision
-				}
-				attributes {
-					path
-					revision
-				}
+	interface {
+		rules {
+			interface {
 				path
+				revision
 			}
-			inject {
-				requiredTypeInstances {
-					id
-					description
+			oneOf {
+				implementationConstraints {
+					requires {
+						path
+						revision
+					}
+					attributes {
+						path
+						revision
+					}
+					path
 				}
-				additionalParameters {
-					name
-					value
+				inject {
+					requiredTypeInstances {
+						id
+						description
+					}
+					additionalParameters {
+						name
+						value
+					}
+					additionalTypeInstances {
+						name
+						id
+					}
 				}
-				additionalTypeInstances {
-					name
-					id
-				}
+			}
+		}
+	}
+	typeInstance {
+		rules {
+			typeRef {
+				path
+				revision
+			}
+			backend {
+				id
+				description
 			}
 		}
 	}

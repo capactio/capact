@@ -22,9 +22,5 @@ spec:
           value: "{{ .Values.global.gateway.auth.username }}"
         - name: GATEWAY_PASSWORD
           value: "{{ .Values.global.gateway.auth.password }}"
-        - name: APP_CLUSTER_POLICY_NAME
-          value: {{ include "capact.fullname" . }}-engine-cluster-policy
-        - name: APP_CLUSTER_POLICY_NAMESPACE
-          value: {{.Release.Namespace}}
       imagePullPolicy: {{ .Values.integrationTest.image.pullPolicy }}
   restartPolicy: Never

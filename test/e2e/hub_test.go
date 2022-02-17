@@ -47,7 +47,7 @@ var _ = Describe("GraphQL API", func() {
 
 			It("based on a prefix of the parent node", func() {
 				const parentNode = "cap.core.type.platform.*"
-				expAssociatedPaths := []string{"cap.core.type.platform.kubernetes", "cap.type.platform.cloud-foundry"}
+				expAssociatedPaths := []string{"cap.core.type.platform.kubernetes", "cap.type.platform.nomad"}
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
 					PathPattern: ptr.String(parentNode),
@@ -58,7 +58,7 @@ var _ = Describe("GraphQL API", func() {
 				HasOnlyExpectTypePaths(gotTypes, expAssociatedPaths)
 			})
 			It("only child node if full path name specified", func() {
-				const fullTypePath = "cap.type.platform.cloud-foundry"
+				const fullTypePath = "cap.type.platform.nomad"
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
 					PathPattern: ptr.String(fullTypePath),
@@ -69,8 +69,8 @@ var _ = Describe("GraphQL API", func() {
 				Expect(gotTypes).To(HaveLen(1))
 				Expect(gotTypes[0].Path).To(Equal(fullTypePath))
 			})
-			It("entries matching or regex (cap.core.type.generic.value|cap.type.platform.cloud-foundry)", func() {
-				expTypePaths := []string{"cap.core.type.generic.value", "cap.type.platform.cloud-foundry"}
+			It("entries matching or regex (cap.core.type.generic.value|cap.type.platform.nomad)", func() {
+				expTypePaths := []string{"cap.core.type.generic.value", "cap.type.platform.nomad"}
 				typePathORFilter := regexutil.OrStringSlice(expTypePaths)
 
 				gotTypes, err := cli.ListTypes(ctx, public.WithTypeFilter(gqlpublicapi.TypeFilter{
@@ -246,6 +246,7 @@ var _ = Describe("GraphQL API", func() {
 	Context("Local Hub", func() {
 		It("should create, find and delete TypeInstance", func() {
 			cli := getHubGraphQLClient()
+			builtinStorage := getBuiltinStorageTypeInstance(ctx, cli)
 
 			// create TypeInstance
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
@@ -291,7 +292,11 @@ var _ = Describe("GraphQL API", func() {
 					Path:     "cap.type.capactio.capact.validation.single-key",
 					Revision: "0.1.0",
 				},
-				Uses:                    []*gqllocalapi.TypeInstance{},
+				Backend: &gqllocalapi.TypeInstanceBackendReference{
+					ID:       builtinStorage.ID,
+					Abstract: true,
+				},
+				Uses:                    []*gqllocalapi.TypeInstance{&builtinStorage},
 				UsedBy:                  []*gqllocalapi.TypeInstance{},
 				LatestResourceVersion:   rev,
 				FirstResourceVersion:    rev,
@@ -311,6 +316,7 @@ var _ = Describe("GraphQL API", func() {
 
 		It("creates multiple TypeInstances with uses relations", func() {
 			cli := getHubGraphQLClient()
+			builtinStorage := getBuiltinStorageTypeInstance(ctx, cli)
 
 			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
 
@@ -325,11 +331,11 @@ var _ = Describe("GraphQL API", func() {
 			childTiID := findCreatedTypeInstanceID("child", createdTypeInstanceIDs)
 			Expect(childTiID).ToNot(BeNil())
 
-			expectedChild := expectedChildTypeInstance(*childTiID)
-			expectedParent := expectedParentTypeInstance(*parentTiID)
-			expectedChild.UsedBy = []*gqllocalapi.TypeInstance{expectedParentTypeInstance(*parentTiID)}
-			expectedChild.Uses = []*gqllocalapi.TypeInstance{}
-			expectedParent.Uses = []*gqllocalapi.TypeInstance{expectedChildTypeInstance(*childTiID)}
+			expectedChild := expectedChildTypeInstance(*childTiID, builtinStorage.ID)
+			expectedParent := expectedParentTypeInstance(*parentTiID, builtinStorage.ID)
+			expectedChild.UsedBy = []*gqllocalapi.TypeInstance{expectedParentTypeInstance(*parentTiID, builtinStorage.ID)}
+			expectedChild.Uses = []*gqllocalapi.TypeInstance{&builtinStorage}
+			expectedParent.Uses = []*gqllocalapi.TypeInstance{&builtinStorage, expectedChildTypeInstance(*childTiID, builtinStorage.ID)}
 			expectedParent.UsedBy = []*gqllocalapi.TypeInstance{}
 
 			assertTypeInstance(ctx, cli, *childTiID, expectedChild)
@@ -731,7 +737,7 @@ func createTypeInstancesInput() *gqllocalapi.CreateTypeInstancesInput {
 	}
 }
 
-func expectedChildTypeInstance(ID string) *gqllocalapi.TypeInstance {
+func expectedChildTypeInstance(tiID, backendID string) *gqllocalapi.TypeInstance {
 	tiRev := &gqllocalapi.TypeInstanceResourceVersion{
 		ResourceVersion: 1,
 		Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
@@ -750,10 +756,15 @@ func expectedChildTypeInstance(ID string) *gqllocalapi.TypeInstance {
 	}
 
 	return &gqllocalapi.TypeInstance{
-		ID: ID,
+		ID: tiID,
 		TypeRef: &gqllocalapi.TypeInstanceTypeReference{
 			Path:     "com.child",
 			Revision: "0.1.0",
+		},
+
+		Backend: &gqllocalapi.TypeInstanceBackendReference{
+			ID:       backendID,
+			Abstract: true,
 		},
 		LatestResourceVersion:   tiRev,
 		FirstResourceVersion:    tiRev,
@@ -765,7 +776,7 @@ func expectedChildTypeInstance(ID string) *gqllocalapi.TypeInstance {
 	}
 }
 
-func expectedParentTypeInstance(ID string) *gqllocalapi.TypeInstance {
+func expectedParentTypeInstance(tiID, backendID string) *gqllocalapi.TypeInstance {
 	tiRev := &gqllocalapi.TypeInstanceResourceVersion{
 		ResourceVersion: 1,
 		Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
@@ -784,10 +795,15 @@ func expectedParentTypeInstance(ID string) *gqllocalapi.TypeInstance {
 	}
 
 	return &gqllocalapi.TypeInstance{
-		ID: ID,
+		ID: tiID,
 		TypeRef: &gqllocalapi.TypeInstanceTypeReference{
 			Path:     "com.parent",
 			Revision: "0.1.0",
+		},
+
+		Backend: &gqllocalapi.TypeInstanceBackendReference{
+			ID:       backendID,
+			Abstract: true,
 		},
 		LatestResourceVersion:   tiRev,
 		FirstResourceVersion:    tiRev,

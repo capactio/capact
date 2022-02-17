@@ -10,14 +10,17 @@ import (
 	"testing"
 	"time"
 
+	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	engineclient "capact.io/capact/pkg/engine/client"
 	"capact.io/capact/pkg/httputil"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/iosafety"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
+	"sigs.k8s.io/yaml"
 )
 
 type GatewayConfig struct {
@@ -26,30 +29,44 @@ type GatewayConfig struct {
 	Password string
 }
 
-type GlobalPolicyConfig struct {
-	Name      string `envconfig:"default=capact-engine-cluster-policy"`
-	Namespace string `envconfig:"default=capact-system"`
-}
-
 type Config struct {
 	StatusEndpoints         []string
 	IgnoredPodsNames        []string      `envconfig:"optional"`
 	PollingInterval         time.Duration `envconfig:"default=2s"`
 	PollingTimeout          time.Duration `envconfig:"default=5m"`
 	Gateway                 GatewayConfig
-	ClusterPolicy           GlobalPolicyConfig
 	HubLocalDeployNamespace string `envconfig:"default=capact-system"`
 	HubLocalDeployName      string `envconfig:"default=capact-hub-local"`
 }
 
-var cfg Config
+var (
+	cfg                  Config
+	originalGlobalPolicy enginegraphql.PolicyInput
+)
 
 var _ = BeforeSuite(func() {
 	err := envconfig.Init(&cfg)
 	Expect(err).ToNot(HaveOccurred())
 
+	cli := getEngineGraphQLClient()
+	originalPolicy, err := cli.GetPolicy(context.Background())
+
+	rawPolicy, err := yaml.Marshal(originalPolicy)
+	Expect(err).ToNot(HaveOccurred())
+
+	input := enginegraphql.PolicyInput{}
+	err = yaml.Unmarshal(rawPolicy, &input)
+	Expect(err).ToNot(HaveOccurred())
+	originalGlobalPolicy = input
+
 	waitTillServiceEndpointsAreReady()
 	waitTillDataIsPopulated()
+})
+
+var _ = AfterSuite(func() {
+	cli := getEngineGraphQLClient()
+	_, err := cli.UpdatePolicy(context.Background(), &originalGlobalPolicy)
+	Expect(err).ToNot(HaveOccurred())
 })
 
 func TestE2E(t *testing.T) {

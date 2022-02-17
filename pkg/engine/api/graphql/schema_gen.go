@@ -102,6 +102,10 @@ type ComplexityRoot struct {
 		TypeRef func(childComplexity int) int
 	}
 
+	InterfacePolicy struct {
+		Rules func(childComplexity int) int
+	}
+
 	ManifestReference struct {
 		Path     func(childComplexity int) int
 		Revision func(childComplexity int) int
@@ -123,12 +127,14 @@ type ComplexityRoot struct {
 	}
 
 	OutputTypeInstanceDetails struct {
+		Backend func(childComplexity int) int
 		ID      func(childComplexity int) int
 		TypeRef func(childComplexity int) int
 	}
 
 	Policy struct {
-		Rules func(childComplexity int) int
+		Interface    func(childComplexity int) int
+		TypeInstance func(childComplexity int) int
 	}
 
 	PolicyRule struct {
@@ -164,8 +170,27 @@ type ComplexityRoot struct {
 		OneOf     func(childComplexity int) int
 	}
 
+	RulesForTypeInstance struct {
+		Backend func(childComplexity int) int
+		TypeRef func(childComplexity int) int
+	}
+
 	RunnerStatus struct {
 		Status func(childComplexity int) int
+	}
+
+	TypeInstanceBackendDetails struct {
+		Abstract func(childComplexity int) int
+		ID       func(childComplexity int) int
+	}
+
+	TypeInstanceBackendRule struct {
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+	}
+
+	TypeInstancePolicy struct {
+		Rules func(childComplexity int) int
 	}
 
 	UserInfo struct {
@@ -436,6 +461,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InputTypeInstanceToProvide.TypeRef(childComplexity), true
 
+	case "InterfacePolicy.rules":
+		if e.complexity.InterfacePolicy.Rules == nil {
+			break
+		}
+
+		return e.complexity.InterfacePolicy.Rules(childComplexity), true
+
 	case "ManifestReference.path":
 		if e.complexity.ManifestReference.Path == nil {
 			break
@@ -548,6 +580,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdatePolicy(childComplexity, args["in"].(PolicyInput)), true
 
+	case "OutputTypeInstanceDetails.backend":
+		if e.complexity.OutputTypeInstanceDetails.Backend == nil {
+			break
+		}
+
+		return e.complexity.OutputTypeInstanceDetails.Backend(childComplexity), true
+
 	case "OutputTypeInstanceDetails.id":
 		if e.complexity.OutputTypeInstanceDetails.ID == nil {
 			break
@@ -562,12 +601,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OutputTypeInstanceDetails.TypeRef(childComplexity), true
 
-	case "Policy.rules":
-		if e.complexity.Policy.Rules == nil {
+	case "Policy.interface":
+		if e.complexity.Policy.Interface == nil {
 			break
 		}
 
-		return e.complexity.Policy.Rules(childComplexity), true
+		return e.complexity.Policy.Interface(childComplexity), true
+
+	case "Policy.typeInstance":
+		if e.complexity.Policy.TypeInstance == nil {
+			break
+		}
+
+		return e.complexity.Policy.TypeInstance(childComplexity), true
 
 	case "PolicyRule.implementationConstraints":
 		if e.complexity.PolicyRule.ImplementationConstraints == nil {
@@ -684,12 +730,61 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RulesForInterface.OneOf(childComplexity), true
 
+	case "RulesForTypeInstance.backend":
+		if e.complexity.RulesForTypeInstance.Backend == nil {
+			break
+		}
+
+		return e.complexity.RulesForTypeInstance.Backend(childComplexity), true
+
+	case "RulesForTypeInstance.typeRef":
+		if e.complexity.RulesForTypeInstance.TypeRef == nil {
+			break
+		}
+
+		return e.complexity.RulesForTypeInstance.TypeRef(childComplexity), true
+
 	case "RunnerStatus.status":
 		if e.complexity.RunnerStatus.Status == nil {
 			break
 		}
 
 		return e.complexity.RunnerStatus.Status(childComplexity), true
+
+	case "TypeInstanceBackendDetails.abstract":
+		if e.complexity.TypeInstanceBackendDetails.Abstract == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceBackendDetails.Abstract(childComplexity), true
+
+	case "TypeInstanceBackendDetails.id":
+		if e.complexity.TypeInstanceBackendDetails.ID == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceBackendDetails.ID(childComplexity), true
+
+	case "TypeInstanceBackendRule.description":
+		if e.complexity.TypeInstanceBackendRule.Description == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceBackendRule.Description(childComplexity), true
+
+	case "TypeInstanceBackendRule.id":
+		if e.complexity.TypeInstanceBackendRule.ID == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceBackendRule.ID(childComplexity), true
+
+	case "TypeInstancePolicy.rules":
+		if e.complexity.TypeInstancePolicy.Rules == nil {
+			break
+		}
+
+		return e.complexity.TypeInstancePolicy.Rules(childComplexity), true
 
 	case "UserInfo.extra":
 		if e.complexity.UserInfo.Extra == nil {
@@ -1035,6 +1130,12 @@ Describes output TypeInstance of an Action
 type OutputTypeInstanceDetails {
   id: ID!
   typeRef: ManifestReference!
+  backend: TypeInstanceBackendDetails!
+}
+
+type TypeInstanceBackendDetails {
+  id: String!
+  abstract: Boolean!
 }
 
 """
@@ -1081,12 +1182,33 @@ enum ActionStatusPhase {
 }
 
 input PolicyInput {
+  interface: InterfacePolicyInput
+  typeInstance: TypeInstancePolicyInput
+}
+
+# TypeInstance Policy Input
+input TypeInstancePolicyInput {
+  rules: [RulesForTypeInstanceInput!]!
+}
+
+input RulesForTypeInstanceInput {
+  typeRef: ManifestReferenceInput!
+  backend: TypeInstanceBackendRuleInput!
+}
+
+input TypeInstanceBackendRuleInput {
+  id: ID!
+  description: String
+}
+
+# Interface Policy Input
+input InterfacePolicyInput {
   rules: [RulesForInterfaceInput!]!
 }
 
 input RulesForInterfaceInput {
   interface: ManifestReferenceInput!
-  oneOf:     [PolicyRuleInput!]!
+  oneOf: [PolicyRuleInput!]!
 }
 
 input PolicyRuleInput {
@@ -1101,8 +1223,8 @@ input PolicyRuleInjectDataInput {
 }
 
 input AdditionalParameterInput {
-    name: String!
-    value: Any!
+  name: String!
+  value: Any!
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -1123,12 +1245,33 @@ input PolicyRuleImplementationConstraintsInput {
 }
 
 type Policy {
+  interface: InterfacePolicy
+  typeInstance: TypeInstancePolicy
+}
+
+# TypeInstance Policy
+type TypeInstancePolicy {
+  rules: [RulesForTypeInstance!]!
+}
+
+type RulesForTypeInstance {
+  typeRef: ManifestReferenceWithOptionalRevision!
+  backend: TypeInstanceBackendRule!
+}
+
+type TypeInstanceBackendRule {
+  id: ID!
+  description: String
+}
+
+# Interface Policy
+type InterfacePolicy {
   rules: [RulesForInterface!]!
 }
 
 type RulesForInterface {
   interface: ManifestReferenceWithOptionalRevision!
-  oneOf:     [PolicyRule!]!
+  oneOf: [PolicyRule!]!
 }
 
 type PolicyRule {
@@ -1148,8 +1291,8 @@ type AdditionalTypeInstanceReference {
 }
 
 type AdditionalParameter {
-    name: String!
-    value: Any!
+  name: String!
+  value: Any!
 }
 
 type PolicyRuleImplementationConstraints {
@@ -2523,6 +2666,41 @@ func (ec *executionContext) _InputTypeInstanceToProvide_typeRef(ctx context.Cont
 	return ec.marshalNManifestReference2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _InterfacePolicy_rules(ctx context.Context, field graphql.CollectedField, obj *InterfacePolicy) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InterfacePolicy",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rules, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*RulesForInterface)
+	fc.Result = res
+	return ec.marshalNRulesForInterface2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ManifestReference_path(ctx context.Context, field graphql.CollectedField, obj *ManifestReference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3024,7 +3202,42 @@ func (ec *executionContext) _OutputTypeInstanceDetails_typeRef(ctx context.Conte
 	return ec.marshalNManifestReference2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_rules(ctx context.Context, field graphql.CollectedField, obj *Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _OutputTypeInstanceDetails_backend(ctx context.Context, field graphql.CollectedField, obj *OutputTypeInstanceDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "OutputTypeInstanceDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Backend, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TypeInstanceBackendDetails)
+	fc.Result = res
+	return ec.marshalNTypeInstanceBackendDetails2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Policy_interface(ctx context.Context, field graphql.CollectedField, obj *Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3042,21 +3255,50 @@ func (ec *executionContext) _Policy_rules(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rules, nil
+		return obj.Interface, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*RulesForInterface)
+	res := resTmp.(*InterfacePolicy)
 	fc.Result = res
-	return ec.marshalNRulesForInterface2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceᚄ(ctx, field.Selections, res)
+	return ec.marshalOInterfacePolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Policy_typeInstance(ctx context.Context, field graphql.CollectedField, obj *Policy) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Policy",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TypeInstance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*TypeInstancePolicy)
+	fc.Result = res
+	return ec.marshalOTypeInstancePolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstancePolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PolicyRule_implementationConstraints(ctx context.Context, field graphql.CollectedField, obj *PolicyRule) (ret graphql.Marshaler) {
@@ -3639,6 +3881,76 @@ func (ec *executionContext) _RulesForInterface_oneOf(ctx context.Context, field 
 	return ec.marshalNPolicyRule2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _RulesForTypeInstance_typeRef(ctx context.Context, field graphql.CollectedField, obj *RulesForTypeInstance) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RulesForTypeInstance",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TypeRef, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ManifestReferenceWithOptionalRevision)
+	fc.Result = res
+	return ec.marshalNManifestReferenceWithOptionalRevision2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReferenceWithOptionalRevision(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RulesForTypeInstance_backend(ctx context.Context, field graphql.CollectedField, obj *RulesForTypeInstance) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RulesForTypeInstance",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Backend, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TypeInstanceBackendRule)
+	fc.Result = res
+	return ec.marshalNTypeInstanceBackendRule2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRule(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _RunnerStatus_status(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3669,6 +3981,178 @@ func (ec *executionContext) _RunnerStatus_status(ctx context.Context, field grap
 	res := resTmp.(interface{})
 	fc.Result = res
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceBackendDetails_id(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceBackendDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceBackendDetails_abstract(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceBackendDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Abstract, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceBackendRule_id(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendRule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceBackendRule",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceBackendRule_description(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceBackendRule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceBackendRule",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstancePolicy_rules(ctx context.Context, field graphql.CollectedField, obj *TypeInstancePolicy) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstancePolicy",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rules, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*RulesForTypeInstance)
+	fc.Result = res
+	return ec.marshalNRulesForTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstanceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UserInfo_username(ctx context.Context, field graphql.CollectedField, obj *UserInfo) (ret graphql.Marshaler) {
@@ -5096,6 +5580,26 @@ func (ec *executionContext) unmarshalInputInputTypeInstanceData(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInterfacePolicyInput(ctx context.Context, obj interface{}) (InterfacePolicyInput, error) {
+	var it InterfacePolicyInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "rules":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rules"))
+			it.Rules, err = ec.unmarshalNRulesForInterfaceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputManifestReferenceInput(ctx context.Context, obj interface{}) (ManifestReferenceInput, error) {
 	var it ManifestReferenceInput
 	var asMap = obj.(map[string]interface{})
@@ -5130,11 +5634,19 @@ func (ec *executionContext) unmarshalInputPolicyInput(ctx context.Context, obj i
 
 	for k, v := range asMap {
 		switch k {
-		case "rules":
+		case "interface":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rules"))
-			it.Rules, err = ec.unmarshalNRulesForInterfaceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForInterfaceInputᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interface"))
+			it.Interface, err = ec.unmarshalOInterfacePolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicyInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "typeInstance":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeInstance"))
+			it.TypeInstance, err = ec.unmarshalOTypeInstancePolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstancePolicyInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5291,6 +5803,82 @@ func (ec *executionContext) unmarshalInputRulesForInterfaceInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("oneOf"))
 			it.OneOf, err = ec.unmarshalNPolicyRuleInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRulesForTypeInstanceInput(ctx context.Context, obj interface{}) (RulesForTypeInstanceInput, error) {
+	var it RulesForTypeInstanceInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "typeRef":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeRef"))
+			it.TypeRef, err = ec.unmarshalNManifestReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "backend":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backend"))
+			it.Backend, err = ec.unmarshalNTypeInstanceBackendRuleInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRuleInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTypeInstanceBackendRuleInput(ctx context.Context, obj interface{}) (TypeInstanceBackendRuleInput, error) {
+	var it TypeInstanceBackendRuleInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTypeInstancePolicyInput(ctx context.Context, obj interface{}) (TypeInstancePolicyInput, error) {
+	var it TypeInstancePolicyInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "rules":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rules"))
+			it.Rules, err = ec.unmarshalNRulesForTypeInstanceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstanceInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5632,6 +6220,33 @@ func (ec *executionContext) _InputTypeInstanceToProvide(ctx context.Context, sel
 	return out
 }
 
+var interfacePolicyImplementors = []string{"InterfacePolicy"}
+
+func (ec *executionContext) _InterfacePolicy(ctx context.Context, sel ast.SelectionSet, obj *InterfacePolicy) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, interfacePolicyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InterfacePolicy")
+		case "rules":
+			out.Values[i] = ec._InterfacePolicy_rules(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var manifestReferenceImplementors = []string{"ManifestReference"}
 
 func (ec *executionContext) _ManifestReference(ctx context.Context, sel ast.SelectionSet, obj *ManifestReference) graphql.Marshaler {
@@ -5775,6 +6390,11 @@ func (ec *executionContext) _OutputTypeInstanceDetails(ctx context.Context, sel 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "backend":
+			out.Values[i] = ec._OutputTypeInstanceDetails_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5797,11 +6417,10 @@ func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, o
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Policy")
-		case "rules":
-			out.Values[i] = ec._Policy_rules(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "interface":
+			out.Values[i] = ec._Policy_interface(ctx, field, obj)
+		case "typeInstance":
+			out.Values[i] = ec._Policy_typeInstance(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6025,6 +6644,38 @@ func (ec *executionContext) _RulesForInterface(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var rulesForTypeInstanceImplementors = []string{"RulesForTypeInstance"}
+
+func (ec *executionContext) _RulesForTypeInstance(ctx context.Context, sel ast.SelectionSet, obj *RulesForTypeInstance) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, rulesForTypeInstanceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RulesForTypeInstance")
+		case "typeRef":
+			out.Values[i] = ec._RulesForTypeInstance_typeRef(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "backend":
+			out.Values[i] = ec._RulesForTypeInstance_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var runnerStatusImplementors = []string{"RunnerStatus"}
 
 func (ec *executionContext) _RunnerStatus(ctx context.Context, sel ast.SelectionSet, obj *RunnerStatus) graphql.Marshaler {
@@ -6038,6 +6689,94 @@ func (ec *executionContext) _RunnerStatus(ctx context.Context, sel ast.Selection
 			out.Values[i] = graphql.MarshalString("RunnerStatus")
 		case "status":
 			out.Values[i] = ec._RunnerStatus_status(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var typeInstanceBackendDetailsImplementors = []string{"TypeInstanceBackendDetails"}
+
+func (ec *executionContext) _TypeInstanceBackendDetails(ctx context.Context, sel ast.SelectionSet, obj *TypeInstanceBackendDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstanceBackendDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TypeInstanceBackendDetails")
+		case "id":
+			out.Values[i] = ec._TypeInstanceBackendDetails_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "abstract":
+			out.Values[i] = ec._TypeInstanceBackendDetails_abstract(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var typeInstanceBackendRuleImplementors = []string{"TypeInstanceBackendRule"}
+
+func (ec *executionContext) _TypeInstanceBackendRule(ctx context.Context, sel ast.SelectionSet, obj *TypeInstanceBackendRule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstanceBackendRuleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TypeInstanceBackendRule")
+		case "id":
+			out.Values[i] = ec._TypeInstanceBackendRule_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			out.Values[i] = ec._TypeInstanceBackendRule_description(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var typeInstancePolicyImplementors = []string{"TypeInstancePolicy"}
+
+func (ec *executionContext) _TypeInstancePolicy(ctx context.Context, sel ast.SelectionSet, obj *TypeInstancePolicy) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstancePolicyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TypeInstancePolicy")
+		case "rules":
+			out.Values[i] = ec._TypeInstancePolicy_rules(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6846,6 +7585,79 @@ func (ec *executionContext) unmarshalNRulesForInterfaceInput2ᚖcapactᚗioᚋca
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNRulesForTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*RulesForTypeInstance) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRulesForTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstance(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNRulesForTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstance(ctx context.Context, sel ast.SelectionSet, v *RulesForTypeInstance) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._RulesForTypeInstance(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRulesForTypeInstanceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstanceInputᚄ(ctx context.Context, v interface{}) ([]*RulesForTypeInstanceInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*RulesForTypeInstanceInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNRulesForTypeInstanceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstanceInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNRulesForTypeInstanceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRulesForTypeInstanceInput(ctx context.Context, v interface{}) (*RulesForTypeInstanceInput, error) {
+	res, err := ec.unmarshalInputRulesForTypeInstanceInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6899,6 +7711,31 @@ func (ec *executionContext) unmarshalNTimestamp2capactᚗioᚋcapactᚋpkgᚋeng
 
 func (ec *executionContext) marshalNTimestamp2capactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTimestamp(ctx context.Context, sel ast.SelectionSet, v Timestamp) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNTypeInstanceBackendDetails2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendDetails(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceBackendDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TypeInstanceBackendDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTypeInstanceBackendRule2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRule(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceBackendRule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TypeInstanceBackendRule(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTypeInstanceBackendRuleInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceBackendRuleInput(ctx context.Context, v interface{}) (*TypeInstanceBackendRuleInput, error) {
+	res, err := ec.unmarshalInputTypeInstanceBackendRuleInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNVersion2string(ctx context.Context, v interface{}) (string, error) {
@@ -7411,6 +8248,21 @@ func (ec *executionContext) unmarshalOInputTypeInstanceData2ᚕᚖcapactᚗioᚋ
 	return res, nil
 }
 
+func (ec *executionContext) marshalOInterfacePolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicy(ctx context.Context, sel ast.SelectionSet, v *InterfacePolicy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._InterfacePolicy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInterfacePolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInterfacePolicyInput(ctx context.Context, v interface{}) (*InterfacePolicyInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputInterfacePolicyInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOJSON2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx context.Context, v interface{}) (*JSON, error) {
 	if v == nil {
 		return nil, nil
@@ -7667,6 +8519,21 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) marshalOTypeInstancePolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstancePolicy(ctx context.Context, sel ast.SelectionSet, v *TypeInstancePolicy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TypeInstancePolicy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOTypeInstancePolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstancePolicyInput(ctx context.Context, v interface{}) (*TypeInstancePolicyInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTypeInstancePolicyInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOUserInfo2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx context.Context, sel ast.SelectionSet, v *UserInfo) graphql.Marshaler {

@@ -257,6 +257,12 @@ Describes output TypeInstance of an Action
 type OutputTypeInstanceDetails {
   id: ID!
   typeRef: ManifestReference!
+  backend: TypeInstanceBackendDetails!
+}
+
+type TypeInstanceBackendDetails {
+  id: String!
+  abstract: Boolean!
 }
 
 """
@@ -303,12 +309,33 @@ enum ActionStatusPhase {
 }
 
 input PolicyInput {
+  interface: InterfacePolicyInput
+  typeInstance: TypeInstancePolicyInput
+}
+
+# TypeInstance Policy Input
+input TypeInstancePolicyInput {
+  rules: [RulesForTypeInstanceInput!]!
+}
+
+input RulesForTypeInstanceInput {
+  typeRef: ManifestReferenceInput!
+  backend: TypeInstanceBackendRuleInput!
+}
+
+input TypeInstanceBackendRuleInput {
+  id: ID!
+  description: String
+}
+
+# Interface Policy Input
+input InterfacePolicyInput {
   rules: [RulesForInterfaceInput!]!
 }
 
 input RulesForInterfaceInput {
   interface: ManifestReferenceInput!
-  oneOf:     [PolicyRuleInput!]!
+  oneOf: [PolicyRuleInput!]!
 }
 
 input PolicyRuleInput {
@@ -323,8 +350,8 @@ input PolicyRuleInjectDataInput {
 }
 
 input AdditionalParameterInput {
-    name: String!
-    value: Any!
+  name: String!
+  value: Any!
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -345,12 +372,33 @@ input PolicyRuleImplementationConstraintsInput {
 }
 
 type Policy {
+  interface: InterfacePolicy
+  typeInstance: TypeInstancePolicy
+}
+
+# TypeInstance Policy
+type TypeInstancePolicy {
+  rules: [RulesForTypeInstance!]!
+}
+
+type RulesForTypeInstance {
+  typeRef: ManifestReferenceWithOptionalRevision!
+  backend: TypeInstanceBackendRule!
+}
+
+type TypeInstanceBackendRule {
+  id: ID!
+  description: String
+}
+
+# Interface Policy
+type InterfacePolicy {
   rules: [RulesForInterface!]!
 }
 
 type RulesForInterface {
   interface: ManifestReferenceWithOptionalRevision!
-  oneOf:     [PolicyRule!]!
+  oneOf: [PolicyRule!]!
 }
 
 type PolicyRule {
@@ -370,8 +418,8 @@ type AdditionalTypeInstanceReference {
 }
 
 type AdditionalParameter {
-    name: String!
-    value: Any!
+  name: String!
+  value: Any!
 }
 
 type PolicyRuleImplementationConstraints {

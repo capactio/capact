@@ -9,7 +9,6 @@ import (
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/pkg/engine/api/graphql"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/fatih/color"
 	"sigs.k8s.io/yaml"
 )
@@ -56,7 +55,7 @@ func askForPolicyInput(existingPolicy *graphql.Policy) (*graphql.PolicyInput, er
 	editor := ""
 	prompt := &survey.Editor{
 		Message:       "Edit current Policy using YAML syntax",
-		Default:       heredoc.Doc(policyStr),
+		Default:       policyStr,
 		AppendDefault: true,
 		HideDefault:   true,
 	}

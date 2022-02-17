@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.uber.org/zap"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	hubclient "capact.io/capact/pkg/hub/client"
@@ -15,8 +17,6 @@ import (
 )
 
 const (
-	// UserInputName is exported so we can use that as a reference in `capact act create` validation process.
-	UserInputName = "input-parameters"
 	runnerContext = "runner-context"
 )
 
@@ -27,6 +27,7 @@ type PolicyEnforcedHubClient interface {
 	ListRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	ListAdditionalTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	ListAdditionalInputToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) (types.ParametersCollection, error)
+	ListTypeInstancesBackendsBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) (policy.TypeInstanceBackendCollection, error)
 	SetGlobalPolicy(policy policy.Policy)
 	SetActionPolicy(policy policy.ActionPolicy)
 	PushWorkflowStepPolicy(policy policy.WorkflowPolicy) error
@@ -48,16 +49,18 @@ type Renderer struct {
 	typeInstanceHandler *TypeInstanceHandler
 	wfValidator         workflowValidator
 	hubClient           hubclient.HubClient
+	log                 *zap.Logger
 }
 
 // NewRenderer returns a new Renderer instance.
-func NewRenderer(cfg renderer.Config, hubClient hubclient.HubClient, typeInstanceHandler *TypeInstanceHandler, validator workflowValidator) *Renderer {
+func NewRenderer(log *zap.Logger, cfg renderer.Config, hubClient hubclient.HubClient, typeInstanceHandler *TypeInstanceHandler, validator workflowValidator) *Renderer {
 	r := &Renderer{
 		typeInstanceHandler: typeInstanceHandler,
 		maxDepth:            cfg.MaxDepth,
 		renderTimeout:       cfg.RenderTimeout,
 		hubClient:           hubClient,
 		wfValidator:         validator,
+		log:                 log,
 	}
 
 	return r
@@ -73,7 +76,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient, r.wfValidator.PolicyValidator())
 
 	// 0. Populate render options
-	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, policyEnforcedClient, r.typeInstanceHandler, input.Options...)
+	dedicatedRenderer := newDedicatedRenderer(r.log, r.maxDepth, policyEnforcedClient, r.typeInstanceHandler, input.Options...)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
@@ -110,7 +113,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// 3. Extract workflow from the root Implementation
-	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
+	rootWorkflow, newArtifactMappings, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
@@ -179,12 +182,20 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	availableArtifacts := dedicatedRenderer.tplInputArguments[dedicatedRenderer.entrypointStep.Template]
 
 	// 9. Register output TypeInstances
-	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts); err != nil {
+	typeInstancesBackends, err := policyEnforcedClient.ListTypeInstancesBackendsBasedOnPolicy(ctx, rule, implementation)
+	if err != nil {
+		return nil, errors.Wrap(err, "while resolving TypeInstance backend based on Policy")
+	}
+
+	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts, typeInstancesBackends, newArtifactMappings); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
 	// 10. Render rootWorkflow templates
-	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
+	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, RootImplementation{
+		Revision: implementation,
+		Rule:     rule,
+	}, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
 		return nil, err
 	}

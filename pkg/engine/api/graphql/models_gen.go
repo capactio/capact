@@ -137,6 +137,14 @@ type InputTypeInstanceToProvide struct {
 	TypeRef *ManifestReference `json:"typeRef"`
 }
 
+type InterfacePolicy struct {
+	Rules []*RulesForInterface `json:"rules"`
+}
+
+type InterfacePolicyInput struct {
+	Rules []*RulesForInterfaceInput `json:"rules"`
+}
+
 type ManifestReference struct {
 	Path     string `json:"path"`
 	Revision string `json:"revision"`
@@ -151,16 +159,19 @@ type ManifestReferenceInput struct {
 
 // Describes output TypeInstance of an Action
 type OutputTypeInstanceDetails struct {
-	ID      string             `json:"id"`
-	TypeRef *ManifestReference `json:"typeRef"`
+	ID      string                      `json:"id"`
+	TypeRef *ManifestReference          `json:"typeRef"`
+	Backend *TypeInstanceBackendDetails `json:"backend"`
 }
 
 type Policy struct {
-	Rules []*RulesForInterface `json:"rules"`
+	Interface    *InterfacePolicy    `json:"interface"`
+	TypeInstance *TypeInstancePolicy `json:"typeInstance"`
 }
 
 type PolicyInput struct {
-	Rules []*RulesForInterfaceInput `json:"rules"`
+	Interface    *InterfacePolicyInput    `json:"interface"`
+	TypeInstance *TypeInstancePolicyInput `json:"typeInstance"`
 }
 
 type PolicyRuleImplementationConstraintsInput struct {
@@ -198,10 +209,43 @@ type RulesForInterfaceInput struct {
 	OneOf     []*PolicyRuleInput      `json:"oneOf"`
 }
 
+type RulesForTypeInstance struct {
+	TypeRef *ManifestReferenceWithOptionalRevision `json:"typeRef"`
+	Backend *TypeInstanceBackendRule               `json:"backend"`
+}
+
+type RulesForTypeInstanceInput struct {
+	TypeRef *ManifestReferenceInput       `json:"typeRef"`
+	Backend *TypeInstanceBackendRuleInput `json:"backend"`
+}
+
 // Additional Action status from the Runner
 type RunnerStatus struct {
 	// Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 	Status interface{} `json:"status"`
+}
+
+type TypeInstanceBackendDetails struct {
+	ID       string `json:"id"`
+	Abstract bool   `json:"abstract"`
+}
+
+type TypeInstanceBackendRule struct {
+	ID          string  `json:"id"`
+	Description *string `json:"description"`
+}
+
+type TypeInstanceBackendRuleInput struct {
+	ID          string  `json:"id"`
+	Description *string `json:"description"`
+}
+
+type TypeInstancePolicy struct {
+	Rules []*RulesForTypeInstance `json:"rules"`
+}
+
+type TypeInstancePolicyInput struct {
+	Rules []*RulesForTypeInstanceInput `json:"rules"`
 }
 
 // Stores user information

@@ -23,25 +23,25 @@ func TestRule_RequiredTypeInstancesToInject(t *testing.T) {
 		},
 		{
 			Name:  "Inject with RequiredTypeInstances",
-			Input: fixPolicyWithTypeRef().Rules[0].OneOf[0],
+			Input: fixPolicyWithTypeRef().Interface.Rules[0].OneOf[0],
 			Expected: []policy.RequiredTypeInstanceToInject{
 				{
-					RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+					TypeInstanceReference: policy.TypeInstanceReference{
 						ID: "id",
-					},
-					TypeRef: &types.ManifestRef{
-						Path:     "cap.type.sample",
-						Revision: "0.1.0",
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.sample",
+							Revision: "0.1.0",
+						},
 					},
 				},
 				{
-					RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+					TypeInstanceReference: policy.TypeInstanceReference{
 						ID:          "id2",
 						Description: ptr.String("ID 2"),
-					},
-					TypeRef: &types.ManifestRef{
-						Path:     "cap.type.sample2",
-						Revision: "0.2.0",
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.sample2",
+							Revision: "0.2.0",
+						},
 					},
 				},
 			},

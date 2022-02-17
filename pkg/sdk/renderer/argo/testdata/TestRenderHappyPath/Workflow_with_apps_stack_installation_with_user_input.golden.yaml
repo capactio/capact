@@ -1081,6 +1081,7 @@ args:
                   typeInstances:
                   - alias: stack-install-install-shared-db-postgresql
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.config
@@ -1088,6 +1089,7 @@ args:
                     value: null
                   - alias: stack-install-install-shared-db-postgres-install-helm-install-helm-release
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
@@ -1095,6 +1097,7 @@ args:
                     value: null
                   - alias: app1-install-app1-install-app1-config
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.productivity.app1.config
@@ -1102,6 +1105,7 @@ args:
                     value: null
                   - alias: app1-install-app1-install-app1-install-create-db-database
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.database
@@ -1109,6 +1113,7 @@ args:
                     value: null
                   - alias: app1-install-app1-install-app1-install-helm-install-helm-release
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
@@ -1116,6 +1121,7 @@ args:
                     value: null
                   - alias: app2-install-app2-install-app2-config
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.productivity.app2.config
@@ -1123,6 +1129,7 @@ args:
                     value: null
                   - alias: app2-install-app2-install-main-create-db-database
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.database
@@ -1130,6 +1137,7 @@ args:
                     value: null
                   - alias: app2-install-app2-install-main-helm-install-helm-release
                     attributes: []
+                    backend: null
                     createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
