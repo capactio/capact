@@ -9,8 +9,10 @@ import (
 const (
 	// OCFPathPrefix defines path prefix that all OCF manifest must have.
 	OCFPathPrefix = "cap."
-	// HubBackendParentNodeName define parent path for the core hub storage.
+	// HubBackendParentNodeName defines parent path for the core Hub storage.
 	HubBackendParentNodeName = "cap.core.type.hub.storage"
+	// BuiltinHubStorageTypePath defines Type path for built-in Hub storage.
+	BuiltinHubStorageTypePath = "cap.core.type.hub.storage.neo4j"
 )
 
 // InterfaceRef holds the full path and revision to the Interface
