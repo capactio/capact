@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 	"time"
+
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/client"
@@ -335,7 +338,7 @@ func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout ti
 	return nil
 }
 
-// mapToInputTypeInstances converts capactCfg.Uses into input TypeInstance required for upgrade Action.
+// mapToInputTypeInstances converts `capactCfg.Uses` into input TypeInstance required for upgrade Action.
 // Returned TypeInstance:
 // - capact-config
 // - capact-helm-release
@@ -345,6 +348,8 @@ func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout ti
 // - monitoring-helm-release
 // - neo4j-helm-release
 // - cert-manager-helm-release
+//
+// Used backend is ignored.
 func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.InputTypeInstanceData, error) {
 	inputTI := []*gqlengine.InputTypeInstanceData{
 		{
@@ -354,6 +359,10 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 	}
 
 	for _, ti := range capactCfg.Uses {
+		if isBuiltinStorage(ti) {
+			continue
+		}
+
 		unpacked := struct {
 			Name string
 		}{}
@@ -373,6 +382,12 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 		})
 	}
 	return inputTI, nil
+}
+
+// isBuiltinStorage checks if a given TypeInstance is a core Hub storage
+// TODO: add support to detect other Hub storages too. This change would require external call to Local Hub
+func isBuiltinStorage(ti *gqllocalapi.TypeInstance) bool {
+	return strings.HasPrefix(ti.TypeRef.Path, types.BuiltinHubStorageTypePath)
 }
 
 func mapToInputParameters(params capact.InputParameters) (gqlengine.JSON, error) {
