@@ -385,7 +385,7 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 }
 
 // isBuiltinStorage checks if a given TypeInstance is a core Hub storage
-// TODO: add support to detect other Hub storages too. This change would require external call to Local Hub
+// TODO: add support to detect other Hub storages too. This change would require external call to Public Hub
 func isBuiltinStorage(ti *gqllocalapi.TypeInstance) bool {
 	return strings.HasPrefix(ti.TypeRef.Path, types.BuiltinHubStorageTypePath)
 }
