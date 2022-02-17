@@ -7,6 +7,7 @@ import (
 var typeInstancesFieldsRegistry = map[TypeInstancesQueryFields]string{
 	TypeInstanceRootFields:                 rootFields,
 	TypeInstanceTypeRefFields:              typeRefFields,
+	TypeInstanceBackendFields:              backendFields,
 	TypeInstanceUsesIDField:                usesIDField,
 	TypeInstanceUsedByIDField:              usedByIDField,
 	TypeInstanceLatestResourceVersionField: latestResourceVersionField,
@@ -25,6 +26,12 @@ var (
 		typeRef {
 			path
 			revision
+		}`
+
+	backendFields = `
+		backend {
+			id
+			abstract
 		}`
 
 	usedByIDField = `
@@ -57,6 +64,8 @@ var (
 
 		%s
 
+		%s
+
 		latestResourceVersion {
 			%s
 		}
@@ -64,18 +73,18 @@ var (
 		firstResourceVersion {
 			%s
 		}
-	
+
 		previousResourceVersion {
 			%s
 		}
-	
+
 		resourceVersions {
 			%s
 		}
-	
+
 		resourceVersion(resourceVersion: 1) {
 			%s
-		}`, rootFields, typeRefFields,
+		}`, rootFields, typeRefFields, backendFields,
 		typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion)
 )
 

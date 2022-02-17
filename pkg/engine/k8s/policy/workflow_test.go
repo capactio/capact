@@ -54,7 +54,7 @@ func policyWithAdditionalInput(input map[string]interface{}) Policy {
 	implementation := "cap.implementation.bitnami.postgresql.install"
 	return Policy{
 		Interface: InterfacePolicy{
-			Rules: RulesList{
+			Rules: InterfaceRulesList{
 				RulesForInterface{
 					Interface: types.ManifestRefWithOptRevision{
 						Path: "cap.interface.database.postgresql.install",

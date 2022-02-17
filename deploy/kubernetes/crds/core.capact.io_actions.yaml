@@ -272,6 +272,18 @@ spec:
                       description: OutputTypeInstanceDetails describes the output
                         TypeInstance.
                       properties:
+                        backend:
+                          description: Backend contains information in which backend
+                            this TypeInstance is stored.
+                          properties:
+                            abstract:
+                              type: boolean
+                            id:
+                              type: string
+                          required:
+                          - abstract
+                          - id
+                          type: object
                         id:
                           description: ID is a unique identifier of the TypeInstance.
                           type: string
@@ -291,6 +303,7 @@ spec:
                           - path
                           type: object
                       required:
+                      - backend
                       - id
                       - typeReference
                       type: object

@@ -314,9 +314,11 @@ func (c *Converter) actionOutputToGraphQL(in *v1alpha1.ActionOutput) *graphql.Ac
 
 	var gqlTypeInstances []*graphql.OutputTypeInstanceDetails
 	for _, item := range *in.TypeInstances {
+		gqlBackend := graphql.TypeInstanceBackendDetails(item.Backend)
 		gqlTypeInstances = append(gqlTypeInstances, &graphql.OutputTypeInstanceDetails{
 			ID:      item.ID,
 			TypeRef: c.manifestRefToGraphQL(item.TypeRef),
+			Backend: &gqlBackend,
 		})
 	}
 

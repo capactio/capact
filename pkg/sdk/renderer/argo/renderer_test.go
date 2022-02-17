@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	actionvalidation "capact.io/capact/pkg/sdk/validation/interfaceio"
-	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
-
+	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
+	actionvalidation "capact.io/capact/pkg/sdk/validation/interfaceio"
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,8 +44,7 @@ func TestRenderHappyPath(t *testing.T) {
 	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
 	policyIOValidator := policyvalidation.NewValidator(fakeCli)
 	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
-
-	argoRenderer := NewRenderer(renderer.Config{
+	argoRenderer := NewRenderer(logger.Noop(), renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
 	}, fakeCli, typeInstanceHandler, wfValidator)
@@ -301,7 +300,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			policyIOValidator := policyvalidation.NewValidator(fakeCli)
 			wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
 
-			argoRenderer := NewRenderer(renderer.Config{
+			argoRenderer := NewRenderer(logger.Noop(), renderer.Config{
 				RenderTimeout: time.Hour,
 				MaxDepth:      50,
 			}, fakeCli, typeInstanceHandler, wfValidator)
@@ -348,7 +347,7 @@ func TestRendererMaxDepth(t *testing.T) {
 	policyIOValidator := policyvalidation.NewValidator(fakeCli)
 	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
 
-	argoRenderer := NewRenderer(renderer.Config{
+	argoRenderer := NewRenderer(logger.Noop(), renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
 	}, fakeCli, typeInstanceHandler, wfValidator)
@@ -387,7 +386,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	policyIOValidator := policyvalidation.NewValidator(fakeCli)
 	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
 
-	argoRenderer := NewRenderer(renderer.Config{
+	argoRenderer := NewRenderer(logger.Noop(), renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
 	}, fakeCli, typeInstanceHandler, wfValidator)

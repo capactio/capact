@@ -9,7 +9,7 @@ import (
 func fixGCPGlobalPolicy() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -33,7 +33,7 @@ func fixGCPGlobalPolicy() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
 											Description: ptr.String("GCP SA"),
 										},
@@ -66,7 +66,7 @@ func fixGCPGlobalPolicy() policy.Policy {
 func fixAWSGlobalPolicy(additionalParameters ...policy.AdditionalParametersToInject) policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -90,7 +90,7 @@ func fixAWSGlobalPolicy(additionalParameters ...policy.AdditionalParametersToInj
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "517cf827-233c-4bf1-8fc9-48534424dd58",
 											Description: ptr.String("AWS Credentials"),
 										},
@@ -119,7 +119,7 @@ func fixAWSGlobalPolicy(additionalParameters ...policy.AdditionalParametersToInj
 func fixGlobalPolicyForFallback() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -138,7 +138,7 @@ func fixGlobalPolicyForFallback() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "517cf827-233c-4bf1-8fc9-48534424dd58",
 											Description: ptr.String("AWS Credentials"),
 										},
@@ -187,7 +187,7 @@ func fixGlobalPolicyForFallback() policy.Policy {
 func fixTerraformPolicy() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -201,7 +201,7 @@ func fixTerraformPolicy() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
 											Description: ptr.String("GCP SA"),
 										},
@@ -229,7 +229,7 @@ func fixTerraformPolicy() policy.Policy {
 func fixAWSRDSPolicy() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.database.postgresql.install",
@@ -243,7 +243,7 @@ func fixAWSRDSPolicy() policy.Policy {
 							Inject: &policy.InjectData{
 								RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 									{
-										RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										TypeInstanceReference: policy.TypeInstanceReference{
 											ID:          "517cf827-233c-4bf1-8fc9-48534424dd58",
 											Description: ptr.String("AWS SA"),
 										},
@@ -279,7 +279,7 @@ func fixAWSRDSPolicy() policy.Policy {
 func fixExistingDBPolicy() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Rules: policy.RulesList{
+			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path:     "cap.interface.productivity.mattermost.install",

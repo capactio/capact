@@ -388,6 +388,15 @@ type OutputTypeInstanceDetails struct {
 
 	// TypeRef contains data needed to resolve Type manifest.
 	TypeRef *ManifestReference `json:"typeReference"`
+
+	// Backend contains information in which backend this TypeInstance is stored.
+	Backend TypeInstanceBackend `json:"backend"`
+}
+
+// TypeInstanceBackend holds information about TypeInstance backend.
+type TypeInstanceBackend struct {
+	ID       string `json:"id"`
+	Abstract bool   `json:"abstract"`
 }
 
 // InputTypeInstanceToProvide describes optional input TypeInstance for advanced rendering mode iteration.

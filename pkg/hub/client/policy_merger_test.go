@@ -28,7 +28,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "only global policy",
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -51,13 +51,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path:     "cap.type.gcp.auth.service-account",
-													Revision: "0.1.0",
+													TypeRef: &types.TypeRef{
+														Path:     "cap.type.gcp.auth.service-account",
+														Revision: "0.1.0",
+													},
 												},
 											},
 										},
@@ -83,7 +83,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			action: policy.ActionPolicy{},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -106,13 +106,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path:     "cap.type.gcp.auth.service-account",
-													Revision: "0.1.0",
+													TypeRef: &types.TypeRef{
+														Path:     "cap.type.gcp.auth.service-account",
+														Revision: "0.1.0",
+													},
 												},
 											},
 										},
@@ -141,7 +141,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "only action policy",
 			action: policy.ActionPolicy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -164,12 +164,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -195,7 +195,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			global: policy.Policy{},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -218,12 +218,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -252,7 +252,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "action first then global for the same interface",
 			action: policy.ActionPolicy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -276,12 +276,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123-111",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -306,7 +306,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -330,12 +330,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123-222",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -365,7 +365,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -390,12 +390,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123-111",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -429,7 +429,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "action first then global for different interfaces - only rules",
 			action: policy.ActionPolicy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -447,7 +447,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: secondInterfacePath,
@@ -465,7 +465,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -499,7 +499,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "merge type instances and additional input",
 			action: policy.ActionPolicy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -522,12 +522,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 										},
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123-111",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -552,7 +552,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -565,12 +565,12 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Inject: &policy.InjectData{
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "123-321-123",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.x",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.x",
+													},
 												},
 											},
 										},
@@ -595,7 +595,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
-					Rules: policy.RulesList{
+					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
 								Path: interfacePath,
@@ -608,21 +608,21 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Inject: &policy.InjectData{
 										RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "123-321-123",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.x",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.x",
+													},
 												},
 											},
 											{
-												RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												TypeInstanceReference: policy.TypeInstanceReference{
 													ID:          "1314-142-123-111",
 													Description: ptr.String("Sample TI"),
-												},
-												TypeRef: &types.ManifestRef{
-													Path: "cap.type.gcp.auth.service-account",
+													TypeRef: &types.TypeRef{
+														Path: "cap.type.gcp.auth.service-account",
+													},
 												},
 											},
 										},
@@ -659,6 +659,384 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 										},
 									},
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Action, policy.Global},
+		},
+	}
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			cli := client.NewPolicyEnforcedClient(nil, nil)
+			cli.SetPolicyOrder(tt.order)
+			cli.SetGlobalPolicy(tt.global)
+			cli.SetActionPolicy(tt.action)
+
+			// expect
+			assert.Equal(t, tt.expected, cli.Policy())
+		})
+	}
+}
+
+func TestPolicyEnforcedClient_mergeTypeInstancePolicies(t *testing.T) {
+	tests := []struct {
+		name     string
+		global   policy.Policy
+		action   policy.ActionPolicy
+		expected policy.Policy
+		order    policy.MergeOrder
+	}{
+		{
+			name: "only global policy",
+			global: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			action: policy.ActionPolicy{},
+			expected: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Action, policy.Global},
+		},
+		{
+			name: "only action policy",
+			action: policy.ActionPolicy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			global: policy.Policy{},
+			expected: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Action, policy.Global},
+		},
+		{
+			name: "action first then global for the same Types",
+			action: policy.ActionPolicy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			global: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "1234-1234-1234-1234-1234",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "1234-1234-1234-1234-1234",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Action, policy.Global},
+		},
+		{
+			name: "action first then global for different Types",
+			action: policy.ActionPolicy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+					},
+				},
+			},
+			global: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path:     "cap.type.aws.auth.credentials",
+								Revision: ptr.String("0.1.0"),
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "00fd161c-01bd-47a6-9872-47490e11f996",
+									Description: ptr.String("Vault TI"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID:          "a36ed738-dfe7-45ec-acd1-8e44e8db893b",
+									Description: ptr.String("Default Capact PostgreSQL backend"),
+								},
+							},
+						},
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.aws.*",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "31bb8355-10d7-49ce-a739-4554d8a40b63",
 								},
 							},
 						},

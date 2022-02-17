@@ -15,7 +15,7 @@ func NewDenyAll() Policy {
 func NewAllowAll() Policy {
 	return Policy{
 		Interface: InterfacePolicy{
-			Rules: RulesList{
+			Rules: InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
 						Path: "cap.*",

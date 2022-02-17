@@ -1,10 +1,17 @@
 // Package types holds manually added types.
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-// OCFPathPrefix defines path prefix that all OCF manifest must have.
-const OCFPathPrefix = "cap."
+const (
+	// OCFPathPrefix defines path prefix that all OCF manifest must have.
+	OCFPathPrefix = "cap."
+	// HubBackendParentNodeName define parent path for the core hub storage.
+	HubBackendParentNodeName = "cap.core.type.hub.storage"
+)
 
 // InterfaceRef holds the full path and revision to the Interface
 type InterfaceRef ManifestRefWithOptRevision
@@ -83,4 +90,15 @@ type OCFVersion string
 type ManifestMetadata struct {
 	OCFVersion OCFVersion   `yaml:"ocfVersion"`
 	Kind       ManifestKind `yaml:"kind"`
+}
+
+// TrimLastNodeFromOCFPath removes the last node name from the given OCF path.
+// For example, for `cap.core.type.examples.name` returns `cap.core.type.examples`.
+func TrimLastNodeFromOCFPath(in string) string {
+	idx := strings.LastIndex(in, ".")
+	if idx == -1 {
+		return in
+	}
+
+	return in[:idx]
 }

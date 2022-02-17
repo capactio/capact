@@ -42,6 +42,7 @@ var (
 const (
 	graphQLServerName = "engine-graphql"
 	policyServiceName = "policy-svc"
+	argoRendererName  = "argo-renderer"
 )
 
 // Config holds application related configuration
@@ -111,7 +112,7 @@ func main() {
 	interfaceIOValidator := actionvalidation.NewValidator(hubClient)
 	policyIOValidator := policyvalidation.NewValidator(hubClient)
 	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
-	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler, wfValidator)
+	argoRenderer := argo.NewRenderer(logger.Named(argoRendererName), cfg.Renderer, hubClient, typeInstanceHandler, wfValidator)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")

@@ -4,8 +4,8 @@ insert_final_newline = true
 [{*.yml, *.yaml}]
 indent_size = 2
 
-[*.graphql]
-indent_size = 4
+[{*.graphql, *.js, *.ts}]
+indent_size = 2
 indent_style = space
 
 [Makefile]

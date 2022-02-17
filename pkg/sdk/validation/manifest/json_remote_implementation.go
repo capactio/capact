@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"capact.io/capact/internal/ptr"
-	"capact.io/capact/internal/regexutil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -20,14 +18,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	typeListQueryFields = public.TypeRevisionRootFields | public.TypeRevisionSpecAdditionalRefsField
-)
-
 // ParentNodesAssociation represents relations between parent node and associated other types.
 // - key holds the parent node path
 // - value holds list of associated Types
-type ParentNodesAssociation map[string][]types.ManifestRef
+type ParentNodesAssociation map[string][]types.TypeRef
 
 // RemoteImplementationValidator is a validator for Implementation manifest, which calls Hub in order to do validation checks.
 type RemoteImplementationValidator struct {
@@ -254,7 +248,7 @@ func (v *RemoteImplementationValidator) resolveRequiresPath(parentPrefix string,
 	allReqItems = append(allReqItems, reqItem.AnyOf...)
 
 	for _, requiresSubItem := range allReqItems {
-		ref := types.ManifestRef{
+		ref := types.TypeRef{
 			Path:     strings.Join([]string{parentPrefix, requiresSubItem.Name}, "."), // default assumption
 			Revision: requiresSubItem.Revision,
 		}
@@ -286,30 +280,12 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 
 	var validationErrs []error
 	for parentNode, expTypesRefs := range relations {
-		typesPath, expAttachedTypes := v.mapToPathAndPathRevIndex(expTypesRefs)
-
-		filter := regexutil.OrStringSlice(typesPath)
-		res, err := v.hub.ListTypes(ctx, public.WithTypeRevisions(typeListQueryFields), public.WithTypeFilter(gqlpublicapi.TypeFilter{
-			PathPattern: ptr.String(filter),
-		}))
+		gotAttachedTypes, err := public.ListAdditionalRefs(ctx, v.hub, expTypesRefs)
 		if err != nil {
 			return ValidationResult{}, errors.Wrap(err, "while fetching Types based on parent node")
 		}
 
-		gotAttachedTypes := map[string][]string{}
-		for _, item := range res {
-			if item == nil {
-				continue
-			}
-			for _, rev := range item.Revisions {
-				if rev.Spec == nil {
-					continue
-				}
-				gotAttachedTypes[v.key(item.Path, rev.Revision)] = rev.Spec.AdditionalRefs
-			}
-		}
-
-		missingEntries := v.detectMissingChildren(gotAttachedTypes, expAttachedTypes, parentNode)
+		missingEntries := v.detectMissingChildren(gotAttachedTypes, expTypesRefs, parentNode)
 		if len(missingEntries) == 0 {
 			continue
 		}
@@ -324,21 +300,7 @@ func (v *RemoteImplementationValidator) checkParentNodesAssociation(ctx context.
 	return ValidationResult{Errors: validationErrs}, nil
 }
 
-func (v *RemoteImplementationValidator) mapToPathAndPathRevIndex(in []types.ManifestRef) ([]string, []string) {
-	var (
-		paths       []string
-		pathsRevIdx []string
-	)
-
-	for _, expType := range in {
-		paths = append(paths, expType.Path)
-		pathsRevIdx = append(pathsRevIdx, v.key(expType.Path, expType.Revision))
-	}
-
-	return paths, pathsRevIdx
-}
-
-func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes map[string][]string, expAttachedTypes []string, expParent string) []string {
+func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes public.ListAdditionalRefsOutput, expAttachedTypes []types.TypeRef, expParent string) []string {
 	var missingChildren []string
 
 	for _, exp := range expAttachedTypes {
@@ -352,7 +314,7 @@ func (v *RemoteImplementationValidator) detectMissingChildren(gotAttachedTypes m
 			continue
 		}
 
-		missingChildren = append(missingChildren, fmt.Sprintf("%q", exp))
+		missingChildren = append(missingChildren, fmt.Sprintf(`"%s:%s"`, exp.Path, exp.Revision))
 	}
 
 	return missingChildren
@@ -365,8 +327,4 @@ func (v *RemoteImplementationValidator) stringSliceContains(slice []string, elem
 		}
 	}
 	return false
-}
-
-func (v *RemoteImplementationValidator) key(a, b string) string {
-	return fmt.Sprintf("%s:%s", a, b)
 }

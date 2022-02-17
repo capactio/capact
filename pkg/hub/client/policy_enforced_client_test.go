@@ -79,13 +79,13 @@ func TestPolicyEnforcedClient_ListRequiredTypeInstancesToInjectBasedOnPolicy(t *
 				Inject: &policy.InjectData{
 					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
-							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+							TypeInstanceReference: policy.TypeInstanceReference{
 								ID:          "my-uuid",
 								Description: ptr.String("My UUID"),
-							},
-							TypeRef: &types.ManifestRef{
-								Path:     "cap.type.gcp.auth.service-account",
-								Revision: "0.1.1",
+								TypeRef: &types.TypeRef{
+									Path:     "cap.type.gcp.auth.service-account",
+									Revision: "0.1.1",
+								},
 							},
 						},
 					},
@@ -110,7 +110,7 @@ func TestPolicyEnforcedClient_ListRequiredTypeInstancesToInjectBasedOnPolicy(t *
 				Inject: &policy.InjectData{
 					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
-							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+							TypeInstanceReference: policy.TypeInstanceReference{
 								ID:          "my-uuid",
 								Description: ptr.String("My UUID"),
 							},
@@ -142,13 +142,13 @@ func TestPolicyEnforcedClient_ListRequiredTypeInstancesToInjectBasedOnPolicy(t *
 				Inject: &policy.InjectData{
 					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
-							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+							TypeInstanceReference: policy.TypeInstanceReference{
 								ID:          "my-uuid",
 								Description: ptr.String("My UUID"),
-							},
-							TypeRef: &types.ManifestRef{
-								Path:     "cap.type.gcp.auth.service-account",
-								Revision: "0.1.1",
+								TypeRef: &types.TypeRef{
+									Path:     "cap.type.gcp.auth.service-account",
+									Revision: "0.1.1",
+								},
 							},
 						},
 					},
@@ -464,6 +464,167 @@ func TestPolicyEnforcedClient_ListAdditionalInputToInjectBasedOnPolicy(t *testin
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expectedParamsCollection, actual)
+			}
+		})
+	}
+}
+
+func TestPolicyEnforcedClient_ListTypeInstancesBackendsBasedOnPolicy(t *testing.T) {
+	tests := []struct {
+		name string
+
+		implRev            gqlpublicapi.ImplementationRevision
+		policyRule         policy.Rule
+		expectedBackends   map[string]policy.TypeInstanceBackend
+		expectedErrMessage *string
+		globalPolicy       policy.Policy
+	}{
+		{
+			name: "Empty inject in policy rule",
+			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
+				AnyOf: []*gqlpublicapi.ImplementationRequirementItem{
+					{
+						TypeRef: &gqlpublicapi.TypeReference{
+							Path:     "cap.type.gcp.sa",
+							Revision: "0.1.1",
+						},
+					},
+				},
+			}),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{},
+				},
+			},
+			globalPolicy: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.capactio.examples.message",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "ID1",
+									TypeRef: &types.TypeRef{
+										Path:     "cap.type.aws.secret-manager.storage",
+										Revision: "0.1.0",
+									},
+									ExtendsHubStorage: true,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedBackends: map[string]policy.TypeInstanceBackend{
+				"cap.type.capactio.examples.message": {
+					TypeInstanceReference: policy.TypeInstanceReference{
+						ID: "ID1",
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.aws.secret-manager.storage",
+							Revision: "0.1.0",
+						},
+						ExtendsHubStorage: true,
+					}},
+			},
+		},
+		{
+			name: "Inject Helm storage",
+			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
+				AllOf: []*gqlpublicapi.ImplementationRequirementItem{
+					{
+						Alias: ptr.String("helm-storage"),
+						TypeRef: &gqlpublicapi.TypeReference{
+							Path:     "cap.type.helm.storage",
+							Revision: "0.1.1",
+						},
+					},
+				},
+			}),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID:          "ID2",
+								Description: ptr.String("ID2"),
+								TypeRef: &types.TypeRef{
+									Path:     "cap.type.helm.storage",
+									Revision: "0.1.1",
+								},
+								ExtendsHubStorage: true,
+							},
+						},
+					},
+				},
+			},
+			globalPolicy: policy.Policy{
+				TypeInstance: policy.TypeInstancePolicy{
+					Rules: []policy.RulesForTypeInstance{
+						{
+							TypeRef: types.ManifestRefWithOptRevision{
+								Path: "cap.type.capactio.examples.message",
+							},
+							Backend: policy.TypeInstanceBackend{
+								TypeInstanceReference: policy.TypeInstanceReference{
+									ID: "ID1",
+									TypeRef: &types.TypeRef{
+										Path:     "cap.type.aws.secret-manager.storage",
+										Revision: "0.1.0",
+									},
+									ExtendsHubStorage: true,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedBackends: map[string]policy.TypeInstanceBackend{
+				"cap.type.capactio.examples.message": {
+					TypeInstanceReference: policy.TypeInstanceReference{
+						ID: "ID1",
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.aws.secret-manager.storage",
+							Revision: "0.1.0",
+						},
+						ExtendsHubStorage: true,
+					},
+				},
+				"helm-storage": {
+					TypeInstanceReference: policy.TypeInstanceReference{
+						ID:          "ID2",
+						Description: ptr.String("ID2"),
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.helm.storage",
+							Revision: "0.1.1",
+						},
+						ExtendsHubStorage: true,
+					},
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			hubCli := &fake.FileSystemClient{}
+
+			validator := policyvalidation.NewValidator(hubCli)
+			cli := client.NewPolicyEnforcedClient(hubCli, validator)
+			cli.SetGlobalPolicy(tt.globalPolicy)
+
+			// when
+			actual, err := cli.ListTypeInstancesBackendsBasedOnPolicy(context.Background(), tt.policyRule, tt.implRev)
+
+			// then
+			if tt.expectedErrMessage != nil {
+				require.Error(t, err)
+				assert.EqualError(t, err, *tt.expectedErrMessage)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedBackends, actual.GetAll())
 			}
 		})
 	}

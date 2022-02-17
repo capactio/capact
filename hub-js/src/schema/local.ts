@@ -1,6 +1,6 @@
-import { readFileSync } from "fs";
-import { makeAugmentedSchema, neo4jgraphql } from "neo4j-graphql-js";
-import { Driver, Transaction } from "neo4j-driver";
+import {readFileSync} from "fs";
+import {makeAugmentedSchema, neo4jgraphql} from "neo4j-graphql-js";
+import {Driver, Transaction} from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
@@ -54,7 +54,7 @@ export const schema = makeAugmentedSchema({
         args: CreateTypeInstancesArgs,
         context: ContextWithDriver
       ) => {
-        const { typeInstances, usesRelations } = args.in;
+        const {typeInstances, usesRelations} = args.in;
 
         const aliases = typeInstances
           .filter((x) => x.alias !== undefined)
@@ -73,14 +73,39 @@ export const schema = makeAugmentedSchema({
               // create TypeInstances
               const createTypeInstanceResult = await tx.run(
                 `UNWIND $typeInstances AS typeInstance
-               MERGE (typeRef:TypeInstanceTypeReference {path: typeInstance.typeRef.path, revision: typeInstance.typeRef.revision})
-               
                CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+
+               // Backend
+               WITH *
+               CALL apoc.do.when(
+                   typeInstance.backend.id IS NOT NULL,
+                   '
+                    WITH false as abstract
+                    RETURN $in.backend.id as id, abstract
+                   ',
+                   '
+                    // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.
+                    WITH true as abstract
+                    MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: "cap.core.type.hub.storage.neo4j", revision: "0.1.0"})
+                    RETURN backend.id as id, abstract
+                   ',
+                   {in: typeInstance}
+               ) YIELD value as backend
+               MATCH (backendTI:TypeInstance {id: backend.id})
+               CREATE (ti)-[:USES]->(backendTI)
+               // TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check
+               // if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.
+               MERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})
+               CREATE (ti)-[:STORED_IN]->(storageRef)
+
+							 // TypeRef
+               MERGE (typeRef:TypeInstanceTypeReference {path: typeInstance.typeRef.path, revision: typeInstance.typeRef.revision})
                CREATE (ti)-[:OF_TYPE]->(typeRef)
-               
+
+               // Revision
                CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: typeInstance.createdBy})
                CREATE (ti)-[:CONTAINS]->(tir)
-               
+
                CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
                CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson(typeInstance.value)})
 
@@ -91,7 +116,7 @@ export const schema = makeAugmentedSchema({
 
                RETURN ti.id as uuid, typeInstance.alias as alias
               `,
-                { typeInstances }
+                {typeInstances}
               );
 
               if (
@@ -117,7 +142,7 @@ export const schema = makeAugmentedSchema({
                 {}
               );
               const usesRelationsParams = usesRelations.map(
-                ({ from, to }: { from: string; to: string }) => ({
+                ({from, to}: { from: string; to: string }) => ({
                   from: aliasMappings[from] || from,
                   to: aliasMappings[to] || to,
                 })
@@ -178,7 +203,7 @@ export const schema = makeAugmentedSchema({
                 );
                 break;
               case UpdateTypeInstanceErrorCode.NotFound: {
-                const ids = args.in.map(({ id }) => id);
+                const ids = args.in.map(({id}) => id);
                 const notFoundIDs = ids.filter(
                   (x) => !customErr.ids.includes(x)
                 );
@@ -206,7 +231,7 @@ export const schema = makeAugmentedSchema({
               await tx.run(
                 `
                     OPTIONAL MATCH (ti:TypeInstance {id: $id})
-                    
+
                     // Check if a given TypeInstance was found
                     CALL apoc.util.validate(ti IS NULL, apoc.convert.toJson({code: 404}), null)
 
@@ -226,9 +251,9 @@ export const schema = makeAugmentedSchema({
                     MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
                     MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
                     OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
-              
+
                     DETACH DELETE ti, metadata, spec, tirs
-              
+
                     WITH typeRef
                     CALL {
                       MATCH (typeRef)
@@ -236,7 +261,7 @@ export const schema = makeAugmentedSchema({
                       DELETE (typeRef)
                       RETURN 'remove typeRef'
                     }
-              
+
                     WITH *
                     CALL {
                       MATCH (attrRef)
@@ -244,9 +269,9 @@ export const schema = makeAugmentedSchema({
                       DELETE (attrRef)
                       RETURN 'remove attr'
                     }
-              
+
                     RETURN $id`,
-                { id: args.id, ownerID: args.ownerID || null }
+                {id: args.id, ownerID: args.ownerID || null}
               );
               return args.id;
             }
@@ -346,9 +371,9 @@ async function switchLocking(
 ) {
   const instanceLockedByOthers = await tx.run(
     `MATCH (ti:TypeInstance)
-          WHERE ti.id IN $in.ids 
+          WHERE ti.id IN $in.ids
           WITH collect(ti) as allIDs
-          
+
           // Check if all TypeInstances were found
           CALL apoc.when(
               size(allIDs) < size($in.ids),
@@ -356,7 +381,7 @@ async function switchLocking(
               'RETURN false as notFoundErr',
               {in: $in, allIDs: allIDs}
           ) YIELD value as checkIDs
-          
+
           // Check if given TypeInstances are not already locked by others
           CALL {
               MATCH (ti:TypeInstance)
@@ -364,7 +389,7 @@ async function switchLocking(
               WITH collect(ti) as lockedIDs
               RETURN lockedIDs
           }
-          
+
           // Execute lock only if all TypeInstance were found and none of them are already locked by another owner
           WITH *
           CALL apoc.do.when(
@@ -377,9 +402,9 @@ async function switchLocking(
               ',
               {in: $in, checkIDs: checkIDs, lockedIDs: lockedIDs}
           ) YIELD value as lockingProcess
-          
+
           RETURN  allIDs, lockedIDs, lockingProcess`,
-    { in: args.in }
+    {in: args.in}
   );
 
   if (!instanceLockedByOthers.records.length) {
@@ -452,4 +477,38 @@ function tryToExtractCustomError(
   }
 
   return null;
+}
+
+export async function ensureCoreStorageTypeInstance(context: ContextWithDriver) {
+  const neo4jSession = context.driver.session();
+  const value = {
+    acceptValue: false,
+    contextSchema: null,
+  }
+  try {
+    await neo4jSession.writeTransaction(
+      async (tx: Transaction) => {
+        await tx.run(`
+				    MERGE (ti:TypeInstance {id: "318b99bd-9b26-4bc1-8259-0a7ff5dae61c"})
+				    MERGE (typeRef:TypeInstanceTypeReference {path: "cap.core.type.hub.storage.neo4j", revision: "0.1.0"})
+				    MERGE (backend:TypeInstanceBackendReference {abstract: true, id: ti.id, description: "Built-in Hub storage"})
+				    MERGE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: "core"})
+				    MERGE (spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($value)})
+
+				    MERGE (ti)-[:OF_TYPE]->(typeRef)
+				    MERGE (ti)-[:STORED_IN]->(backend)
+				    MERGE (ti)-[:CONTAINS]->(tir)
+				    MERGE (tir)-[:DESCRIBED_BY]->(metadata:TypeInstanceResourceVersionMetadata)
+				    MERGE (tir)-[:SPECIFIED_BY]->(spec)
+
+				    RETURN ti
+					`, {value});
+      }
+    );
+  } catch (e) {
+    const err = e as Error;
+    throw new Error(`while ensuring TypeInstance for core backend storage: ${err.message}`);
+  } finally {
+    await neo4jSession.close();
+  }
 }

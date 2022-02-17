@@ -4,9 +4,9 @@
 package controller
 
 import (
+	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/hub/client/local"
 	"context"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -83,7 +83,7 @@ var _ = BeforeSuite(func(done Done) {
 		},
 	}
 
-	svc := NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(),
+	svc := NewActionService(logger.Noop(), mgr.GetClient(),
 		&argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, policy.MergeOrder{policy.Action, policy.Global}, &typeInstanceLockerFake{},
 		&typeInstanceGetterFake{}, cfg)
 

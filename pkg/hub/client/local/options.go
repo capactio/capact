@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// TypeInstancesQueryFields allows to configure which fields should be returned for TypeInstance query.
+// TypeInstancesQueryFields allows configuring which fields should be returned for TypeInstance query.
 type TypeInstancesQueryFields uint64
 
 const (
@@ -12,6 +12,8 @@ const (
 	TypeInstanceRootFields TypeInstancesQueryFields = 1 << iota
 	// TypeInstanceTypeRefFields returns TypeInstance's TypeRef fields.
 	TypeInstanceTypeRefFields
+	// TypeInstanceBackendFields returns TypeInstance's Backend fields.
+	TypeInstanceBackendFields
 	// TypeInstanceUsedByIDField returns IDs for UsedBy field.
 	TypeInstanceUsedByIDField
 	// TypeInstanceUsesIDField returns IDs for Uses field.

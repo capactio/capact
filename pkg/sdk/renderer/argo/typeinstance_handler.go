@@ -5,11 +5,12 @@ import (
 	"path"
 	"strings"
 
-	"github.com/google/uuid"
-
+	"capact.io/capact/pkg/engine/k8s/policy"
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
+	"github.com/google/uuid"
 	apiv1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -104,6 +105,7 @@ type OutputTypeInstanceRelation struct {
 type OutputTypeInstance struct {
 	ArtifactName *string
 	TypeInstance types.OutputTypeInstance
+	Backend      policy.TypeInstanceBackend
 }
 
 // OutputTypeInstances holds information about the output TypeInstances
@@ -135,7 +137,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	}
 
 	for _, ti := range output.typeInstances {
-		payload.TypeInstances = append(payload.TypeInstances, &graphqllocal.CreateTypeInstanceInput{
+		gqlTI := &graphqllocal.CreateTypeInstanceInput{
 			Alias:     ti.ArtifactName,
 			CreatedBy: &ownerID,
 			TypeRef: &graphqllocal.TypeInstanceTypeReferenceInput{
@@ -143,7 +145,13 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 				Revision: ti.TypeInstance.TypeRef.Revision,
 			},
 			Attributes: []*graphqllocal.AttributeReferenceInput{},
-		})
+		}
+		if ti.Backend.ID != "" {
+			gqlTI.Backend = &graphqllocal.TypeInstanceBackendInput{
+				ID: ti.Backend.ID,
+			}
+		}
+		payload.TypeInstances = append(payload.TypeInstances, gqlTI)
 
 		artifacts = append(artifacts, wfv1.Artifact{
 			Name: *ti.ArtifactName,
