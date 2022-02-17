@@ -1001,7 +1001,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 		upperLayerStepOutputBackendAlias := ptr.StringPtrToString(mappings[name].Backend)
 		backendAlias, err := r.selectBackendAlias(upperLayerStepOutputBackendAlias, stepOutputBackendAlias)
 		if err != nil {
-			return errors.Wrapf(err, "while resolving backend alias for %s", step.Name)
+			return errors.Wrapf(err, "while resolving backend alias for %q", step.Name)
 		}
 
 		log := r.log.With(zap.String("artifactName", *artifactName))
@@ -1009,7 +1009,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 
 		backend, err := r.selectBackend(backendAlias, typeRef, backends)
 		if err != nil {
-			return errors.Wrapf(err, "while resolving backend ID for %s", name)
+			return errors.Wrapf(err, "while resolving backend ID for %q", name)
 		}
 
 		log.Debug("Selected TypeInstance Backend", zap.Any("backend", backend))
