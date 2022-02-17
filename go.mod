@@ -18,22 +18,21 @@ require (
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
 	github.com/briandowns/spinner v1.12.0
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
-	github.com/containerd/containerd v1.4.11 // indirect
 	github.com/docker/cli v20.10.9+incompatible
 	github.com/docker/docker v20.10.9+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
 	github.com/fatih/camelcase v1.0.0
-	github.com/fatih/color v1.12.0
+	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
 	github.com/gitchander/permutation v0.0.0-20210517125447-a5d73722e1b1
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.5
-	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.9.1
 	github.com/hashicorp/hcl2 v0.0.0-20191002203319-fb75b3253c80 // indirect
 	github.com/hashicorp/terraform v0.11.12-beta1
@@ -44,12 +43,12 @@ require (
 	github.com/jetstack/cert-manager v1.4.4
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
-	github.com/mattn/go-isatty v0.0.13
+	github.com/mattn/go-isatty v0.0.14
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/nautilus/gateway v0.1.16
 	github.com/nautilus/graphql v0.0.16
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
-	github.com/olekukonko/tablewriter v0.0.4
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
 	github.com/opencontainers/runc v1.0.3 // indirect
@@ -59,6 +58,7 @@ require (
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/spectralops/teller v1.4.1-0.20220220074628-10ea63fb3d8e
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
@@ -71,10 +71,11 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/zclconf/go-cty v1.8.1
 	go.uber.org/zap v1.18.1
-	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	google.golang.org/api v0.44.0
+	google.golang.org/grpc v1.38.0
+	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.6.3
@@ -99,4 +100,6 @@ replace (
 
 	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.8
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
+
+	github.com/spectralops/teller => github.com/pkosiec/teller v1.4.1-0.20220223143025-e3f18e5c70c2
 )

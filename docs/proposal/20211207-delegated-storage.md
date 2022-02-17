@@ -475,100 +475,95 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
 
     <details> <summary>Protocol Buffers definition</summary>
 
-    ```proto
+    ```protobuf
     syntax = "proto3";
-    option go_package = "./";
-    package storagebackend;
-
-    import "google/protobuf/any.proto";
-
+    option go_package = "./storage_backend";
+    package storage_backend;
+    
+    message OnCreateRequest {
+      string typeinstance_id = 1;
+      bytes value = 2;
+      bytes additional_parameters = 3;
+    }
+    
+    message OnCreateResponse {
+      optional bytes additional_parameters = 1;
+    }
+    
     message TypeInstanceResourceVersion {
       uint32 resource_version = 1;
-      google.protobuf.Any value = 2;
+      bytes value = 2;
     }
-
-    message TypeInstance {
-      string id = 1;
-
-      TypeInstanceResourceVersion resource_version = 2;
-    }
-
-    message OnCreateRequest {
-      TypeInstance typeinstance = 1;
-      google.protobuf.Any additional_parameters = 2;
-    }
-
-    message OnCreateResponse {
-      google.protobuf.Any additional_parameters = 1;
-    }
-
-    message OnUpdateData {
-      TypeInstanceResourceVersion resource_version = 1;
-      google.protobuf.Any additional_parameters = 2;
-    }
-
+    
     message OnUpdateRequest {
       string typeinstance_id = 1;
-      
-      OnUpdateData old_data = 2;
-      OnUpdateData new_data = 3;
+      uint32 new_resource_version = 2;
+      bytes new_value = 3;
+      optional bytes additional_parameters = 4;
     }
-
+    
     message OnUpdateResponse {
-      google.protobuf.Any additional_parameters = 1;
+      optional bytes additional_parameters = 1;
     }
-
+    
     message OnDeleteRequest {
       string typeinstance_id = 1;
-      google.protobuf.Any additional_parameters = 2;
+      bytes additional_parameters = 2;
     }
-
+    
     message OnDeleteResponse {}
-
+    
     message GetValueRequest {
       string typeinstance_id = 1;
-      string resource_version_id = 2;
-      google.protobuf.Any additional_parameters = 3;
+      uint32 resource_version = 2;
+      bytes additional_parameters = 3;
     }
-
+    
     message GetValueResponse {
-      google.protobuf.Any value = 1;
+      optional bytes value = 1;
     }
-
-
+    
+    
     // lock messages
-
+    
     message GetLockedByRequest {
       string typeinstance_id = 1;
-      google.protobuf.Any additional_parameters = 2;
+      bytes additional_parameters = 2;
     }
-
+    
     message GetLockedByResponse {
-      string locked_by = 1;
+      optional string locked_by = 1;
     }
-
-    message OnLockUnlockRequest {
+    
+    message OnLockRequest {
       string typeinstance_id = 1;
-      google.protobuf.Any additional_parameters = 2;
+      bytes additional_parameters = 2;
       string locked_by = 3;
     }
-
-    message OnLockUnlockResponse {}
-
+    
+    message OnLockResponse {}
+    
+    message OnUnlockRequest {
+      string typeinstance_id = 1;
+      bytes additional_parameters = 2;
+    }
+    
+    message OnUnlockResponse {}
+    
     // services
-
+    
     service StorageBackend {
       // value
       rpc GetValue(GetValueRequest) returns (GetValueResponse);
       rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
       rpc OnUpdate(OnUpdateRequest) returns (OnUpdateResponse);
       rpc OnDelete(OnDeleteRequest) returns (OnDeleteResponse);
-
+    
       // lock
       rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
-      rpc OnLock(OnLockUnlockRequest) returns (OnLockUnlockResponse);
-      rpc OnUnlock(OnLockUnlockRequest) returns (OnLockUnlockResponse);
-    } 
+      rpc OnLock(OnLockRequest) returns (OnLockRequest);
+      rpc OnUnlock(OnUnlockRequest) returns (OnUnlockRequest);
+    }
     ```
 
     </details>
