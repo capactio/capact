@@ -4,6 +4,7 @@
 package e2e
 
 import (
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,14 +24,13 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/types"
+	gomegatypes "github.com/onsi/gomega/types"
 	"github.com/pkg/errors"
 )
 
 const (
 	actionPassingInterfacePath = "cap.interface.capactio.capact.validation.action.passing"
 	uploadTypePath             = "cap.type.capactio.capact.validation.upload"
-	builtinStorageTypePath     = "cap.core.type.hub.storage.neo4j"
 	singleKeyTypePath          = "cap.type.capactio.capact.validation.single-key"
 )
 
@@ -590,7 +590,7 @@ func getUploadedTypeInstanceByValue(ctx context.Context, hubClient *hubclient.Cl
 func getBuiltinStorageTypeInstance(ctx context.Context, hubClient *hubclient.Client) hublocalgraphql.TypeInstance {
 	coreStorage, err := hubClient.ListTypeInstances(ctx, &hublocalgraphql.TypeInstanceFilter{
 		TypeRef: &hublocalgraphql.TypeRefFilterInput{
-			Path:     builtinStorageTypePath,
+			Path:     types.BuiltinHubStorageTypePath,
 			Revision: ptr.String("0.1.0"),
 		},
 	}, local.WithFields(local.TypeInstanceAllFields))
@@ -601,7 +601,7 @@ func getBuiltinStorageTypeInstance(ctx context.Context, hubClient *hubclient.Cli
 }
 
 func assertOutputTypeInstancesInActionStatus(ctx context.Context, engineClient *engine.Client, actionName string,
-	match types.GomegaMatcher,
+	match gomegatypes.GomegaMatcher,
 ) {
 	Eventually(func() ([]*enginegraphql.OutputTypeInstanceDetails, error) {
 		action, err := engineClient.GetAction(ctx, actionName)
