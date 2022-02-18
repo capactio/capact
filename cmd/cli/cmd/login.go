@@ -123,6 +123,10 @@ func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 		return err
 	}
 
+	if err = config.AddNewContext(answers.Server); err != nil {
+		return err
+	}
+
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
 	okCheck(w, "Login Succeeded\n")
 

@@ -60,26 +60,3 @@ func DeleteHub(serverURL string) error {
 
 	return ks.Remove(b64.StdEncoding.EncodeToString([]byte(serverURL)))
 }
-
-// ListHubServer returns a list of saved Public Hub servers.
-func ListHubServer() ([]string, error) {
-	ks, err := openStore()
-	if err != nil {
-		return nil, err
-	}
-
-	keys, err := ks.Keys()
-	if err != nil {
-		return nil, err
-	}
-
-	var out []string
-	for _, k := range keys {
-		dec, err := b64.StdEncoding.DecodeString(k)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, string(dec))
-	}
-	return out, nil
-}
