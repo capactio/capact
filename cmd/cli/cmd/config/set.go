@@ -5,7 +5,6 @@ import (
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/config"
-	"capact.io/capact/internal/cli/credstore"
 	"capact.io/capact/internal/cli/heredoc"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -53,17 +52,13 @@ func setRun(opts setContextOptions) error {
 }
 
 func askWhatServerToSet() (string, error) {
-	candidates, err := credstore.ListHubServer()
-	if err != nil {
-		return "", err
-	}
-
+	candidates := config.GetAvailableContexts()
 	if len(candidates) == 0 {
 		return "", fmt.Errorf("Not logged in to any server")
 	}
 
 	var serverAddress string
-	err = survey.AskOne(&survey.Select{
+	err := survey.AskOne(&survey.Select{
 		Message: "Which Hub server do you want to set as the default? ",
 		Options: candidates,
 	}, &serverAddress)

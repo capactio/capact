@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	availableContextsKey           = "availableContexts"
 	defaultContextKey              = "defaultContext"
 	credentialsStoreBackendKey     = "credentialsStore.backend"
 	credentialsStoreFilePassphrase = "credentialsStore.filePassphrase"
@@ -86,6 +87,19 @@ func GetDefaultContext() string {
 	return viper.GetString(defaultContextKey)
 }
 
+func AddContext(server string) error {
+	availableContexts := GetAvailableContexts()
+	viper.Set(availableContextsKey, appendIfMissing(availableContexts, server))
+	if err := viper.WriteConfig(); err != nil {
+		return errors.Wrap(err, "while writing config file")
+	}
+	return nil
+}
+
+func GetAvailableContexts() []string {
+	return viper.GetStringSlice(availableContextsKey)
+}
+
 // GetCredentialsStoreBackend returns keyring backend type.
 func GetCredentialsStoreBackend() string {
 	return viper.GetString(credentialsStoreBackendKey)
@@ -94,4 +108,13 @@ func GetCredentialsStoreBackend() string {
 // GetCredentialsStoreFilePassphrase returns passphrase for file keyring backend type.
 func GetCredentialsStoreFilePassphrase() string {
 	return viper.GetString(credentialsStoreFilePassphrase)
+}
+
+func appendIfMissing(slice []string, i string) []string {
+	for _, ele := range slice {
+		if ele == i {
+			return slice
+		}
+	}
+	return append(slice, i)
 }
