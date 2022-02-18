@@ -9,6 +9,7 @@ import (
 	"capact.io/capact/internal/ptr"
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -22,15 +23,16 @@ type TypeInstanceEssentialData struct {
 }
 
 func (ti *TypeInstanceEssentialData) String() string {
-	if ti == nil {
-		return ""
+	emptyMetadataMsg := "empty metadata"
+	if ti == nil || (ti.ID == nil && ti.Alias == nil) {
+		return emptyMetadataMsg
 	}
 	var tiMetadata []string
 	if ti.ID != nil {
-		tiMetadata = append(tiMetadata, fmt.Sprintf("ID: %s", *ti.ID))
+		tiMetadata = append(tiMetadata, fmt.Sprintf("ID: %q", *ti.ID))
 	}
 	if ti.Alias != nil {
-		tiMetadata = append(tiMetadata, fmt.Sprintf("Alias: %s", *ti.Alias))
+		tiMetadata = append(tiMetadata, fmt.Sprintf("Alias: %q", *ti.Alias))
 	}
 	return strings.Join(tiMetadata, ", ")
 }
@@ -101,7 +103,7 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 		}
 		typeRef, ok := typeInstancesTypeRef[ti.ID]
 		if !ok {
-			return nil, errors.Wrapf(err, "while finding TypeInstance Type reference for id %q", ti.ID)
+			return nil, errors.Wrapf(err, "while finding TypeInstance Type reference for ID %q", ti.ID)
 		}
 		typeInstanceCollection = append(typeInstanceCollection, &TypeInstanceEssentialData{
 			ID:      ptr.String(ti.ID),
@@ -120,7 +122,7 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 
 //ValidateTypeInstances is responsible for validating TypeInstance.
 func ValidateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollection []*TypeInstanceEssentialData) (Result, error) {
-	resultBldr := NewResultBuilder("Validation TypeInstances")
+	resultBldr := NewResultBuilder("TypeInstance with")
 
 	for _, ti := range typeInstanceCollection {
 		if _, ok := ti.Value.(map[string]interface{}); !ok {
@@ -141,13 +143,13 @@ func ValidateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollec
 		if err != nil {
 			return nil, errors.Wrap(err, "while validating JSON schema for TypeInstance")
 		}
-		if !result.Valid() {
-			for _, err := range result.Errors() {
-				msg := fmt.Sprintf("TypeInstance(%s)", ti.String())
-				resultBldr.ReportIssue(msg, err.String())
-			}
+
+		for _, err := range result.Errors() {
+			resultBldr.ReportIssue(ti.String(), err.String())
 		}
 	}
 
-	return resultBldr.Result(), nil
+	return resultBldr.ResultWithCustomErrorFormat(func(bldr *IssueBuilder, issueField string) multierror.ErrorFormatFunc {
+		return HeaderedErrListFormatFunc(fmt.Sprintf("- %s %s", bldr.header, issueField))
+	}), nil
 }

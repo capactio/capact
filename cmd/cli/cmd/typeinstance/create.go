@@ -101,12 +101,13 @@ func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.
 		typeInstanceToCreate = mergeCreateTypeInstances(typeInstanceToCreate, out)
 	}
 
-	validationResult, err := validation.ValidateTypeInstancesToCreate(ctx, hubCli, typeInstanceToCreate)
+	r := validation.ResultAggregator{}
+	err = r.Report(validation.ValidateTypeInstancesToCreate(ctx, hubCli, typeInstanceToCreate))
 	if err != nil {
 		return errors.Wrap(err, "while validating TypeInstances")
 	}
-	if validationResult.Len() > 0 {
-		return validationResult.ErrorOrNil()
+	if r.ErrorOrNil() != nil {
+		return r.ErrorOrNil()
 	}
 
 	// HACK: UsesRelations are required on GQL side so at least empty array needs to be send

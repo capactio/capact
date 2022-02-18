@@ -87,12 +87,13 @@ func (u *Upload) Do(ctx context.Context) error {
 
 	u.log.Info("Validating TypeInstances")
 
-	validationResult, err := validation.ValidateTypeInstancesToCreate(ctx, u.client, payload)
+	r := validation.ResultAggregator{}
+	err = r.Report(validation.ValidateTypeInstancesToCreate(ctx, u.client, payload))
 	if err != nil {
 		return errors.Wrap(err, "while validating TypeInstances")
 	}
-	if validationResult.Len() > 0 {
-		return validationResult.ErrorOrNil()
+	if r.ErrorOrNil() != nil {
+		return r.ErrorOrNil()
 	}
 
 	u.log.Info("Uploading TypeInstances to Hub...", zap.Int("TypeInstance count", len(payload.TypeInstances)))

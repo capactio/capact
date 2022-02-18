@@ -60,12 +60,13 @@ func editTI(ctx context.Context, opts editOptions, w io.Writer) error {
 		return err
 	}
 
-	validationResult, err := validation.ValidateTypeInstanceToUpdate(ctx, hubCli, typeInstanceToUpdate)
+	r := validation.ResultAggregator{}
+	err = r.Report(validation.ValidateTypeInstanceToUpdate(ctx, hubCli, typeInstanceToUpdate))
 	if err != nil {
 		return errors.Wrap(err, "while validating TypeInstance")
 	}
-	if validationResult.Len() > 0 {
-		return validationResult.ErrorOrNil()
+	if r.ErrorOrNil() != nil {
+		return r.ErrorOrNil()
 	}
 
 	_, err = hubCli.UpdateTypeInstances(ctx, typeInstanceToUpdate)

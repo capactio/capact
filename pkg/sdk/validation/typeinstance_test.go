@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -35,7 +36,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					Alias: ptr.String("aws-creds"),
 				},
 			},
-			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(Alias: aws-creds)\":\n    * (root): key is required"),
+			expError: errors.New("- TypeInstance with Alias: \"aws-creds\":\n    * (root): key is required"),
 		},
 		"When TypeInstance value does not meet Type property constraints": {
 			schemaCollection: SchemaCollection{
@@ -56,7 +57,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					ID: ptr.String("5605af48-c34f-4bdc-b2d8-53c679bdfa5a"),
 				},
 			},
-			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(ID: 5605af48-c34f-4bdc-b2d8-53c679bdfa5a)\":\n    * replicas: Invalid type. Expected: string, given: integer"),
+			expError: errors.New("- TypeInstance with ID: \"5605af48-c34f-4bdc-b2d8-53c679bdfa5a\":\n    * replicas: Invalid type. Expected: string, given: integer"),
 		},
 		"When TypeInstance contains the required property": {
 			schemaCollection: SchemaCollection{
@@ -107,7 +108,7 @@ func TestValidateTypeInstances(t *testing.T) {
 					Alias: ptr.String("aws-creds-2"),
 				},
 			},
-			expError: fmt.Errorf("%s", "- Validation TypeInstances \"TypeInstance(Alias: aws-creds)\":\n    * (root): key is required\n- Validation TypeInstances \"TypeInstance(Alias: aws-creds-2)\":\n    * (root): key is required"),
+			expError: errors.New("- TypeInstance with Alias: \"aws-creds\":\n    * (root): key is required\n- TypeInstance with Alias: \"aws-creds-2\":\n    * (root): key is required"),
 		},
 	}
 
