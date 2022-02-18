@@ -8,7 +8,9 @@ import (
 
 	"capact.io/capact/internal/logger"
 	argoactions "capact.io/capact/pkg/argo-actions"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/local"
+	"capact.io/capact/pkg/hub/client/public"
 
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
@@ -16,12 +18,13 @@ import (
 
 // Config for the argo-actions command.
 type Config struct {
-	Action           string
-	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
-	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
-	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
-	LocalHubEndpoint string                       `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
-	Logger           logger.Config
+	Action            string
+	DownloadConfig    []argoactions.DownloadConfig `envconfig:"optional"`
+	UploadConfig      argoactions.UploadConfig     `envconfig:"optional"`
+	UpdateConfig      argoactions.UpdateConfig     `envconfig:"optional"`
+	LocalHubEndpoint  string                       `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
+	PublicHubEndpoint string                       `envconfig:"default=http://capact-hub-public.capact-system/graphql"`
+	Logger            logger.Config
 }
 
 func main() {
@@ -37,20 +40,24 @@ func main() {
 	logger, err := logger.New(cfg.Logger)
 	exitOnError(err, "while creating zap logger")
 
-	client := local.NewDefaultClient(cfg.LocalHubEndpoint)
+	// TODO: Consider using connection `hubclient.New` and route requests through Gateway
+	client := hubclient.Client{
+		Local:  local.NewDefaultClient(cfg.LocalHubEndpoint),
+		Public: public.NewDefaultClient(cfg.PublicHubEndpoint),
+	}
 
 	switch cfg.Action {
 	case argoactions.DownloadAction:
 		log := logger.With(zap.String("Action", argoactions.DownloadAction))
-		action = argoactions.NewDownloadAction(log, client, cfg.DownloadConfig)
+		action = argoactions.NewDownloadAction(log, &client, cfg.DownloadConfig)
 
 	case argoactions.UploadAction:
 		log := logger.With(zap.String("Action", argoactions.UploadAction))
-		action = argoactions.NewUploadAction(log, client, cfg.UploadConfig)
+		action = argoactions.NewUploadAction(log, &client, cfg.UploadConfig)
 
 	case argoactions.UpdateAction:
 		log := logger.With(zap.String("Action", argoactions.UpdateAction))
-		action = argoactions.NewUpdateAction(log, client, cfg.UpdateConfig)
+		action = argoactions.NewUpdateAction(log, &client, cfg.UpdateConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)

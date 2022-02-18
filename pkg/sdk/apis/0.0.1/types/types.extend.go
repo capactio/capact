@@ -31,6 +31,10 @@ type ManifestRef struct {
 	Revision string `json:"revision"` // Version of the manifest content in the SemVer format.
 }
 
+func (in *ManifestRef) String() string {
+	return fmt.Sprintf("%s:%s", in.Path, in.Revision)
+}
+
 // ManifestRefWithOptRevision specifies type by path and optional revision.
 // +kubebuilder:object:generate=true
 type ManifestRefWithOptRevision struct {

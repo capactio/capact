@@ -35,6 +35,7 @@ The following environment variables can be set:
 |--------------------------|----------|-------------------------------------------------|--------------------------------------------------------|
 | APP_ACTION               | yes      |                                                 | Defines action to perform |
 | APP_LOCAL_HUB_ENDPOINT   | no       | http://capact-hub-local.capact-system/graphql   | Defines local Hub Endpoint |
+| APP_PUBLIC_HUB_ENDPOINT  | no       | http://capact-hub-public.capact-system/graphql  | Defines public Hub Endpoint |
 | APP_DOWNLOAD_CONFIG      | no       |                                                 | For download action defines Type Instances to download |
 | APP_LOGGER_DEV_MODE      | no       | `false`                                         | Enable additional log messages            |
 

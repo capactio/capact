@@ -13,6 +13,7 @@ import (
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -85,6 +86,12 @@ func NewCreate() *cobra.Command {
 func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.ResourcePrinter) error {
 	typeInstanceToCreate := &gqllocalapi.CreateTypeInstancesInput{}
 
+	server := config.GetDefaultContext()
+	hubCli, err := client.NewHub(server)
+	if err != nil {
+		return err
+	}
+
 	for _, path := range opts.TypeInstancesFiles {
 		out, err := loadCreateTypeInstanceFromFile(path)
 		if err != nil {
@@ -94,16 +101,18 @@ func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.
 		typeInstanceToCreate = mergeCreateTypeInstances(typeInstanceToCreate, out)
 	}
 
+	r := validation.ResultAggregator{}
+	err = r.Report(validation.ValidateTypeInstancesToCreate(ctx, hubCli, typeInstanceToCreate))
+	if err != nil {
+		return errors.Wrap(err, "while validating TypeInstances")
+	}
+	if r.ErrorOrNil() != nil {
+		return r.ErrorOrNil()
+	}
+
 	// HACK: UsesRelations are required on GQL side so at least empty array needs to be send
 	if typeInstanceToCreate.UsesRelations == nil {
 		typeInstanceToCreate.UsesRelations = []*gqllocalapi.TypeInstanceUsesRelationInput{}
-	}
-
-	server := config.GetDefaultContext()
-
-	hubCli, err := client.NewHub(server)
-	if err != nil {
-		return err
 	}
 
 	createdTI, err := hubCli.CreateTypeInstances(ctx, typeInstanceToCreate)

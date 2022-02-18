@@ -39,8 +39,8 @@ func (bldr *IssueBuilder) ReportIssue(field, format string, args ...interface{})
 	return bldr
 }
 
-// Result returns validation result index by field name.
-func (bldr *IssueBuilder) Result() Result {
+// ResultWithCustomErrorFormat returns validation result index by field name with custom error format.
+func (bldr *IssueBuilder) ResultWithCustomErrorFormat(errorFormatFn func(bldr *IssueBuilder, issueField string) multierr.ErrorFormatFunc) Result {
 	if bldr == nil {
 		return nil
 	}
@@ -49,15 +49,22 @@ func (bldr *IssueBuilder) Result() Result {
 		if issues == nil {
 			continue
 		}
-		issues.ErrorFormat = headeredErrListFormatFunc(fmt.Sprintf("- %s %q", bldr.header, field))
+		issues.ErrorFormat = errorFormatFn(bldr, field)
 	}
 
 	return bldr.issues
 }
 
-// headeredErrListFormatFunc is a basic formatter that outputs the errors as
+// Result returns validation result index by field name.
+func (bldr *IssueBuilder) Result() Result {
+	return bldr.ResultWithCustomErrorFormat(func(bldr *IssueBuilder, issueField string) multierr.ErrorFormatFunc {
+		return HeaderedErrListFormatFunc(fmt.Sprintf("- %s %q", bldr.header, issueField))
+	})
+}
+
+// HeaderedErrListFormatFunc is a basic formatter that outputs the errors as
 // a bullet point list with a given header.
-func headeredErrListFormatFunc(fieldName string) multierr.ErrorFormatFunc {
+func HeaderedErrListFormatFunc(fieldName string) multierr.ErrorFormatFunc {
 	return func(es []error) string {
 		points := make([]string, len(es))
 		for i, err := range es {
