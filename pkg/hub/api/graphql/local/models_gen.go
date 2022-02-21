@@ -52,10 +52,14 @@ type LockTypeInstancesInput struct {
 }
 
 type TypeInstance struct {
-	ID       string  `json:"id"`
-	LockedBy *string `json:"lockedBy"`
+	ID        string  `json:"id"`
+	CreatedAt *string `json:"createdAt"`
+	LockedBy  *string `json:"lockedBy"`
 	// Common properties for all TypeInstances which cannot be changed
-	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
+	TypeRef *TypeInstanceTypeReference `json:"typeRef"`
+	// Return TypeInstance that are used. List is sorted by TypeInstance's TypeRef path in ascending order.
+	// If TypeRef path is same for multiple TypeInstance then it's additionally sorted by Type revision in descending order (newest revision are first).
+	// If both TypeRef path and revision are same, then it's additionally sorted by TypeInstance createdAt field (newly created are first).
 	Uses                    []*TypeInstance                `json:"uses"`
 	UsedBy                  []*TypeInstance                `json:"usedBy"`
 	Backend                 *TypeInstanceBackendReference  `json:"backend"`

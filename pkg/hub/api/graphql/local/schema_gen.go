@@ -73,6 +73,7 @@ type ComplexityRoot struct {
 
 	TypeInstance struct {
 		Backend                 func(childComplexity int) int
+		CreatedAt               func(childComplexity int) int
 		FirstResourceVersion    func(childComplexity int) int
 		ID                      func(childComplexity int) int
 		LatestResourceVersion   func(childComplexity int) int
@@ -291,6 +292,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeInstance.Backend(childComplexity), true
+
+	case "TypeInstance.createdAt":
+		if e.complexity.TypeInstance.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.TypeInstance.CreatedAt(childComplexity), true
 
 	case "TypeInstance.firstResourceVersion":
 		if e.complexity.TypeInstance.FirstResourceVersion == nil {
@@ -586,6 +594,11 @@ directive @index on FIELD_DEFINITION
 directive @id on FIELD_DEFINITION
 
 """
+Represents date, time and time zone
+"""
+scalar DateTime
+
+"""
 Arbitrary data
 """
 scalar Any
@@ -607,7 +620,7 @@ scalar LockOwnerID
 
 type TypeInstance {
   id: ID! @id
-
+  createdAt: DateTime
   lockedBy: LockOwnerID
 
   """
@@ -615,8 +628,19 @@ type TypeInstance {
   """
   typeRef: TypeInstanceTypeReference!
     @relation(name: "OF_TYPE", direction: "OUT")
-  uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
-  usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
+  """
+  Return TypeInstance that are used. List is sorted by TypeInstance's TypeRef path in ascending order.
+  If TypeRef path is same for multiple TypeInstance then it's additionally sorted by Type revision in descending order (newest revision are first).
+  If both TypeRef path and revision are same, then it's additionally sorted by TypeInstance createdAt field (newly created are first).
+  """
+  uses: [TypeInstance!]!
+    @cypher(
+      statement: "MATCH (this)-[:USES]->(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
+    )
+  usedBy: [TypeInstance!]!
+    @cypher(
+      statement: "MATCH (this)<-[:USES]-(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
+    )
   backend: TypeInstanceBackendReference! @relation(name: "STORED_IN", direction: "OUT")
 
   latestResourceVersion: TypeInstanceResourceVersion
@@ -907,7 +931,9 @@ type Query {
         )
       )
 
-      RETURN DISTINCT ti
+      WITH DISTINCT ti, typeRef
+      ORDER BY typeRef.path ASC, typeRef.revision DESC, ti.createdAt DESC
+      RETURN ti
       """
     )
 
@@ -929,7 +955,7 @@ type Mutation {
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
     @cypher(
       statement: """
-      CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+      CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
 
       // Backend
       WITH *
@@ -1554,7 +1580,7 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 			return ec.resolvers.Mutation().CreateTypeInstance(rctx, args["in"].(CreateTypeInstanceInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CREATE (ti:TypeInstance {id: apoc.create.uuid()})\n\n// Backend\nWITH *\nCALL apoc.do.when(\n    $in.backend.id IS NOT NULL,\n    '\n     WITH false as abstract\n     RETURN $in.backend.id as id, abstract\n    ',\n    '\n     // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.\n     WITH true as abstract\n     MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: \"cap.core.type.hub.storage.neo4j\"})\n     RETURN backend.id as id, abstract\n    ',\n    {in: $in}\n) YIELD value as backend\nMATCH (backendTI:TypeInstance {id: backend.id})\nCREATE (ti)-[:USES]->(backendTI)\n// TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check\n// if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.\nMERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})\nCREATE (ti)-[:STORED_IN]->(storageRef)\n\n// TypeRef\nMERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\n// Revision\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($in.value)})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})\n\n// Backend\nWITH *\nCALL apoc.do.when(\n    $in.backend.id IS NOT NULL,\n    '\n     WITH false as abstract\n     RETURN $in.backend.id as id, abstract\n    ',\n    '\n     // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.\n     WITH true as abstract\n     MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: \"cap.core.type.hub.storage.neo4j\"})\n     RETURN backend.id as id, abstract\n    ',\n    {in: $in}\n) YIELD value as backend\nMATCH (backendTI:TypeInstance {id: backend.id})\nCREATE (ti)-[:USES]->(backendTI)\n// TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check\n// if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.\nMERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})\nCREATE (ti)-[:STORED_IN]->(storageRef)\n\n// TypeRef\nMERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\n// Revision\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($in.value)})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -1812,7 +1838,7 @@ func (ec *executionContext) _Query_typeInstances(ctx context.Context, field grap
 			return ec.resolvers.Query().TypeInstances(rctx, args["filter"].(*TypeInstanceFilter))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeReference {path: f.path})\n  WHERE (f.revision IS NULL) OR (ex.revision = f.revision)\n  RETURN collect(ex) as excludedAttributes\n}\n\nMATCH (tir:TypeInstanceResourceVersion)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)\nMATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:TypeInstanceTypeReference)\nMATCH (ti:TypeInstance)-[:CONTAINS]->(tir)\nWHERE\n$filter = {} OR\n(\n  (\n    $filter.typeRef IS NULL\n    OR\n    (\n      ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)\n      OR\n      (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)\n    )\n  )\n  AND\n  ($filter.createdBy IS NULL OR tir.createdBy = $filter.createdBy)\n  AND\n  (\n  \t$filter.attributes IS NULL\n    OR\n    (\n      all(inc IN included WHERE\n        (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})\n        AND\n        (inc.revision IS NULL OR attr.revision = inc.revision)\n      )\n      AND\n      none(exc IN excludedAttributes WHERE (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n)\n\nRETURN DISTINCT ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeReference {path: f.path})\n  WHERE (f.revision IS NULL) OR (ex.revision = f.revision)\n  RETURN collect(ex) as excludedAttributes\n}\n\nMATCH (tir:TypeInstanceResourceVersion)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)\nMATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:TypeInstanceTypeReference)\nMATCH (ti:TypeInstance)-[:CONTAINS]->(tir)\nWHERE\n$filter = {} OR\n(\n  (\n    $filter.typeRef IS NULL\n    OR\n    (\n      ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)\n      OR\n      (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)\n    )\n  )\n  AND\n  ($filter.createdBy IS NULL OR tir.createdBy = $filter.createdBy)\n  AND\n  (\n  \t$filter.attributes IS NULL\n    OR\n    (\n      all(inc IN included WHERE\n        (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})\n        AND\n        (inc.revision IS NULL OR attr.revision = inc.revision)\n      )\n      AND\n      none(exc IN excludedAttributes WHERE (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n)\n\nWITH DISTINCT ti, typeRef\nORDER BY typeRef.path ASC, typeRef.revision DESC, ti.createdAt DESC\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -2038,6 +2064,38 @@ func (ec *executionContext) _TypeInstance_id(ctx context.Context, field graphql.
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _TypeInstance_createdAt(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstance",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalODateTime2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _TypeInstance_lockedBy(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2155,18 +2213,14 @@ func (ec *executionContext) _TypeInstance_uses(ctx context.Context, field graphq
 			return obj.Uses, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "USES")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:USES]->(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC")
 			if err != nil {
 				return nil, err
 			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
 			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive0, name, direction, nil, nil)
+			return ec.directives.Cypher(ctx, obj, directive0, statement)
 		}
 
 		tmp, err := directive1(rctx)
@@ -2218,18 +2272,14 @@ func (ec *executionContext) _TypeInstance_usedBy(ctx context.Context, field grap
 			return obj.UsedBy, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "USES")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)<-[:USES]-(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC")
 			if err != nil {
 				return nil, err
 			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "IN")
-			if err != nil {
-				return nil, err
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
 			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive0, name, direction, nil, nil)
+			return ec.directives.Cypher(ctx, obj, directive0, statement)
 		}
 
 		tmp, err := directive1(rctx)
@@ -5236,6 +5286,8 @@ func (ec *executionContext) _TypeInstance(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdAt":
+			out.Values[i] = ec._TypeInstance_createdAt(ctx, field, obj)
 		case "lockedBy":
 			out.Values[i] = ec._TypeInstance_lockedBy(ctx, field, obj)
 		case "typeRef":
@@ -6663,6 +6715,21 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) unmarshalODateTime2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODateTime2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*v)
 }
 
 func (ec *executionContext) unmarshalOFilterRule2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐFilterRule(ctx context.Context, v interface{}) (*FilterRule, error) {

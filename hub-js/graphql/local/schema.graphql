@@ -13,6 +13,11 @@ directive @index on FIELD_DEFINITION
 directive @id on FIELD_DEFINITION
 
 """
+Represents date, time and time zone
+"""
+scalar DateTime
+
+"""
 Arbitrary data
 """
 scalar Any
@@ -34,7 +39,7 @@ scalar LockOwnerID
 
 type TypeInstance {
   id: ID! @id
-
+  createdAt: DateTime
   lockedBy: LockOwnerID
 
   """
@@ -42,8 +47,19 @@ type TypeInstance {
   """
   typeRef: TypeInstanceTypeReference!
     @relation(name: "OF_TYPE", direction: "OUT")
-  uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
-  usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
+  """
+  Return TypeInstance that are used. List is sorted by TypeInstance's TypeRef path in ascending order.
+  If TypeRef path is same for multiple TypeInstance then it's additionally sorted by Type revision in descending order (newest revision are first).
+  If both TypeRef path and revision are same, then it's additionally sorted by TypeInstance createdAt field (newly created are first).
+  """
+  uses: [TypeInstance!]!
+    @cypher(
+      statement: "MATCH (this)-[:USES]->(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
+    )
+  usedBy: [TypeInstance!]!
+    @cypher(
+      statement: "MATCH (this)<-[:USES]-(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
+    )
   backend: TypeInstanceBackendReference! @relation(name: "STORED_IN", direction: "OUT")
 
   latestResourceVersion: TypeInstanceResourceVersion
@@ -334,7 +350,9 @@ type Query {
         )
       )
 
-      RETURN DISTINCT ti
+      WITH DISTINCT ti, typeRef
+      ORDER BY typeRef.path ASC, typeRef.revision DESC, ti.createdAt DESC
+      RETURN ti
       """
     )
 
@@ -356,7 +374,7 @@ type Mutation {
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
     @cypher(
       statement: """
-      CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+      CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
 
       // Backend
       WITH *
