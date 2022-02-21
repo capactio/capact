@@ -69,6 +69,7 @@ require (
 	github.com/vrischmann/envconfig v1.3.0
 	github.com/xanzy/go-gitlab v0.33.0
 	github.com/xeipuuv/gojsonschema v1.2.0
+	github.com/zalando/go-keyring v0.1.1
 	github.com/zclconf/go-cty v1.8.1
 	go.uber.org/zap v1.18.1
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602
