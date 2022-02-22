@@ -629,14 +629,17 @@ type TypeInstance {
   typeRef: TypeInstanceTypeReference!
     @relation(name: "OF_TYPE", direction: "OUT")
   """
-  Return TypeInstance that are used. List is sorted by TypeInstance's TypeRef path in ascending order.
-  If TypeRef path is same for multiple TypeInstance then it's additionally sorted by Type revision in descending order (newest revision are first).
+  Returns TypeInstances that are used. List is sorted by TypeInstance's TypeRef path in ascending order, and then by revision in descending order (newest revision are first).
   If both TypeRef path and revision are same, then it's additionally sorted by TypeInstance createdAt field (newly created are first).
   """
   uses: [TypeInstance!]!
     @cypher(
       statement: "MATCH (this)-[:USES]->(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
     )
+  """
+  Returns TypeInstances that uses this TypeInstance. List is sorted by TypeInstance's TypeRef path in ascending order, and then by revision in descending order (newest revision are first).
+  If both TypeRef path and revision are same, then it's additionally sorted by TypeInstance createdAt field (newly created are first).
+  """
   usedBy: [TypeInstance!]!
     @cypher(
       statement: "MATCH (this)<-[:USES]-(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
@@ -883,6 +886,10 @@ input UnlockTypeInstancesInput {
 }
 
 type Query {
+  """
+  Returns all TypeInstances. List is sorted by TypeInstance's TypeRef path in ascending order, and then by revision in descending order (newest revision are first).
+  If both TypeRef path and revision are same, then it's additionally sorted by TypeInstance createdAt field (newly created are first).
+  """
   typeInstances(filter: TypeInstanceFilter = {}): [TypeInstance!]!
     @cypher(
       statement: """
