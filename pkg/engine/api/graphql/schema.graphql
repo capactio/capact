@@ -330,7 +330,16 @@ input TypeInstanceBackendRuleInput {
 
 # Interface Policy Input
 input InterfacePolicyInput {
+  default: DefaultInterfaceInputData
   rules: [RulesForInterfaceInput!]!
+}
+
+input DefaultInterfaceInputData {
+  inject: DefaultInjectInputData
+}
+
+input DefaultInjectInputData{
+  requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
 }
 
 input RulesForInterfaceInput {
@@ -393,7 +402,16 @@ type TypeInstanceBackendRule {
 
 # Interface Policy
 type InterfacePolicy {
+  default: DefaultInterfaceData
   rules: [RulesForInterface!]!
+}
+
+type DefaultInterfaceData {
+  inject: DefaultInjectData
+}
+
+type DefaultInjectData {
+  requiredTypeInstances: [RequiredTypeInstanceReference!]
 }
 
 type RulesForInterface {

@@ -2,6 +2,12 @@ package graphql
 
 // The types had to be moved out from generated models to add `omitempty` tags.
 
+//InterfacePolicy represents Interface Policy.
+type InterfacePolicy struct {
+	Default *DefaultInterfaceData `json:"default,omitempty"`
+	Rules   []*RulesForInterface  `json:"rules"`
+}
+
 // PolicyRule represents a single policy rule.
 type PolicyRule struct {
 	ImplementationConstraints *PolicyRuleImplementationConstraints `json:"implementationConstraints,omitempty"`
