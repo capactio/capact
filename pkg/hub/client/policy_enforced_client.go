@@ -13,6 +13,7 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/validation"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
@@ -101,6 +102,10 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 		return nil, policy.Rule{}, err
 	}
 
+	fmt.Println("ListImplementationRevisionForInterface")
+	fmt.Println("found implementations", implementations)
+	spew.Dump(implementations)
+
 	return implementations, rule, nil
 }
 
@@ -154,6 +159,13 @@ type requiredTypeInstanceToInject map[string]policy.RequiredTypeInstanceToInject
 
 func (e *PolicyEnforcedClient) listRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (requiredTypeInstanceToInject, error) {
 	requiredTIs := policyRule.RequiredTypeInstancesToInject()
+
+	// inject Default RequiredTypeInstances
+	if e.mergedPolicy.Interface.Default != nil && e.mergedPolicy.Interface.Default.Inject != nil {
+		fmt.Println("inject Default RequiredTypeInstances")
+		requiredTIs = append(requiredTIs, e.mergedPolicy.Interface.Default.Inject.RequiredTypeInstances...)
+	}
+
 	if len(requiredTIs) == 0 {
 		return nil, nil
 	}
@@ -443,6 +455,22 @@ func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeI
 			})
 		}
 		filter.RequiredTypeInstancesInjectionSatisfiedBy = injectedRequiredTypeInstances
+	}
+
+	fmt.Println("Default Injection in hubFilterForPolicyRule")
+
+	// Default Injection
+	if e.mergedPolicy.Interface.Default != nil && e.mergedPolicy.Interface.Default.Inject != nil {
+		for _, ti := range e.mergedPolicy.Interface.Default.Inject.RequiredTypeInstances {
+			fmt.Println("Add a new TI in Default Injection in hubFilterForPolicyRule...")
+			filter.RequiredTypeInstancesInjectionSatisfiedBy = append(filter.RequiredTypeInstancesInjectionSatisfiedBy, &hubpublicgraphql.TypeInstanceValue{
+				TypeRef: &hubpublicgraphql.TypeReferenceInput{
+					Path:     ti.TypeRef.Path,
+					Revision: ti.TypeRef.Revision,
+				},
+				Value: nil, // not supported right now
+			})
+		}
 	}
 
 	return filter

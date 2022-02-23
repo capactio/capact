@@ -12,6 +12,7 @@ type typeInstanceKind string
 const (
 	requiredTypeInstance   typeInstanceKind = "RequiredTypeInstance"
 	additionalTypeInstance typeInstanceKind = "AdditionalTypeInstance"
+	defaultTypeInstance    typeInstanceKind = "DefaultTypeInstance"
 	backendTypeInstance    typeInstanceKind = "BackendTypeInstance"
 )
 
@@ -53,6 +54,22 @@ func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInst
 	for _, rule := range in.Interface.Rules {
 		for _, ruleItem := range rule.OneOf {
 			tis = append(tis, TypeInstanceIDsWithUnresolvedMetadataForRule(ruleItem)...)
+		}
+	}
+
+	// Interface Defaults
+	fmt.Println("TypeInstanceIDsWithUnresolvedMetadataForPolicy")
+	if in.Interface.Default != nil && in.Interface.Default.Inject != nil {
+		for _, defaultTI := range in.Interface.Default.Inject.RequiredTypeInstances {
+			fmt.Println("Adding ID", defaultTI.ID)
+			if defaultTI.TypeRef != nil && defaultTI.TypeRef.Path != "" && defaultTI.TypeRef.Revision != "" {
+				continue
+			}
+			tis = append(tis, TypeInstanceMetadata{
+				ID:          defaultTI.ID,
+				Description: defaultTI.Description,
+				Kind:        defaultTypeInstance,
+			})
 		}
 	}
 

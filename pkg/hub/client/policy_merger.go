@@ -52,6 +52,13 @@ func applyInterfacePolicy(currentPolicy *policy.InterfacePolicy, newPolicy polic
 			mergeRules(&ruleForInterface.OneOf[ruleIndex], newRule)
 		}
 	}
+	if newPolicy.Default != nil && newPolicy.Default.Inject != nil {
+		if currentPolicy.Default == nil || currentPolicy.Default.Inject == nil {
+			currentPolicy.Default = newPolicy.Default
+		} else {
+			currentPolicy.Default.Inject.RequiredTypeInstances = append(currentPolicy.Default.Inject.RequiredTypeInstances, newPolicy.Default.Inject.RequiredTypeInstances...)
+		}
+	}
 }
 
 func mergeRules(rule *policy.Rule, newRule policy.Rule) {
