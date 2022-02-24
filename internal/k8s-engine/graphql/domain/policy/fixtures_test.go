@@ -10,6 +10,16 @@ import (
 func fixGQLInput() graphql.PolicyInput {
 	return graphql.PolicyInput{
 		Interface: &graphql.InterfacePolicyInput{
+			Default: &graphql.DefaultInterfaceInputData{
+				Inject: &graphql.DefaultInjectInputData{
+					RequiredTypeInstances: []*graphql.RequiredTypeInstanceReferenceInput{
+						{
+							ID:          "28806e5a-3b13-4d58-915b-8357a51c3e95",
+							Description: ptr.String("Sample description"),
+						},
+					},
+				},
+			},
 			Rules: []*graphql.RulesForInterfaceInput{
 				{
 					Interface: &graphql.ManifestReferenceInput{
@@ -110,6 +120,16 @@ func fixGQLInput() graphql.PolicyInput {
 func fixGQL() graphql.Policy {
 	return graphql.Policy{
 		Interface: &graphql.InterfacePolicy{
+			Default: &graphql.DefaultInterfaceData{
+				Inject: &graphql.DefaultInjectData{
+					RequiredTypeInstances: []*graphql.RequiredTypeInstanceReference{
+						{
+							ID:          "28806e5a-3b13-4d58-915b-8357a51c3e95",
+							Description: ptr.String("Sample description"),
+						},
+					},
+				},
+			},
 			Rules: []*graphql.RulesForInterface{
 				{
 					Interface: &graphql.ManifestReferenceWithOptionalRevision{
@@ -210,6 +230,18 @@ func fixGQL() graphql.Policy {
 func fixModel() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
+			Default: &policy.DefaultInterfaceData{
+				Inject: &policy.DefaultInjectInterfaceData{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID:          "28806e5a-3b13-4d58-915b-8357a51c3e95",
+								Description: ptr.String("Sample description"),
+							},
+						},
+					},
+				},
+			},
 			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{

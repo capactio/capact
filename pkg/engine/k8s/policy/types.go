@@ -40,6 +40,14 @@ type InterfacePolicy struct {
 	Rules   InterfaceRulesList    `json:"rules"`
 }
 
+// DefaultRequiredTypeInstancesToInject returns default required TypeInstances to inject for a given interface.
+func (in *InterfacePolicy) DefaultRequiredTypeInstancesToInject() []RequiredTypeInstanceToInject {
+	if in.Default == nil || in.Default.Inject == nil {
+		return nil
+	}
+	return in.Default.Inject.RequiredTypeInstances
+}
+
 type DefaultInterfaceData struct {
 	Inject *DefaultInjectInterfaceData `json:"inject,omitempty"`
 }

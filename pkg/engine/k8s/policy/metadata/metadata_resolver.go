@@ -11,7 +11,6 @@ import (
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"github.com/davecgh/go-spew/spew"
 	multierr "github.com/hashicorp/go-multierror"
 
 	"github.com/pkg/errors"
@@ -54,31 +53,17 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 		return nil
 	}
 
-	fmt.Println("idsToQuery")
-	spew.Dump(idsToQuery)
-
 	resolvedTypeRefs, err := r.hubCli.FindTypeInstancesTypeRef(ctx, idsToQuery)
 	if err != nil {
 		return errors.Wrap(err, "while finding TypeRef for TypeInstances")
 	}
 
-	fmt.Println("resolvedTypeRefs")
-	spew.Dump(resolvedTypeRefs)
-
 	// verify if all TypeInstances are resolved
 	multiErr := multierror.New()
 	for _, ti := range unresolvedTIs {
-		fmt.Println("Checking ti", ti.ID)
-
 		if typeRef, exists := resolvedTypeRefs[ti.ID]; exists && typeRef.Path != "" && typeRef.Revision != "" {
-			fmt.Println("OK!!!!", typeRef.Path, typeRef.Revision)
 			continue
 		}
-
-		fmt.Println("ERRORRRR!!!")
-		fmt.Println("resolvedTypeRefs!!!")
-		spew.Dump(resolvedTypeRefs)
-
 		multiErr = multierr.Append(multiErr, fmt.Errorf("missing Type reference for %s", ti.String(true)))
 	}
 	if multiErr.ErrorOrNil() != nil {
@@ -131,9 +116,7 @@ func (r *Resolver) mapToTypeRefs(in map[string]hublocalgraphql.TypeInstanceTypeR
 }
 
 func (r *Resolver) setTypeRefsForDefaultTypeInstances(policy *policy.Policy, typeRefs map[string]TypeRefWithAdditionalRefs) {
-	fmt.Println("setTypeRefsForDefaultTypeInstances")
-	if policy.Interface.Default == nil || policy.Interface.Default.Inject == nil || len(policy.Interface.Default.Inject.RequiredTypeInstances) == 0 {
-		fmt.Println("empty policy.Interface.Default in setTypeRefsForDefaultTypeInstances")
+	if policy.Interface.Default == nil || policy.Interface.Default.Inject == nil {
 		return
 	}
 	for reqTIIdx, reqTI := range policy.Interface.Default.Inject.RequiredTypeInstances {
@@ -142,7 +125,6 @@ func (r *Resolver) setTypeRefsForDefaultTypeInstances(policy *policy.Policy, typ
 			continue
 		}
 
-		fmt.Println("Addding TypeRef for", policy.Interface.Default.Inject.RequiredTypeInstances[reqTIIdx])
 		policy.Interface.Default.Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.TypeRef{
 			Path:     typeRef.Path,
 			Revision: typeRef.Revision,
