@@ -148,6 +148,32 @@ func ExampleNewStorageBackendClient() {
 
 	fmt.Printf("Getting TI %q: locked by: %v\n", typeInstanceID, lockedByRes.LockedBy)
 
+	// get value
+
+	resourceVersion = 1
+	res, err = client.GetValue(ctx, &pb.GetValueRequest{
+		TypeinstanceId:       typeInstanceID,
+		ResourceVersion:      resourceVersion,
+		AdditionalParameters: reqAdditionalParams,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
+
+	resourceVersion = 2
+	res, err = client.GetValue(ctx, &pb.GetValueRequest{
+		TypeinstanceId:       typeInstanceID,
+		ResourceVersion:      resourceVersion,
+		AdditionalParameters: reqAdditionalParams,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
+
 	// delete
 	fmt.Printf("Deleting TI %q...\n", typeInstanceID)
 
