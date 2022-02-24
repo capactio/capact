@@ -31,7 +31,7 @@ func ExampleNewStorageBackendClient() {
 	client := pb.NewStorageBackendClient(conn)
 
 	// create
-	fmt.Println("create TI", typeInstanceID)
+	fmt.Printf("Creating TI %q...\n", typeInstanceID)
 
 	_, err = client.OnCreate(ctx, &pb.OnCreateRequest{
 		TypeinstanceId:       typeInstanceID,
@@ -44,19 +44,20 @@ func ExampleNewStorageBackendClient() {
 
 	// get value
 
+	var resourceVersion uint32 = 1
 	res, err := client.GetValue(ctx, &pb.GetValueRequest{
 		TypeinstanceId:       typeInstanceID,
-		ResourceVersion:      1,
+		ResourceVersion:      resourceVersion,
 		AdditionalParameters: reqAdditionalParams,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("first get - resource version 1", string(res.Value))
+	fmt.Printf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
 
 	// update
-	fmt.Println("update TI", typeInstanceID)
+	fmt.Printf("Updating TI %q...\n", typeInstanceID)
 
 	newValueBytes := []byte(`{"key": "updated"}`)
 	_, err = client.OnUpdate(ctx, &pb.OnUpdateRequest{
@@ -73,29 +74,30 @@ func ExampleNewStorageBackendClient() {
 
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
 		TypeinstanceId:       typeInstanceID,
-		ResourceVersion:      1,
+		ResourceVersion:      resourceVersion,
 		AdditionalParameters: reqAdditionalParams,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("get after update - resource version 1", string(res.Value))
+	fmt.Printf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
 
+	resourceVersion = 2
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
 		TypeinstanceId:       typeInstanceID,
-		ResourceVersion:      2,
+		ResourceVersion:      resourceVersion,
 		AdditionalParameters: reqAdditionalParams,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("get after update - resource version 2", string(res.Value))
+	fmt.Printf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
 
 	// lock
 
-	fmt.Println("locking")
+	fmt.Printf("Locking TI %q...\n", typeInstanceID)
 
 	_, err = client.OnLock(ctx, &pb.OnLockRequest{
 		TypeinstanceId:       typeInstanceID,
@@ -120,11 +122,11 @@ func ExampleNewStorageBackendClient() {
 		panic("lockedBy cannot be nil")
 	}
 
-	fmt.Println("first get - lockedBy", *lockedByRes.LockedBy)
+	fmt.Printf("Getting TI %q: locked by %q\n", typeInstanceID, *lockedByRes.LockedBy)
 
 	// unlock
 
-	fmt.Println("unlocking")
+	fmt.Printf("Unlocking TI %q...\n", typeInstanceID)
 
 	_, err = client.OnUnlock(ctx, &pb.OnUnlockRequest{
 		TypeinstanceId:       typeInstanceID,
@@ -144,10 +146,10 @@ func ExampleNewStorageBackendClient() {
 		panic(err)
 	}
 
-	fmt.Println("second get - lockedBy", lockedByRes.LockedBy)
+	fmt.Printf("Getting TI %q: locked by: %v\n", typeInstanceID, lockedByRes.LockedBy)
 
 	// delete
-	fmt.Println("delete TI", typeInstanceID)
+	fmt.Printf("Deleting TI %q...\n", typeInstanceID)
 
 	_, err = client.OnDelete(ctx, &pb.OnDeleteRequest{
 		TypeinstanceId:       typeInstanceID,
@@ -159,14 +161,15 @@ func ExampleNewStorageBackendClient() {
 
 	// last get
 
+	resourceVersion = 1
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
 		TypeinstanceId:       typeInstanceID,
-		ResourceVersion:      1,
+		ResourceVersion:      resourceVersion,
 		AdditionalParameters: reqAdditionalParams,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("last get after delete - value", string(res.Value))
+	fmt.Printf("Getting TI %q: resource version %d: is nil: %v\n", typeInstanceID, resourceVersion, res.Value == nil)
 }

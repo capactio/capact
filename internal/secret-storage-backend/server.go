@@ -15,12 +15,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// AdditionalParameters holds Secret storage backend specific parameters.
 type AdditionalParameters struct {
 	Provider string `json:"provider"`
 }
 
 var _ pb.StorageBackendServer = &Handler{}
 
+// Handler handles incoming requests to the Secret storage backend gRPC server.
 type Handler struct {
 	pb.UnimplementedStorageBackendServer
 
@@ -35,9 +37,11 @@ const (
 )
 
 var (
+	// NilRequestInputError describes an error with an invalid request.
 	NilRequestInputError = status.Error(codes.InvalidArgument, "request data cannot be nil")
 )
 
+// NewHandler returns new Handler.
 func NewHandler(log *zap.Logger, providers map[string]tellercore.Provider) *Handler {
 	return &Handler{
 		log:       log,
@@ -45,6 +49,7 @@ func NewHandler(log *zap.Logger, providers map[string]tellercore.Provider) *Hand
 	}
 }
 
+// GetValue returns a value for a given TypeInstance. It returns nil as value if a given secret is not found.
 func (h *Handler) GetValue(_ context.Context, request *pb.GetValueRequest) (*pb.GetValueResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
@@ -71,6 +76,7 @@ func (h *Handler) GetValue(_ context.Context, request *pb.GetValueRequest) (*pb.
 	}, nil
 }
 
+// GetLockedBy returns a locked by data for a given TypeInstance. It returns nil as value if a given secret is not found.
 func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest) (*pb.GetLockedByResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
@@ -97,6 +103,7 @@ func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest)
 	}, nil
 }
 
+// OnCreate handles TypeInstance creation by creating secret in a given provider.
 func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.OnCreateResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
@@ -115,6 +122,7 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 	return &pb.OnCreateResponse{}, nil
 }
 
+// OnUpdate handles TypeInstance update by updating secret in a given provider.
 func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.OnUpdateResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
@@ -133,7 +141,8 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 	return &pb.OnUpdateResponse{}, nil
 }
 
-// OnLock doesn't check whether a given TypeInstance is already locked, but overrides the value in place
+// OnLock handles TypeInstance locking by setting a secret entry in a given provider.
+// It doesn't check whether a given TypeInstance is already locked, but overrides the value in place
 // TODO(review): Is that valid assumption? Is there a need to complicate the flow here?
 func (h *Handler) OnLock(_ context.Context, request *pb.OnLockRequest) (*pb.OnLockResponse, error) {
 	if request == nil {
@@ -154,6 +163,7 @@ func (h *Handler) OnLock(_ context.Context, request *pb.OnLockRequest) (*pb.OnLo
 	return &pb.OnLockResponse{}, nil
 }
 
+// OnUnlock handles TypeInstance unlocking by removing secret entry in a given provider.
 func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.OnUnlockResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
@@ -173,7 +183,8 @@ func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.
 	return &pb.OnUnlockResponse{}, nil
 }
 
-// OnDelete doesn't check whether a given TypeInstance is locked. It assumes the caller ensured it's unlocked state.
+// OnDelete handles TypeInstance deletion by removing a secret in a given provider.
+// It doesn't check whether a given TypeInstance is locked. It assumes the caller ensured it's unlocked state.
 // TODO(review): Is that a valid assumption?
 func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
 	if request == nil {
@@ -290,10 +301,10 @@ func (h *Handler) storagePathForTypeInstance(provider tellercore.Provider, tiID 
 func (h *Handler) ensureEntryDoesNotExist(provider tellercore.Provider, key tellercore.KeyPath) error {
 	entry, err := h.getEntry(provider, key)
 	if err != nil {
-		return h.internalError(errors.Wrapf(err, "while getting entry for path %q", key.Path))
+		return h.internalError(errors.Wrapf(err, "while getting field %q for path %q", key.Field, key.Path))
 	}
 	if entry.IsFound {
-		return status.Error(codes.AlreadyExists, fmt.Sprintf("entry %q in provider %q already exist", key.Path, provider.Name()))
+		return status.Error(codes.AlreadyExists, fmt.Sprintf("field %q for path %q in provider %q already exist", key.Field, key.Path, provider.Name()))
 	}
 
 	return nil
