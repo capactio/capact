@@ -1,22 +1,28 @@
-package main_test
+package storage_backend_test
 
 import (
 	"context"
 	"fmt"
-	utilrand "k8s.io/apimachinery/pkg/util/rand"
-	"testing"
 
 	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 	"google.golang.org/grpc"
+	utilrand "k8s.io/apimachinery/pkg/util/rand"
 )
 
-func Test(t *testing.T) {
+// This example illustrates how to use gRPC Go client against real gRPC Storage Backend server.
+//
+// NOTE: Before running this example, make sure that the server is running under the `srvAddr` address
+//	and the `provider` is enabled on this server.
+func ExampleNewStorageBackendClient() {
+	provider := "dotenv"
+	srvAddr := ":50051" // server address
+
 	valueBytes := []byte(`{"key": true}`)
 	typeInstanceID := utilrand.String(10) // temp
 
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"dotenv"}`))
+	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, provider))
 
-	conn, err := grpc.Dial(":50051", grpc.WithInsecure())
+	conn, err := grpc.Dial(srvAddr, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}

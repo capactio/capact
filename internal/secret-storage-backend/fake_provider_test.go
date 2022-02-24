@@ -1,4 +1,4 @@
-package secret_storage_backend_test
+package secretstoragebackend_test
 
 import (
 	"sort"
@@ -18,10 +18,7 @@ func (f *fakeProvider) Name() string {
 }
 
 func (f *fakeProvider) GetMapping(kp tellercore.KeyPath) ([]tellercore.EnvEntry, error) {
-	kvs, err := f.getSecret(kp)
-	if err != nil {
-		return nil, err
-	}
+	kvs := f.getSecret(kp)
 
 	var entries []tellercore.EnvEntry
 	for k, v := range kvs {
@@ -32,10 +29,7 @@ func (f *fakeProvider) GetMapping(kp tellercore.KeyPath) ([]tellercore.EnvEntry,
 }
 
 func (f *fakeProvider) Get(kp tellercore.KeyPath) (*tellercore.EnvEntry, error) {
-	kvs, err := f.getSecret(kp)
-	if err != nil {
-		return nil, err
-	}
+	kvs := f.getSecret(kp)
 
 	k := kp.EffectiveKey()
 	val, ok := kvs[k]
@@ -49,10 +43,7 @@ func (f *fakeProvider) Get(kp tellercore.KeyPath) (*tellercore.EnvEntry, error) 
 }
 
 func (f *fakeProvider) PutMapping(kp tellercore.KeyPath, m map[string]string) error {
-	secrets, err := f.getSecret(kp)
-	if err != nil {
-		return err
-	}
+	secrets := f.getSecret(kp)
 
 	tellerutils.Merge(m, secrets)
 
@@ -67,10 +58,7 @@ func (f *fakeProvider) Put(kp tellercore.KeyPath, val string) error {
 }
 
 func (f *fakeProvider) Delete(kp tellercore.KeyPath) error {
-	kvs, err := f.getSecret(kp)
-	if err != nil {
-		return err
-	}
+	kvs := f.getSecret(kp)
 
 	k := kp.EffectiveKey()
 	delete(kvs, k)
@@ -88,11 +76,11 @@ func (f *fakeProvider) DeleteMapping(kp tellercore.KeyPath) error {
 	return nil
 }
 
-func (f *fakeProvider) getSecret(kp tellercore.KeyPath) (map[string]string, error) {
+func (f *fakeProvider) getSecret(kp tellercore.KeyPath) map[string]string {
 	secret, ok := f.secrets[kp.Path]
 	if !ok {
-		return map[string]string{}, nil
+		return map[string]string{}
 	}
 
-	return secret, nil
+	return secret
 }

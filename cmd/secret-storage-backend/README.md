@@ -36,9 +36,9 @@ To perform such calls, you can use e.g. [Insomnia](https://insomnia.rest/) tool.
 
 To run the server with `dotenv` provider enabled, which stores data in files, execute:
 
-```bash
-APP_SUPPORTED_PROVIDERS=dotenv APP_LOGGER_DEV_MODE=true go run ./cmd/secret-storage-backend/main.go
-```
+   ```bash
+   APP_SUPPORTED_PROVIDERS=dotenv,aws_secretsmanager APP_LOGGER_DEV_MODE=true go run ./cmd/secret-storage-backend/main.go
+   ```
 
 > **NOTE:** You can enable multiple providers, separating them by comma, such as: `APP_SUPPORTED_PROVIDERS=aws_secretsmanager,dotenv`.
 

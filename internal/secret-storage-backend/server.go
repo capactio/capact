@@ -1,4 +1,4 @@
-package secret_storage_backend
+package secretstoragebackend
 
 import (
 	"context"
