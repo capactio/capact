@@ -170,7 +170,7 @@ mutation UpdatePolicy {
                     inject: {
                         requiredTypeInstances: [
                             {
-                                id: "edf854df-86cf-4855-9d38-8d88545fb9c9"
+                                id: "28806e5a-3b13-4d58-915b-8357a51c3e95"
                                 description: "My TypeInstance"
                             }
                         ]

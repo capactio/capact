@@ -75,9 +75,9 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 		return errors.Wrap(err, "while resolving parent nodes for TypeRefs")
 	}
 
-	r.setTypeRefsForDefaultTypeInstances(policy, typeRefWithParentNodes)
 	r.setTypeRefsForAdditionalTypeInstances(policy, typeRefWithParentNodes)
 	r.setTypeRefsForRequiredTypeInstances(policy, typeRefWithParentNodes)
+	r.setTypeRefsForDefaultTypeInstances(policy, typeRefWithParentNodes)
 	r.setTypeRefsForBackendTypeInstances(policy, typeRefWithParentNodes)
 
 	return nil

@@ -36,8 +36,8 @@ type Policy struct {
 
 // InterfacePolicy holds the Policy for Interfaces.
 type InterfacePolicy struct {
-	Default *DefaultInterfaceData `json:"default,omitempty"`
-	Rules   InterfaceRulesList    `json:"rules"`
+	Default *InterfaceDefault  `json:"default,omitempty"`
+	Rules   InterfaceRulesList `json:"rules"`
 }
 
 // DefaultRequiredTypeInstancesToInject returns default required TypeInstances to inject for a given interface.
@@ -48,11 +48,13 @@ func (in *InterfacePolicy) DefaultRequiredTypeInstancesToInject() []RequiredType
 	return in.Default.Inject.RequiredTypeInstances
 }
 
-type DefaultInterfaceData struct {
-	Inject *DefaultInjectInterfaceData `json:"inject,omitempty"`
+// InterfaceDefault holds a defaults for the Interface Policy.
+type InterfaceDefault struct {
+	Inject *DefaultInject `json:"inject,omitempty"`
 }
 
-type DefaultInjectInterfaceData struct {
+//DefaultInject holds default injection for the Interface Policy.
+type DefaultInject struct {
 	RequiredTypeInstances []RequiredTypeInstanceToInject `json:"requiredTypeInstances,omitempty"`
 }
 

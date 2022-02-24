@@ -28,6 +28,22 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "only global policy",
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
@@ -83,6 +99,22 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			action: policy.ActionPolicy{},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
@@ -141,6 +173,22 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			name: "only action policy",
 			action: policy.ActionPolicy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
@@ -195,6 +243,22 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			global: policy.Policy{},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
@@ -496,9 +560,25 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			order: policy.MergeOrder{policy.Action, policy.Global},
 		},
 		{
-			name: "merge type instances and additional input",
+			name: "merge type instances and additional input for default and rule",
 			action: policy.ActionPolicy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.a",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
@@ -552,6 +632,22 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1111-2222-3333",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.b",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{
@@ -595,6 +691,32 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			expected: policy.Policy{
 				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.a",
+											Revision: "0.1.0",
+										},
+									},
+								},
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1111-2222-3333",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.b",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
 					Rules: policy.InterfaceRulesList{
 						policy.RulesForInterface{
 							Interface: types.ManifestRefWithOptRevision{

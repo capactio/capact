@@ -113,11 +113,7 @@ func (e *PolicyEnforcedClient) ListTypeInstancesBackendsBasedOnPolicy(_ context.
 		out.SetByTypeRef(rule.TypeRef, rule.Backend)
 	}
 
-	// TODO(https://github.com/capactio/capact/issues/635):
-	// 2. Global defaults based on required TypeInstance injection
-	// e.mergedPolicy.Interface.Defaults
-
-	//3. Override defaults with specific Interface Policy rule
+	//2. Override defaults with specific Interface Policy rule
 	inject, err := e.listRequiredTypeInstancesToInjectBasedOnPolicy(rule, implRev)
 	if err != nil {
 		return policy.TypeInstanceBackendCollection{}, err
@@ -448,21 +444,19 @@ func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeI
 		filter.RequiredTypeInstancesInjectionSatisfiedBy = injectedRequiredTypeInstances
 	}
 
-	fmt.Println("Default Injection in hubFilterForPolicyRule")
-
-	// Default Injection
-	if e.mergedPolicy.Interface.Default != nil && e.mergedPolicy.Interface.Default.Inject != nil {
-		for _, ti := range e.mergedPolicy.Interface.Default.Inject.RequiredTypeInstances {
-			fmt.Println("Add a new TI in Default Injection in hubFilterForPolicyRule...")
-			filter.RequiredTypeInstancesInjectionSatisfiedBy = append(filter.RequiredTypeInstancesInjectionSatisfiedBy, &hubpublicgraphql.TypeInstanceValue{
-				TypeRef: &hubpublicgraphql.TypeReferenceInput{
-					Path:     ti.TypeRef.Path,
-					Revision: ti.TypeRef.Revision,
-				},
-				Value: nil, // not supported right now
-			})
-		}
+	// Append TypeInstance from Interface Default
+	defaultTI := e.mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject()
+	var injectedDefaultRequiredTypeInstances []*hubpublicgraphql.TypeInstanceValue
+	for _, ti := range defaultTI {
+		injectedDefaultRequiredTypeInstances = append(injectedDefaultRequiredTypeInstances, &hubpublicgraphql.TypeInstanceValue{
+			TypeRef: &hubpublicgraphql.TypeReferenceInput{
+				Path:     ti.TypeRef.Path,
+				Revision: ti.TypeRef.Revision,
+			},
+			Value: nil, // not supported right now
+		})
 	}
+	filter.RequiredTypeInstancesInjectionSatisfiedBy = append(filter.RequiredTypeInstancesInjectionSatisfiedBy, injectedDefaultRequiredTypeInstances...)
 
 	return filter
 }

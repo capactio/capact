@@ -119,20 +119,20 @@ type AdvancedModeContinueRenderingInput struct {
 	TypeInstances []*InputTypeInstanceData `json:"typeInstances"`
 }
 
-type DefaultInjectData struct {
+type DefaultForInterface struct {
+	Inject *DefaultInjectForInterface `json:"inject"`
+}
+
+type DefaultForInterfaceInput struct {
+	Inject *DefaultInjectForInterfaceInput `json:"inject"`
+}
+
+type DefaultInjectForInterface struct {
 	RequiredTypeInstances []*RequiredTypeInstanceReference `json:"requiredTypeInstances"`
 }
 
-type DefaultInjectInputData struct {
+type DefaultInjectForInterfaceInput struct {
 	RequiredTypeInstances []*RequiredTypeInstanceReferenceInput `json:"requiredTypeInstances"`
-}
-
-type DefaultInterfaceData struct {
-	Inject *DefaultInjectData `json:"inject"`
-}
-
-type DefaultInterfaceInputData struct {
-	Inject *DefaultInjectInputData `json:"inject"`
 }
 
 // Client input for Input TypeInstance
@@ -154,8 +154,8 @@ type InputTypeInstanceToProvide struct {
 }
 
 type InterfacePolicyInput struct {
-	Default *DefaultInterfaceInputData `json:"default"`
-	Rules   []*RulesForInterfaceInput  `json:"rules"`
+	Default *DefaultForInterfaceInput `json:"default"`
+	Rules   []*RulesForInterfaceInput `json:"rules"`
 }
 
 type ManifestReference struct {

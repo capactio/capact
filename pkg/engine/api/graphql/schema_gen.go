@@ -92,12 +92,12 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
-	DefaultInjectData struct {
-		RequiredTypeInstances func(childComplexity int) int
+	DefaultForInterface struct {
+		Inject func(childComplexity int) int
 	}
 
-	DefaultInterfaceData struct {
-		Inject func(childComplexity int) int
+	DefaultInjectForInterface struct {
+		RequiredTypeInstances func(childComplexity int) int
 	}
 
 	InputTypeInstanceDetails struct {
@@ -442,19 +442,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AdditionalTypeInstanceReference.Name(childComplexity), true
 
-	case "DefaultInjectData.requiredTypeInstances":
-		if e.complexity.DefaultInjectData.RequiredTypeInstances == nil {
+	case "DefaultForInterface.inject":
+		if e.complexity.DefaultForInterface.Inject == nil {
 			break
 		}
 
-		return e.complexity.DefaultInjectData.RequiredTypeInstances(childComplexity), true
+		return e.complexity.DefaultForInterface.Inject(childComplexity), true
 
-	case "DefaultInterfaceData.inject":
-		if e.complexity.DefaultInterfaceData.Inject == nil {
+	case "DefaultInjectForInterface.requiredTypeInstances":
+		if e.complexity.DefaultInjectForInterface.RequiredTypeInstances == nil {
 			break
 		}
 
-		return e.complexity.DefaultInterfaceData.Inject(childComplexity), true
+		return e.complexity.DefaultInjectForInterface.RequiredTypeInstances(childComplexity), true
 
 	case "InputTypeInstanceDetails.id":
 		if e.complexity.InputTypeInstanceDetails.ID == nil {
@@ -1233,15 +1233,15 @@ input TypeInstanceBackendRuleInput {
 
 # Interface Policy Input
 input InterfacePolicyInput {
-  default: DefaultInterfaceInputData
+  default: DefaultForInterfaceInput
   rules: [RulesForInterfaceInput!]!
 }
 
-input DefaultInterfaceInputData {
-  inject: DefaultInjectInputData
+input DefaultForInterfaceInput {
+  inject: DefaultInjectForInterfaceInput
 }
 
-input DefaultInjectInputData{
+input DefaultInjectForInterfaceInput{
   requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
 }
 
@@ -1305,15 +1305,15 @@ type TypeInstanceBackendRule {
 
 # Interface Policy
 type InterfacePolicy {
-  default: DefaultInterfaceData
+  default: DefaultForInterface
   rules: [RulesForInterface!]!
 }
 
-type DefaultInterfaceData {
-  inject: DefaultInjectData
+type DefaultForInterface {
+  inject: DefaultInjectForInterface
 }
 
-type DefaultInjectData {
+type DefaultInjectForInterface {
   requiredTypeInstances: [RequiredTypeInstanceReference!]
 }
 
@@ -2574,7 +2574,7 @@ func (ec *executionContext) _AdditionalTypeInstanceReference_id(ctx context.Cont
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DefaultInjectData_requiredTypeInstances(ctx context.Context, field graphql.CollectedField, obj *DefaultInjectData) (ret graphql.Marshaler) {
+func (ec *executionContext) _DefaultForInterface_inject(ctx context.Context, field graphql.CollectedField, obj *DefaultForInterface) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2582,7 +2582,39 @@ func (ec *executionContext) _DefaultInjectData_requiredTypeInstances(ctx context
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "DefaultInjectData",
+		Object:     "DefaultForInterface",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Inject, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*DefaultInjectForInterface)
+	fc.Result = res
+	return ec.marshalODefaultInjectForInterface2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectForInterface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DefaultInjectForInterface_requiredTypeInstances(ctx context.Context, field graphql.CollectedField, obj *DefaultInjectForInterface) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "DefaultInjectForInterface",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -2604,38 +2636,6 @@ func (ec *executionContext) _DefaultInjectData_requiredTypeInstances(ctx context
 	res := resTmp.([]*RequiredTypeInstanceReference)
 	fc.Result = res
 	return ec.marshalORequiredTypeInstanceReference2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRequiredTypeInstanceReferenceᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _DefaultInterfaceData_inject(ctx context.Context, field graphql.CollectedField, obj *DefaultInterfaceData) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "DefaultInterfaceData",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Inject, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*DefaultInjectData)
-	fc.Result = res
-	return ec.marshalODefaultInjectData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectData(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputTypeInstanceDetails_id(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceDetails) (ret graphql.Marshaler) {
@@ -2805,9 +2805,9 @@ func (ec *executionContext) _InterfacePolicy_default(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*DefaultInterfaceData)
+	res := resTmp.(*DefaultForInterface)
 	fc.Result = res
-	return ec.marshalODefaultInterfaceData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInterfaceData(ctx, field.Selections, res)
+	return ec.marshalODefaultForInterface2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultForInterface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InterfacePolicy_rules(ctx context.Context, field graphql.CollectedField, obj *InterfacePolicy) (ret graphql.Marshaler) {
@@ -5696,17 +5696,17 @@ func (ec *executionContext) unmarshalInputAdvancedModeContinueRenderingInput(ctx
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDefaultInjectInputData(ctx context.Context, obj interface{}) (DefaultInjectInputData, error) {
-	var it DefaultInjectInputData
+func (ec *executionContext) unmarshalInputDefaultForInterfaceInput(ctx context.Context, obj interface{}) (DefaultForInterfaceInput, error) {
+	var it DefaultForInterfaceInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
 		switch k {
-		case "requiredTypeInstances":
+		case "inject":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requiredTypeInstances"))
-			it.RequiredTypeInstances, err = ec.unmarshalORequiredTypeInstanceReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRequiredTypeInstanceReferenceInputᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inject"))
+			it.Inject, err = ec.unmarshalODefaultInjectForInterfaceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectForInterfaceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5716,17 +5716,17 @@ func (ec *executionContext) unmarshalInputDefaultInjectInputData(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDefaultInterfaceInputData(ctx context.Context, obj interface{}) (DefaultInterfaceInputData, error) {
-	var it DefaultInterfaceInputData
+func (ec *executionContext) unmarshalInputDefaultInjectForInterfaceInput(ctx context.Context, obj interface{}) (DefaultInjectForInterfaceInput, error) {
+	var it DefaultInjectForInterfaceInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
 		switch k {
-		case "inject":
+		case "requiredTypeInstances":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inject"))
-			it.Inject, err = ec.unmarshalODefaultInjectInputData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectInputData(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requiredTypeInstances"))
+			it.RequiredTypeInstances, err = ec.unmarshalORequiredTypeInstanceReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRequiredTypeInstanceReferenceInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5774,7 +5774,7 @@ func (ec *executionContext) unmarshalInputInterfacePolicyInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("default"))
-			it.Default, err = ec.unmarshalODefaultInterfaceInputData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInterfaceInputData(ctx, v)
+			it.Default, err = ec.unmarshalODefaultForInterfaceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultForInterfaceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6348,19 +6348,19 @@ func (ec *executionContext) _AdditionalTypeInstanceReference(ctx context.Context
 	return out
 }
 
-var defaultInjectDataImplementors = []string{"DefaultInjectData"}
+var defaultForInterfaceImplementors = []string{"DefaultForInterface"}
 
-func (ec *executionContext) _DefaultInjectData(ctx context.Context, sel ast.SelectionSet, obj *DefaultInjectData) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, defaultInjectDataImplementors)
+func (ec *executionContext) _DefaultForInterface(ctx context.Context, sel ast.SelectionSet, obj *DefaultForInterface) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, defaultForInterfaceImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("DefaultInjectData")
-		case "requiredTypeInstances":
-			out.Values[i] = ec._DefaultInjectData_requiredTypeInstances(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("DefaultForInterface")
+		case "inject":
+			out.Values[i] = ec._DefaultForInterface_inject(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6372,19 +6372,19 @@ func (ec *executionContext) _DefaultInjectData(ctx context.Context, sel ast.Sele
 	return out
 }
 
-var defaultInterfaceDataImplementors = []string{"DefaultInterfaceData"}
+var defaultInjectForInterfaceImplementors = []string{"DefaultInjectForInterface"}
 
-func (ec *executionContext) _DefaultInterfaceData(ctx context.Context, sel ast.SelectionSet, obj *DefaultInterfaceData) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, defaultInterfaceDataImplementors)
+func (ec *executionContext) _DefaultInjectForInterface(ctx context.Context, sel ast.SelectionSet, obj *DefaultInjectForInterface) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, defaultInjectForInterfaceImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("DefaultInterfaceData")
-		case "inject":
-			out.Values[i] = ec._DefaultInterfaceData_inject(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("DefaultInjectForInterface")
+		case "requiredTypeInstances":
+			out.Values[i] = ec._DefaultInjectForInterface_requiredTypeInstances(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8466,33 +8466,33 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) marshalODefaultInjectData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectData(ctx context.Context, sel ast.SelectionSet, v *DefaultInjectData) graphql.Marshaler {
+func (ec *executionContext) marshalODefaultForInterface2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultForInterface(ctx context.Context, sel ast.SelectionSet, v *DefaultForInterface) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._DefaultInjectData(ctx, sel, v)
+	return ec._DefaultForInterface(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODefaultInjectInputData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectInputData(ctx context.Context, v interface{}) (*DefaultInjectInputData, error) {
+func (ec *executionContext) unmarshalODefaultForInterfaceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultForInterfaceInput(ctx context.Context, v interface{}) (*DefaultForInterfaceInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputDefaultInjectInputData(ctx, v)
+	res, err := ec.unmarshalInputDefaultForInterfaceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODefaultInterfaceData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInterfaceData(ctx context.Context, sel ast.SelectionSet, v *DefaultInterfaceData) graphql.Marshaler {
+func (ec *executionContext) marshalODefaultInjectForInterface2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectForInterface(ctx context.Context, sel ast.SelectionSet, v *DefaultInjectForInterface) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._DefaultInterfaceData(ctx, sel, v)
+	return ec._DefaultInjectForInterface(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODefaultInterfaceInputData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInterfaceInputData(ctx context.Context, v interface{}) (*DefaultInterfaceInputData, error) {
+func (ec *executionContext) unmarshalODefaultInjectForInterfaceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐDefaultInjectForInterfaceInput(ctx context.Context, v interface{}) (*DefaultInjectForInterfaceInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputDefaultInterfaceInputData(ctx, v)
+	res, err := ec.unmarshalInputDefaultInjectForInterfaceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -4,8 +4,8 @@ package graphql
 
 //InterfacePolicy represents Interface Policy.
 type InterfacePolicy struct {
-	Default *DefaultInterfaceData `json:"default,omitempty"`
-	Rules   []*RulesForInterface  `json:"rules"`
+	Default *DefaultForInterface `json:"default,omitempty"`
+	Rules   []*RulesForInterface `json:"rules"`
 }
 
 // PolicyRule represents a single policy rule.

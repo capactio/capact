@@ -10,8 +10,8 @@ import (
 func fixGQLInput() graphql.PolicyInput {
 	return graphql.PolicyInput{
 		Interface: &graphql.InterfacePolicyInput{
-			Default: &graphql.DefaultInterfaceInputData{
-				Inject: &graphql.DefaultInjectInputData{
+			Default: &graphql.DefaultForInterfaceInput{
+				Inject: &graphql.DefaultInjectForInterfaceInput{
 					RequiredTypeInstances: []*graphql.RequiredTypeInstanceReferenceInput{
 						{
 							ID:          "28806e5a-3b13-4d58-915b-8357a51c3e95",
@@ -120,8 +120,8 @@ func fixGQLInput() graphql.PolicyInput {
 func fixGQL() graphql.Policy {
 	return graphql.Policy{
 		Interface: &graphql.InterfacePolicy{
-			Default: &graphql.DefaultInterfaceData{
-				Inject: &graphql.DefaultInjectData{
+			Default: &graphql.DefaultForInterface{
+				Inject: &graphql.DefaultInjectForInterface{
 					RequiredTypeInstances: []*graphql.RequiredTypeInstanceReference{
 						{
 							ID:          "28806e5a-3b13-4d58-915b-8357a51c3e95",
@@ -230,8 +230,8 @@ func fixGQL() graphql.Policy {
 func fixModel() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{
-			Default: &policy.DefaultInterfaceData{
-				Inject: &policy.DefaultInjectInterfaceData{
+			Default: &policy.InterfaceDefault{
+				Inject: &policy.DefaultInject{
 					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
 							TypeInstanceReference: policy.TypeInstanceReference{

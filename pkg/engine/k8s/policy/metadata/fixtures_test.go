@@ -19,6 +19,17 @@ import (
 func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 	return &policy.Policy{
 		Interface: policy.InterfacePolicy{
+			Default: &policy.InterfaceDefault{
+				Inject: &policy.DefaultInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID: "id12",
+							},
+						},
+					},
+				},
+			},
 			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{
@@ -157,6 +168,21 @@ func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 func fixComplexPolicyWithTypeRef() *policy.Policy {
 	return &policy.Policy{
 		Interface: policy.InterfacePolicy{
+			Default: &policy.InterfaceDefault{
+				Inject: &policy.DefaultInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID: "id12",
+								TypeRef: &types.TypeRef{
+									Path:     "cap.type.type12",
+									Revision: "0.12.0",
+								},
+							},
+						},
+					},
+				},
+			},
 			Rules: policy.InterfaceRulesList{
 				{
 					Interface: types.ManifestRefWithOptRevision{

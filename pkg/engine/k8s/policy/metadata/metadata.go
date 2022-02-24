@@ -50,28 +50,15 @@ func (m TypeInstanceMetadata) String(withKind bool) string {
 func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInstanceMetadata {
 	var tis []TypeInstanceMetadata
 
-	// Interface
+	// Interface rules
 	for _, rule := range in.Interface.Rules {
 		for _, ruleItem := range rule.OneOf {
 			tis = append(tis, TypeInstanceIDsWithUnresolvedMetadataForRule(ruleItem)...)
 		}
 	}
 
-	// Interface Defaults
-	fmt.Println("TypeInstanceIDsWithUnresolvedMetadataForPolicy")
-	if in.Interface.Default != nil && in.Interface.Default.Inject != nil {
-		for _, defaultTI := range in.Interface.Default.Inject.RequiredTypeInstances {
-			fmt.Println("Adding ID", defaultTI.ID)
-			if defaultTI.TypeRef != nil && defaultTI.TypeRef.Path != "" && defaultTI.TypeRef.Revision != "" {
-				continue
-			}
-			tis = append(tis, TypeInstanceMetadata{
-				ID:          defaultTI.ID,
-				Description: defaultTI.Description,
-				Kind:        defaultTypeInstance,
-			})
-		}
-	}
+	// Interface default
+	tis = append(tis, TypeInstanceIDsWithUnresolvedMetadataForDefault(in.Interface.Default)...)
 
 	// TypeInstances backends
 	for _, rule := range in.TypeInstance.Rules {
@@ -83,6 +70,27 @@ func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInst
 			ID:          rule.Backend.ID,
 			Description: rule.Backend.Description,
 			Kind:        backendTypeInstance,
+		})
+	}
+
+	return tis
+}
+
+// TypeInstanceIDsWithUnresolvedMetadataForDefault filters TypeInstances that have unresolved metadata for a given Interface default.
+func TypeInstanceIDsWithUnresolvedMetadataForDefault(in *policy.InterfaceDefault) []TypeInstanceMetadata {
+	if in == nil || in.Inject == nil {
+		return nil
+	}
+
+	var tis []TypeInstanceMetadata
+	for _, defaultTI := range in.Inject.RequiredTypeInstances {
+		if defaultTI.TypeRef != nil && defaultTI.TypeRef.Path != "" && defaultTI.TypeRef.Revision != "" {
+			continue
+		}
+		tis = append(tis, TypeInstanceMetadata{
+			ID:          defaultTI.ID,
+			Description: defaultTI.Description,
+			Kind:        defaultTypeInstance,
 		})
 	}
 

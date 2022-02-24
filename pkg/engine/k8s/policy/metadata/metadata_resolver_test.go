@@ -37,13 +37,13 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 		{
 			Name:     "Unresolved TypeRefs",
 			Input:    fixComplexPolicyWithoutTypeRef(),
-			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 12},
+			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 13},
 			Expected: fixComplexPolicyWithTypeRef(),
 		},
 		{
 			Name:  "Partial result",
 			Input: fixComplexPolicyWithoutTypeRef(),
-			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 12, IgnoreIDs: map[string]struct{}{
+			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 13, IgnoreIDs: map[string]struct{}{
 				"id2": {}, "id4": {}, // required
 				"id8": {},             // additional
 				"id9": {}, "id11": {}, // backend
