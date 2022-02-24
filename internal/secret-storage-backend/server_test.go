@@ -231,7 +231,7 @@ func TestHandler_OnCreate(t *testing.T) {
 					"1": "original",
 				},
 			},
-			ExpectedErrorMessage: ptr.String("rpc error: code = AlreadyExists desc = entry \"/capact/uuid\" in provider \"fake\" already exist"),
+			ExpectedErrorMessage: ptr.String("rpc error: code = AlreadyExists desc = field \"1\" for path \"/capact/uuid\" in provider \"fake\" already exist"),
 		},
 	}
 
@@ -344,7 +344,7 @@ func TestHandler_OnUpdate(t *testing.T) {
 					"3": "original",
 				},
 			},
-			ExpectedErrorMessage: ptr.String("rpc error: code = AlreadyExists desc = entry \"/capact/uuid\" in provider \"fake\" already exist"),
+			ExpectedErrorMessage: ptr.String("rpc error: code = AlreadyExists desc = field \"3\" for path \"/capact/uuid\" in provider \"fake\" already exist"),
 		},
 	}
 

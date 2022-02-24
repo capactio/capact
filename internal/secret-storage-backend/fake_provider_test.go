@@ -45,9 +45,7 @@ func (f *fakeProvider) Get(kp tellercore.KeyPath) (*tellercore.EnvEntry, error) 
 func (f *fakeProvider) PutMapping(kp tellercore.KeyPath, m map[string]string) error {
 	secrets := f.getSecret(kp)
 
-	tellerutils.Merge(m, secrets)
-
-	f.secrets[kp.Path] = secrets
+	f.secrets[kp.Path] = tellerutils.Merge(secrets, m)
 
 	return nil
 }
