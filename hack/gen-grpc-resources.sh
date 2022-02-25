@@ -65,6 +65,10 @@ host::install::protoc() {
   # extract the archive
   unzip "${name}".zip
 
+  go mod init tmp
+  go install "google.golang.org/protobuf/cmd/protoc-gen-go@${STABLE_PROTOC_GEN_GO_VERSION}"
+  go install "google.golang.org/grpc/cmd/protoc-gen-go-grpc@${STABLE_PROTOC_GEN_GO_GRPC_VERSION}"
+
   popd >/dev/null
 
   echo -e "${GREEN}√ install protoc${NC}"
