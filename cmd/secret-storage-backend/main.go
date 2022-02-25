@@ -20,12 +20,13 @@ import (
 
 // Config holds application related configuration.
 type Config struct {
-	// Address is the TCP address the gRPC server binds to.
+	// GRPCAddr is the TCP address the gRPC server binds to.
 	GRPCAddr string `envconfig:"default=:50051"`
 
 	// HealthzAddr is the TCP address the health probes endpoint binds to.
 	HealthzAddr string `envconfig:"default=:8082"`
 
+	// SupportedProviders holds enabled secret providers separated by comma.
 	SupportedProviders []string `envconfig:"default=aws_secretsmanager"`
 
 	Logger logger.Config

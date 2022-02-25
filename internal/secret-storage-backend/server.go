@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// AdditionalParameters holds Secret storage backend specific parameters.
-type AdditionalParameters struct {
+// Context holds Secret storage backend specific parameters.
+type Context struct {
 	Provider string `json:"provider"`
 }
 
@@ -55,7 +55,7 @@ func (h *Handler) GetValue(_ context.Context, request *pb.GetValueRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromAdditionalParams(request.AdditionalParameters)
+	provider, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -66,13 +66,12 @@ func (h *Handler) GetValue(_ context.Context, request *pb.GetValueRequest) (*pb.
 		return nil, err
 	}
 
-	var value []byte
-	if entry.IsFound {
-		value = []byte(entry.Value)
+	if !entry.IsFound {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q in revision %d was not found", request.TypeinstanceId, request.ResourceVersion))
 	}
 
 	return &pb.GetValueResponse{
-		Value: value,
+		Value: []byte(entry.Value),
 	}, nil
 }
 
@@ -82,20 +81,28 @@ func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest)
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromAdditionalParams(request.AdditionalParameters)
+	provider, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	key := h.storageKeyForLockedBy(provider, request.TypeinstanceId)
-	entry, err := h.getEntry(provider, key)
+	key := tellercore.KeyPath{
+		Path: h.storagePathForTypeInstance(provider, request.TypeinstanceId),
+	}
+	entries, err := h.getEntriesForPath(provider, key)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(entries) == 0 {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q not found: secret from path %q is empty", request.TypeinstanceId, key.Path))
 	}
 
 	var lockedBy *string
-	if entry.IsFound && entry.Value != "" {
-		lockedBy = ptr.String(entry.Value)
+	for _, entry := range entries {
+		if entry.Key == lockedByField && entry.Value != "" {
+			lockedBy = ptr.String(entry.Value)
+		}
 	}
 
 	return &pb.GetLockedByResponse{
@@ -109,12 +116,17 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	err := h.handlePutValue(
-		request.AdditionalParameters,
-		request.TypeinstanceId,
-		firstResourceVersion,
-		request.Value,
-	)
+	provider, err := h.getProviderFromContext(request.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	key := h.storageKeyForTypeInstanceValue(provider, request.TypeinstanceId, firstResourceVersion)
+	if err := h.ensureSecretCanBeCreated(provider, key); err != nil {
+		return nil, err
+	}
+
+	err = h.putEntry(provider, key, request.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -128,12 +140,18 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	err := h.handlePutValue(
-		request.AdditionalParameters,
-		request.TypeinstanceId,
-		request.NewResourceVersion,
-		request.NewValue,
-	)
+	provider, err := h.getProviderFromContext(request.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	key := h.storageKeyForTypeInstanceValue(provider, request.TypeinstanceId, request.NewResourceVersion)
+
+	if err := h.ensureSecretCanBeUpdated(provider, key); err != nil {
+		return nil, err
+	}
+
+	err = h.putEntry(provider, key, request.NewValue)
 	if err != nil {
 		return nil, err
 	}
@@ -143,18 +161,23 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 
 // OnLock handles TypeInstance locking by setting a secret entry in a given provider.
 // It doesn't check whether a given TypeInstance is already locked, but overrides the value in place
-// TODO(review): Is that valid assumption? Is there a need to complicate the flow here?
 func (h *Handler) OnLock(_ context.Context, request *pb.OnLockRequest) (*pb.OnLockResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromAdditionalParams(request.AdditionalParameters)
+	provider, err := h.getProviderFromContext(request.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	err = h.ensureSecretIsNotLocked(provider, request.TypeinstanceId)
 	if err != nil {
 		return nil, err
 	}
 
 	key := h.storageKeyForLockedBy(provider, request.TypeinstanceId)
+
 	err = h.putEntry(provider, key, []byte(request.LockedBy))
 	if err != nil {
 		return nil, err
@@ -169,13 +192,21 @@ func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromAdditionalParams(request.AdditionalParameters)
+	provider, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	key := h.storageKeyForLockedBy(provider, request.TypeinstanceId)
-	err = h.deleteEntry(provider, key)
+	key := tellercore.KeyPath{
+		Path: h.storagePathForTypeInstance(provider, request.TypeinstanceId),
+	}
+	err = h.ensureSecretCanBeUnlocked(provider, key)
+	if err != nil {
+		return nil, err
+	}
+
+	lockedByKey := h.storageKeyForLockedBy(provider, request.TypeinstanceId)
+	err = h.deleteEntry(provider, lockedByKey)
 	if err != nil {
 		return nil, err
 	}
@@ -184,21 +215,26 @@ func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.
 }
 
 // OnDelete handles TypeInstance deletion by removing a secret in a given provider.
-// It doesn't check whether a given TypeInstance is locked. It assumes the caller ensured it's unlocked state.
-// TODO(review): Is that a valid assumption?
+// It checks whether a given TypeInstance is locked before doing such operation.
 func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromAdditionalParams(request.AdditionalParameters)
+	provider, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	err = provider.DeleteMapping(tellercore.KeyPath{
+	key := tellercore.KeyPath{
 		Path: h.storagePathForTypeInstance(provider, request.TypeinstanceId),
-	})
+	}
+	err = h.ensureSecretCanBeDeleted(provider, key)
+	if err != nil {
+		return nil, err
+	}
+
+	err = provider.DeleteMapping(key)
 	if err != nil {
 		return nil, h.internalError(errors.Wrapf(err, "while deleting TypeInstance %q", request.TypeinstanceId))
 	}
@@ -206,36 +242,16 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 	return &pb.OnDeleteResponse{}, nil
 }
 
-func (h *Handler) handlePutValue(additionalParamsBytes []byte, typeInstanceID string, resourceVersion uint32, value []byte) error {
-	provider, err := h.getProviderFromAdditionalParams(additionalParamsBytes)
-	if err != nil {
-		return err
-	}
-
-	key := h.storageKeyForTypeInstanceValue(provider, typeInstanceID, resourceVersion)
-
-	if err := h.ensureEntryDoesNotExist(provider, key); err != nil {
-		return err
-	}
-
-	err = h.putEntry(provider, key, value)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (h *Handler) getProviderFromAdditionalParams(additionalParamsBytes []byte) (tellercore.Provider, error) {
-	var additionalParams AdditionalParameters
-	err := json.Unmarshal(additionalParamsBytes, &additionalParams)
+func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, error) {
+	var context Context
+	err := json.Unmarshal(contextBytes, &context)
 	if err != nil {
 		return nil, h.internalError(errors.Wrap(err, "while unmarshaling additional parameters"))
 	}
 
-	provider, ok := h.providers[additionalParams.Provider]
+	provider, ok := h.providers[context.Provider]
 	if !ok {
-		return nil, h.internalError(fmt.Errorf("missing loaded provider with name %q", additionalParams.Provider))
+		return nil, h.internalError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
 	}
 
 	return provider, nil
@@ -249,6 +265,16 @@ func (h *Handler) getEntry(provider tellercore.Provider, key tellercore.KeyPath)
 	}
 
 	return entry, nil
+}
+
+func (h *Handler) getEntriesForPath(provider tellercore.Provider, key tellercore.KeyPath) ([]tellercore.EnvEntry, error) {
+	h.log.Info("getting whole secret", zap.String("path", key.Path), zap.String("provider", provider.Name()))
+	entries, err := provider.GetMapping(key)
+	if err != nil {
+		return nil, h.internalError(errors.Wrapf(err, "while getting value by path %q", key.Path))
+	}
+
+	return entries, nil
 }
 
 func (h *Handler) putEntry(provider tellercore.Provider, key tellercore.KeyPath, value []byte) error {
@@ -293,18 +319,89 @@ func (h *Handler) storagePathForTypeInstance(provider tellercore.Provider, tiID 
 	switch provider.Name() {
 	case "dotenv":
 		prefix = "/tmp/"
+	default:
+		prefix = "/"
 	}
 
-	return fmt.Sprintf("%s/capact/%s", prefix, tiID)
+	return fmt.Sprintf("%scapact/%s", prefix, tiID)
 }
 
-func (h *Handler) ensureEntryDoesNotExist(provider tellercore.Provider, key tellercore.KeyPath) error {
+func (h *Handler) ensureSecretCanBeCreated(provider tellercore.Provider, key tellercore.KeyPath) error {
+	entries, err := h.getEntriesForPath(provider, key)
+	if err != nil {
+		return h.internalError(err)
+	}
+
+	if len(entries) != 0 {
+		return status.Error(codes.AlreadyExists, fmt.Sprintf("path %q in provider %q already exist", key.Path, provider.Name()))
+	}
+
+	return nil
+}
+
+func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tellercore.KeyPath) error {
+	entries, err := h.getEntriesForPath(provider, key)
+	if err != nil {
+		return h.internalError(err)
+	}
+
+	if len(entries) == 0 {
+		return status.Error(codes.NotFound, fmt.Sprintf("path %q in provider %q not found", key.Path, provider.Name()))
+	}
+
+	for _, entry := range entries {
+		if entry.Key == lockedByField {
+			return h.typeInstanceLockedError(key.Path, entry.Value)
+		}
+		if entry.Key == key.Field {
+			return status.Error(codes.AlreadyExists, fmt.Sprintf("field %q for path %q in provider %q already exist", key.Field, key.Path, provider.Name()))
+		}
+	}
+
+	return nil
+}
+
+func (h *Handler) ensureSecretIsNotLocked(provider tellercore.Provider, typeInstanceID string) error {
+	key := h.storageKeyForLockedBy(provider, typeInstanceID)
 	entry, err := h.getEntry(provider, key)
 	if err != nil {
-		return h.internalError(errors.Wrapf(err, "while getting field %q for path %q", key.Field, key.Path))
+		return h.internalError(errors.Wrapf(err, "while getting entry"))
 	}
-	if entry.IsFound {
-		return status.Error(codes.AlreadyExists, fmt.Sprintf("field %q for path %q in provider %q already exist", key.Field, key.Path, provider.Name()))
+	if entry.IsFound && entry.Value != "" {
+		return h.typeInstanceLockedError(key.Path, entry.Value)
+	}
+
+	return nil
+}
+
+func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tellercore.KeyPath) error {
+	entries, err := h.getEntriesForPath(provider, key)
+	if err != nil {
+		return h.internalError(err)
+	}
+
+	if len(entries) == 0 {
+		return status.Error(codes.NotFound, fmt.Sprintf("path %q in provider %q not found", key.Path, provider.Name()))
+	}
+
+	for _, entry := range entries {
+		if entry.Key != lockedByField {
+			continue
+		}
+		return h.typeInstanceLockedError(key.Path, entry.Value)
+	}
+
+	return nil
+}
+
+func (h *Handler) ensureSecretCanBeUnlocked(provider tellercore.Provider, key tellercore.KeyPath) error {
+	entries, err := h.getEntriesForPath(provider, key)
+	if err != nil {
+		return h.internalError(err)
+	}
+
+	if len(entries) == 0 {
+		return status.Error(codes.NotFound, fmt.Sprintf("path %q in provider %q not found", key.Path, provider.Name()))
 	}
 
 	return nil
@@ -312,4 +409,8 @@ func (h *Handler) ensureEntryDoesNotExist(provider tellercore.Provider, key tell
 
 func (h *Handler) internalError(err error) error {
 	return status.Error(codes.Internal, err.Error())
+}
+
+func (h *Handler) typeInstanceLockedError(path, lockedByValue string) error {
+	return status.Error(codes.FailedPrecondition, fmt.Sprintf("typeInstance locked: path %q contains %q property with value %q", path, lockedByField, lockedByValue))
 }

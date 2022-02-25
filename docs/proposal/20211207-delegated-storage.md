@@ -417,16 +417,16 @@ Also, the additional, nice-to-have goals are:
         ```proto
         message TypeInstanceData {
           string id = 1;
-          google.protobuf.Any value = 2;
+          bytes value = 2;
         }
 
         message OnCreateRequest {
           TypeInstanceData typeinstance = 1;
-          google.protobuf.Any additional_parameters = 2;
+          bytes context = 2;
         }
 
         message OnCreateResponse {
-          google.protobuf.Any additional_parameters = 1;
+          optional bytes context = 1;
         }
 
         service SearchService {
@@ -483,11 +483,11 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     message OnCreateRequest {
       string typeinstance_id = 1;
       bytes value = 2;
-      bytes additional_parameters = 3;
+      bytes context = 3;
     }
     
     message OnCreateResponse {
-      optional bytes additional_parameters = 1;
+      optional bytes context = 1;
     }
     
     message TypeInstanceResourceVersion {
@@ -499,16 +499,16 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
       string typeinstance_id = 1;
       uint32 new_resource_version = 2;
       bytes new_value = 3;
-      optional bytes additional_parameters = 4;
+      optional bytes context = 4;
     }
     
     message OnUpdateResponse {
-      optional bytes additional_parameters = 1;
+      optional bytes context = 1;
     }
     
     message OnDeleteRequest {
       string typeinstance_id = 1;
-      bytes additional_parameters = 2;
+      bytes context = 2;
     }
     
     message OnDeleteResponse {}
@@ -516,7 +516,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     message GetValueRequest {
       string typeinstance_id = 1;
       uint32 resource_version = 2;
-      bytes additional_parameters = 3;
+      bytes context = 3;
     }
     
     message GetValueResponse {
@@ -528,7 +528,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     
     message GetLockedByRequest {
       string typeinstance_id = 1;
-      bytes additional_parameters = 2;
+      bytes context = 2;
     }
     
     message GetLockedByResponse {
@@ -537,7 +537,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     
     message OnLockRequest {
       string typeinstance_id = 1;
-      bytes additional_parameters = 2;
+      bytes context = 2;
       string locked_by = 3;
     }
     
@@ -545,7 +545,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     
     message OnUnlockRequest {
       string typeinstance_id = 1;
-      bytes additional_parameters = 2;
+      bytes context = 2;
     }
     
     message OnUnlockResponse {}

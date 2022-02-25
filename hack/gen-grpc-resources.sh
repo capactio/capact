@@ -51,7 +51,9 @@ host::install::protoc() {
   shout "Install the protoc ${STABLE_PROTOC_VERSION} locally to a tempdir..."
   mkdir -p "${TMP_DIR}/bin"
 
-  export PATH="${TMP_DIR}/bin:${PATH}"
+  export GOBIN="${TMP_DIR}/bin"
+  export PATH="${GOBIN}:${PATH}"
+
   pushd "$TMP_DIR" >/dev/null
 
   os=$(host::os)
@@ -65,7 +67,6 @@ host::install::protoc() {
   # extract the archive
   unzip "${name}".zip
 
-  go mod init tmp
   go install "google.golang.org/protobuf/cmd/protoc-gen-go@${STABLE_PROTOC_GEN_GO_VERSION}"
   go install "google.golang.org/grpc/cmd/protoc-gen-go-grpc@${STABLE_PROTOC_GEN_GO_GRPC_VERSION}"
 

@@ -20,23 +20,25 @@ import (
 func TestHandler_GetValue(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.GetValueRequest{
-		TypeinstanceId:       "uuid",
-		ResourceVersion:      2,
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId:  "uuid",
+		ResourceVersion: 2,
+		Context:         reqContext,
 	}
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
 
 	testCases := []struct {
-		Name          string
-		InputProvider tellercore.Provider
-		ExpectedValue []byte
+		Name                 string
+		InputProvider        tellercore.Provider
+		ExpectedValue        []byte
+		ExpectedErrorMessage *string
 	}{
 		{
-			Name:          "No secret",
-			InputProvider: &fakeProvider{},
-			ExpectedValue: nil,
+			Name:                 "No secret",
+			InputProvider:        &fakeProvider{},
+			ExpectedValue:        nil,
+			ExpectedErrorMessage: ptr.String("rpc error: code = NotFound desc = TypeInstance \"uuid\" in revision 2 was not found"),
 		},
 		{
 			Name: "Success",
@@ -80,8 +82,14 @@ func TestHandler_GetValue(t *testing.T) {
 			res, err := client.GetValue(ctx, req)
 
 			// then
+			if testCase.ExpectedErrorMessage != nil {
+				assert.Nil(t, res)
+				require.Error(t, err)
+				assert.EqualError(t, err, *testCase.ExpectedErrorMessage)
+				return
+			}
+
 			require.NoError(t, err)
-			require.NotNil(t, res)
 			assert.Equal(t, testCase.ExpectedValue, res.Value)
 		})
 	}
@@ -90,28 +98,32 @@ func TestHandler_GetValue(t *testing.T) {
 func TestHandler_GetLockedBy(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.GetLockedByRequest{
-		TypeinstanceId:       "uuid",
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId: "uuid",
+		Context:        reqContext,
 	}
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
 
 	testCases := []struct {
-		Name             string
-		InputProvider    tellercore.Provider
-		ExpectedLockedBy *string
+		Name                 string
+		InputProvider        tellercore.Provider
+		ExpectedLockedBy     *string
+		ExpectedErrorMessage *string
 	}{
 		{
-			Name:             "No data",
-			InputProvider:    &fakeProvider{},
-			ExpectedLockedBy: nil,
+			Name:                 "No data",
+			InputProvider:        &fakeProvider{},
+			ExpectedLockedBy:     nil,
+			ExpectedErrorMessage: ptr.String("rpc error: code = NotFound desc = TypeInstance \"uuid\" not found: secret from path \"/capact/uuid\" is empty"),
 		},
 		{
 			Name: "Empty value",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
-					path: {},
+					path: {
+						"1": "bar",
+					},
 				},
 			},
 			ExpectedLockedBy: nil,
@@ -147,16 +159,16 @@ func TestHandler_GetLockedBy(t *testing.T) {
 			res, err := client.GetLockedBy(ctx, req)
 
 			// then
-			require.NoError(t, err)
-			require.NotNil(t, res)
-
-			if testCase.ExpectedLockedBy == nil {
-				assert.Nil(t, res.LockedBy)
+			if testCase.ExpectedErrorMessage != nil {
+				assert.Nil(t, res)
+				require.Error(t, err)
+				assert.EqualError(t, err, *testCase.ExpectedErrorMessage)
 				return
 			}
 
-			require.NotNil(t, res.LockedBy)
-			assert.Equal(t, *testCase.ExpectedLockedBy, *res.LockedBy)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			assert.Equal(t, testCase.ExpectedLockedBy, res.LockedBy)
 		})
 	}
 }
@@ -164,12 +176,12 @@ func TestHandler_GetLockedBy(t *testing.T) {
 func TestHandler_OnCreate(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	valueBytes := []byte(`{"key": true}`)
 	req := &storage_backend.OnCreateRequest{
-		TypeinstanceId:       "uuid",
-		Value:                valueBytes,
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId: "uuid",
+		Value:          valueBytes,
+		Context:        reqContext,
 	}
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
 
@@ -202,23 +214,7 @@ func TestHandler_OnCreate(t *testing.T) {
 			},
 		},
 		{
-			Name: "Already existing without conflict",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"locked_by": "service/foo",
-					},
-				},
-			},
-			ExpectedProviderState: map[string]map[string]string{
-				path: {
-					"1":         string(valueBytes),
-					"locked_by": "service/foo",
-				},
-			},
-		},
-		{
-			Name: "Already existing with conflict",
+			Name: "Already existing",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
 					path: {
@@ -231,7 +227,7 @@ func TestHandler_OnCreate(t *testing.T) {
 					"1": "original",
 				},
 			},
-			ExpectedErrorMessage: ptr.String("rpc error: code = AlreadyExists desc = field \"1\" for path \"/capact/uuid\" in provider \"fake\" already exist"),
+			ExpectedErrorMessage: ptr.String("rpc error: code = AlreadyExists desc = path \"/capact/uuid\" in provider \"fake\" already exist"),
 		},
 	}
 
@@ -265,7 +261,7 @@ func TestHandler_OnCreate(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, res)
-			assert.Nil(t, res.AdditionalParameters)
+			assert.Nil(t, res.Context)
 		})
 	}
 }
@@ -273,13 +269,13 @@ func TestHandler_OnCreate(t *testing.T) {
 func TestHandler_OnUpdate(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	valueBytes := []byte(`{"key": true}`)
 	req := &storage_backend.OnUpdateRequest{
-		TypeinstanceId:       "uuid",
-		NewResourceVersion:   3,
-		NewValue:             valueBytes,
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId:     "uuid",
+		NewResourceVersion: 3,
+		NewValue:           valueBytes,
+		Context:            reqContext,
 	}
 
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
@@ -291,29 +287,19 @@ func TestHandler_OnUpdate(t *testing.T) {
 		ExpectedErrorMessage  *string
 	}{
 		{
-			Name:          "No data", // data for a give nrevision could reside in different storage backend
-			InputProvider: &fakeProvider{secrets: map[string]map[string]string{}},
-			ExpectedProviderState: map[string]map[string]string{
-				path: {
-					"3": string(valueBytes),
-				},
-			},
-		},
-		{
-			Name: "Empty value",
+			Name: "Non-existing secret",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
 					path: {},
 				},
 			},
 			ExpectedProviderState: map[string]map[string]string{
-				path: {
-					"3": string(valueBytes),
-				},
+				path: {},
 			},
+			ExpectedErrorMessage: ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
-			Name: "Already existing without conflict",
+			Name: "Already existing locked",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
 					path: {
@@ -325,13 +311,13 @@ func TestHandler_OnUpdate(t *testing.T) {
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1":         "original",
-					"3":         string(valueBytes),
 					"locked_by": "service/foo",
 				},
 			},
+			ExpectedErrorMessage: ptr.String("rpc error: code = FailedPrecondition desc = typeInstance locked: path \"/capact/uuid\" contains \"locked_by\" property with value \"service/foo\""),
 		},
 		{
-			Name: "Already existing with conflict",
+			Name: "Already existing not locked",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
 					path: {
@@ -378,7 +364,7 @@ func TestHandler_OnUpdate(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, res)
-			assert.Nil(t, res.AdditionalParameters)
+			assert.Nil(t, res.Context)
 		})
 	}
 }
@@ -386,11 +372,11 @@ func TestHandler_OnUpdate(t *testing.T) {
 func TestHandler_OnLock(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.OnLockRequest{
-		TypeinstanceId:       "uuid",
-		LockedBy:             "foo/sample",
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId: "uuid",
+		LockedBy:       "foo/sample",
+		Context:        reqContext,
 	}
 
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
@@ -402,7 +388,7 @@ func TestHandler_OnLock(t *testing.T) {
 		ExpectedErrorMessage  *string
 	}{
 		{
-			Name:          "No data", // data for a give nrevision could reside in different storage backend
+			Name:          "No data",
 			InputProvider: &fakeProvider{secrets: map[string]map[string]string{}},
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
@@ -440,7 +426,7 @@ func TestHandler_OnLock(t *testing.T) {
 			},
 		},
 		{
-			Name: "Already existing with conflict",
+			Name: "Already existing locked",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
 					path: {
@@ -452,9 +438,10 @@ func TestHandler_OnLock(t *testing.T) {
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"3":         "original",
-					"locked_by": "foo/sample",
+					"locked_by": "previous",
 				},
 			},
+			ExpectedErrorMessage: ptr.String("rpc error: code = FailedPrecondition desc = typeInstance locked: path \"/capact/uuid\" contains \"locked_by\" property with value \"previous\""),
 		},
 	}
 
@@ -495,10 +482,10 @@ func TestHandler_OnLock(t *testing.T) {
 func TestHandler_OnUnlock(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.OnUnlockRequest{
-		TypeinstanceId:       "uuid",
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId: "uuid",
+		Context:        reqContext,
 	}
 
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
@@ -510,9 +497,10 @@ func TestHandler_OnUnlock(t *testing.T) {
 		ExpectedErrorMessage  *string
 	}{
 		{
-			Name:                  "No data", // data for a give nrevision could reside in different storage backend
+			Name:                  "No data",
 			InputProvider:         &fakeProvider{secrets: map[string]map[string]string{}},
 			ExpectedProviderState: map[string]map[string]string{},
+			ExpectedErrorMessage:  ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
 			Name: "Already existing without conflict",
@@ -537,6 +525,21 @@ func TestHandler_OnUnlock(t *testing.T) {
 					path: {
 						"3":         "original",
 						"locked_by": "",
+					},
+				},
+			},
+			ExpectedProviderState: map[string]map[string]string{
+				path: {
+					"3": "original",
+				},
+			},
+		},
+		{
+			Name: "Already existing without lockedBy property",
+			InputProvider: &fakeProvider{
+				secrets: map[string]map[string]string{
+					path: {
+						"3": "original",
 					},
 				},
 			},
@@ -585,10 +588,10 @@ func TestHandler_OnUnlock(t *testing.T) {
 func TestHandler_OnDelete(t *testing.T) {
 	// given
 	providerName := "fake"
-	reqAdditionalParams := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.OnDeleteRequest{
-		TypeinstanceId:       "uuid",
-		AdditionalParameters: reqAdditionalParams,
+		TypeinstanceId: "uuid",
+		Context:        reqContext,
 	}
 
 	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
@@ -600,9 +603,10 @@ func TestHandler_OnDelete(t *testing.T) {
 		ExpectedErrorMessage  *string
 	}{
 		{
-			Name:                  "No data", // data for a give nrevision could reside in different storage backend
+			Name:                  "No data",
 			InputProvider:         &fakeProvider{secrets: map[string]map[string]string{}},
 			ExpectedProviderState: map[string]map[string]string{},
+			ExpectedErrorMessage:  ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
 			Name: "Empty value",
@@ -611,45 +615,46 @@ func TestHandler_OnDelete(t *testing.T) {
 					path: {},
 				},
 			},
-			ExpectedProviderState: map[string]map[string]string{},
+			ExpectedProviderState: map[string]map[string]string{path: {}},
+			ExpectedErrorMessage:  ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
-			Name: "Already existing",
+			Name: "Already existing not locked",
+			InputProvider: &fakeProvider{
+				secrets: map[string]map[string]string{
+					path: {
+						"1": "original",
+					},
+					"cant-touch-this": {
+						"Music":        "hits me so hard",
+						"Makes me say": "Oh, my Lord",
+					},
+				},
+			},
+			ExpectedProviderState: map[string]map[string]string{
+				"cant-touch-this": {
+					"Music":        "hits me so hard",
+					"Makes me say": "Oh, my Lord",
+				},
+			},
+		},
+		{
+			Name: "Already existing locked",
 			InputProvider: &fakeProvider{
 				secrets: map[string]map[string]string{
 					path: {
 						"1":         "original",
 						"locked_by": "foo/bar",
 					},
-					"cant-touch-this": {
-						"Music":        "hits me so hard",
-						"Makes me say": "Oh, my Lord",
-					},
 				},
 			},
 			ExpectedProviderState: map[string]map[string]string{
-				"cant-touch-this": {
-					"Music":        "hits me so hard",
-					"Makes me say": "Oh, my Lord",
+				path: {
+					"1":         "original",
+					"locked_by": "foo/bar",
 				},
 			},
-		},
-		{
-			Name: "Other data",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					"cant-touch-this": {
-						"Music":        "hits me so hard",
-						"Makes me say": "Oh, my Lord",
-					},
-				},
-			},
-			ExpectedProviderState: map[string]map[string]string{
-				"cant-touch-this": {
-					"Music":        "hits me so hard",
-					"Makes me say": "Oh, my Lord",
-				},
-			},
+			ExpectedErrorMessage: ptr.String("rpc error: code = FailedPrecondition desc = typeInstance locked: path \"/capact/uuid\" contains \"locked_by\" property with value \"foo/bar\""),
 		},
 	}
 
