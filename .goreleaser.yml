@@ -32,10 +32,9 @@ builds:
       # Install upx first, https://github.com/upx/upx/releases
       post: upx -9 "{{ .Path }}"
     main: ./cmd/cli
-    binary: 'capact-{{ .Os }}-{{ .Arch }}'
+    binary: 'capact'
     ldflags:
       - -s -w -X  capact.io/capact/cmd/cli/cmd.Version={{.Version}} -X  capact.io/capact/cmd/cli/cmd.Revision={{.ShortCommit}} -X capact.io/capact/cmd/cli/cmd.BuildDate={{.Date}} -X capact.io/capact/cmd/cli/cmd.Branch={{.Branch}}
-    no_unique_dist_dir: true
 
   # Capact populator
   - id: populator
@@ -45,12 +44,47 @@ builds:
     ignore: *build-ignore
     hooks: *build-hooks
     main: ./cmd/populator
-    binary: 'populator-{{ .Os }}-{{ .Arch }}'
-    no_unique_dist_dir: true
+    binary: 'populator'
 
 archives:
-  - format: binary
-    name_template: '{{ .Binary }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+  - id: capact-archive
+    name_template: &archives-name-template '{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    format: &archives-format binary
+    builds:
+    - capact
+
+  - id: populator-archive
+    name_template: *archives-name-template
+    format: *archives-format
+    builds:
+    - populator
+
+brews:
+  - name: capact
+    ids:
+    - capact-archive
+    homepage: &homebrew-homepage https://github.com/capactio/homebrew-tap
+    description: "Capact CLI is a command-line tool, which manages Capact resources."
+    license: "Apache License 2.0"
+    tap: &homebrew-tap
+      owner: capactio
+      name: homebrew-tap
+    commit_author: &homebrew-commit-author
+        name: Capact Bot
+        email: capactbot@capact.io
+    test: |
+      system "#{bin}/capact version"
+
+  - name: populator
+    ids:
+    - populator-archive
+    homepage: *homebrew-homepage
+    description: "Populator is a command-line tool, which helps to populate various Capact content."
+    license: "Apache License 2.0"
+    tap: *homebrew-tap
+    commit_author: *homebrew-commit-author
+    test: |
+      system "#{bin}/populator help"
 
 dockers:
   - dockerfile: Dockerfile.cli
@@ -76,12 +110,6 @@ changelog:
       - '^test:'
 
 dist: bin
-
-blobs:
-  -
-    provider: gs
-    bucket: capactio-binaries
-    folder: '{{ .Tag }}'
 
 release:
   github:
