@@ -50,11 +50,11 @@ host::os() {
 host::install::protoc() {
   shout "Install the protoc ${STABLE_PROTOC_VERSION} locally to a tempdir..."
   mkdir -p "${TMP_DIR}/bin"
-
-  export GOBIN="${TMP_DIR}/bin"
-  export PATH="${GOBIN}:${PATH}"
-
   pushd "$TMP_DIR" >/dev/null
+
+  GO_BIN="${TMP_DIR}/bin"
+  NPM_BIN="$(npm bin)"
+  export PATH="${GO_BIN}:${NPM_BIN}:${PATH}"
 
   os=$(host::os)
   arch=$(uname -m)
@@ -67,11 +67,14 @@ host::install::protoc() {
   # extract the archive
   unzip "${name}".zip
 
+	# Go plugins
   go install "google.golang.org/protobuf/cmd/protoc-gen-go@${STABLE_PROTOC_GEN_GO_VERSION}"
   go install "google.golang.org/grpc/cmd/protoc-gen-go-grpc@${STABLE_PROTOC_GEN_GO_GRPC_VERSION}"
 
-  popd >/dev/null
+	# TypeScript plugins
+	npm install ts-proto@1.106.2
 
+  popd >/dev/null
   echo -e "${GREEN}√ install protoc${NC}"
 }
 
@@ -85,13 +88,18 @@ main() {
   shout "Generating Capact gRPC related resources..."
 
   readonly apiPaths=(
-    "/pkg/hub/api/grpc"
+    "/hub-js/proto/"
   )
 
   for path in "${apiPaths[@]}"; do
     echo "- Processing ${path}..."
     pushd "${REPO_ROOT_DIR}$path" > /dev/null
-    protoc -I=. --go_out=. --go-grpc_out=. ./*.proto
+    protoc -I=. \
+    --ts_proto_out="${REPO_ROOT_DIR}/hub-js/grpc" \
+    --ts_proto_opt=esModuleInterop=true,outputServices=generic-definitions,useExactTypes=false \
+    --go_out="${REPO_ROOT_DIR}/pkg/hub/api/grpc"  \
+    --go-grpc_out="${REPO_ROOT_DIR}/pkg/hub/api/grpc"  \
+    ./*.proto
     popd > /dev/null
   done
 
