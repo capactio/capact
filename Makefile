@@ -17,7 +17,7 @@ all: generate build-all-images test-unit test-lint ## Default: generate all, bui
 # Building #
 ############
 
-APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions gitlab-api-runner
+APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions gitlab-api-runner secret-storage-backend
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2 merger
 
@@ -148,7 +148,7 @@ image-security-scan: build-all-images ## Build the docker images and check for v
 # Generating #
 ##############
 
-generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources gen-go-source-code gen-docs ## Run all generators
+generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources gen-go-source-code gen-docs gen-grpc-resources ## Run all generators
 .PHONY: generate
 
 gen-go-api-from-ocf-spec: ## Generate Go code from OCF JSON Schemas
@@ -162,6 +162,10 @@ gen-k8s-resources: ## Generate K8s resources
 gen-graphql-resources: ## Generate code from GraphQL schema
 	./hack/gen-graphql-resources.sh
 .PHONY: gen-graphql-resources
+
+gen-grpc-resources: ## Generate gRPC + ProtoBuf Go code for client and server
+	./hack/gen-grpc-resources.sh
+.PHONY: gen-proto-source-code
 
 gen-go-source-code:
 	go generate -x ./...

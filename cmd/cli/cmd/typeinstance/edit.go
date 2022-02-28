@@ -9,10 +9,12 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 )
@@ -56,6 +58,15 @@ func editTI(ctx context.Context, opts editOptions, w io.Writer) error {
 	typeInstanceToUpdate, err := typeInstanceViaEditor(ctx, hubCli, opts.EditTypeInstanceID)
 	if err != nil {
 		return err
+	}
+
+	r := validation.ResultAggregator{}
+	err = r.Report(validation.ValidateTypeInstanceToUpdate(ctx, hubCli, typeInstanceToUpdate))
+	if err != nil {
+		return errors.Wrap(err, "while validating TypeInstance")
+	}
+	if r.ErrorOrNil() != nil {
+		return r.ErrorOrNil()
 	}
 
 	_, err = hubCli.UpdateTypeInstances(ctx, typeInstanceToUpdate)

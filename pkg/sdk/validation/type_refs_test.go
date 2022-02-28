@@ -76,7 +76,7 @@ func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
 			givenTypeRefs: validation.TypeRefCollection{
 				"aws-creds": {},
 			},
-			expectedErrorMsg: "while fetching JSONSchemas for input TypeRefs: hub error for testing purposes",
+			expectedErrorMsg: "while fetching JSONSchemas for TypeRefs: hub error for testing purposes",
 		},
 	}
 	for tn, tc := range tests {

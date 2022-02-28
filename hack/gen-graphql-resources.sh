@@ -38,7 +38,6 @@ host::install::gqlgen() {
 
   pushd "$TMP_DIR" >/dev/null
 
-  go mod init tmp
   go install "github.com/99designs/gqlgen@${STABLE_GQLGEN_VERSION}"
 
   popd >/dev/null
