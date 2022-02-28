@@ -293,7 +293,7 @@ capact::cli()  {
 
   os=$(host::os)
   arch=$(host::arch)
-  default_path="${REPO_DIR}/bin/capact-${os}-${arch}"
+  default_path="${REPO_DIR}/bin/capact_${os}_${arch}/capact"
   cli=${CAPACT_BINARY:-${default_path}}
   if [ ! -f "${cli}" ]; then
     shout "capact cli not found, trying to build one..."
