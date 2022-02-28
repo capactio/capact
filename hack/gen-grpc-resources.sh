@@ -72,7 +72,7 @@ host::install::protoc() {
   go install "google.golang.org/grpc/cmd/protoc-gen-go-grpc@${STABLE_PROTOC_GEN_GO_GRPC_VERSION}"
 
 	# TypeScript plugins
-	npm install ts-proto@1.106.2
+	npm install ts-proto@${STABLE_PROTOC_GEN_TS_VERSION}
 
   popd >/dev/null
   echo -e "${GREEN}√ install protoc${NC}"

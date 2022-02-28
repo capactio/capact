@@ -1,8 +1,8 @@
 /* eslint-disable */
-import Long from "long";
-import _m0 from "protobufjs/minimal";
+import Long from 'long';
+import _m0 from 'protobufjs/minimal';
 
-export const protobufPackage = "storage_backend";
+export const protobufPackage = 'storage_backend';
 
 export interface OnCreateRequest {
   typeInstanceId: string;
@@ -73,7 +73,7 @@ export interface OnUnlockResponse {}
 
 function createBaseOnCreateRequest(): OnCreateRequest {
   return {
-    typeInstanceId: "",
+    typeInstanceId: '',
     value: new Uint8Array(),
     context: new Uint8Array(),
   };
@@ -84,7 +84,7 @@ export const OnCreateRequest = {
     message: OnCreateRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.value.length !== 0) {
@@ -124,7 +124,7 @@ export const OnCreateRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       value: isSet(object.value)
         ? bytesFromBase64(object.value)
         : new Uint8Array(),
@@ -151,7 +151,7 @@ export const OnCreateRequest = {
 
   fromPartial(object: DeepPartial<OnCreateRequest>): OnCreateRequest {
     const message = createBaseOnCreateRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.value = object.value ?? new Uint8Array();
     message.context = object.context ?? new Uint8Array();
     return message;
@@ -292,7 +292,7 @@ export const TypeInstanceResourceVersion = {
 
 function createBaseOnUpdateRequest(): OnUpdateRequest {
   return {
-    typeInstanceId: "",
+    typeInstanceId: '',
     newResourceVersion: 0,
     newValue: new Uint8Array(),
     context: undefined,
@@ -304,7 +304,7 @@ export const OnUpdateRequest = {
     message: OnUpdateRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.newResourceVersion !== 0) {
@@ -350,7 +350,7 @@ export const OnUpdateRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       newResourceVersion: isSet(object.newResourceVersion)
         ? Number(object.newResourceVersion)
         : 0,
@@ -383,7 +383,7 @@ export const OnUpdateRequest = {
 
   fromPartial(object: DeepPartial<OnUpdateRequest>): OnUpdateRequest {
     const message = createBaseOnUpdateRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.newResourceVersion = object.newResourceVersion ?? 0;
     message.newValue = object.newValue ?? new Uint8Array();
     message.context = object.context ?? undefined;
@@ -450,7 +450,7 @@ export const OnUpdateResponse = {
 };
 
 function createBaseOnDeleteRequest(): OnDeleteRequest {
-  return { typeInstanceId: "", context: new Uint8Array() };
+  return { typeInstanceId: '', context: new Uint8Array() };
 }
 
 export const OnDeleteRequest = {
@@ -458,7 +458,7 @@ export const OnDeleteRequest = {
     message: OnDeleteRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.context.length !== 0) {
@@ -492,7 +492,7 @@ export const OnDeleteRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : new Uint8Array(),
@@ -512,7 +512,7 @@ export const OnDeleteRequest = {
 
   fromPartial(object: DeepPartial<OnDeleteRequest>): OnDeleteRequest {
     const message = createBaseOnDeleteRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.context = object.context ?? new Uint8Array();
     return message;
   },
@@ -561,7 +561,7 @@ export const OnDeleteResponse = {
 };
 
 function createBaseGetValueRequest(): GetValueRequest {
-  return { typeInstanceId: "", resourceVersion: 0, context: new Uint8Array() };
+  return { typeInstanceId: '', resourceVersion: 0, context: new Uint8Array() };
 }
 
 export const GetValueRequest = {
@@ -569,7 +569,7 @@ export const GetValueRequest = {
     message: GetValueRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.resourceVersion !== 0) {
@@ -609,7 +609,7 @@ export const GetValueRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       resourceVersion: isSet(object.resourceVersion)
         ? Number(object.resourceVersion)
         : 0,
@@ -634,7 +634,7 @@ export const GetValueRequest = {
 
   fromPartial(object: DeepPartial<GetValueRequest>): GetValueRequest {
     const message = createBaseGetValueRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.resourceVersion = object.resourceVersion ?? 0;
     message.context = object.context ?? new Uint8Array();
     return message;
@@ -698,7 +698,7 @@ export const GetValueResponse = {
 };
 
 function createBaseGetLockedByRequest(): GetLockedByRequest {
-  return { typeInstanceId: "", context: new Uint8Array() };
+  return { typeInstanceId: '', context: new Uint8Array() };
 }
 
 export const GetLockedByRequest = {
@@ -706,7 +706,7 @@ export const GetLockedByRequest = {
     message: GetLockedByRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.context.length !== 0) {
@@ -740,7 +740,7 @@ export const GetLockedByRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : new Uint8Array(),
@@ -760,7 +760,7 @@ export const GetLockedByRequest = {
 
   fromPartial(object: DeepPartial<GetLockedByRequest>): GetLockedByRequest {
     const message = createBaseGetLockedByRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.context = object.context ?? new Uint8Array();
     return message;
   },
@@ -819,7 +819,7 @@ export const GetLockedByResponse = {
 };
 
 function createBaseOnLockRequest(): OnLockRequest {
-  return { typeInstanceId: "", context: new Uint8Array(), lockedBy: "" };
+  return { typeInstanceId: '', context: new Uint8Array(), lockedBy: '' };
 }
 
 export const OnLockRequest = {
@@ -827,13 +827,13 @@ export const OnLockRequest = {
     message: OnLockRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.context.length !== 0) {
       writer.uint32(18).bytes(message.context);
     }
-    if (message.lockedBy !== "") {
+    if (message.lockedBy !== '') {
       writer.uint32(26).string(message.lockedBy);
     }
     return writer;
@@ -867,11 +867,11 @@ export const OnLockRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : new Uint8Array(),
-      lockedBy: isSet(object.lockedBy) ? String(object.lockedBy) : "",
+      lockedBy: isSet(object.lockedBy) ? String(object.lockedBy) : '',
     };
   },
 
@@ -889,9 +889,9 @@ export const OnLockRequest = {
 
   fromPartial(object: DeepPartial<OnLockRequest>): OnLockRequest {
     const message = createBaseOnLockRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.context = object.context ?? new Uint8Array();
-    message.lockedBy = object.lockedBy ?? "";
+    message.lockedBy = object.lockedBy ?? '';
     return message;
   },
 };
@@ -939,7 +939,7 @@ export const OnLockResponse = {
 };
 
 function createBaseOnUnlockRequest(): OnUnlockRequest {
-  return { typeInstanceId: "", context: new Uint8Array() };
+  return { typeInstanceId: '', context: new Uint8Array() };
 }
 
 export const OnUnlockRequest = {
@@ -947,7 +947,7 @@ export const OnUnlockRequest = {
     message: OnUnlockRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
-    if (message.typeInstanceId !== "") {
+    if (message.typeInstanceId !== '') {
       writer.uint32(10).string(message.typeInstanceId);
     }
     if (message.context.length !== 0) {
@@ -981,7 +981,7 @@ export const OnUnlockRequest = {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
-        : "",
+        : '',
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : new Uint8Array(),
@@ -1001,7 +1001,7 @@ export const OnUnlockRequest = {
 
   fromPartial(object: DeepPartial<OnUnlockRequest>): OnUnlockRequest {
     const message = createBaseOnUnlockRequest();
-    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.typeInstanceId = object.typeInstanceId ?? '';
     message.context = object.context ?? new Uint8Array();
     return message;
   },
@@ -1050,12 +1050,12 @@ export const OnUnlockResponse = {
 };
 
 export const StorageBackendDefinition = {
-  name: "StorageBackend",
-  fullName: "storage_backend.StorageBackend",
+  name: 'StorageBackend',
+  fullName: 'storage_backend.StorageBackend',
   methods: {
     /** value */
     getValue: {
-      name: "GetValue",
+      name: 'GetValue',
       requestType: GetValueRequest,
       requestStream: false,
       responseType: GetValueResponse,
@@ -1063,7 +1063,7 @@ export const StorageBackendDefinition = {
       options: {},
     },
     onCreate: {
-      name: "OnCreate",
+      name: 'OnCreate',
       requestType: OnCreateRequest,
       requestStream: false,
       responseType: OnCreateResponse,
@@ -1071,7 +1071,7 @@ export const StorageBackendDefinition = {
       options: {},
     },
     onUpdate: {
-      name: "OnUpdate",
+      name: 'OnUpdate',
       requestType: OnUpdateRequest,
       requestStream: false,
       responseType: OnUpdateResponse,
@@ -1079,7 +1079,7 @@ export const StorageBackendDefinition = {
       options: {},
     },
     onDelete: {
-      name: "OnDelete",
+      name: 'OnDelete',
       requestType: OnDeleteRequest,
       requestStream: false,
       responseType: OnDeleteResponse,
@@ -1088,7 +1088,7 @@ export const StorageBackendDefinition = {
     },
     /** lock */
     getLockedBy: {
-      name: "GetLockedBy",
+      name: 'GetLockedBy',
       requestType: GetLockedByRequest,
       requestStream: false,
       responseType: GetLockedByResponse,
@@ -1096,7 +1096,7 @@ export const StorageBackendDefinition = {
       options: {},
     },
     onLock: {
-      name: "OnLock",
+      name: 'OnLock',
       requestType: OnLockRequest,
       requestStream: false,
       responseType: OnLockResponse,
@@ -1104,7 +1104,7 @@ export const StorageBackendDefinition = {
       options: {},
     },
     onUnlock: {
-      name: "OnUnlock",
+      name: 'OnUnlock',
       requestType: OnUnlockRequest,
       requestStream: false,
       responseType: OnUnlockResponse,
@@ -1118,16 +1118,16 @@ declare var self: any | undefined;
 declare var window: any | undefined;
 declare var global: any | undefined;
 var globalThis: any = (() => {
-  if (typeof globalThis !== "undefined") return globalThis;
-  if (typeof self !== "undefined") return self;
-  if (typeof window !== "undefined") return window;
-  if (typeof global !== "undefined") return global;
-  throw "Unable to locate global object";
+  if (typeof globalThis !== 'undefined') return globalThis;
+  if (typeof self !== 'undefined') return self;
+  if (typeof window !== 'undefined') return window;
+  if (typeof global !== 'undefined') return global;
+  throw 'Unable to locate global object';
 })();
 
 const atob: (b64: string) => string =
   globalThis.atob ||
-  ((b64) => globalThis.Buffer.from(b64, "base64").toString("binary"));
+  ((b64) => globalThis.Buffer.from(b64, 'base64').toString('binary'));
 function bytesFromBase64(b64: string): Uint8Array {
   const bin = atob(b64);
   const arr = new Uint8Array(bin.length);
@@ -1139,13 +1139,13 @@ function bytesFromBase64(b64: string): Uint8Array {
 
 const btoa: (bin: string) => string =
   globalThis.btoa ||
-  ((bin) => globalThis.Buffer.from(bin, "binary").toString("base64"));
+  ((bin) => globalThis.Buffer.from(bin, 'binary').toString('base64'));
 function base64FromBytes(arr: Uint8Array): string {
   const bin: string[] = [];
   for (const byte of arr) {
     bin.push(String.fromCharCode(byte));
   }
-  return btoa(bin.join(""));
+  return btoa(bin.join(''));
 }
 
 type Builtin =
