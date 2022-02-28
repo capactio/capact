@@ -15,7 +15,7 @@ To build the binary install required [Prerequisites](https://capact.io/community
 make build-tool-populator
 ```
 
-It creates a binary for your platform in the `bin` directory. For example, for Linux systems, it is `bin/populator-linux-amd64`.
+It creates a binary for your platform in the `bin` directory. For example, for Linux systems, it is `bin/populator_linux_amd64/populator`.
 
 ## Usage
 
@@ -35,7 +35,7 @@ kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
 To run it and use manifests, for example from the [`hub-manifests`](https://github.com/capactio/hub-manifests) repo, run:
 
 ```shell
-./bin/populator-linux-amd64 register ocf-manifests --source {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_REPO}
+./bin/populator_linux_amd64/populator register ocf-manifests --source {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_REPO}
 ```
 
 To use manifests from private git repo, private key, encoded in base64 format, is needed.

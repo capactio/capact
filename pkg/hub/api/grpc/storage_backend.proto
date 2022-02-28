@@ -1,0 +1,88 @@
+syntax = "proto3";
+option go_package = "./storage_backend";
+package storage_backend;
+
+message OnCreateRequest {
+  string typeinstance_id = 1;
+  bytes value = 2;
+  bytes context = 3;
+}
+
+message OnCreateResponse {
+  optional bytes context = 1;
+}
+
+message TypeInstanceResourceVersion {
+  uint32 resource_version = 1;
+  bytes value = 2;
+}
+
+message OnUpdateRequest {
+  string typeinstance_id = 1;
+  uint32 new_resource_version = 2;
+  bytes new_value = 3;
+  optional bytes context = 4;
+}
+
+message OnUpdateResponse {
+  optional bytes context = 1;
+}
+
+message OnDeleteRequest {
+  string typeinstance_id = 1;
+  bytes context = 2;
+}
+
+message OnDeleteResponse {}
+
+message GetValueRequest {
+  string typeinstance_id = 1;
+  uint32 resource_version = 2;
+  bytes context = 3;
+}
+
+message GetValueResponse {
+  optional bytes value = 1;
+}
+
+
+// lock messages
+
+message GetLockedByRequest {
+  string typeinstance_id = 1;
+  bytes context = 2;
+}
+
+message GetLockedByResponse {
+  optional string locked_by = 1;
+}
+
+message OnLockRequest {
+  string typeinstance_id = 1;
+  bytes context = 2;
+  string locked_by = 3;
+}
+
+message OnLockResponse {}
+
+message OnUnlockRequest {
+  string typeinstance_id = 1;
+  bytes context = 2;
+}
+
+message OnUnlockResponse {}
+
+// services
+
+service StorageBackend {
+  // value
+  rpc GetValue(GetValueRequest) returns (GetValueResponse);
+  rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
+  rpc OnUpdate(OnUpdateRequest) returns (OnUpdateResponse);
+  rpc OnDelete(OnDeleteRequest) returns (OnDeleteResponse);
+
+  // lock
+  rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
+  rpc OnLock(OnLockRequest) returns (OnLockResponse);
+  rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
+}

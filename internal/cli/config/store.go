@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	availableContextsKey           = "availableContexts"
 	defaultContextKey              = "defaultContext"
 	credentialsStoreBackendKey     = "credentialsStore.backend"
 	credentialsStoreFilePassphrase = "credentialsStore.filePassphrase"
@@ -74,7 +75,7 @@ func SetAsDefaultContext(server string, override bool) error {
 		viper.Set(defaultContextKey, server)
 
 		if err := viper.WriteConfig(); err != nil {
-			return errors.Wrap(err, "while writing config file")
+			return errors.Wrap(err, "while writing default context into config file")
 		}
 	}
 
@@ -86,6 +87,34 @@ func GetDefaultContext() string {
 	return viper.GetString(defaultContextKey)
 }
 
+// AddNewContext adds a new context if not exists to the collection of available contexts.
+func AddNewContext(server string) error {
+	availableContexts := GetAvailableContexts()
+	if err := storeAvailableContexts(appendContextIfMissing(availableContexts, server)); err != nil {
+		return errors.Wrap(err, "while setting and writing a new context")
+	}
+	return nil
+}
+
+// DeleteContext delete a context from the the collection of available contexts.
+func DeleteContext(server string) error {
+	availableContexts := GetAvailableContexts()
+	for index, context := range availableContexts {
+		if context == server {
+			availableContexts = append(availableContexts[:index], availableContexts[index+1:]...)
+		}
+	}
+	if err := storeAvailableContexts(availableContexts); err != nil {
+		return errors.Wrap(err, "while setting and writing available contexts")
+	}
+	return nil
+}
+
+// GetAvailableContexts return collection of available contexts.
+func GetAvailableContexts() []string {
+	return viper.GetStringSlice(availableContextsKey)
+}
+
 // GetCredentialsStoreBackend returns keyring backend type.
 func GetCredentialsStoreBackend() string {
 	return viper.GetString(credentialsStoreBackendKey)
@@ -94,4 +123,21 @@ func GetCredentialsStoreBackend() string {
 // GetCredentialsStoreFilePassphrase returns passphrase for file keyring backend type.
 func GetCredentialsStoreFilePassphrase() string {
 	return viper.GetString(credentialsStoreFilePassphrase)
+}
+
+func storeAvailableContexts(contexts []string) error {
+	viper.Set(availableContextsKey, contexts)
+	if err := viper.WriteConfig(); err != nil {
+		return errors.Wrap(err, "while writing available contexts into config file")
+	}
+	return nil
+}
+
+func appendContextIfMissing(contexts []string, newContext string) []string {
+	for _, context := range contexts {
+		if context == newContext {
+			return contexts
+		}
+	}
+	return append(contexts, newContext)
 }

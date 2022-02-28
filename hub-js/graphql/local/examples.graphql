@@ -162,6 +162,9 @@ mutation DeleteLockedTypeInstance($typeInstanceID: ID!) {
 
 fragment TypeInstance on TypeInstance {
   id
+  createdAt {
+    formatted
+  }
   typeRef {
     path
     revision
