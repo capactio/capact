@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Retry a command
 n=0
 until [ "$n" -ge 5 ]

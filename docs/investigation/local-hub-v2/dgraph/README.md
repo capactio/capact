@@ -28,13 +28,13 @@ Additionally, we don't want to use the Dgraph only as of the database and create
 
 - Install Go
 - Install Docker
-- **(optional)** Install [Insomnia](https://insomnia.rest/download)
+- Install [Insomnia](https://insomnia.rest/download)
 
 ## What has changed?
 
 In general, they mostly do a [bug fix releases](https://github.com/dgraph-io/dgraph/blob/12c3ef564cde11ecc3de96ec1516b3148e52d795/CHANGELOG.md).
 
-### Architecture
+## Overview
 
 Dgraph doesn't allow adding custom logic directly in Dgraph server. To change the Dgraph behavior, you can:
 - use `@custom` directive to redirect resolution of a given queries, mutations and fields. Resolution is done by calling the defined HTTP server.
@@ -47,16 +47,18 @@ It's due to the fact that Dgraph's GraphQL calls are not translated but directly
 
 In comparison to current Neo4j implementation. We can do exactly the same, but we need to write delegation logic in JavaScript, as a result we can use any protocol we want to. Dgraph just gives a syntax sugar for extensions, but at the same time restrict it to HTTP only.
 
-#### Give it a try
+## Give it a try
 
 1. Ensure that Docker is running on your localhost.
 2. Run the Dgraph and lambda server and load GraphQL schema:
    ```bash
    docker compose up --build
    ```
-3. Run all queries and mutations from [scenario.graphql](./assets/scenario.graphql) one by one.
+   >**NOTE:** If the data was not populated successfully, run: `docker compose run populate`.
+3. Use [Insomnia](https://insomnia.rest/download) to run all queries and mutations from [scenario.graphql](./assets/scenario.graphql) one by one.
+   >**NOTE:** GraphQL address: http://localhost:8080
 
-#### Findings
+### Findings
 
 After running the above example, you can notice that:
 
@@ -66,7 +68,7 @@ After running the above example, you can notice that:
 - If a field is marked with `@custom` or `@lambda` directive, it's not included in mutation.
 - To prepare the demo scenario I had to check the Dgraph code directly as snippets described in Dgraph documentation are sometimes invalid.
 
-At the beginning, I thought that lambdas on fields will be able to speed up our development. Due to, found issues, I don't think it will.
+At the beginning, I thought that lambdas on fields will be able to speed up our development. Due to, found issues, I don't think they will.
 
 ### Migration problems
 
