@@ -90,7 +90,7 @@ func GetDefaultContext() string {
 // AddNewContext adds a new context if not exists to the collection of available contexts.
 func AddNewContext(server string) error {
 	availableContexts := GetAvailableContexts()
-	if err := setAndWriteAvailableContexts(appendContextIfMissing(availableContexts, server)); err != nil {
+	if err := storeAvailableContexts(appendContextIfMissing(availableContexts, server)); err != nil {
 		return errors.Wrap(err, "while setting and writing a new context")
 	}
 	return nil
@@ -104,7 +104,7 @@ func DeleteContext(server string) error {
 			availableContexts = append(availableContexts[:index], availableContexts[index+1:]...)
 		}
 	}
-	if err := setAndWriteAvailableContexts(availableContexts); err != nil {
+	if err := storeAvailableContexts(availableContexts); err != nil {
 		return errors.Wrap(err, "while setting and writing available contexts")
 	}
 	return nil
@@ -125,7 +125,7 @@ func GetCredentialsStoreFilePassphrase() string {
 	return viper.GetString(credentialsStoreFilePassphrase)
 }
 
-func setAndWriteAvailableContexts(contexts []string) error {
+func storeAvailableContexts(contexts []string) error {
 	viper.Set(availableContextsKey, contexts)
 	if err := viper.WriteConfig(); err != nil {
 		return errors.Wrap(err, "while writing available contexts into config file")
