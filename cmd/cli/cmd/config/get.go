@@ -6,7 +6,6 @@ import (
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/config"
-	"capact.io/capact/internal/cli/credstore"
 	"capact.io/capact/internal/cli/heredoc"
 
 	"github.com/olekukonko/tablewriter"
@@ -24,22 +23,17 @@ func NewGet() *cobra.Command {
 		`, cli.Name),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getRun(os.Stdout)
+			getRun(os.Stdout)
+			return nil
 		},
 	}
 }
 
-func getRun(w io.Writer) error {
-	out, err := credstore.ListHubServer()
-	if err != nil {
-		return err
-	}
-
+func getRun(w io.Writer) {
+	out := config.GetAvailableContexts()
 	def := config.GetDefaultContext()
 
 	printTable(def, out, w)
-
-	return nil
 }
 
 func printTable(defaultServer string, servers []string, w io.Writer) {

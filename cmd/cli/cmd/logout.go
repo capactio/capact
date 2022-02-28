@@ -5,6 +5,7 @@ import (
 	"os"
 
 	capactCLI "capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/credstore"
 	"capact.io/capact/internal/cli/heredoc"
 	"github.com/fatih/color"
@@ -54,7 +55,15 @@ func runLogout(serverAddress string, w io.Writer) error {
 		return errors.Wrap(err, "could not erase credentials")
 	}
 
-	// TODO: handle current context update
+	if serverAddress == config.GetDefaultContext() {
+		if err := config.SetAsDefaultContext("", true); err != nil {
+			return errors.Wrap(err, "while setting a default context to none")
+		}
+	}
+
+	if err := config.DeleteContext(serverAddress); err != nil {
+		return errors.Wrap(err, "could not delete context")
+	}
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
 	okCheck(w, "Logout Succeeded\n")
@@ -63,17 +72,14 @@ func runLogout(serverAddress string, w io.Writer) error {
 }
 
 func askWhatServerToLogout() (string, error) {
-	candidates, err := credstore.ListHubServer()
-	if err != nil {
-		return "", err
-	}
+	candidates := config.GetAvailableContexts()
 
 	if len(candidates) == 0 {
 		return "", errors.New("Not logged in to any server")
 	}
 
 	var serverAddress string
-	err = survey.AskOne(&survey.Select{
+	err := survey.AskOne(&survey.Select{
 		Message: "What server do you want to log out of? ",
 		Options: candidates,
 	}, &serverAddress)
