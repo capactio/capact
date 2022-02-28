@@ -1,0 +1,21 @@
+schema:
+  - ../schema.graphql
+
+exec:
+  filename: internal/generated/generated.go
+  package: generated
+
+model:
+  filename: internal/model/models_gen.go
+  package: model
+
+autobind:
+  # - "github.com/schartey/dgraph-lambda-go/examples/models"
+
+resolver:
+  dir: internal/resolvers
+  package: resolvers
+  filename_template: "{resolver}.resolver.go" # also allow "{name}.resolvers.go"
+
+server:
+  standalone: true

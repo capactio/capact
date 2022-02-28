@@ -406,7 +406,7 @@ jobs:
     permissions:
       contents: read
     env:
-      CAPACT_BINARY: "${{ github.workspace}}/capact_linux_amd64/capact"
+      CAPACT_BINARY: "${{ github.workspace}}/capact"
 
     steps:
       - name: Checkout code
