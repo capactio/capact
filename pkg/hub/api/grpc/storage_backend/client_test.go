@@ -21,7 +21,7 @@ const secretStorageBackendAddr = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
 //	and the `provider` is enabled on this server.
 //
 // To run this test, execute:
-// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -v
+// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -v -count 1
 func TestNewStorageBackendClient(t *testing.T) {
 	srvAddr := os.Getenv(secretStorageBackendAddr)
 	if srvAddr == "" {
