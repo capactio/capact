@@ -125,7 +125,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string, opts ...TypeIn
 
 	query := fmt.Sprintf(`query FindTypeInstance($id: ID!) {
 		typeInstance(id: $id) {
-			%s	
+			%s
 		}
 	}`, tiOpts.fields)
 
@@ -154,13 +154,13 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 
 	body := bytes.Buffer{}
 	for idx, id := range ids {
-		body.WriteString(fmt.Sprintf(`		
+		body.WriteString(fmt.Sprintf(`
 		id_%d:typeInstance(id: %q) {
 			id
 			typeRef {
 			  path
 			  revision
-			}	
+			}
 		}`, idx, id))
 	}
 
@@ -194,7 +194,7 @@ func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.
 
 	query := fmt.Sprintf(`query ListTypeInstances($filter: TypeInstanceFilter) {
 		typeInstances(filter: $filter) {
-			%s	
+			%s
 		}
 	}`, tiOpts.fields)
 

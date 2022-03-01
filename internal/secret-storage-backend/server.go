@@ -126,12 +126,15 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 		return nil, err
 	}
 
+	h.log.Debug("put val", zap.String("data", string(request.Value)))
 	err = h.putEntry(provider, key, request.Value)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.OnCreateResponse{}, nil
+	return &pb.OnCreateResponse{
+		Context: request.Context,
+	}, nil
 }
 
 // OnUpdate handles TypeInstance update by updating secret in a given provider.
@@ -243,15 +246,18 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 }
 
 func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, error) {
-	var context Context
-	err := json.Unmarshal(contextBytes, &context)
+	if len(contextBytes) == 0 {
+		return h.providers["dotenv"], nil
+	}
+	var ctx Context
+	err := json.Unmarshal(contextBytes, &ctx)
 	if err != nil {
-		return nil, h.internalError(errors.Wrap(err, "while unmarshaling additional parameters"))
+		return nil, h.internalError(errors.Wrap(err, "while unmarshaling ctx"))
 	}
 
-	provider, ok := h.providers[context.Provider]
+	provider, ok := h.providers[ctx.Provider]
 	if !ok {
-		return nil, h.internalError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
+		return nil, h.internalError(fmt.Errorf("missing loaded provider with name %q", ctx.Provider))
 	}
 
 	return provider, nil

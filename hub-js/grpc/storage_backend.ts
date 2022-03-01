@@ -7,7 +7,7 @@ export const protobufPackage = "storage_backend";
 export interface OnCreateRequest {
   typeInstanceId: string;
   value: Uint8Array;
-  context: Uint8Array;
+  context?: Uint8Array | undefined;
 }
 
 export interface OnCreateResponse {
@@ -32,7 +32,7 @@ export interface OnUpdateResponse {
 
 export interface OnDeleteRequest {
   typeInstanceId: string;
-  context: Uint8Array;
+  context?: Uint8Array | undefined;
 }
 
 export interface OnDeleteResponse {}
@@ -72,11 +72,7 @@ export interface OnUnlockRequest {
 export interface OnUnlockResponse {}
 
 function createBaseOnCreateRequest(): OnCreateRequest {
-  return {
-    typeInstanceId: "",
-    value: new Uint8Array(),
-    context: new Uint8Array(),
-  };
+  return { typeInstanceId: "", value: new Uint8Array(), context: undefined };
 }
 
 export const OnCreateRequest = {
@@ -90,7 +86,7 @@ export const OnCreateRequest = {
     if (message.value.length !== 0) {
       writer.uint32(18).bytes(message.value);
     }
-    if (message.context.length !== 0) {
+    if (message.context !== undefined) {
       writer.uint32(26).bytes(message.context);
     }
     return writer;
@@ -130,7 +126,7 @@ export const OnCreateRequest = {
         : new Uint8Array(),
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
-        : new Uint8Array(),
+        : undefined,
     };
   },
 
@@ -143,9 +139,10 @@ export const OnCreateRequest = {
         message.value !== undefined ? message.value : new Uint8Array()
       ));
     message.context !== undefined &&
-      (obj.context = base64FromBytes(
-        message.context !== undefined ? message.context : new Uint8Array()
-      ));
+      (obj.context =
+        message.context !== undefined
+          ? base64FromBytes(message.context)
+          : undefined);
     return obj;
   },
 
@@ -153,7 +150,7 @@ export const OnCreateRequest = {
     const message = createBaseOnCreateRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
     message.value = object.value ?? new Uint8Array();
-    message.context = object.context ?? new Uint8Array();
+    message.context = object.context ?? undefined;
     return message;
   },
 };
@@ -450,7 +447,7 @@ export const OnUpdateResponse = {
 };
 
 function createBaseOnDeleteRequest(): OnDeleteRequest {
-  return { typeInstanceId: "", context: new Uint8Array() };
+  return { typeInstanceId: "", context: undefined };
 }
 
 export const OnDeleteRequest = {
@@ -461,7 +458,7 @@ export const OnDeleteRequest = {
     if (message.typeInstanceId !== "") {
       writer.uint32(10).string(message.typeInstanceId);
     }
-    if (message.context.length !== 0) {
+    if (message.context !== undefined) {
       writer.uint32(18).bytes(message.context);
     }
     return writer;
@@ -495,7 +492,7 @@ export const OnDeleteRequest = {
         : "",
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
-        : new Uint8Array(),
+        : undefined,
     };
   },
 
@@ -504,16 +501,17 @@ export const OnDeleteRequest = {
     message.typeInstanceId !== undefined &&
       (obj.typeInstanceId = message.typeInstanceId);
     message.context !== undefined &&
-      (obj.context = base64FromBytes(
-        message.context !== undefined ? message.context : new Uint8Array()
-      ));
+      (obj.context =
+        message.context !== undefined
+          ? base64FromBytes(message.context)
+          : undefined);
     return obj;
   },
 
   fromPartial(object: DeepPartial<OnDeleteRequest>): OnDeleteRequest {
     const message = createBaseOnDeleteRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
-    message.context = object.context ?? new Uint8Array();
+    message.context = object.context ?? undefined;
     return message;
   },
 };

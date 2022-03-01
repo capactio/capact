@@ -1,5 +1,5 @@
 import {ApolloServer} from "apollo-server-express";
-import * as express from "express";
+import express from "express";
 import neo4j, {Driver} from "neo4j-driver";
 import {
   createTerminus,
@@ -12,7 +12,8 @@ import {GraphQLSchema} from "graphql";
 import {assertSchemaOnDatabase, getSchemaForMode, HubMode} from "./schema";
 import {config} from "./config";
 import {logger} from "./logger";
-import {ensureCoreStorageTypeInstance} from "./schema/local";
+import { ensureCoreStorageTypeInstance } from "./local/mutation/register-built-in-storage";
+import DelegatedStorageService from "./local/storage/service";
 
 async function main() {
   logger.info("Using Neo4j database", {endpoint: config.neo4j.endpoint});
@@ -33,7 +34,7 @@ async function main() {
         db: await driver.verifyConnectivity(),
       };
     } catch (error) {
-      throw new HealthCheckError("healthcheck failed", error);
+      throw new HealthCheckError("health check failed", error);
     }
   };
 
@@ -62,7 +63,8 @@ async function setupHttpServer(
   const app = express();
   app.use(express.json({limit: config.express.bodySizeLimit}));
 
-  const apolloServer = new ApolloServer({schema, context: {driver}});
+  const delegatedStorage = new DelegatedStorageService(driver)
+  const apolloServer = new ApolloServer({schema, context: {driver, delegatedStorage}});
   await apolloServer.start();
   apolloServer.applyMiddleware({app});
 
@@ -76,5 +78,5 @@ async function setupHttpServer(
 }
 
 (async () => {
-  main();
+  await main();
 })();

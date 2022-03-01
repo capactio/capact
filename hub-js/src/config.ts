@@ -5,6 +5,8 @@ if (process.env.APP_NEO4J_PASSWORD === undefined) {
 const graphqlBindAddress = process.env.APP_GRAPH_QL_ADDR || ":8080";
 const [graphQLAddr, graphQLPort] = graphqlBindAddress.split(":", 2);
 
+export const BUILTIN_STORAGE_BACKEND_ID = "318b99bd-9b26-4bc1-8259-0a7ff5dae61c"
+
 export const config = {
   neo4j: {
     endpoint: process.env.APP_NEO4J_ENDPOINT || "bolt://localhost:7687",

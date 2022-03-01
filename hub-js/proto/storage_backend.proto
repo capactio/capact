@@ -5,7 +5,7 @@ package storage_backend;
 message OnCreateRequest {
   string type_instance_id = 1;
   bytes value = 2;
-  bytes context = 3;
+	optional bytes context = 3;
 }
 
 message OnCreateResponse {
@@ -30,7 +30,7 @@ message OnUpdateResponse {
 
 message OnDeleteRequest {
   string type_instance_id = 1;
-  bytes context = 2;
+  optional bytes context = 2;
 }
 
 message OnDeleteResponse {}
