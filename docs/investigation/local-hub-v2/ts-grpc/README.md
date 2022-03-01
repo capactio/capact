@@ -5,7 +5,7 @@ This document aggregates raw notes from a short investigation as a part of the [
 ## Goal
 
 The goal is to find which tools we should use to generate the gRPC client for delegated storage backend. We want to:
-- have a TypeScript Types
+- generate TypeScript Types
 - have support for async/await
 
 ## Options

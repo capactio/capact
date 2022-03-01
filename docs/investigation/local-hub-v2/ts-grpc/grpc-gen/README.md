@@ -24,7 +24,7 @@ npm install
 To generate the TypeScript files into [`./proto/official`](./proto/ts-plugin), run:
 
 ```bash
-$(npm bin)/proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --outDir=proto/official ../../../../../hub-js/proto/storage_backend.proto
+npx proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --outDir=proto/official --grpcLib=@grpc/grpc-js ../../../../../hub-js/proto/storage_backend.proto
 ```
 
 This is aliased as a npm script:
@@ -40,7 +40,7 @@ To generate the TypeScript files into [`./proto/ts-plugin`](./proto/ts-plugin), 
 > **NOTE:** The `./proto/ts-plugin` directory needs to exist.
 
 ```bash
-$(npm bin)/grpc_tools_node_protoc \
+npx grpc_tools_node_protoc \
   --plugin=protoc-gen-ts_proto=$(npm bin)/protoc-gen-ts_proto \
   --ts_proto_out=./proto/ts-plugin \
   --ts_proto_opt=esModuleInterop=true,outputServices=generic-definitions,useExactTypes=false \
