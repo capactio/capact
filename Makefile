@@ -26,7 +26,7 @@ build-all-tools: ## Builds the standalone binaries for all tools
 .PHONY: build-cli-tools
 
 build-tool-cli: ## Builds the standalone binaries for the capact CLI
-	goreleaser build --id capact --rm-dist --skip-post-hooks --snapshot
+	goreleaser build --id capact --rm-dist --skip-post-hooks --snapshot --single-target
 .PHONY: build-tool-cli
 
 build-tool-populator: ## Builds the standalone binaries for the Hub Populator

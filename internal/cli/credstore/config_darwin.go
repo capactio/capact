@@ -10,12 +10,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	serviceName = fmt.Sprintf("%s-vault", Name)
+)
+
 func openStore() (Keyring, error) {
 	backend := config.GetCredentialsStoreBackend()
 
 	cfg := keyring.Config{
-		ServiceName:      fmt.Sprintf("%s-vault", Name),
-		WinCredPrefix:    fmt.Sprintf("%s-vault", Name),
+		ServiceName:      serviceName,
+		WinCredPrefix:    serviceName,
 		FileDir:          fmt.Sprintf("~/.config/capact/%s_vault", Name),
 		FilePasswordFunc: fileKeyringPassphrasePrompt,
 	}
@@ -23,12 +27,10 @@ func openStore() (Keyring, error) {
 	switch backend {
 	case "keychain":
 		return &Keychain{}, nil
-	case "file":
-		return keyring.Open(cfg)
-	case "pass":
+	case "file", "pass":
 		return keyring.Open(cfg)
 	default:
-		return nil, errors.New("not supported")
+		return nil, errors.New("backend not supported")
 	}
 
 	return nil, nil

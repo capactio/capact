@@ -111,16 +111,13 @@ func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 		Username: answers.Username,
 		Secret:   answers.Password,
 	}
-	//if err := loginClientSide(ctx, answers.Server, &creds); err != nil {
-	//	return errors.Wrap(err, "while verifying provided credentials")
-	//}
+	if err := loginClientSide(ctx, answers.Server, &creds); err != nil {
+		return errors.Wrap(err, "while verifying provided credentials")
+	}
 
-	fmt.Println("Add hub...")
 	if err = credstore.AddHub(answers.Server, creds); err != nil {
 		return errors.Wrap(err, "while adding hub to a credential store")
 	}
-
-	fmt.Println("SetAsDefaultContext...")
 
 	if err = config.SetAsDefaultContext(answers.Server, false); err != nil {
 		return errors.Wrap(err, "while setting context to default")
@@ -128,12 +125,6 @@ func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 
 	if err = config.AddNewContext(answers.Server); err != nil {
 		return errors.Wrap(err, "while adding a new context")
-	}
-
-	fmt.Println("add context...")
-
-	if err = config.AddContext(answers.Server); err != nil {
-		return err
 	}
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
