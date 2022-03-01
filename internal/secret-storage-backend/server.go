@@ -60,14 +60,14 @@ func (h *Handler) GetValue(_ context.Context, request *pb.GetValueRequest) (*pb.
 		return nil, err
 	}
 
-	key := h.storageKeyForTypeInstanceValue(provider, request.TypeinstanceId, request.ResourceVersion)
+	key := h.storageKeyForTypeInstanceValue(provider, request.TypeInstanceId, request.ResourceVersion)
 	entry, err := h.getEntry(provider, key)
 	if err != nil {
 		return nil, err
 	}
 
 	if !entry.IsFound {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q in revision %d was not found", request.TypeinstanceId, request.ResourceVersion))
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q in revision %d was not found", request.TypeInstanceId, request.ResourceVersion))
 	}
 
 	return &pb.GetValueResponse{
@@ -87,7 +87,7 @@ func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest)
 	}
 
 	key := tellercore.KeyPath{
-		Path: h.storagePathForTypeInstance(provider, request.TypeinstanceId),
+		Path: h.storagePathForTypeInstance(provider, request.TypeInstanceId),
 	}
 	entries, err := h.getEntriesForPath(provider, key)
 	if err != nil {
@@ -95,7 +95,7 @@ func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest)
 	}
 
 	if len(entries) == 0 {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q not found: secret from path %q is empty", request.TypeinstanceId, key.Path))
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q not found: secret from path %q is empty", request.TypeInstanceId, key.Path))
 	}
 
 	var lockedBy *string
@@ -121,7 +121,7 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 		return nil, err
 	}
 
-	key := h.storageKeyForTypeInstanceValue(provider, request.TypeinstanceId, firstResourceVersion)
+	key := h.storageKeyForTypeInstanceValue(provider, request.TypeInstanceId, firstResourceVersion)
 	if err := h.ensureSecretCanBeCreated(provider, key); err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 		return nil, err
 	}
 
-	key := h.storageKeyForTypeInstanceValue(provider, request.TypeinstanceId, request.NewResourceVersion)
+	key := h.storageKeyForTypeInstanceValue(provider, request.TypeInstanceId, request.NewResourceVersion)
 
 	if err := h.ensureSecretCanBeUpdated(provider, key); err != nil {
 		return nil, err
@@ -171,12 +171,12 @@ func (h *Handler) OnLock(_ context.Context, request *pb.OnLockRequest) (*pb.OnLo
 		return nil, err
 	}
 
-	err = h.ensureSecretIsNotLocked(provider, request.TypeinstanceId)
+	err = h.ensureSecretIsNotLocked(provider, request.TypeInstanceId)
 	if err != nil {
 		return nil, err
 	}
 
-	key := h.storageKeyForLockedBy(provider, request.TypeinstanceId)
+	key := h.storageKeyForLockedBy(provider, request.TypeInstanceId)
 
 	err = h.putEntry(provider, key, []byte(request.LockedBy))
 	if err != nil {
@@ -198,14 +198,14 @@ func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.
 	}
 
 	key := tellercore.KeyPath{
-		Path: h.storagePathForTypeInstance(provider, request.TypeinstanceId),
+		Path: h.storagePathForTypeInstance(provider, request.TypeInstanceId),
 	}
 	err = h.ensureSecretCanBeUnlocked(provider, key)
 	if err != nil {
 		return nil, err
 	}
 
-	lockedByKey := h.storageKeyForLockedBy(provider, request.TypeinstanceId)
+	lockedByKey := h.storageKeyForLockedBy(provider, request.TypeInstanceId)
 	err = h.deleteEntry(provider, lockedByKey)
 	if err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 	}
 
 	key := tellercore.KeyPath{
-		Path: h.storagePathForTypeInstance(provider, request.TypeinstanceId),
+		Path: h.storagePathForTypeInstance(provider, request.TypeInstanceId),
 	}
 	err = h.ensureSecretCanBeDeleted(provider, key)
 	if err != nil {
@@ -236,7 +236,7 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 
 	err = provider.DeleteMapping(key)
 	if err != nil {
-		return nil, h.internalError(errors.Wrapf(err, "while deleting TypeInstance %q", request.TypeinstanceId))
+		return nil, h.internalError(errors.Wrapf(err, "while deleting TypeInstance %q", request.TypeInstanceId))
 	}
 
 	return &pb.OnDeleteResponse{}, nil

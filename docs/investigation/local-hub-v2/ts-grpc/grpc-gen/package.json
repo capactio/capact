@@ -1,0 +1,46 @@
+{
+  "name": "grpc-gen",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run build:typescript",
+    "build:typescript": "tsc -p .",
+    "watch": "npm run build:typescript -- -w",
+    "lint:prettier": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
+    "lint:fix:prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
+    "start:server": "node server",
+    "build:official-proto": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=proto/official ../../../../../hub-js/proto/storage_backend.proto",
+    "build:plugin-proto": "grpc_tools_node_protoc --ts_proto_opt=esModuleInterop=true,outputServices=generic-definitions,useExactTypes=false --ts_proto_out=./proto/ts-plugin --proto_path='../../../../../hub-js/proto/' ../../../../../hub-js/proto/storage_backend.proto",
+    "start:client-official": "node dist/client-official",
+    "start:client-official-await": "node dist/client-official-await",
+    "start:client-ts-plugin": "node dist/client-ts-plugin"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.3.1",
+    "google-protobuf": "^3.17.0",
+    "long": "^5.2.0",
+    "nice-grpc": "^1.0.6",
+    "protobufjs": "^6.11.2"
+  },
+  "devDependencies": {
+    "@tsconfig/node12": "^1.0.7",
+    "@types/google-protobuf": "^3.15.2",
+    "@types/node": "^15.0.3",
+    "@typescript-eslint/eslint-plugin": "^4.23.0",
+    "@typescript-eslint/parser": "^4.23.0",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "grpc-tools": "^1.11.2",
+    "prettier": "^2.3.0",
+    "ts-proto": "^1.106.2",
+    "ts-protoc-gen": "^0.15.0",
+    "typescript": "^4.2.4"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "tabWidth": 2,
+    "printWidth": 80,
+    "useTabs": false
+  }
+}
