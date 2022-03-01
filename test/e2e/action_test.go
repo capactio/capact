@@ -236,7 +236,7 @@ var _ = Describe("Action", func() {
 				},
 			}
 
-			By("2. Modifying rule Policy to pick Implementation B...")
+			By("2. Modifying default Policy to pick Implementation B...")
 			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
 				{
 					ID:          injectTypeInstance.ID,

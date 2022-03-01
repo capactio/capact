@@ -129,6 +129,7 @@ func (r *Resolver) setTypeRefsForDefaultTypeInstances(policy *policy.Policy, typ
 			Path:     typeRef.Path,
 			Revision: typeRef.Revision,
 		}
+		policy.Interface.Default.Inject.RequiredTypeInstances[reqTIIdx].ExtendsHubStorage = r.isExtendingHubStorage(typeRef)
 	}
 }
 
