@@ -73,7 +73,7 @@ export const schema = makeAugmentedSchema({
               // create TypeInstances
               const createTypeInstanceResult = await tx.run(
                 `UNWIND $typeInstances AS typeInstance
-               CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+               CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
 
                // Backend
                WITH *
@@ -500,6 +500,7 @@ export async function ensureCoreStorageTypeInstance(context: ContextWithDriver) 
 				    MERGE (ti)-[:CONTAINS]->(tir)
 				    MERGE (tir)-[:DESCRIBED_BY]->(metadata:TypeInstanceResourceVersionMetadata)
 				    MERGE (tir)-[:SPECIFIED_BY]->(spec)
+				    SET ti.createdAt = CASE WHEN ti.createdAt IS NOT NULL THEN ti.createdAt ELSE datetime() END
 
 				    RETURN ti
 					`, {value});

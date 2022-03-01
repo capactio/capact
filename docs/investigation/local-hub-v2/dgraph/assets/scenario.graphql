@@ -1,0 +1,116 @@
+# Create Backend
+mutation BackendRef {
+  addTypeInstanceBackendReference(input: { abstract: true }) {
+    typeInstanceBackendReference {
+      id
+      abstract
+    }
+  }
+}
+
+# Create first TypeInstance
+mutation TypeInstance1 {
+  addTypeInstance(
+    input: {
+      typeRef: { path: "cap.type.db.psql.config", revision: "0.1.0" }
+      spec: { backend: { id: "0x2" } backendID: "123"}
+    }
+  ) {
+    typeInstance {
+      id
+      uses {
+        id
+        typeRef {
+          path
+        }
+      }
+      usedBy {
+        id
+        typeRef {
+          path
+        }
+      }
+    }
+  }
+}
+
+# Create second TypeInstance
+# TODO: update in `uses` property to match the TypeInstance1
+mutation TypeInstance2 {
+  addTypeInstance(
+    input: {
+      typeRef: { path: "cap.type.db.psql.config", revision: "0.1.0" }
+      spec: { backend: { id: "0x2" }}
+      uses: [{ id: "0x5" }]
+    }
+  ) {
+    typeInstance {
+      id
+      uses {
+        id
+        typeRef {
+          path
+        }
+      }
+      usedBy {
+        id
+        typeRef {
+          path
+        }
+      }
+    }
+  }
+}
+
+query GetAllTypeInstances {
+  queryTypeInstance {
+    ...TypeInstanceFields
+    uses {
+      ...TypeInstanceFields
+    }
+    usedBy {
+      ...TypeInstanceFields
+    }
+  }
+}
+
+query FilterTypeInstance {
+  queryTypeInstance(filter: { id: "0x7" }) {
+    ...TypeInstanceFields
+    uses {
+      ...TypeInstanceFields
+    }
+    usedBy {
+      ...TypeInstanceFields
+    }
+  }
+}
+
+query QuerySingleTypeInstance {
+  getTypeInstance(id: "0x7" ) {
+    ...TypeInstanceFields
+    uses {
+      ...TypeInstanceFields
+    }
+    usedBy {
+      ...TypeInstanceFields
+    }
+  }
+}
+
+
+fragment TypeInstanceFields on TypeInstance {
+  id
+  lockedBy
+  typeRef {
+    path
+    revision
+  }
+  spec {
+    backend {
+      id
+      abstract
+    }
+    value
+  }
+}

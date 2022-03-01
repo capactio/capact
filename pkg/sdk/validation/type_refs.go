@@ -35,7 +35,7 @@ func ResolveTypeRefsToJSONSchemas(ctx context.Context, hubCli HubClient, inTypeR
 		PathPattern: ptr.String(typeRefsPathFilter),
 	}))
 	if err != nil {
-		return nil, errors.Wrap(err, "while fetching JSONSchemas for input TypeRefs")
+		return nil, errors.Wrap(err, "while fetching JSONSchemas for TypeRefs")
 	}
 
 	indexedTypes := map[string]interface{}{}

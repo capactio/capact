@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"capact.io/capact/pkg/httputil"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"github.com/avast/retry-go"
 
@@ -23,6 +24,15 @@ type Client struct {
 // NewClient creates a public client with a given GraphQL custom client instance.
 func NewClient(cli *graphql.Client) *Client {
 	return &Client{client: cli}
+}
+
+// NewDefaultClient creates ready to use client with default values.
+func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
+	httpClient := httputil.NewClient(opts...)
+	clientOpt := graphql.WithHTTPClient(httpClient)
+	client := graphql.NewClient(endpoint, clientOpt)
+
+	return NewClient(client)
 }
 
 // FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.

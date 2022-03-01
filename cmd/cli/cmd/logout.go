@@ -55,7 +55,15 @@ func runLogout(serverAddress string, w io.Writer) error {
 		return errors.Wrap(err, "could not erase credentials")
 	}
 
-	// TODO: handle current context update
+	if serverAddress == config.GetDefaultContext() {
+		if err := config.SetAsDefaultContext("", true); err != nil {
+			return errors.Wrap(err, "while setting a default context to none")
+		}
+	}
+
+	if err := config.DeleteContext(serverAddress); err != nil {
+		return errors.Wrap(err, "could not delete context")
+	}
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
 	okCheck(w, "Logout Succeeded\n")

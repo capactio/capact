@@ -18,14 +18,18 @@ import (
 // TypeInstanceHandler provides functionality to handle TypeInstance operations such as
 // injecting download step and upload step.
 type TypeInstanceHandler struct {
-	hubActionsImage string
-	genUUID         func() string
+	hubActionsImage   string
+	localHubEndpoint  string
+	publicHubEndpoint string
+	genUUID           func() string
 }
 
 // NewTypeInstanceHandler returns a new TypeInstanceHandler instance.
-func NewTypeInstanceHandler(hubActionsImage string) *TypeInstanceHandler {
+func NewTypeInstanceHandler(hubActionsImage string, localHubEndpoint string, publicHubEndpoint string) *TypeInstanceHandler {
 	return &TypeInstanceHandler{
-		hubActionsImage: hubActionsImage,
+		hubActionsImage:   hubActionsImage,
+		localHubEndpoint:  localHubEndpoint,
+		publicHubEndpoint: publicHubEndpoint,
 		genUUID: func() string {
 			return uuid.New().String()
 		},
@@ -70,6 +74,14 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 				{
 					Name:  "APP_DOWNLOAD_CONFIG",
 					Value: strings.Join(typeInstanceToDownload, ","),
+				},
+				{
+					Name:  "APP_LOCAL_HUB_ENDPOINT",
+					Value: r.localHubEndpoint,
+				},
+				{
+					Name:  "APP_PUBLIC_HUB_ENDPOINT",
+					Value: r.publicHubEndpoint,
 				},
 			},
 		},
@@ -205,6 +217,14 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 					Name:  "APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR",
 					Value: "/upload/typeInstances",
 				},
+				{
+					Name:  "APP_LOCAL_HUB_ENDPOINT",
+					Value: r.localHubEndpoint,
+				},
+				{
+					Name:  "APP_PUBLIC_HUB_ENDPOINT",
+					Value: r.publicHubEndpoint,
+				},
 			},
 		},
 		Inputs: wfv1.Inputs{
@@ -295,6 +315,14 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 				{
 					Name:  "APP_UPDATE_CONFIG_TYPE_INSTANCES_DIR",
 					Value: "/update/typeInstances",
+				},
+				{
+					Name:  "APP_LOCAL_HUB_ENDPOINT",
+					Value: r.localHubEndpoint,
+				},
+				{
+					Name:  "APP_PUBLIC_HUB_ENDPOINT",
+					Value: r.publicHubEndpoint,
 				},
 			},
 		},

@@ -220,7 +220,7 @@ jobs:
           make test-k8s-controller
       - name: Get Capact CLI for linux
         run: |
-          curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
+          curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact_linux_amd64/capact
           chmod +x ./capact
       - name: Run cross-functional integration tests
         env:
@@ -256,7 +256,7 @@ jobs:
           . ./hack/ci/setup-env.sh
       - name: Build Capact CLI for linux
         run: |
-          curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
+          curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact_linux_amd64/capact
           chmod +x ./capact
       - name: Log into Capact long-running cluster
         env:

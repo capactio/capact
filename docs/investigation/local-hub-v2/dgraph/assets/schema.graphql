@@ -1,0 +1,37 @@
+
+type TypeInstance {
+  id: ID!
+
+  # `lockedBy` field cannot be ignored only on mutation.
+  # Maybe they will support that in the future: https://discuss.dgraph.io/t/graphql-error-non-nullable-field-was-not-present-in-result-from-dgraph/9503/6
+  lockedBy: String
+
+  """
+  Common properties for all TypeInstances which cannot be changed
+  """
+  typeRef: TypeInstanceTypeReference!
+  uses: [TypeInstance!]
+  usedBy: [TypeInstance!] @hasInverse(field: uses)
+
+  spec: TypeInstanceResourceVersionSpec
+}
+
+
+type TypeInstanceResourceVersionSpec {
+  id: ID!
+  # Moved from TypeInstance to be visible in value's @lambda resolver.
+  backend: TypeInstanceBackendReference!
+  backendID: String!
+  value: String! @lambda
+}
+
+type TypeInstanceTypeReference {
+  path: String!
+  revision: String!
+}
+
+type TypeInstanceBackendReference {
+  id: ID!
+  abstract: Boolean!
+}
+

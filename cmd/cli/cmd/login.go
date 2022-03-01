@@ -102,7 +102,7 @@ func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 	// perform the questions if needed
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while asking for server")
 	}
 
 	answers.Server = normalizeServerEndpoint(answers.Server)
@@ -117,13 +117,17 @@ func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 
 	fmt.Println("Add hub...")
 	if err = credstore.AddHub(answers.Server, creds); err != nil {
-		return err
+		return errors.Wrap(err, "while adding hub to a credential store")
 	}
 
 	fmt.Println("SetAsDefaultContext...")
 
 	if err = config.SetAsDefaultContext(answers.Server, false); err != nil {
-		return err
+		return errors.Wrap(err, "while setting context to default")
+	}
+
+	if err = config.AddNewContext(answers.Server); err != nil {
+		return errors.Wrap(err, "while adding a new context")
 	}
 
 	fmt.Println("add context...")

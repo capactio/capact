@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"capact.io/capact/pkg/hub/client/local"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -25,11 +25,11 @@ type DownloadConfig struct {
 type Download struct {
 	log    *zap.Logger
 	cfg    []DownloadConfig
-	client *local.Client
+	client *hubclient.Client
 }
 
 // NewDownloadAction returns a new Download instance.
-func NewDownloadAction(log *zap.Logger, client *local.Client, cfg []DownloadConfig) Action {
+func NewDownloadAction(log *zap.Logger, client *hubclient.Client, cfg []DownloadConfig) Action {
 	return &Download{
 		log:    log,
 		cfg:    cfg,

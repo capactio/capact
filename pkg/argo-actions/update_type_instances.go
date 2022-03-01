@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
-	"capact.io/capact/pkg/hub/client/local"
+	hubclient "capact.io/capact/pkg/hub/client"
+	"capact.io/capact/pkg/sdk/validation"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
@@ -26,12 +27,12 @@ type UpdateConfig struct {
 // It is used to update existing TypeInstances in the Local Hub.
 type Update struct {
 	log    *zap.Logger
-	client *local.Client
+	client *hubclient.Client
 	cfg    UpdateConfig
 }
 
 // NewUpdateAction returns a new Update instance.
-func NewUpdateAction(log *zap.Logger, client *local.Client, cfg UpdateConfig) Action {
+func NewUpdateAction(log *zap.Logger, client *hubclient.Client, cfg UpdateConfig) Action {
 	return &Update{
 		log:    log,
 		client: client,
@@ -83,6 +84,17 @@ func (u *Update) Do(ctx context.Context) error {
 		return errors.Wrap(err, "while rendering UpdateTypeInstancesInput")
 	}
 
+	u.log.Info("Validating TypeInstances")
+
+	r := validation.ResultAggregator{}
+	err = r.Report(validation.ValidateTypeInstanceToUpdate(ctx, u.client, payload))
+	if err != nil {
+		return errors.Wrap(err, "while validating TypeInstance")
+	}
+	if r.ErrorOrNil() != nil {
+		return r.ErrorOrNil()
+	}
+
 	u.log.Info("Updating TypeInstances in Hub...", zap.Int("TypeInstance count", len(payload)))
 
 	uploadOutput, err := u.updateTypeInstances(ctx, payload)
@@ -110,5 +122,5 @@ func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values 
 }
 
 func (u *Update) updateTypeInstances(ctx context.Context, in []graphqllocal.UpdateTypeInstancesInput) ([]graphqllocal.TypeInstance, error) {
-	return u.client.UpdateTypeInstances(ctx, in)
+	return u.client.Local.UpdateTypeInstances(ctx, in)
 }

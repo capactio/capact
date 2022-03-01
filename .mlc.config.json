@@ -14,6 +14,9 @@
     },
     {
       "pattern": "^http://capact-hub-local.capact-system/graphql$"
+    },
+    {
+      "pattern": "^http://capact-hub-public.capact-system/graphql$"
     }
   ],
   "timeout": "20s",

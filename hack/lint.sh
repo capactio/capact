@@ -17,7 +17,7 @@ readonly CURRENT_DIR
 readonly REPO_ROOT_DIR
 readonly GOLANGCI_LINT_VERSION="v1.41.1"
 
-LINT_TIMEOUT=${LINT_TIMEOUT:-5m}
+LINT_TIMEOUT=${LINT_TIMEOUT:-10m}
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 # shellcheck source=./hack/lib/utilities.sh

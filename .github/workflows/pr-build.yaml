@@ -395,7 +395,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: cli_${{github.sha}}
-          path: ${{ github.workspace }}/bin/capact-linux-amd64
+          path: ${{ github.workspace }}/bin/capact_linux_amd64/capact
           retention-days: 1 # Default 90 days
 
   integration-tests:
@@ -406,7 +406,7 @@ jobs:
     permissions:
       contents: read
     env:
-      CAPACT_BINARY: "${{ github.workspace}}/capact-linux-amd64"
+      CAPACT_BINARY: "${{ github.workspace}}/capact"
 
     steps:
       - name: Checkout code

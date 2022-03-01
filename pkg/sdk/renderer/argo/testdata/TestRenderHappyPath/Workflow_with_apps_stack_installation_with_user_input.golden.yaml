@@ -1224,6 +1224,10 @@ args:
           value: /upload/payload
         - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
           value: /upload/typeInstances
+        - name: APP_LOCAL_HUB_ENDPOINT
+          value: http://capact-hub-local.capact-system/graphql
+        - name: APP_PUBLIC_HUB_ENDPOINT
+          value: http://capact-hub-public.capact-system/graphql
         image: alpine:3.7
         imagePullPolicy: IfNotPresent
         name: ""
