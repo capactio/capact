@@ -1,6 +1,6 @@
 import {
   OnCreateRequest,
-  StorageBackendDefinition
+  StorageBackendDefinition,
 } from "../../../grpc/storage_backend";
 import { createChannel, createClient, Client } from "nice-grpc";
 import { Driver } from "neo4j-driver";
@@ -8,16 +8,16 @@ import { TypeInstanceBackendInput } from "../types/type-instance";
 
 export const TARGET = "0.0.0.0:50051";
 
-type StorageClient = Client<typeof StorageBackendDefinition>
+type StorageClient = Client<typeof StorageBackendDefinition>;
 
 export interface StorageInstanceDetails {
   url: string;
 }
 
 export interface StoreInput {
-  backend: TypeInstanceBackendInput,
+  backend: TypeInstanceBackendInput;
   typeInstance: {
-    id: string
+    id: string;
     value: any;
   };
 }
@@ -42,7 +42,7 @@ export default class DelegatedStorageService {
   async Store(input: StoreInput): Promise<Uint8Array | undefined> {
     const req: OnCreateRequest = {
       typeInstanceId: input.typeInstance.id,
-      value: new TextEncoder().encode(JSON.stringify(input.typeInstance.value))
+      value: new TextEncoder().encode(JSON.stringify(input.typeInstance.value)),
       // TODO: will be done in follow-up pull-request for #645
       // context: input.backend.context,
     };
@@ -52,7 +52,9 @@ export default class DelegatedStorageService {
     return res.context;
   }
 
-  private async storageInstanceDetailsFetcher(id: string): Promise<StorageInstanceDetails> {
+  private async storageInstanceDetailsFetcher(
+    id: string
+  ): Promise<StorageInstanceDetails> {
     const sess = this.dbDriver.session();
     try {
       const fetchRevisionResult = await sess.run(
@@ -70,15 +72,18 @@ export default class DelegatedStorageService {
         { id: id }
       );
       if (fetchRevisionResult.records.length !== 1) {
-        throw new Error(`Internal Server Error, unexpected response row length, want 1, got ${fetchRevisionResult.records.length}`);
+        throw new Error(
+          `Internal Server Error, unexpected response row length, want 1, got ${fetchRevisionResult.records.length}`
+        );
       }
 
       const record = fetchRevisionResult.records[0];
       return record.get("value"); // TODO: validate against Storage JSON Schema.
-
     } catch (e) {
       const err = e as Error;
-      throw new Error(`failed to fetch the TypeInstance "${id}": ${err.message}`);
+      throw new Error(
+        `failed to fetch the TypeInstance "${id}": ${err.message}`
+      );
     } finally {
       await sess.close();
     }

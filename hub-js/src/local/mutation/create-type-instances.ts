@@ -6,7 +6,7 @@ import {
   CreateTypeInstanceInput,
   CreateTypeInstancesInput,
   TypeInstanceBackendDetails,
-  TypeInstanceUsesRelationInput
+  TypeInstanceUsesRelationInput,
 } from "../types/type-instance";
 
 interface createTypeInstancesArgs {
@@ -33,27 +33,31 @@ export async function createTypeInstances(
   const neo4jSession = context.driver.session();
 
   try {
-    return await neo4jSession.writeTransaction(
-      async (tx: Transaction) => {
+    return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      const typeInstancesInput = typeInstances.map(setStorageBackend);
+      const createTypeInstanceResult = await createTypeInstancesInDB(
+        tx,
+        typeInstancesInput
+      );
 
-        const typeInstancesInput = typeInstances.map(setStorageBackend);
-        const createTypeInstanceResult = await createTypeInstancesInDB(tx, typeInstancesInput);
+      const aliasMappings = mapAliasesToIDs(createTypeInstanceResult);
 
-        const aliasMappings = mapAliasesToIDs(createTypeInstanceResult);
+      console.log("here2");
+      await delegatedDataStorageIfNeeded(
+        context.delegatedStorage,
+        aliasMappings,
+        typeInstancesInput
+      );
+      console.log("here3");
+      await setTypeInstanceRelationsInDB(tx, aliasMappings, usesRelations);
 
-        console.log("here2");
-        await delegatedDataStorageIfNeeded(context.delegatedStorage, aliasMappings, typeInstancesInput);
-        console.log("here3");
-        await setTypeInstanceRelationsInDB(tx, aliasMappings, usesRelations);
+      // TODO: update context if needed.
 
-        // TODO: update context if needed.
-
-        return Object.entries(aliasMappings).map((entry) => ({
-          alias: entry[0],
-          id: entry[1]
-        }));
-      }
-    );
+      return Object.entries(aliasMappings).map((entry) => ({
+        alias: entry[0],
+        id: entry[1],
+      }));
+    });
   } catch (e) {
     // for _ := ti { ensure data is deleted in delegated storage }
     const err = e as Error;
@@ -79,7 +83,10 @@ function validate(typeInstances: CreateTypeInstanceInput[]) {
   }
 }
 
-async function createTypeInstancesInDB(tx: Transaction, typeInstancesInput: CreateTypeInstanceInput[]) {
+async function createTypeInstancesInDB(
+  tx: Transaction,
+  typeInstancesInput: CreateTypeInstanceInput[]
+) {
   const createTypeInstanceResult = await tx.run(
     `UNWIND $typeInstances AS typeInstance
            CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
@@ -124,40 +131,43 @@ async function createTypeInstancesInDB(tx: Transaction, typeInstancesInput: Crea
   return createTypeInstanceResult;
 }
 
-export type TypeInstanceInput = Omit<CreateTypeInstanceInput, "backend"> & { backend: TypeInstanceBackendDetails };
+export type TypeInstanceInput = Omit<CreateTypeInstanceInput, "backend"> & {
+  backend: TypeInstanceBackendDetails;
+};
 
 function setStorageBackend(ti: CreateTypeInstanceInput): TypeInstanceInput {
   ti.backend = {
     id: ti.backend?.id || BUILTIN_STORAGE_BACKEND_ID, // if not provided, store in built-in
-    abstract: !ti.backend
+    abstract: !ti.backend,
   } as TypeInstanceBackendDetails;
 
   return ti as TypeInstanceInput;
 }
 
 function mapAliasesToIDs(createResult: QueryResult): aliasMapping {
-  return createResult.records.reduce(
-    (acc: { [key: string]: string }, cur) => {
-      const uuid = cur.get("uuid");
-      const alias = cur.get("alias");
+  return createResult.records.reduce((acc: { [key: string]: string }, cur) => {
+    const uuid = cur.get("uuid");
+    const alias = cur.get("alias");
 
-      return {
-        ...acc,
-        [alias]: uuid
-      };
-    },
-    {}
-  );
+    return {
+      ...acc,
+      [alias]: uuid,
+    };
+  }, {});
 }
 
-
-async function delegatedDataStorageIfNeeded(delegatedStorage: DelegatedStorageService, aliasMappings: aliasMapping, tis: TypeInstanceInput[]) {
+async function delegatedDataStorageIfNeeded(
+  delegatedStorage: DelegatedStorageService,
+  aliasMappings: aliasMapping,
+  tis: TypeInstanceInput[]
+) {
   for (const ti of tis) {
     if (!ti.backend || !ti.alias) {
       continue;
     }
 
-    if (ti.backend.abstract) { // TODO: can be helper method in backend
+    if (ti.backend.abstract) {
+      // TODO: can be helper method in backend
       continue;
     }
     console.info(ti);
@@ -167,17 +177,21 @@ async function delegatedDataStorageIfNeeded(delegatedStorage: DelegatedStorageSe
       backend: ti.backend,
       typeInstance: {
         id: aliasMappings[ti.alias],
-        value: ti.value
-      }
+        value: ti.value,
+      },
     });
   }
 }
 
-async function setTypeInstanceRelationsInDB(tx: Transaction, aliasMappings: aliasMapping, usesRelations: TypeInstanceUsesRelationInput[]) {
+async function setTypeInstanceRelationsInDB(
+  tx: Transaction,
+  aliasMappings: aliasMapping,
+  usesRelations: TypeInstanceUsesRelationInput[]
+) {
   const usesRelationsParams = usesRelations.map(
     ({ from, to }: { from: string; to: string }) => ({
       from: aliasMappings[from] || from,
-      to: aliasMappings[to] || to
+      to: aliasMappings[to] || to,
     })
   );
 
@@ -189,14 +203,11 @@ async function setTypeInstanceRelationsInDB(tx: Transaction, aliasMappings: alia
            RETURN fromTi AS from, toTi AS to
            `,
     {
-      usesRelations: usesRelationsParams
+      usesRelations: usesRelationsParams,
     }
   );
 
-  if (
-    createRelationsResult.records.length !==
-    usesRelationsParams.length
-  ) {
+  if (createRelationsResult.records.length !== usesRelationsParams.length) {
     throw new Error(
       "Failed to create some relations. Please verify, if you use proper aliases or IDs in relations definition."
     );

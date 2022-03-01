@@ -27,20 +27,18 @@ export async function toggleLockTypeInstances(
 ) {
   const neo4jSession = context.driver.session();
   try {
-    return await neo4jSession.writeTransaction(
-      async (tx: Transaction) => {
-        await switchLocking(
-          tx,
-          args,
-          `
+    return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      await switchLocking(
+        tx,
+        args,
+        `
                   MATCH (ti:TypeInstance)
                   WHERE ti.id IN $in.ids
                   SET ti.lockedBy = $in.ownerID
                   RETURN true as executed`
-        );
-        return args.in.ids;
-      }
-    );
+      );
+      return args.in.ids;
+    });
   } catch (e) {
     const err = e as Error;
     throw new Error(`failed to lock TypeInstances: ${err.message}`);
@@ -56,20 +54,18 @@ export async function unlockTypeInstances(
 ) {
   const neo4jSession = context.driver.session();
   try {
-    return await neo4jSession.writeTransaction(
-      async (tx: Transaction) => {
-        await switchLocking(
-          tx,
-          args,
-          `
+    return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      await switchLocking(
+        tx,
+        args,
+        `
                   MATCH (ti:TypeInstance)
                   WHERE ti.id IN $in.ids
                   SET ti.lockedBy = null
                   RETURN true as executed`
-        );
-        return args.in.ids;
-      }
-    );
+      );
+      return args.in.ids;
+    });
   } catch (e) {
     const err = e as Error;
     throw new Error(`failed to unlock TypeInstances: ${err.message}`);
@@ -130,7 +126,7 @@ async function switchLocking(
   const resultRow: LockingResult = {
     allIDs: record.get("allIDs"),
     lockedIDs: record.get("lockedIDs"),
-    lockingProcess: record.get("lockingProcess")
+    lockingProcess: record.get("lockingProcess"),
   };
 
   validateLockingProcess(resultRow, args.in.ids);
@@ -144,7 +140,7 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
     const notFoundIDs = expIDs.filter((x) => !foundIDs.includes(x));
     if (notFoundIDs.length !== 0) {
       errMsg.push(
-        `TypeInstances with IDs "${notFoundIDs.join("\", \"")}" were not found`
+        `TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`
       );
     }
 
@@ -152,7 +148,7 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
     if (lockedIDs.length !== 0) {
       errMsg.push(
         `TypeInstances with IDs "${lockedIDs.join(
-          "\", \""
+          '", "'
         )}" are locked by different owner`
       );
     }

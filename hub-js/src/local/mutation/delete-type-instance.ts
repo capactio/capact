@@ -5,15 +5,14 @@ import { UpdateTypeInstanceErrorCode } from "./update-type-instances";
 
 export async function deleteTypeInstance(
   _: any,
-  args: { id: string, ownerID: string },
+  args: { id: string; ownerID: string },
   context: ContextWithDriver
 ) {
   const neo4jSession = context.driver.session();
   try {
-    return await neo4jSession.writeTransaction(
-      async (tx: Transaction) => {
-        await tx.run(
-          `
+    return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      await tx.run(
+        `
                     OPTIONAL MATCH (ti:TypeInstance {id: $id})
 
                     // Check if a given TypeInstance was found
@@ -65,11 +64,10 @@ export async function deleteTypeInstance(
                     }
 
                     RETURN $id`,
-          { id: args.id, ownerID: args.ownerID || null }
-        );
-        return args.id;
-      }
-    );
+        { id: args.id, ownerID: args.ownerID || null }
+      );
+      return args.id;
+    });
   } catch (e) {
     let err = e as Error;
     const customErr = tryToExtractCustomError(err);

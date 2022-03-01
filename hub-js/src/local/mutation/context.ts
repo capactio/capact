@@ -9,5 +9,6 @@ export interface ContextWithDelegatedStorage {
   delegatedStorage: DelegatedStorageService;
 }
 
-export interface Context extends ContextWithDriver, ContextWithDelegatedStorage {
-}
+export interface Context
+  extends ContextWithDriver,
+    ContextWithDelegatedStorage {}

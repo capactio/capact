@@ -9,12 +9,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "cleanup": "rm -rf ./dist",
     "lint": "eslint --ext ts .",
+    "lint:prettier": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
+    "lint:fix:prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
     "build": "npm run cleanup && tsc",
     "start": "node dist/src/index.js",
     "dev": "npm run build && npm run start",
     "preinstall": "npx npm-force-resolutions"
   },
   "dependencies": {
+    "prettier": "^2.5.0",
     "@godaddy/terminus": "^4.8.0",
     "@grpc/grpc-js": "^1.3.1",
     "apollo-server-express": "^3.6.2",

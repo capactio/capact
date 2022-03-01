@@ -63,7 +63,8 @@ type TypeInstance {
     @cypher(
       statement: "MATCH (this)<-[:USES]-(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
     )
-  backend: TypeInstanceBackendReference! @relation(name: "STORED_IN", direction: "OUT")
+  backend: TypeInstanceBackendReference!
+    @relation(name: "STORED_IN", direction: "OUT")
 
   latestResourceVersion: TypeInstanceResourceVersion
     @cypher(

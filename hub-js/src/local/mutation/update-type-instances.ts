@@ -28,13 +28,15 @@ export async function updateTypeInstances(
       switch (customErr.code) {
         case UpdateTypeInstanceErrorCode.Conflict:
           const conflictIDs = customErr.ids.join(`", "`);
-          err = Error(`TypeInstances with IDs "${conflictIDs}" are locked by different owner`);
+          err = Error(
+            `TypeInstances with IDs "${conflictIDs}" are locked by different owner`
+          );
           break;
         case UpdateTypeInstanceErrorCode.NotFound: {
           const ids = args.in.map(({ id }) => id);
-          const notFoundIDs = ids.filter(
-            (x) => !customErr.ids.includes(x)
-          ).join(`", "`);
+          const notFoundIDs = ids
+            .filter((x) => !customErr.ids.includes(x))
+            .join(`", "`);
           err = Error(`TypeInstances with IDs "${notFoundIDs}" were not found`);
           break;
         }

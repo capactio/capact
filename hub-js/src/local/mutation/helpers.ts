@@ -1,6 +1,5 @@
 import { UpdateTypeInstanceError } from "./update-type-instances";
 
-
 /**
  * In Cypher we throw custom errors, e.g.:
  *   CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, foundIDs: foundIDs}), null)

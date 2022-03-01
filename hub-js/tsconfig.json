@@ -1,9 +1,9 @@
 {
-	"extends": "@tsconfig/recommended/tsconfig.json",
-	"include": ["src/**/*"],
-	"compilerOptions": {
-		"outDir": "dist",
-		"typeRoots": ["src/types"]
-	},
-	"exclude": ["node_modules", "src/types/**/*"]
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "typeRoots": ["src/types"]
+  },
+  "exclude": ["node_modules", "src/types/**/*"]
 }
