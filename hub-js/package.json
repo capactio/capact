@@ -8,6 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cleanup": "rm -rf ./dist",
+    "lint": "eslint --ext ts .",
     "lint:prettier": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
     "lint:fix:prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
     "build": "npm run cleanup && tsc",

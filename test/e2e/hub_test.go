@@ -284,6 +284,7 @@ var _ = Describe("GraphQL API", func() {
 					Value: map[string]interface{}{
 						"key": "bar",
 					},
+					Backend: &gqllocalapi.TypeInstanceResourceVersionSpecBackend{},
 				},
 			}
 			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
@@ -752,6 +753,7 @@ func expectedChildTypeInstance(tiID, backendID string) *gqllocalapi.TypeInstance
 			Value: map[string]interface{}{
 				"child": true,
 			},
+			Backend: &gqllocalapi.TypeInstanceResourceVersionSpecBackend{},
 		},
 	}
 
@@ -791,6 +793,7 @@ func expectedParentTypeInstance(tiID, backendID string) *gqllocalapi.TypeInstanc
 			Value: map[string]interface{}{
 				"parent": true,
 			},
+			Backend: &gqllocalapi.TypeInstanceResourceVersionSpecBackend{},
 		},
 	}
 

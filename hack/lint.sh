@@ -102,6 +102,7 @@ graphql::run_checks() {
 
 hub_js::lint() {
   pushd "${REPO_ROOT_DIR}/hub-js" > /dev/null
+  npm ci
   npm run lint:prettier
   popd > /dev/null
 }
