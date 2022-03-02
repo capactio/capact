@@ -58,7 +58,7 @@ require (
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spectralops/teller v1.4.1-0.20220220074628-10ea63fb3d8e
+	github.com/spectralops/teller v1.4.1-0.20220302155019-433a633e34b9
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
@@ -100,6 +100,4 @@ replace (
 
 	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.8
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
-
-	github.com/spectralops/teller => github.com/pkosiec/teller v1.4.1-0.20220225072420-11c5a1dd402f
 )
