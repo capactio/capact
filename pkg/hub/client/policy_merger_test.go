@@ -1271,7 +1271,7 @@ func TestPolicyEnforcedClient_mergeTypeInstancePoliciesForDefault(t *testing.T) 
 	}
 }
 
-func TestMergeRequiredTypeInstances(t *testing.T) {
+func TestRequiredTypeInstancesForRule(t *testing.T) {
 	tests := []struct {
 		name     string
 		rule     policy.Rule
@@ -1329,6 +1329,57 @@ func TestMergeRequiredTypeInstances(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "TypeInstaces should not contain duplicates",
+			rule: policy.Rule{
+				Inject: &policy.InjectData{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID:          "1111-2222-3333",
+								Description: ptr.String("Sample TI"),
+								TypeRef: &types.TypeRef{
+									Path:     "cap.type.gcp.auth.service-account",
+									Revision: "0.1.0",
+								},
+							},
+						},
+					},
+				},
+			},
+			global: policy.Policy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1111-2222-3333",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.gcp.auth.service-account",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: []policy.RequiredTypeInstanceToInject{
+				{
+					TypeInstanceReference: policy.TypeInstanceReference{
+						ID:          "1111-2222-3333",
+						Description: ptr.String("Sample TI"),
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.gcp.auth.service-account",
+							Revision: "0.1.0",
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, test := range tests {
 		tt := test
@@ -1338,7 +1389,7 @@ func TestMergeRequiredTypeInstances(t *testing.T) {
 			cli.SetGlobalPolicy(tt.global)
 
 			// expect
-			assert.Equal(t, tt.expected, cli.MergeRequiredTypeInstances(tt.rule))
+			assert.Equal(t, tt.expected, cli.RequiredTypeInstancesForRule(tt.rule))
 		})
 	}
 }

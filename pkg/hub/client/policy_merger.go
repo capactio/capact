@@ -30,8 +30,8 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 	e.mergedPolicy = currentPolicy
 }
 
-// MergeRequiredTypeInstances returns the merged list of TypeInstances from Rule and Defaults
-func (e *PolicyEnforcedClient) MergeRequiredTypeInstances(policyRule policy.Rule) []policy.RequiredTypeInstanceToInject {
+// RequiredTypeInstancesForRule returns the merged list of TypeInstances from Rule and Defaults.
+func (e *PolicyEnforcedClient) RequiredTypeInstancesForRule(policyRule policy.Rule) []policy.RequiredTypeInstanceToInject {
 	// prefer policy Rule over Default
 	return mergeRequiredTypeInstances(e.mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject(), policyRule.RequiredTypeInstancesToInject())
 }

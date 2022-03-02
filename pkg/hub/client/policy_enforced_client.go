@@ -149,7 +149,7 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 type requiredTypeInstanceToInject map[string]policy.RequiredTypeInstanceToInject
 
 func (e *PolicyEnforcedClient) listRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (requiredTypeInstanceToInject, error) {
-	requiredTIs := e.MergeRequiredTypeInstances(policyRule)
+	requiredTIs := e.RequiredTypeInstancesForRule(policyRule)
 
 	if len(requiredTIs) == 0 {
 		return nil, nil
@@ -428,9 +428,10 @@ func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeI
 	filter.RequirementsSatisfiedBy = allTypeInstances
 
 	// Requirements Injection
-	if rule.Inject != nil {
+	tisToInject := e.RequiredTypeInstancesForRule(rule)
+	if len(tisToInject) > 0 {
 		var injectedRequiredTypeInstances []*hubpublicgraphql.TypeInstanceValue
-		for _, ti := range rule.Inject.RequiredTypeInstances {
+		for _, ti := range tisToInject {
 			injectedRequiredTypeInstances = append(injectedRequiredTypeInstances, &hubpublicgraphql.TypeInstanceValue{
 				TypeRef: &hubpublicgraphql.TypeReferenceInput{
 					Path:     ti.TypeRef.Path,
@@ -441,21 +442,6 @@ func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeI
 		}
 		filter.RequiredTypeInstancesInjectionSatisfiedBy = injectedRequiredTypeInstances
 	}
-
-	// Append TypeInstance from Interface Default
-	defaultTI := e.mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject()
-	var injectedDefaultRequiredTypeInstances []*hubpublicgraphql.TypeInstanceValue
-	for _, ti := range defaultTI {
-		injectedDefaultRequiredTypeInstances = append(injectedDefaultRequiredTypeInstances, &hubpublicgraphql.TypeInstanceValue{
-			TypeRef: &hubpublicgraphql.TypeReferenceInput{
-				Path:     ti.TypeRef.Path,
-				Revision: ti.TypeRef.Revision,
-			},
-			Value: nil, // not supported right now
-		})
-	}
-	filter.RequiredTypeInstancesInjectionSatisfiedBy = append(filter.RequiredTypeInstancesInjectionSatisfiedBy, injectedDefaultRequiredTypeInstances...)
-
 	return filter
 }
 
