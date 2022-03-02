@@ -6,24 +6,20 @@ import {
   Config,
   adjectives,
   colors,
-  animals
+  animals,
 } from "unique-names-generator";
-import {
-  DeleteInput,
-  StoreInput,
-  UpdatedContexts
-} from "../storage/service";
+import { DeleteInput, StoreInput, UpdatedContexts } from "../storage/service";
 import {
   CreateTypeInstanceInput,
   CreateTypeInstancesInput,
   TypeInstanceBackendDetails,
-  TypeInstanceUsesRelationInput
+  TypeInstanceUsesRelationInput,
 } from "../types/type-instance";
 
 const genAdjsColorsAndAnimals: Config = {
   dictionaries: [adjectives, colors, animals],
   separator: "_",
-  length: 3
+  length: 3,
 };
 
 interface createTypeInstancesArgs {
@@ -62,7 +58,10 @@ export async function createTypeInstances(
         typeInstancesInput
       );
 
-      const storeInput = getExternallyStoredValues(createAliasMappingsResult, typeInstancesInput);
+      const storeInput = getExternallyStoredValues(
+        createAliasMappingsResult,
+        typeInstancesInput
+      );
       externallyStored = storeInput;
       const updatedContexts = await context.delegatedStorage.Store(
         ...storeInput
@@ -78,7 +77,7 @@ export async function createTypeInstances(
 
       return Object.entries(createAliasMappingsResult).map((entry) => ({
         alias: entry[0],
-        id: entry[1]
+        id: entry[1],
       }));
     });
   } catch (e) {
@@ -190,7 +189,7 @@ function setDefaults(ti: CreateTypeInstanceInput): TypeInstanceInput {
   ti.backend = {
     id: ti.backend?.id || BUILTIN_STORAGE_BACKEND_ID, // if not provided, store in built-in
     abstract: !ti.backend,
-    context: ti.backend?.context
+    context: ti.backend?.context,
   } as TypeInstanceBackendDetails;
 
   // ensure that alias is set, so we can correlate returned ID from Cypher with an input TypeInstance
@@ -207,12 +206,15 @@ function mapAliasesToIDs(createResult: QueryResult): aliasMapping {
 
     return {
       ...acc,
-      [alias]: uuid
+      [alias]: uuid,
     };
   }, {});
 }
 
-function getExternallyStoredValues(aliasMappings: aliasMapping, tis: TypeInstanceInput[]) {
+function getExternallyStoredValues(
+  aliasMappings: aliasMapping,
+  tis: TypeInstanceInput[]
+) {
   return tis
     .filter((ti) => ti.backend && ti.alias && !ti.backend.abstract)
     .map((ti) => {
@@ -221,8 +223,8 @@ function getExternallyStoredValues(aliasMappings: aliasMapping, tis: TypeInstanc
         backend: ti.backend,
         typeInstance: {
           id: tiID,
-          value: ti.value
-        }
+          value: ti.value,
+        },
       } as StoreInput;
     });
 }
@@ -234,7 +236,7 @@ async function setTypeInstanceRelationsInDB(
 ) {
   const usesRelationsParams = usesRelations.map(({ from, to }) => ({
     from: aliasMappings[from] || from,
-    to: aliasMappings[to] || to
+    to: aliasMappings[to] || to,
   }));
 
   const createRelationsResult = await tx.run(
@@ -245,7 +247,7 @@ async function setTypeInstanceRelationsInDB(
            RETURN fromTi AS from, toTi AS to
            `,
     {
-      usesRelations: usesRelationsParams
+      usesRelations: usesRelationsParams,
     }
   );
 

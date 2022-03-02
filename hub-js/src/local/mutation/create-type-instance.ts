@@ -1,7 +1,8 @@
 import { Context } from "./context";
 import {
-  CreateTypeInstanceInput, CreateTypeInstancesInput,
-  TypeInstanceUsesRelationInput
+  CreateTypeInstanceInput,
+  CreateTypeInstancesInput,
+  TypeInstanceUsesRelationInput,
 } from "../types/type-instance";
 import { createTypeInstances } from "./create-type-instances";
 
@@ -17,8 +18,8 @@ export async function createTypeInstance(
   const input = {
     in: {
       typeInstances: [args.in] as CreateTypeInstanceInput[],
-      usesRelations: [] as TypeInstanceUsesRelationInput[]
-    } as CreateTypeInstancesInput
+      usesRelations: [] as TypeInstanceUsesRelationInput[],
+    } as CreateTypeInstancesInput,
   };
   try {
     const result = await createTypeInstances(obj, input, context);
@@ -28,4 +29,3 @@ export async function createTypeInstance(
     throw new Error(`failed to create TypeInstance: ${err.message}`);
   }
 }
-

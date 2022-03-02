@@ -1,7 +1,7 @@
 import {
   OnCreateRequest,
   OnDeleteRequest,
-  StorageBackendDefinition
+  StorageBackendDefinition,
 } from "../../../grpc/storage_backend";
 import { createChannel, createClient, Client } from "nice-grpc";
 import { Driver } from "neo4j-driver";
@@ -72,7 +72,7 @@ export default class DelegatedStorageService {
         ),
         context: new TextEncoder().encode(
           JSON.stringify(input.backend.context)
-        )
+        ),
       };
       const res = await cli.onCreate(req);
 
@@ -83,7 +83,7 @@ export default class DelegatedStorageService {
       const updateCtx = JSON.parse(res.context.toString());
       mapping = {
         ...mapping,
-        [input.typeInstance.id]: updateCtx
+        [input.typeInstance.id]: updateCtx,
       };
     }
 
@@ -108,7 +108,7 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         context: new TextEncoder().encode(
           JSON.stringify(input.backend.context)
-        )
+        ),
       };
       await cli.onDelete(req);
     }
