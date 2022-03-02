@@ -488,6 +488,9 @@ func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hu
 	Expect(createdTypeInstance).NotTo(BeNil())
 	typeInstanceID := createdTypeInstance.ID
 
+	typeInstance, err := hubClient.FindTypeInstance(ctx, typeInstanceID)
+	Expect(err).ToNot(HaveOccurred())
+
 	cleanupFn := func() {
 		err := hubClient.DeleteTypeInstance(ctx, typeInstanceID)
 		if err != nil {
@@ -495,7 +498,7 @@ func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hu
 		}
 	}
 
-	return createdTypeInstance, cleanupFn
+	return typeInstance, cleanupFn
 }
 
 type policyOption func(*enginegraphql.PolicyInput)

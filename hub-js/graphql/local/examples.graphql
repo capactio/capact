@@ -11,7 +11,8 @@ mutation CreateTypeInstance {
       attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
     }
   ) {
-    ...TypeInstance
+    id
+    alias
   }
 }
 

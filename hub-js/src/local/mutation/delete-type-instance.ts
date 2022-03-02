@@ -13,57 +13,57 @@ export async function deleteTypeInstance(
     return await neo4jSession.writeTransaction(async (tx: Transaction) => {
       await tx.run(
         `
-                    OPTIONAL MATCH (ti:TypeInstance {id: $id})
+            OPTIONAL MATCH (ti:TypeInstance {id: $id})
 
-                    // Check if a given TypeInstance was found
-                    CALL apoc.util.validate(ti IS NULL, apoc.convert.toJson({code: 404}), null)
+            // Check if a given TypeInstance was found
+            CALL apoc.util.validate(ti IS NULL, apoc.convert.toJson({code: 404}), null)
 
-                    // Check if a given TypeInstance is not already locked by a different owner
-                    CALL {
-                        WITH ti
-                        WITH ti
-                        WHERE ti.lockedBy IS NOT NULL AND ($ownerID IS NULL OR ti.lockedBy <> $ownerID)
-                        WITH count(ti.id) as lockedIDs
-                        RETURN lockedIDs = 1 as isLocked
-                    }
-                    CALL apoc.util.validate(isLocked, apoc.convert.toJson({code: 409}), null)
+            // Check if a given TypeInstance is not already locked by a different owner
+            CALL {
+                WITH ti
+                WITH ti
+                WHERE ti.lockedBy IS NOT NULL AND ($ownerID IS NULL OR ti.lockedBy <> $ownerID)
+                WITH count(ti.id) as lockedIDs
+                RETURN lockedIDs = 1 as isLocked
+            }
+            CALL apoc.util.validate(isLocked, apoc.convert.toJson({code: 409}), null)
 
-                    // Check if a given TypeInstance is not used by others
-                    CALL {
-                        WITH ti
-                        WITH ti
-                        MATCH (ti)-[:USES]->(others:TypeInstance)
-                        WITH count(others) as othersLen
-                        RETURN  othersLen > 1 as isUsed
-                    }
-                    CALL apoc.util.validate(isUsed, apoc.convert.toJson({code: 400}), null)
+            // Check if a given TypeInstance is not used by others
+            CALL {
+                WITH ti
+                WITH ti
+                MATCH (ti)-[:USES]->(others:TypeInstance)
+                WITH count(others) as othersLen
+                RETURN  othersLen > 1 as isUsed
+            }
+            CALL apoc.util.validate(isUsed, apoc.convert.toJson({code: 400}), null)
 
-                    WITH ti
-                    MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
-                    MATCH (ti)-[:OF_TYPE]->(typeRef: TypeInstanceTypeReference)
-                    MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
-                    MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
-                    OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
+            WITH ti
+            MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
+            MATCH (ti)-[:OF_TYPE]->(typeRef: TypeInstanceTypeReference)
+            MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
+            MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
+            OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
 
-                    DETACH DELETE ti, metadata, spec, tirs
+            DETACH DELETE ti, metadata, spec, tirs
 
-                    WITH typeRef
-                    CALL {
-                      MATCH (typeRef)
-                      WHERE NOT (typeRef)--()
-                      DELETE (typeRef)
-                      RETURN 'remove typeRef'
-                    }
+            WITH typeRef
+            CALL {
+              MATCH (typeRef)
+              WHERE NOT (typeRef)--()
+              DELETE (typeRef)
+              RETURN 'remove typeRef'
+            }
 
-                    WITH *
-                    CALL {
-                      MATCH (attrRef)
-                      WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
-                      DELETE (attrRef)
-                      RETURN 'remove attr'
-                    }
+            WITH *
+            CALL {
+              MATCH (attrRef)
+              WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
+              DELETE (attrRef)
+              RETURN 'remove attr'
+            }
 
-                    RETURN $id`,
+            RETURN $id`,
         { id: args.id, ownerID: args.ownerID || null }
       );
       return args.id;

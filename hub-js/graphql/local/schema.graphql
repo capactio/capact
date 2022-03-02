@@ -390,8 +390,7 @@ type Mutation {
     in: CreateTypeInstancesInput!
   ): [CreateTypeInstanceOutput!]!
 
-  # TODO extend input with TypeInstanceInstrumentation
-  createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
+  createTypeInstance(in: CreateTypeInstanceInput!): CreateTypeInstanceOutput!
 
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(

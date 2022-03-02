@@ -32,10 +32,10 @@ export async function toggleLockTypeInstances(
         tx,
         args,
         `
-                  MATCH (ti:TypeInstance)
-                  WHERE ti.id IN $in.ids
-                  SET ti.lockedBy = $in.ownerID
-                  RETURN true as executed`
+            MATCH (ti:TypeInstance)
+            WHERE ti.id IN $in.ids
+            SET ti.lockedBy = $in.ownerID
+            RETURN true as executed`
       );
       return args.in.ids;
     });
@@ -59,10 +59,10 @@ export async function unlockTypeInstances(
         tx,
         args,
         `
-                  MATCH (ti:TypeInstance)
-                  WHERE ti.id IN $in.ids
-                  SET ti.lockedBy = null
-                  RETURN true as executed`
+            MATCH (ti:TypeInstance)
+            WHERE ti.id IN $in.ids
+            SET ti.lockedBy = null
+            RETURN true as executed`
       );
       return args.in.ids;
     });

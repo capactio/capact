@@ -111,7 +111,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	}
 }
 
-func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func() error) {
+func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func()) {
 	t.Helper()
 
 	ti, err := cli.CreateTypeInstances(ctx, fixExternalDotenvStorage(srvAddr))
@@ -119,8 +119,8 @@ func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *Clien
 	require.Len(t, ti, 1)
 	dotenvHubStorage := ti[0]
 
-	return dotenvHubStorage, func() error {
-		return cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
+	return dotenvHubStorage, func() {
+		_ = cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
 	}
 }
 

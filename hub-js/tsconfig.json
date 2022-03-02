@@ -3,7 +3,7 @@
   "include": ["src/**/*"],
   "compilerOptions": {
     "outDir": "dist",
-    "typeRoots": ["src/types"]
+    "sourceMap": true,
   },
   "exclude": ["node_modules", "src/types/**/*"]
 }

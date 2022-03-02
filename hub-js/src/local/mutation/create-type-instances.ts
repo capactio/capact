@@ -8,7 +8,7 @@ import {
   colors,
   animals
 } from "unique-names-generator";
-import DelegatedStorageService, {
+import {
   DeleteInput,
   StoreInput,
   UpdatedContexts

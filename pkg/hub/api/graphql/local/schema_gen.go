@@ -141,7 +141,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateTypeInstances(ctx context.Context, in CreateTypeInstancesInput) ([]*CreateTypeInstanceOutput, error)
-	CreateTypeInstance(ctx context.Context, in CreateTypeInstanceInput) (*TypeInstance, error)
+	CreateTypeInstance(ctx context.Context, in CreateTypeInstanceInput) (*CreateTypeInstanceOutput, error)
 	UpdateTypeInstances(ctx context.Context, in []*UpdateTypeInstancesInput) ([]*TypeInstance, error)
 	DeleteTypeInstance(ctx context.Context, id string, ownerID *string) (string, error)
 	LockTypeInstances(ctx context.Context, in LockTypeInstancesInput) ([]string, error)
@@ -720,11 +720,11 @@ type TypeInstanceResourceVersionSpec {
 
 type TypeInstanceResourceVersionSpecBackend {
   context: Any
-  @cypher(
-    statement: """
-    RETURN apoc.convert.fromJsonMap(this.context)
-    """
-  )
+    @cypher(
+      statement: """
+      RETURN apoc.convert.fromJsonMap(this.context)
+      """
+    )
 }
 
 type TypeInstanceBackendReference {
@@ -990,8 +990,7 @@ type Mutation {
     in: CreateTypeInstancesInput!
   ): [CreateTypeInstanceOutput!]!
 
-  # TODO extend input with TypeInstanceInstrumentation
-  createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
+  createTypeInstance(in: CreateTypeInstanceInput!): CreateTypeInstanceOutput!
 
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(
@@ -1581,9 +1580,9 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*TypeInstance)
+	res := resTmp.(*CreateTypeInstanceOutput)
 	fc.Result = res
-	return ec.marshalNTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstance(ctx, field.Selections, res)
+	return ec.marshalNCreateTypeInstanceOutput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6054,6 +6053,10 @@ func (ec *executionContext) unmarshalNCreateTypeInstanceInput2ᚖcapactᚗioᚋc
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCreateTypeInstanceOutput2capactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceOutput(ctx context.Context, sel ast.SelectionSet, v CreateTypeInstanceOutput) graphql.Marshaler {
+	return ec._CreateTypeInstanceOutput(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNCreateTypeInstanceOutput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceOutputᚄ(ctx context.Context, sel ast.SelectionSet, v []*CreateTypeInstanceOutput) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -6214,10 +6217,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNTypeInstance2capactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstance(ctx context.Context, sel ast.SelectionSet, v TypeInstance) graphql.Marshaler {
-	return ec._TypeInstance(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*TypeInstance) graphql.Marshaler {
