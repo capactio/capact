@@ -44,7 +44,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	t.Logf("Creating TI %q...\n", typeInstanceID)
 
 	_, err = client.OnCreate(ctx, &pb.OnCreateRequest{
-		TypeinstanceId: typeInstanceID,
+		TypeInstanceId: typeInstanceID,
 		Value:          valueBytes,
 		Context:        reqContext,
 	})
@@ -54,7 +54,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	var resourceVersion uint32 = 1
 	res, err := client.GetValue(ctx, &pb.GetValueRequest{
-		TypeinstanceId:  typeInstanceID,
+		TypeInstanceId:  typeInstanceID,
 		ResourceVersion: resourceVersion,
 		Context:         reqContext,
 	})
@@ -68,7 +68,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	newValueBytes := []byte(`{"key": "updated"}`)
 	_, err = client.OnUpdate(ctx, &pb.OnUpdateRequest{
-		TypeinstanceId:     typeInstanceID,
+		TypeInstanceId:     typeInstanceID,
 		NewResourceVersion: 2,
 		NewValue:           newValueBytes,
 		Context:            reqContext,
@@ -78,7 +78,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	// get value
 
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
-		TypeinstanceId:  typeInstanceID,
+		TypeInstanceId:  typeInstanceID,
 		ResourceVersion: resourceVersion,
 		Context:         reqContext,
 	})
@@ -89,7 +89,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	resourceVersion = 2
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
-		TypeinstanceId:  typeInstanceID,
+		TypeInstanceId:  typeInstanceID,
 		ResourceVersion: resourceVersion,
 		Context:         reqContext,
 	})
@@ -103,7 +103,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	t.Logf("Locking TI %q...\n", typeInstanceID)
 
 	_, err = client.OnLock(ctx, &pb.OnLockRequest{
-		TypeinstanceId: typeInstanceID,
+		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 		LockedBy:       "test/sample",
 	})
@@ -112,7 +112,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	// get lockedBy
 
 	lockedByRes, err := client.GetLockedBy(ctx, &pb.GetLockedByRequest{
-		TypeinstanceId: typeInstanceID,
+		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 	})
 	require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	t.Logf("Unlocking TI %q...\n", typeInstanceID)
 
 	_, err = client.OnUnlock(ctx, &pb.OnUnlockRequest{
-		TypeinstanceId: typeInstanceID,
+		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 	})
 	require.NoError(t, err)
@@ -134,7 +134,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	// get lockedBy
 
 	lockedByRes, err = client.GetLockedBy(ctx, &pb.GetLockedByRequest{
-		TypeinstanceId: typeInstanceID,
+		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 	})
 	require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	resourceVersion = 1
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
-		TypeinstanceId:  typeInstanceID,
+		TypeInstanceId:  typeInstanceID,
 		ResourceVersion: resourceVersion,
 		Context:         reqContext,
 	})
@@ -157,7 +157,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	resourceVersion = 2
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
-		TypeinstanceId:  typeInstanceID,
+		TypeInstanceId:  typeInstanceID,
 		ResourceVersion: resourceVersion,
 		Context:         reqContext,
 	})
@@ -170,7 +170,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	t.Logf("Deleting TI %q...\n", typeInstanceID)
 
 	_, err = client.OnDelete(ctx, &pb.OnDeleteRequest{
-		TypeinstanceId: typeInstanceID,
+		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 	})
 	require.NoError(t, err)
@@ -179,7 +179,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	resourceVersion = 1
 	_, err = client.GetValue(ctx, &pb.GetValueRequest{
-		TypeinstanceId:  typeInstanceID,
+		TypeInstanceId:  typeInstanceID,
 		ResourceVersion: resourceVersion,
 		Context:         reqContext,
 	})
