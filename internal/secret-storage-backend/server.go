@@ -20,6 +20,32 @@ type Context struct {
 	Provider string `json:"provider"`
 }
 
+// Providers holds map of the configured providers for the Handler.
+type Providers map[string]tellercore.Provider
+
+// Count returns the providers count.
+func (p Providers) Count() int {
+	return len(p)
+}
+
+// GetDefault returns the default provider in case there is exactly one configured.
+func (p Providers) GetDefault() (tellercore.Provider, error) {
+	count := p.Count()
+	invalidCountErr := fmt.Errorf("invalid number of providers configured to get default one: expected: 1, actual: %d", count)
+
+	if count > 1 {
+		return nil, invalidCountErr
+	}
+
+	for _, provider := range p {
+		// return first one
+		return provider, nil
+	}
+
+	// empty map - no providers
+	return nil, invalidCountErr
+}
+
 var _ pb.StorageBackendServer = &Handler{}
 
 // Handler handles incoming requests to the Secret storage backend gRPC server.
@@ -28,7 +54,7 @@ type Handler struct {
 
 	log *zap.Logger
 
-	providers map[string]tellercore.Provider
+	providers Providers
 }
 
 const (
@@ -42,7 +68,7 @@ var (
 )
 
 // NewHandler returns new Handler.
-func NewHandler(log *zap.Logger, providers map[string]tellercore.Provider) *Handler {
+func NewHandler(log *zap.Logger, providers Providers) *Handler {
 	return &Handler{
 		log:       log,
 		providers: providers,
@@ -243,6 +269,16 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 }
 
 func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, error) {
+	if len(contextBytes) == 0 {
+		// try to get the default provider
+		provider, err := h.providers.GetDefault()
+		if err != nil {
+			return nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
+		}
+
+		return provider, nil
+	}
+
 	var context Context
 	err := json.Unmarshal(contextBytes, &context)
 	if err != nil {
@@ -251,7 +287,7 @@ func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provid
 
 	provider, ok := h.providers[context.Provider]
 	if !ok {
-		return nil, h.internalError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
+		return nil, h.failedPreconditionError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
 	}
 
 	return provider, nil
@@ -411,6 +447,10 @@ func (h *Handler) internalError(err error) error {
 	return status.Error(codes.Internal, err.Error())
 }
 
+func (h *Handler) failedPreconditionError(err error) error {
+	return status.Error(codes.FailedPrecondition, err.Error())
+}
+
 func (h *Handler) typeInstanceLockedError(path, lockedByValue string) error {
-	return status.Error(codes.FailedPrecondition, fmt.Sprintf("typeInstance locked: path %q contains %q property with value %q", path, lockedByField, lockedByValue))
+	return h.failedPreconditionError(fmt.Errorf("typeInstance locked: path %q contains %q property with value %q", path, lockedByField, lockedByValue))
 }

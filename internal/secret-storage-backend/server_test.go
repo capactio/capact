@@ -42,24 +42,20 @@ func TestHandler_GetValue(t *testing.T) {
 		},
 		{
 			Name: "Success",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"2": `{"key":true}`,
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"2": `{"key":true}`,
 				},
-			},
+			}),
 			ExpectedValue: []byte(`{"key":true}`),
 		},
 		{
 			Name: "Empty value", // empty value is also a valid one
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"2": "",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"2": "",
 				},
-			},
+			}),
 			ExpectedValue: []byte{},
 		},
 	}
@@ -113,30 +109,26 @@ func TestHandler_GetLockedBy(t *testing.T) {
 	}{
 		{
 			Name:                 "No data",
-			InputProvider:        &fakeProvider{},
+			InputProvider:        newFakeProvider(nil),
 			ExpectedLockedBy:     nil,
 			ExpectedErrorMessage: ptr.String("rpc error: code = NotFound desc = TypeInstance \"uuid\" not found: secret from path \"/capact/uuid\" is empty"),
 		},
 		{
 			Name: "Empty value",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1": "bar",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1": "bar",
 				},
-			},
+			}),
 			ExpectedLockedBy: nil,
 		},
 		{
 			Name: "Success",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"locked_by": "service/foo",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"locked_by": "service/foo",
 				},
-			},
+			}),
 			ExpectedLockedBy: ptr.String("service/foo"),
 		},
 	}
@@ -193,7 +185,7 @@ func TestHandler_OnCreate(t *testing.T) {
 	}{
 		{
 			Name:          "No data",
-			InputProvider: &fakeProvider{secrets: map[string]map[string]string{}},
+			InputProvider: newFakeProvider(map[string]map[string]string{}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1": string(valueBytes),
@@ -202,11 +194,9 @@ func TestHandler_OnCreate(t *testing.T) {
 		},
 		{
 			Name: "Empty value",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {},
-				},
-			},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1": string(valueBytes),
@@ -215,13 +205,11 @@ func TestHandler_OnCreate(t *testing.T) {
 		},
 		{
 			Name: "Already existing",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1": "original",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1": "original",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1": "original",
@@ -288,11 +276,9 @@ func TestHandler_OnUpdate(t *testing.T) {
 	}{
 		{
 			Name: "Non-existing secret",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {},
-				},
-			},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {},
 			},
@@ -300,14 +286,12 @@ func TestHandler_OnUpdate(t *testing.T) {
 		},
 		{
 			Name: "Already existing locked",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1":         "original",
-						"locked_by": "service/foo",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1":         "original",
+					"locked_by": "service/foo",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1":         "original",
@@ -318,13 +302,11 @@ func TestHandler_OnUpdate(t *testing.T) {
 		},
 		{
 			Name: "Already existing not locked",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"3": "original",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"3": "original",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"3": "original",
@@ -389,7 +371,7 @@ func TestHandler_OnLock(t *testing.T) {
 	}{
 		{
 			Name:          "No data",
-			InputProvider: &fakeProvider{secrets: map[string]map[string]string{}},
+			InputProvider: newFakeProvider(nil),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"locked_by": "foo/sample",
@@ -398,11 +380,9 @@ func TestHandler_OnLock(t *testing.T) {
 		},
 		{
 			Name: "Empty value",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {},
-				},
-			},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"locked_by": "foo/sample",
@@ -411,13 +391,11 @@ func TestHandler_OnLock(t *testing.T) {
 		},
 		{
 			Name: "Already existing without conflict",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1": "original",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1": "original",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1":         "original",
@@ -427,14 +405,12 @@ func TestHandler_OnLock(t *testing.T) {
 		},
 		{
 			Name: "Already existing locked",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"3":         "original",
-						"locked_by": "previous",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"3":         "original",
+					"locked_by": "previous",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"3":         "original",
@@ -498,20 +474,18 @@ func TestHandler_OnUnlock(t *testing.T) {
 	}{
 		{
 			Name:                  "No data",
-			InputProvider:         &fakeProvider{secrets: map[string]map[string]string{}},
-			ExpectedProviderState: map[string]map[string]string{},
+			InputProvider:         newFakeProvider(nil),
+			ExpectedProviderState: nil,
 			ExpectedErrorMessage:  ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
 			Name: "Already existing without conflict",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1":         "original",
-						"locked_by": "foo/bar",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1":         "original",
+					"locked_by": "foo/bar",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1": "original",
@@ -520,14 +494,12 @@ func TestHandler_OnUnlock(t *testing.T) {
 		},
 		{
 			Name: "Already existing empty property",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"3":         "original",
-						"locked_by": "",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"3":         "original",
+					"locked_by": "",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"3": "original",
@@ -536,13 +508,11 @@ func TestHandler_OnUnlock(t *testing.T) {
 		},
 		{
 			Name: "Already existing without lockedBy property",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"3": "original",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"3": "original",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"3": "original",
@@ -604,33 +574,29 @@ func TestHandler_OnDelete(t *testing.T) {
 	}{
 		{
 			Name:                  "No data",
-			InputProvider:         &fakeProvider{secrets: map[string]map[string]string{}},
-			ExpectedProviderState: map[string]map[string]string{},
+			InputProvider:         newFakeProvider(nil),
+			ExpectedProviderState: nil,
 			ExpectedErrorMessage:  ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
 			Name: "Empty value",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {},
-				},
-			},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {},
+			}),
 			ExpectedProviderState: map[string]map[string]string{path: {}},
 			ExpectedErrorMessage:  ptr.String("rpc error: code = NotFound desc = path \"/capact/uuid\" in provider \"fake\" not found"),
 		},
 		{
 			Name: "Already existing not locked",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1": "original",
-					},
-					"cant-touch-this": {
-						"Music":        "hits me so hard",
-						"Makes me say": "Oh, my Lord",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1": "original",
 				},
-			},
+				"cant-touch-this": {
+					"Music":        "hits me so hard",
+					"Makes me say": "Oh, my Lord",
+				},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				"cant-touch-this": {
 					"Music":        "hits me so hard",
@@ -640,14 +606,12 @@ func TestHandler_OnDelete(t *testing.T) {
 		},
 		{
 			Name: "Already existing locked",
-			InputProvider: &fakeProvider{
-				secrets: map[string]map[string]string{
-					path: {
-						"1":         "original",
-						"locked_by": "foo/bar",
-					},
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1":         "original",
+					"locked_by": "foo/bar",
 				},
-			},
+			}),
 			ExpectedProviderState: map[string]map[string]string{
 				path: {
 					"1":         "original",
@@ -688,6 +652,85 @@ func TestHandler_OnDelete(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, res)
+		})
+	}
+}
+
+func TestHandler_GetProviderFromContext(t *testing.T) {
+	// given
+	testCases := []struct {
+		Name                 string
+		InputContextBytes    []byte
+		InputProviders       map[string]tellercore.Provider
+		ExpectedProviderName string
+		ExpectedErrorMessage *string
+	}{
+		{
+			Name: "Empty context",
+			InputProviders: secret_storage_backend.Providers{
+				"one": &fakeProvider{name: "one"},
+			},
+			InputContextBytes:    nil,
+			ExpectedProviderName: "one",
+		},
+		{
+			Name: "Invalid context",
+			InputProviders: secret_storage_backend.Providers{
+				"one": &fakeProvider{name: "one"},
+			},
+			InputContextBytes:    []byte(`{foo}`),
+			ExpectedErrorMessage: ptr.String("rpc error: code = Internal desc = while unmarshaling additional parameters: invalid character 'f' looking for beginning of object key string"),
+		},
+		{
+			// this case shouldn't happen as the server validates list of input providers during start
+			Name:                 "Empty context without default provider",
+			InputProviders:       secret_storage_backend.Providers{},
+			ExpectedErrorMessage: ptr.String("rpc error: code = FailedPrecondition desc = while getting default provider based on empty context: invalid number of providers configured to get default one: expected: 1, actual: 0"),
+		},
+		{
+			Name: "Empty context with multiple providers",
+			InputProviders: secret_storage_backend.Providers{
+				"one": &fakeProvider{name: "one"},
+				"two": &fakeProvider{name: "two"},
+			},
+			ExpectedErrorMessage: ptr.String("rpc error: code = FailedPrecondition desc = while getting default provider based on empty context: invalid number of providers configured to get default one: expected: 1, actual: 2"),
+		},
+		{
+			Name: "Provider passed in context",
+			InputProviders: secret_storage_backend.Providers{
+				"one": &fakeProvider{name: "one"},
+				"two": &fakeProvider{name: "two"},
+			},
+			InputContextBytes:    []byte(`{"provider": "two"}`),
+			ExpectedProviderName: "two",
+		},
+		{
+			Name: "No such provider",
+			InputProviders: secret_storage_backend.Providers{
+				"one": &fakeProvider{name: "one"},
+			},
+			InputContextBytes:    []byte(`{"provider": "non-existing"}`),
+			ExpectedErrorMessage: ptr.String("rpc error: code = FailedPrecondition desc = missing loaded provider with name \"non-existing\""),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			handler := secret_storage_backend.NewHandler(logger.Noop(), testCase.InputProviders)
+
+			// when
+			provider, err := handler.GetProviderFromContext(testCase.InputContextBytes)
+
+			// then
+			if testCase.ExpectedErrorMessage != nil {
+				assert.Nil(t, provider)
+				require.Error(t, err)
+				assert.EqualError(t, err, *testCase.ExpectedErrorMessage)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, testCase.ExpectedProviderName, provider.Name())
 		})
 	}
 }

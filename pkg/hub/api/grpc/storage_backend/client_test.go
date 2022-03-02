@@ -13,7 +13,7 @@ import (
 )
 
 // #nosec G101
-const secretStorageBackendAddr = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
+const secretStorageBackendAddrEnv = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
 
 // This test illustrates how to use gRPC Go client against real gRPC Storage Backend server.
 //
@@ -21,19 +21,42 @@ const secretStorageBackendAddr = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
 //	and the `provider` is enabled on this server.
 //
 // To run this test, execute:
-// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -v -count 1
+// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -run TestNewStorageBackendClient -v -count 1
 func TestNewStorageBackendClient(t *testing.T) {
-	srvAddr := os.Getenv(secretStorageBackendAddr)
+	srvAddr := os.Getenv(secretStorageBackendAddrEnv)
 	if srvAddr == "" {
-		t.Skipf("skipping storage backend gRPC client test as the env %s is not provided", secretStorageBackendAddr)
+		t.Skipf("skipping storage backend gRPC client test as the env %s is not provided", secretStorageBackendAddrEnv)
 	}
-	provider := "dotenv"
 
-	valueBytes := []byte(`{"key": true}`)
+	value := []byte(`{"key": true}`)
 	typeInstanceID := "id"
 
+	provider := "dotenv"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, provider))
 
+	executeSecretStorageBackendTestScenario(t, srvAddr, typeInstanceID, value, reqContext)
+}
+
+// This test illustrates how to use gRPC Go client against real gRPC Storage Backend server without passing request context.
+//
+// NOTE: Before running this test, make sure that the server is running under the `srvAddr` address
+//	and there is just one `provider` enabled on this server.
+//
+// To run this test, execute:
+// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -run TestNewStorageBackendClient_WithDefaultProvider -v -count 1
+func TestNewStorageBackendClient_WithDefaultProvider(t *testing.T) {
+	srvAddr := os.Getenv(secretStorageBackendAddrEnv)
+	if srvAddr == "" {
+		srvAddr = ":50051"
+	}
+
+	value := []byte(`{"key": true}`)
+	typeInstanceID := "id"
+
+	executeSecretStorageBackendTestScenario(t, srvAddr, typeInstanceID, value, nil)
+}
+
+func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstanceID string, value, reqContext []byte) {
 	conn, err := grpc.Dial(srvAddr, grpc.WithInsecure())
 	require.NoError(t, err)
 
@@ -45,7 +68,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	_, err = client.OnCreate(ctx, &pb.OnCreateRequest{
 		TypeInstanceId: typeInstanceID,
-		Value:          valueBytes,
+		Value:          value,
 		Context:        reqContext,
 	})
 	require.NoError(t, err)
@@ -61,7 +84,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
-	assert.Equal(t, valueBytes, res.Value)
+	assert.Equal(t, value, res.Value)
 
 	// update
 	t.Logf("Updating TI %q...\n", typeInstanceID)
@@ -85,7 +108,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
-	assert.Equal(t, valueBytes, res.Value)
+	assert.Equal(t, value, res.Value)
 
 	resourceVersion = 2
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
@@ -153,7 +176,7 @@ func TestNewStorageBackendClient(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
-	assert.Equal(t, valueBytes, res.Value)
+	assert.Equal(t, value, res.Value)
 
 	resourceVersion = 2
 	res, err = client.GetValue(ctx, &pb.GetValueRequest{
@@ -184,6 +207,6 @@ func TestNewStorageBackendClient(t *testing.T) {
 		Context:         reqContext,
 	})
 	require.Error(t, err)
-	assert.EqualError(t, err, "rpc error: code = NotFound desc = TypeInstance \"id\" in revision 1 was not found")
+	assert.EqualError(t, err, fmt.Sprintf("rpc error: code = NotFound desc = TypeInstance \"%s\" in revision 1 was not found", typeInstanceID))
 	t.Logf("Getting TI %q: resource version %d: error: %v\n", typeInstanceID, resourceVersion, err)
 }

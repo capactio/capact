@@ -11,10 +11,15 @@ var _ tellercore.Provider = &fakeProvider{}
 
 type fakeProvider struct {
 	secrets map[string]map[string]string
+	name    string
+}
+
+func newFakeProvider(secrets map[string]map[string]string) *fakeProvider {
+	return &fakeProvider{secrets: secrets, name: "fake"}
 }
 
 func (f *fakeProvider) Name() string {
-	return "fake"
+	return f.name
 }
 
 func (f *fakeProvider) GetMapping(kp tellercore.KeyPath) ([]tellercore.EnvEntry, error) {
@@ -45,6 +50,9 @@ func (f *fakeProvider) Get(kp tellercore.KeyPath) (*tellercore.EnvEntry, error) 
 func (f *fakeProvider) PutMapping(kp tellercore.KeyPath, m map[string]string) error {
 	secrets := f.getSecret(kp)
 
+	if f.secrets == nil {
+		f.secrets = make(map[string]map[string]string)
+	}
 	f.secrets[kp.Path] = tellerutils.Merge(secrets, m)
 
 	return nil
