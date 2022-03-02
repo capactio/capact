@@ -19,6 +19,7 @@ By default, the Secret Storage Backend has the `aws_secretsmanager` provider ena
 2. Export environment variables:
 
    ```bash
+    export AWS_DEFAULT_REGION="{region}" # e.g. eu-west-1
     export AWS_ACCESS_KEY_ID="{accessKey}"
     export AWS_SECRET_ACCESS_KEY="{secretKey}"
     ```

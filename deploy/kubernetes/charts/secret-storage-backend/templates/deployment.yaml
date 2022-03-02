@@ -56,9 +56,11 @@ spec:
               value: "true"
             - name: APP_SUPPORTED_PROVIDERS
               value: "{{ join "," .Values.supportedProviders }}"
-            {{- with .Values.additionalEnvs }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
+          {{- if .Values.additionalEnvs }}
+          envFrom:
+            - secretRef:
+                name: {{ include "secret-storage-backend.fullname" . }}
+          {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

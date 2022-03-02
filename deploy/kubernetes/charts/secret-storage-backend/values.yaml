@@ -12,7 +12,7 @@ image:
 supportedProviders:
   - "dotenv"
 
-additionalEnvs: []
+additionalEnvs: {}
 
 replicaCount: 1
 

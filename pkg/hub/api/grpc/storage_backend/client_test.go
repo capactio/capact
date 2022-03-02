@@ -14,14 +14,12 @@ import (
 
 // #nosec G101
 const secretStorageBackendAddrEnv = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
+const typeInstanceIDEnv = "TYPEINSTANCE_ID"
 
 // This test illustrates how to use gRPC Go client against real gRPC Storage Backend server.
 //
 // NOTE: Before running this test, make sure that the server is running under the `srvAddr` address
 //	and the `provider` is enabled on this server.
-//
-// To run this test, execute:
-// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -run "^TestNewStorageBackendClient$" -v -count 1
 func TestNewStorageBackendClient(t *testing.T) {
 	srvAddr := os.Getenv(secretStorageBackendAddrEnv)
 	if srvAddr == "" {
@@ -30,7 +28,6 @@ func TestNewStorageBackendClient(t *testing.T) {
 
 	value := []byte(`{"key": true}`)
 	typeInstanceID := "id"
-
 	provider := "dotenv"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, provider))
 
@@ -44,14 +41,22 @@ func TestNewStorageBackendClient(t *testing.T) {
 //
 // To run this test, execute:
 // GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -run "^TestNewStorageBackendClient_WithDefaultProvider$" -v -count 1
+//
+// You can run this test with custom TypeInstance ID, by setting TYPEINSTANCE_ID env variable during test run.
+// This might be helpful while running this test against server with different default provider configured.
 func TestNewStorageBackendClient_WithDefaultProvider(t *testing.T) {
 	srvAddr := os.Getenv(secretStorageBackendAddrEnv)
 	if srvAddr == "" {
-		srvAddr = ":50051"
+		t.Skipf("skipping storage backend gRPC client test as the env %s is not provided", secretStorageBackendAddrEnv)
+	}
+
+	typeInstanceID := os.Getenv(typeInstanceIDEnv)
+	if typeInstanceID == "" {
+		// fallback to default
+		typeInstanceID = "id"
 	}
 
 	value := []byte(`{"key": true}`)
-	typeInstanceID := "id"
 
 	executeSecretStorageBackendTestScenario(t, srvAddr, typeInstanceID, value, nil)
 }
