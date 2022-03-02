@@ -149,9 +149,7 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 type requiredTypeInstanceToInject map[string]policy.RequiredTypeInstanceToInject
 
 func (e *PolicyEnforcedClient) listRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (requiredTypeInstanceToInject, error) {
-	var requiredTIs []policy.RequiredTypeInstanceToInject
-	requiredTIs = append(requiredTIs, policyRule.RequiredTypeInstancesToInject()...)
-	requiredTIs = append(requiredTIs, e.mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject()...)
+	requiredTIs := e.MergeRequiredTypeInstances(policyRule)
 
 	if len(requiredTIs) == 0 {
 		return nil, nil

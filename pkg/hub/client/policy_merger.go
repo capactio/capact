@@ -30,14 +30,23 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 	e.mergedPolicy = currentPolicy
 }
 
+// MergeRequiredTypeInstances returns the merged list of TypeInstances from Rule and Defaults
+func (e *PolicyEnforcedClient) MergeRequiredTypeInstances(policyRule policy.Rule) []policy.RequiredTypeInstanceToInject {
+	// prefer policy Rule over Default
+	return mergeRequiredTypeInstances(e.mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject(), policyRule.RequiredTypeInstancesToInject())
+}
+
 func applyInterfacePolicy(currentPolicy *policy.InterfacePolicy, newPolicy policy.InterfacePolicy) {
 	// Default
-	if newPolicy.Default != nil && newPolicy.Default.Inject != nil {
+	if len(newPolicy.DefaultRequiredTypeInstancesToInject()) > 0 {
 		if currentPolicy.Default == nil || currentPolicy.Default.Inject == nil {
-			currentPolicy.Default = newPolicy.Default
-		} else {
-			currentPolicy.Default.Inject.RequiredTypeInstances = mergeRequiredTypeInstances(currentPolicy.Default.Inject.RequiredTypeInstances, newPolicy.Default.Inject.RequiredTypeInstances)
+			currentPolicy.Default = &policy.InterfaceDefault{
+				Inject: &policy.DefaultInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{},
+				},
+			}
 		}
+		currentPolicy.Default.Inject.RequiredTypeInstances = mergeRequiredTypeInstances(currentPolicy.Default.Inject.RequiredTypeInstances, newPolicy.Default.Inject.RequiredTypeInstances)
 	}
 
 	// from new policy we are checking if there are the same rules. If yes we fill missing data,
