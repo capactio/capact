@@ -26,6 +26,7 @@ readonly charts=(
   "monitoring"
   "neo4j"
   "capact"
+  "secret-storage-backend"
 )
 
 # shellcheck source=./hack/lib/utilities.sh
