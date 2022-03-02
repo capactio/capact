@@ -455,6 +455,11 @@ type Mutation {
       CREATE (metadata: TypeInstanceResourceVersionMetadata)
       CREATE (tir)-[:DESCRIBED_BY]->(metadata)
 
+      // TODO: Temporary don't allow backend update, will be fixed in follow-up PR
+      WITH *
+      MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)-[:WITH_BACKEND]->(specBackend: TypeInstanceResourceVersionSpecBackend)
+      CREATE (spec)-[:WITH_BACKEND]->(specBackend)
+
       WITH ti, tir, latestRevision, metadata, item
       CALL apoc.do.when(
         item.typeInstance.attributes IS NOT NULL,
