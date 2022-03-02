@@ -124,8 +124,13 @@ type ComplexityRoot struct {
 	}
 
 	TypeInstanceResourceVersionSpec struct {
+		Backend         func(childComplexity int) int
 		Instrumentation func(childComplexity int) int
 		Value           func(childComplexity int) int
+	}
+
+	TypeInstanceResourceVersionSpecBackend struct {
+		Context func(childComplexity int) int
 	}
 
 	TypeInstanceTypeReference struct {
@@ -487,6 +492,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TypeInstanceResourceVersionMetadata.Attributes(childComplexity), true
 
+	case "TypeInstanceResourceVersionSpec.backend":
+		if e.complexity.TypeInstanceResourceVersionSpec.Backend == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceResourceVersionSpec.Backend(childComplexity), true
+
 	case "TypeInstanceResourceVersionSpec.instrumentation":
 		if e.complexity.TypeInstanceResourceVersionSpec.Instrumentation == nil {
 			break
@@ -500,6 +512,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeInstanceResourceVersionSpec.Value(childComplexity), true
+
+	case "TypeInstanceResourceVersionSpecBackend.context":
+		if e.complexity.TypeInstanceResourceVersionSpecBackend.Context == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceResourceVersionSpecBackend.Context(childComplexity), true
 
 	case "TypeInstanceTypeReference.path":
 		if e.complexity.TypeInstanceTypeReference.Path == nil {
@@ -644,7 +663,8 @@ type TypeInstance {
     @cypher(
       statement: "MATCH (this)<-[:USES]-(ti:TypeInstance)-[:OF_TYPE]-(tr: TypeInstanceTypeReference) RETURN ti ORDER BY tr.path ASC, tr.revision DESC, ti.createdAt DESC"
     )
-  backend: TypeInstanceBackendReference! @relation(name: "STORED_IN", direction: "OUT")
+  backend: TypeInstanceBackendReference!
+    @relation(name: "STORED_IN", direction: "OUT")
 
   latestResourceVersion: TypeInstanceResourceVersion
     @cypher(
@@ -689,11 +709,22 @@ type TypeInstanceResourceVersionSpec {
       """
     )
 
+  backend: TypeInstanceResourceVersionSpecBackend!
+    @relation(name: "WITH_BACKEND", direction: "OUT")
   """
   CURRENTLY NOT IMPLEMENTED
   """
   instrumentation: TypeInstanceInstrumentation
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
+}
+
+type TypeInstanceResourceVersionSpecBackend {
+  context: Any
+  @cypher(
+    statement: """
+    RETURN apoc.convert.fromJsonMap(this.context)
+    """
+  )
 }
 
 type TypeInstanceBackendReference {
@@ -808,6 +839,7 @@ input TypeInstanceTypeReferenceInput {
 
 input TypeInstanceBackendInput {
   id: String!
+  context: Any
 }
 
 input CreateTypeInstanceInput {
@@ -960,52 +992,6 @@ type Mutation {
 
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
-    @cypher(
-      statement: """
-      CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
-
-      // Backend
-      WITH *
-      CALL apoc.do.when(
-          $in.backend.id IS NOT NULL,
-          '
-           WITH false as abstract
-           RETURN $in.backend.id as id, abstract
-          ',
-          '
-           // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.
-           WITH true as abstract
-           MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: "cap.core.type.hub.storage.neo4j"})
-           RETURN backend.id as id, abstract
-          ',
-          {in: $in}
-      ) YIELD value as backend
-      MATCH (backendTI:TypeInstance {id: backend.id})
-      CREATE (ti)-[:USES]->(backendTI)
-      // TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check
-      // if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.
-      MERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})
-      CREATE (ti)-[:STORED_IN]->(storageRef)
-
-      // TypeRef
-      MERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
-      CREATE (ti)-[:OF_TYPE]->(typeRef)
-
-      // Revision
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})
-      CREATE (ti)-[:CONTAINS]->(tir)
-
-      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
-      CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($in.value)})
-
-      FOREACH (attr in $in.attributes |
-        MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
-        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
-      )
-
-      RETURN ti
-      """
-    )
 
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(
@@ -1582,32 +1568,8 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateTypeInstance(rctx, args["in"].(CreateTypeInstanceInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})\n\n// Backend\nWITH *\nCALL apoc.do.when(\n    $in.backend.id IS NOT NULL,\n    '\n     WITH false as abstract\n     RETURN $in.backend.id as id, abstract\n    ',\n    '\n     // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.\n     WITH true as abstract\n     MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: \"cap.core.type.hub.storage.neo4j\"})\n     RETURN backend.id as id, abstract\n    ',\n    {in: $in}\n) YIELD value as backend\nMATCH (backendTI:TypeInstance {id: backend.id})\nCREATE (ti)-[:USES]->(backendTI)\n// TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check\n// if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.\nMERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})\nCREATE (ti)-[:STORED_IN]->(storageRef)\n\n// TypeRef\nMERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\n// Revision\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($in.value)})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Cypher == nil {
-				return nil, errors.New("directive cypher is not implemented")
-			}
-			return ec.directives.Cypher(ctx, nil, directive0, statement)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*TypeInstance); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/local.TypeInstance`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTypeInstance(rctx, args["in"].(CreateTypeInstanceInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3453,6 +3415,69 @@ func (ec *executionContext) _TypeInstanceResourceVersionSpec_value(ctx context.C
 	return ec.marshalNAny2interface(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _TypeInstanceResourceVersionSpec_backend(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceResourceVersionSpec",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Backend, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "WITH_BACKEND")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive0, name, direction, nil, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeInstanceResourceVersionSpecBackend); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/local.TypeInstanceResourceVersionSpecBackend`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TypeInstanceResourceVersionSpecBackend)
+	fc.Result = res
+	return ec.marshalNTypeInstanceResourceVersionSpecBackend2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstanceResourceVersionSpecBackend(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _TypeInstanceResourceVersionSpec_instrumentation(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3511,6 +3536,62 @@ func (ec *executionContext) _TypeInstanceResourceVersionSpec_instrumentation(ctx
 	res := resTmp.(*TypeInstanceInstrumentation)
 	fc.Result = res
 	return ec.marshalOTypeInstanceInstrumentation2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstanceInstrumentation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceResourceVersionSpecBackend_context(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionSpecBackend) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceResourceVersionSpecBackend",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Context, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "RETURN apoc.convert.fromJsonMap(this.context)")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive0, statement)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(interface{}); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be interface{}`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstanceTypeReference_path(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceTypeReference) (ret graphql.Marshaler) {
@@ -4868,6 +4949,14 @@ func (ec *executionContext) unmarshalInputTypeInstanceBackendInput(ctx context.C
 			if err != nil {
 				return it, err
 			}
+		case "context":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("context"))
+			it.Context, err = ec.unmarshalOAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -5564,8 +5653,37 @@ func (ec *executionContext) _TypeInstanceResourceVersionSpec(ctx context.Context
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "backend":
+			out.Values[i] = ec._TypeInstanceResourceVersionSpec_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "instrumentation":
 			out.Values[i] = ec._TypeInstanceResourceVersionSpec_instrumentation(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var typeInstanceResourceVersionSpecBackendImplementors = []string{"TypeInstanceResourceVersionSpecBackend"}
+
+func (ec *executionContext) _TypeInstanceResourceVersionSpecBackend(ctx context.Context, sel ast.SelectionSet, obj *TypeInstanceResourceVersionSpecBackend) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, typeInstanceResourceVersionSpecBackendImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TypeInstanceResourceVersionSpecBackend")
+		case "context":
+			out.Values[i] = ec._TypeInstanceResourceVersionSpecBackend_context(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6271,6 +6389,16 @@ func (ec *executionContext) marshalNTypeInstanceResourceVersionSpec2ᚖcapactᚗ
 		return graphql.Null
 	}
 	return ec._TypeInstanceResourceVersionSpec(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTypeInstanceResourceVersionSpecBackend2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstanceResourceVersionSpecBackend(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceResourceVersionSpecBackend) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TypeInstanceResourceVersionSpecBackend(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTypeInstanceTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐTypeInstanceTypeReference(ctx context.Context, sel ast.SelectionSet, v *TypeInstanceTypeReference) graphql.Marshaler {

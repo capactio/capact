@@ -109,11 +109,22 @@ type TypeInstanceResourceVersionSpec {
       """
     )
 
+  backend: TypeInstanceResourceVersionSpecBackend!
+    @relation(name: "WITH_BACKEND", direction: "OUT")
   """
   CURRENTLY NOT IMPLEMENTED
   """
   instrumentation: TypeInstanceInstrumentation
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
+}
+
+type TypeInstanceResourceVersionSpecBackend {
+  context: Any
+    @cypher(
+      statement: """
+      RETURN apoc.convert.fromJsonMap(this.context)
+      """
+    )
 }
 
 type TypeInstanceBackendReference {
@@ -228,6 +239,7 @@ input TypeInstanceTypeReferenceInput {
 
 input TypeInstanceBackendInput {
   id: String!
+  context: Any
 }
 
 input CreateTypeInstanceInput {
@@ -380,52 +392,6 @@ type Mutation {
 
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
-    @cypher(
-      statement: """
-      CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
-
-      // Backend
-      WITH *
-      CALL apoc.do.when(
-          $in.backend.id IS NOT NULL,
-          '
-           WITH false as abstract
-           RETURN $in.backend.id as id, abstract
-          ',
-          '
-           // TODO(storage): this should be resolved by Local Hub server during the insertion, not in cypher.
-           WITH true as abstract
-           MATCH (backend:TypeInstance)-[:OF_TYPE]->(typeRef {path: "cap.core.type.hub.storage.neo4j"})
-           RETURN backend.id as id, abstract
-          ',
-          {in: $in}
-      ) YIELD value as backend
-      MATCH (backendTI:TypeInstance {id: backend.id})
-      CREATE (ti)-[:USES]->(backendTI)
-      // TODO(storage): It should be taken from the uses relation but we don't have access to the TypeRef.additionalRefs to check
-      // if a given type is a backend or not. Maybe we will introduce a dedicated property to distinguish them from others.
-      MERGE (storageRef:TypeInstanceBackendReference {abstract: backend.abstract, id: backendTI.id})
-      CREATE (ti)-[:STORED_IN]->(storageRef)
-
-      // TypeRef
-      MERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
-      CREATE (ti)-[:OF_TYPE]->(typeRef)
-
-      // Revision
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})
-      CREATE (ti)-[:CONTAINS]->(tir)
-
-      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
-      CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson($in.value)})
-
-      FOREACH (attr in $in.attributes |
-        MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
-        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
-      )
-
-      RETURN ti
-      """
-    )
 
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(

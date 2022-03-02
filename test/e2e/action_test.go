@@ -402,7 +402,7 @@ func fixHelmStorageTypeInstanceCreateInput() *hublocalgraphql.CreateTypeInstance
 		},
 		Attributes: []*hublocalgraphql.AttributeReferenceInput{},
 		Value: map[string]interface{}{
-			"url":         "helm-release.default:50051",
+			"url":         "e2e-test-backend-mock-url:50051",
 			"acceptValue": true,
 			"contextSchema": heredoc.Doc(`
 				{

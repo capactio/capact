@@ -1,5 +1,6 @@
 export interface TypeInstanceBackendInput {
   id: string;
+  context?: any;
 }
 
 export interface CreateTypeInstanceInput {
@@ -11,6 +12,7 @@ export interface CreateTypeInstanceInput {
 export interface TypeInstanceBackendDetails {
   abstract: boolean;
   id: string;
+  context?: any;
 }
 
 export interface CreateTypeInstancesInput {

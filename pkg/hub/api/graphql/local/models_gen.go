@@ -72,7 +72,8 @@ type TypeInstance struct {
 }
 
 type TypeInstanceBackendInput struct {
-	ID string `json:"id"`
+	ID      string      `json:"id"`
+	Context interface{} `json:"context"`
 }
 
 type TypeInstanceBackendReference struct {
@@ -123,9 +124,14 @@ type TypeInstanceResourceVersionMetadata struct {
 }
 
 type TypeInstanceResourceVersionSpec struct {
-	Value interface{} `json:"value"`
+	Value   interface{}                             `json:"value"`
+	Backend *TypeInstanceResourceVersionSpecBackend `json:"backend"`
 	// CURRENTLY NOT IMPLEMENTED
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
+}
+
+type TypeInstanceResourceVersionSpecBackend struct {
+	Context interface{} `json:"context"`
 }
 
 type TypeInstanceTypeReference struct {

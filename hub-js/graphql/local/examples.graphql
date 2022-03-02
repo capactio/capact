@@ -211,6 +211,9 @@ fragment TypeInstanceResourceVersion on TypeInstanceResourceVersion {
   }
   spec {
     value
+    backend {
+      context
+    }
   }
 }
 
