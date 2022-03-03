@@ -53,6 +53,7 @@ func main() {
 	healthzServer := healthz.NewHTTPServer(logger, cfg.HealthzAddr, appName)
 	parallelServers.Go(func() error { return healthzServer.Start(ctx) })
 
+	logger.Info("loaded secret providers", zap.Strings("providers", cfg.SupportedProviders))
 	providers, err := loadProviders(cfg.SupportedProviders)
 	exitOnError(err, "while loading providers")
 
@@ -98,6 +99,10 @@ func loadProviders(providerNames []string) (map[string]tellercore.Provider, erro
 		}
 
 		providersMap[providerName] = provider
+	}
+
+	if len(providersMap) == 0 {
+		return nil, errors.New("at least one secret provider has to be configured")
 	}
 
 	return providersMap, nil
