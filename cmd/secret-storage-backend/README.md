@@ -17,7 +17,7 @@ By default, the Secret Storage Backend has the `aws_secretsmanager` provider ena
 
 1. Create AWS security credentials with `SecretsManagerReadWrite` policy.
 2. Export environment variables:
-    
+
    ```bash
     export AWS_ACCESS_KEY_ID="{accessKey}"
     export AWS_SECRET_ACCESS_KEY="{secretKey}"
@@ -28,7 +28,7 @@ By default, the Secret Storage Backend has the `aws_secretsmanager` provider ena
     APP_LOGGER_DEV_MODE=true go run ./cmd/secret-storage-backend/main.go
     ```
 
-The server listens to gRPC calls according to the [Storage Backend Protocol Buffers schema](../../pkg/hub/api/grpc/storage_backend.proto).
+The server listens to gRPC calls according to the [Storage Backend Protocol Buffers schema](../../hub-js/proto/storage_backend.proto).
 To perform such calls, you can use e.g. [Insomnia](https://insomnia.rest/) tool.
 
 ### Dotenv provider

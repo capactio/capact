@@ -22,11 +22,11 @@ func TestHandler_GetValue(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.GetValueRequest{
-		TypeinstanceId:  "uuid",
+		TypeInstanceId:  "uuid",
 		ResourceVersion: 2,
 		Context:         reqContext,
 	}
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                 string
@@ -100,10 +100,10 @@ func TestHandler_GetLockedBy(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.GetLockedByRequest{
-		TypeinstanceId: "uuid",
+		TypeInstanceId: "uuid",
 		Context:        reqContext,
 	}
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                 string
@@ -179,11 +179,11 @@ func TestHandler_OnCreate(t *testing.T) {
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	valueBytes := []byte(`{"key": true}`)
 	req := &storage_backend.OnCreateRequest{
-		TypeinstanceId: "uuid",
+		TypeInstanceId: "uuid",
 		Value:          valueBytes,
 		Context:        reqContext,
 	}
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                  string
@@ -272,13 +272,13 @@ func TestHandler_OnUpdate(t *testing.T) {
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	valueBytes := []byte(`{"key": true}`)
 	req := &storage_backend.OnUpdateRequest{
-		TypeinstanceId:     "uuid",
+		TypeInstanceId:     "uuid",
 		NewResourceVersion: 3,
 		NewValue:           valueBytes,
 		Context:            reqContext,
 	}
 
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                  string
@@ -374,12 +374,12 @@ func TestHandler_OnLock(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.OnLockRequest{
-		TypeinstanceId: "uuid",
+		TypeInstanceId: "uuid",
 		LockedBy:       "foo/sample",
 		Context:        reqContext,
 	}
 
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                  string
@@ -484,11 +484,11 @@ func TestHandler_OnUnlock(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.OnUnlockRequest{
-		TypeinstanceId: "uuid",
+		TypeInstanceId: "uuid",
 		Context:        reqContext,
 	}
 
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                  string
@@ -590,11 +590,11 @@ func TestHandler_OnDelete(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	req := &storage_backend.OnDeleteRequest{
-		TypeinstanceId: "uuid",
+		TypeInstanceId: "uuid",
 		Context:        reqContext,
 	}
 
-	path := fmt.Sprintf("/capact/%s", req.TypeinstanceId)
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
 
 	testCases := []struct {
 		Name                  string
