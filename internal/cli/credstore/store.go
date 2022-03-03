@@ -4,8 +4,13 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 
+	"capact.io/capact/internal/cli/config"
 	"github.com/99designs/keyring"
+	"github.com/AlecAivazis/survey/v2"
 )
+
+// Name defines Capact local credential store Name.
+const Name = "capacthub"
 
 // Credentials holds credentials details.
 type Credentials struct {
@@ -59,4 +64,16 @@ func DeleteHub(serverURL string) error {
 	}
 
 	return ks.Remove(b64.StdEncoding.EncodeToString([]byte(serverURL)))
+}
+
+func fileKeyringPassphrasePrompt(promptMessage string) (string, error) {
+	password := config.GetCredentialsStoreFilePassphrase()
+	if password != "" {
+		return password, nil
+	}
+
+	err := survey.AskOne(&survey.Password{
+		Message: promptMessage,
+	}, &password)
+	return password, err
 }
