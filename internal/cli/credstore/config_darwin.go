@@ -25,7 +25,7 @@ func openStore() (Keyring, error) {
 	}
 
 	switch backend {
-	case "keychain":
+	case "", "keychain":
 		return &Keychain{}, nil
 	case "file", "pass":
 		return keyring.Open(cfg)
@@ -33,5 +33,4 @@ func openStore() (Keyring, error) {
 		return nil, errors.New("backend not supported")
 	}
 
-	return nil, nil
 }
