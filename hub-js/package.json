@@ -2,17 +2,19 @@
   "name": "hub-js",
   "version": "0.1.0",
   "description": "Component, which stores the OCF manifests and exposes API to access, and manage them",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
+  "type": "commonjs",
   "types": "./index.d.ts",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cleanup": "rm -rf ./dist",
-    "lint": "eslint --ext ts .",
-    "lint:prettier": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
-    "lint:fix:prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
+    "lint": "eslint . --ext .ts --fix",
+    "lint:check": "eslint . --ext .ts",
+    "prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
+    "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md,graphql}\"",
     "build": "npm run cleanup && tsc",
-    "start": "node dist/src/index.js",
+    "start": "node dist/index.js",
     "dev": "npm run build && npm run start",
     "preinstall": "npx npm-force-resolutions"
   },
@@ -34,7 +36,7 @@
   },
   "resolutions": {
     "ws": "=7.4.6",
-    "ansi-regex": ">=5.0.1"
+    "ansi-regex": "^5.0.1"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.1",
@@ -42,20 +44,14 @@
     "@types/express-serve-static-core": "^4.17.19",
     "@types/node": "^16.4.13",
     "@types/ws": "^7.4.7",
-    "@typescript-eslint/eslint-plugin": "^4.22.1",
-    "@typescript-eslint/parser": "^4.22.1",
-    "eslint": "^7.26.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-config-node": "^4.1.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.4.0",
+    "eslint": "^8.10.0",
+    "@typescript-eslint/eslint-plugin": "^5.13.0",
+    "@typescript-eslint/parser": "^5.13.0",
     "husky": "^4.0.0",
     "lint-staged": "^10.5.4",
     "npm-force-resolutions": "^0.0.10",
     "prettier": "^2.3.0",
-    "typescript": "^4.2.4"
+    "typescript": "~4.5.5"
   },
   "husky": {
     "hooks": {

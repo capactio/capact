@@ -1,7 +1,8 @@
 import { Transaction } from "neo4j-driver";
 import { ContextWithDriver } from "./context";
+import { logger } from "../../logger";
 
-interface LockingTypeInstanceInput {
+export interface LockingTypeInstanceInput {
   in: {
     ids: [string];
     ownerID: string;
@@ -20,7 +21,8 @@ interface LockingResult {
   };
 }
 
-export async function toggleLockTypeInstances(
+export async function lockTypeInstances(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _: any,
   args: LockingTypeInstanceInput,
   context: ContextWithDriver
@@ -28,6 +30,7 @@ export async function toggleLockTypeInstances(
   const neo4jSession = context.driver.session();
   try {
     return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      logger.debug("Executing query to lock TypeInstance(s)", args);
       await switchLocking(
         tx,
         args,
@@ -47,34 +50,7 @@ export async function toggleLockTypeInstances(
   }
 }
 
-export async function unlockTypeInstances(
-  _: any,
-  args: LockingTypeInstanceInput,
-  context: ContextWithDriver
-) {
-  const neo4jSession = context.driver.session();
-  try {
-    return await neo4jSession.writeTransaction(async (tx: Transaction) => {
-      await switchLocking(
-        tx,
-        args,
-        `
-            MATCH (ti:TypeInstance)
-            WHERE ti.id IN $in.ids
-            SET ti.lockedBy = null
-            RETURN true as executed`
-      );
-      return args.in.ids;
-    });
-  } catch (e) {
-    const err = e as Error;
-    throw new Error(`failed to unlock TypeInstances: ${err.message}`);
-  } finally {
-    await neo4jSession.close();
-  }
-}
-
-async function switchLocking(
+export async function switchLocking(
   tx: Transaction,
   args: LockingTypeInstanceInput,
   executeQuery: string

@@ -1,9 +1,18 @@
 import { Transaction } from "neo4j-driver";
 import { ContextWithDriver } from "./context";
-import { tryToExtractCustomError } from "./helpers";
-import { UpdateTypeInstanceErrorCode } from "./update-type-instances";
+import {
+  CustomCypherErrorCode,
+  tryToExtractCustomCypherError,
+} from "./cypher-errors";
+import { logger } from "../../logger";
+
+export interface UpdateTypeInstanceError {
+  code: CustomCypherErrorCode;
+  ids: string[];
+}
 
 export async function deleteTypeInstance(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _: any,
   args: { id: string; ownerID: string },
   context: ContextWithDriver
@@ -11,6 +20,10 @@ export async function deleteTypeInstance(
   const neo4jSession = context.driver.session();
   try {
     return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      logger.debug(
+        "Executing query to delete TypeInstance from database",
+        args
+      );
       await tx.run(
         `
             OPTIONAL MATCH (ti:TypeInstance {id: $id})
@@ -70,13 +83,13 @@ export async function deleteTypeInstance(
     });
   } catch (e) {
     let err = e as Error;
-    const customErr = tryToExtractCustomError(err);
+    const customErr = tryToExtractCustomCypherError(err);
     if (customErr) {
       switch (customErr.code) {
-        case UpdateTypeInstanceErrorCode.Conflict:
+        case CustomCypherErrorCode.Conflict:
           err = Error(`TypeInstance is locked by different owner`);
           break;
-        case UpdateTypeInstanceErrorCode.NotFound:
+        case CustomCypherErrorCode.NotFound:
           err = Error(`TypeInstance was not found`);
           break;
         default:

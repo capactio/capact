@@ -2,10 +2,11 @@ import {
   OnCreateRequest,
   OnDeleteRequest,
   StorageBackendDefinition,
-} from "../../../grpc/storage_backend";
+} from "../../generated/grpc/storage_backend";
 import { createChannel, createClient, Client } from "nice-grpc";
 import { Driver } from "neo4j-driver";
 import { TypeInstanceBackendInput } from "../types/type-instance";
+import { logger } from "../../logger";
 
 // TODO(https://github.com/capactio/capact/issues/604):
 // Represents the fake storage backend URL that should be ignored
@@ -23,6 +24,7 @@ export interface StoreInput {
   backend: TypeInstanceBackendInput;
   typeInstance: {
     id: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any;
   };
 }
@@ -35,6 +37,7 @@ export interface DeleteInput {
 }
 
 export interface UpdatedContexts {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -59,6 +62,9 @@ export default class DelegatedStorageService {
     let mapping: UpdatedContexts = {};
 
     for (const input of inputs) {
+      logger.debug(
+        `Storing TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
+      );
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -98,6 +104,9 @@ export default class DelegatedStorageService {
    */
   async Delete(...inputs: DeleteInput[]) {
     for (const input of inputs) {
+      logger.debug(
+        `Deleting TypeInstance ${input.typeInstance.id} from external backend ${input.backend.id}`
+      );
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -155,9 +164,14 @@ export default class DelegatedStorageService {
     if (!this.registeredClients.has(id)) {
       const { url } = await this.storageInstanceDetailsFetcher(id);
       if (url === FAKE_TEST_URL) {
+        logger.debug(
+          "Skipping a real call as backend was classified as a fake one"
+        );
         // TODO: remove after using a real backend in e2e tests.
         return undefined;
       }
+
+      logger.debug(`Initialize gRPC client for Backend ${id} with URL ${url}`);
       const channel = createChannel(url);
       const client: StorageClient = createClient(
         StorageBackendDefinition,
@@ -166,6 +180,6 @@ export default class DelegatedStorageService {
       this.registeredClients.set(id, client);
     }
 
-    return this.registeredClients.get(id)!;
+    return this.registeredClients.get(id);
   }
 }

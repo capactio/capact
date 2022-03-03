@@ -35,28 +35,25 @@ func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
 }
 
 // CreateTypeInstance creates a new TypeInstances in the local Hub.
-func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.CreateTypeInstanceOutput, error) {
+func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (string, error) {
 	req := graphql.NewRequest(`mutation CreateTypeInstance($in: CreateTypeInstanceInput!) {
 		createTypeInstance(
 			in: $in
-		) {
-			alias
-			id
-		}
+		)
 	}`)
 	req.Var("in", in)
 
 	var resp struct {
-		CreatedTypeInstance hublocalgraphql.CreateTypeInstanceOutput `json:"createTypeInstance"`
+		CreatedTypeInstance string `json:"createTypeInstance"`
 	}
 	err := retry.Do(func() error {
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
 	if err != nil {
-		return nil, errors.Wrap(err, "while executing mutation to create TypeInstance")
+		return "", errors.Wrap(err, "while executing mutation to create TypeInstance")
 	}
 
-	return &resp.CreatedTypeInstance, nil
+	return resp.CreatedTypeInstance, nil
 }
 
 // CreateTypeInstances creates new TypeInstances and allows to define "uses" relationships between them.

@@ -249,7 +249,7 @@ var _ = Describe("GraphQL API", func() {
 			builtinStorage := getBuiltinStorageTypeInstance(ctx, cli)
 
 			// create TypeInstance
-			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
+			createdTypeInstanceID, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
 				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 					Path:     "cap.type.capactio.capact.validation.single-key",
 					Revision: "0.1.0",
@@ -267,7 +267,7 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// check create TypeInstance
-			typeInstance, err := cli.FindTypeInstance(ctx, createdTypeInstance.ID)
+			typeInstance, err := cli.FindTypeInstance(ctx, createdTypeInstanceID)
 
 			Expect(err).ToNot(HaveOccurred())
 			rev := &gqllocalapi.TypeInstanceResourceVersion{
@@ -288,7 +288,7 @@ var _ = Describe("GraphQL API", func() {
 				},
 			}
 			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
-				ID: createdTypeInstance.ID,
+				ID: createdTypeInstanceID,
 				TypeRef: &gqllocalapi.TypeInstanceTypeReference{
 					Path:     "cap.type.capactio.capact.validation.single-key",
 					Revision: "0.1.0",
@@ -307,10 +307,10 @@ var _ = Describe("GraphQL API", func() {
 			}))
 
 			// check delete TypeInstance
-			err = cli.DeleteTypeInstance(ctx, createdTypeInstance.ID)
+			err = cli.DeleteTypeInstance(ctx, createdTypeInstanceID)
 			Expect(err).ToNot(HaveOccurred())
 
-			got, err := cli.FindTypeInstance(ctx, createdTypeInstance.ID)
+			got, err := cli.FindTypeInstance(ctx, createdTypeInstanceID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(got).To(BeNil())
 		})
@@ -353,9 +353,9 @@ var _ = Describe("GraphQL API", func() {
 			var createdTIIDs []string
 
 			for _, ver := range []string{"id1", "id2", "id3"} {
-				out, err := localCli.CreateTypeInstance(ctx, typeInstance(ver))
+				outID, err := localCli.CreateTypeInstance(ctx, typeInstance(ver))
 				Expect(err).NotTo(HaveOccurred())
-				createdTIIDs = append(createdTIIDs, out.ID)
+				createdTIIDs = append(createdTIIDs, outID)
 			}
 			defer func() {
 				for _, id := range createdTIIDs {
@@ -439,10 +439,10 @@ var _ = Describe("GraphQL API", func() {
 			id4, err := localCli.CreateTypeInstance(ctx, typeInstance("id4"))
 			Expect(err).ToNot(HaveOccurred())
 
-			defer localCli.DeleteTypeInstance(ctx, id4.ID)
+			defer localCli.DeleteTypeInstance(ctx, id4)
 
 			lockingIDs = createdTIIDs
-			lockingIDs = append(lockingIDs, id4.ID)
+			lockingIDs = append(lockingIDs, id4)
 			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     lockingIDs,
 				OwnerID: barOwnerID,
@@ -484,9 +484,9 @@ var _ = Describe("GraphQL API", func() {
 			var createdTIIDs []string
 
 			for _, ver := range []string{"id1", "id2"} {
-				out, err := localCli.CreateTypeInstance(ctx, typeInstance(ver))
+				outID, err := localCli.CreateTypeInstance(ctx, typeInstance(ver))
 				Expect(err).NotTo(HaveOccurred())
-				createdTIIDs = append(createdTIIDs, out.ID)
+				createdTIIDs = append(createdTIIDs, outID)
 			}
 			defer func() {
 				for _, id := range createdTIIDs {

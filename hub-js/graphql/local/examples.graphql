@@ -10,10 +10,7 @@ mutation CreateTypeInstance {
       value: { hello: "world" }
       attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
     }
-  ) {
-    id
-    alias
-  }
+  )
 }
 
 mutation CreateTypeInstances {

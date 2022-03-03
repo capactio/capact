@@ -6,7 +6,7 @@ const graphqlBindAddress = process.env.APP_GRAPH_QL_ADDR || ":8080";
 const [graphQLAddr, graphQLPort] = graphqlBindAddress.split(":", 2);
 
 export const BUILTIN_STORAGE_BACKEND_ID =
-  "318b99bd-9b26-4bc1-8259-0a7ff5dae61c";
+  "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
 export const config = {
   neo4j: {
@@ -19,6 +19,9 @@ export const config = {
     bindPort: Number(graphQLPort),
   },
   hubMode: process.env.APP_HUB_MODE || "public",
+  logger: {
+    level: process.env.APP_LOGGER_LEVEL || "info",
+  },
   express: {
     bodySizeLimit: process.env.APP_EXPRESS_BODY_SIZE_LIMIT || "32mb",
   },

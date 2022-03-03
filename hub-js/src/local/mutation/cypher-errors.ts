@@ -1,4 +1,14 @@
-import { UpdateTypeInstanceError } from "./update-type-instances";
+export enum CustomCypherErrorCode {
+  Conflict = 409,
+  NotFound = 404,
+}
+
+export interface CustomCypherErrorOutput {
+  code: CustomCypherErrorCode;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
 
 /**
  * In Cypher we throw custom errors, e.g.:
@@ -11,9 +21,9 @@ import { UpdateTypeInstanceError } from "./update-type-instances";
  * @returns extracted error, if not possible, returns null.
  *
  */
-export function tryToExtractCustomError(
+export function tryToExtractCustomCypherError(
   error: Error
-): UpdateTypeInstanceError | null {
+): CustomCypherErrorOutput | null {
   const firstOpen = error.message.indexOf("{");
   const firstClose = error.message.lastIndexOf("}");
   const candidate = error.message.substring(firstOpen, firstClose + 1);

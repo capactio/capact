@@ -141,7 +141,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateTypeInstances(ctx context.Context, in CreateTypeInstancesInput) ([]*CreateTypeInstanceOutput, error)
-	CreateTypeInstance(ctx context.Context, in CreateTypeInstanceInput) (*CreateTypeInstanceOutput, error)
+	CreateTypeInstance(ctx context.Context, in CreateTypeInstanceInput) (string, error)
 	UpdateTypeInstances(ctx context.Context, in []*UpdateTypeInstancesInput) ([]*TypeInstance, error)
 	DeleteTypeInstance(ctx context.Context, id string, ownerID *string) (string, error)
 	LockTypeInstances(ctx context.Context, in LockTypeInstancesInput) ([]string, error)
@@ -990,7 +990,7 @@ type Mutation {
     in: CreateTypeInstancesInput!
   ): [CreateTypeInstanceOutput!]!
 
-  createTypeInstance(in: CreateTypeInstanceInput!): CreateTypeInstanceOutput!
+  createTypeInstance(in: CreateTypeInstanceInput!): ID!
 
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(
@@ -1585,9 +1585,9 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*CreateTypeInstanceOutput)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNCreateTypeInstanceOutput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceOutput(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6056,10 +6056,6 @@ func (ec *executionContext) unmarshalNCreateTypeInstanceInput2ᚕᚖcapactᚗio�
 func (ec *executionContext) unmarshalNCreateTypeInstanceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceInput(ctx context.Context, v interface{}) (*CreateTypeInstanceInput, error) {
 	res, err := ec.unmarshalInputCreateTypeInstanceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNCreateTypeInstanceOutput2capactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceOutput(ctx context.Context, sel ast.SelectionSet, v CreateTypeInstanceOutput) graphql.Marshaler {
-	return ec._CreateTypeInstanceOutput(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNCreateTypeInstanceOutput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐCreateTypeInstanceOutputᚄ(ctx context.Context, sel ast.SelectionSet, v []*CreateTypeInstanceOutput) graphql.Marshaler {

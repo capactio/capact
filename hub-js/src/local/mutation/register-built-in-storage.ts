@@ -1,6 +1,7 @@
 import { Transaction } from "neo4j-driver";
 import { BUILTIN_STORAGE_BACKEND_ID } from "../../config";
 import { ContextWithDriver } from "./context";
+import { TypeInstanceBackendDetails } from "../types/type-instance";
 
 export async function ensureCoreStorageTypeInstance(
   context: ContextWithDriver
@@ -43,4 +44,11 @@ export async function ensureCoreStorageTypeInstance(
   } finally {
     await neo4jSession.close();
   }
+}
+
+export function builtinStorageBackendDetails(): TypeInstanceBackendDetails {
+  return {
+    id: BUILTIN_STORAGE_BACKEND_ID,
+    abstract: true,
+  };
 }

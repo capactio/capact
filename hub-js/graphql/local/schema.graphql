@@ -390,7 +390,7 @@ type Mutation {
     in: CreateTypeInstancesInput!
   ): [CreateTypeInstanceOutput!]!
 
-  createTypeInstance(in: CreateTypeInstanceInput!): CreateTypeInstanceOutput!
+  createTypeInstance(in: CreateTypeInstanceInput!): ID!
 
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(

@@ -13,8 +13,16 @@ import {
   CreateTypeInstanceInput,
   CreateTypeInstancesInput,
   TypeInstanceBackendDetails,
+  TypeInstanceBackendInput,
   TypeInstanceUsesRelationInput,
 } from "../types/type-instance";
+import {
+  CustomCypherErrorCode,
+  CustomCypherErrorOutput,
+  tryToExtractCustomCypherError,
+} from "./cypher-errors";
+import { logger } from "../../logger";
+import { builtinStorageBackendDetails } from "./register-built-in-storage";
 
 const genAdjsColorsAndAnimals: Config = {
   dictionaries: [adjectives, colors, animals],
@@ -22,11 +30,11 @@ const genAdjsColorsAndAnimals: Config = {
   length: 3,
 };
 
-interface createTypeInstancesArgs {
+export interface CreateTypeInstancesArgs {
   in: CreateTypeInstancesInput;
 }
 
-interface aliasMapping {
+interface AliasMapping {
   [key: string]: string;
 }
 
@@ -35,8 +43,9 @@ export type TypeInstanceInput = Omit<CreateTypeInstanceInput, "backend"> & {
 };
 
 export async function createTypeInstances(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _: any,
-  args: createTypeInstancesArgs,
+  args: CreateTypeInstancesArgs,
   context: Context
 ) {
   const { typeInstances, usesRelations } = args.in;
@@ -106,14 +115,36 @@ function validate(input: TypeInstanceInput[]) {
       "Missing TypeInstance aliases. Please ensure that each TypeInstance has unique alias."
     );
   }
+
+  const notAllowedBackendCtx = input.filter(
+    (x) => x.backend.id === BUILTIN_STORAGE_BACKEND_ID && x.backend.context
+  );
+  if (notAllowedBackendCtx.length) {
+    throw new Error("Built-in storage backend does not accept context");
+  }
 }
 
 async function createTypeInstancesInDB(
   tx: Transaction,
   typeInstancesInput: CreateTypeInstanceInput[]
-): Promise<aliasMapping> {
-  const createTypeInstanceResult = await tx.run(
-    `UNWIND $typeInstances AS typeInstance
+): Promise<AliasMapping> {
+  try {
+    logger.debug(
+      "Executing query to create TypeInstance in database",
+      typeInstancesInput
+    );
+    const createTypeInstanceResult = await tx.run(
+      `
+           // Check if a given backend is registered
+           CALL {
+             UNWIND $typeInstances AS typeInstance
+             OPTIONAL MATCH (backendTI:TypeInstance {id: typeInstance.backend.id})
+             WITH backendTI, typeInstance
+             WHERE backendTI IS NULL
+             RETURN collect(typeInstance.backend.id) as notFoundBackendIds
+           }
+           CALL apoc.util.validate(size(notFoundBackendIds) > 0, apoc.convert.toJson({ids: notFoundBackendIds, code: 404}), null)
+           UNWIND $typeInstances AS typeInstance
            CREATE (ti:TypeInstance {id: apoc.create.uuid(), createdAt: datetime()})
 
            // Backend
@@ -145,24 +176,53 @@ async function createTypeInstancesInDB(
 
            RETURN ti.id as uuid, typeInstance.alias as alias
            `,
-    { typeInstances: typeInstancesInput }
-  );
-
-  // HINT: returned records may be sometimes duplicated, so we need to reduce them and create an expected mapping upfront.
-  const aliasMappings = mapAliasesToIDs(createTypeInstanceResult);
-  if (Object.keys(aliasMappings).length !== typeInstancesInput.length) {
-    throw new Error(
-      "Failed to create some TypeInstances. Please verify, if you provided all the required fields for TypeInstances."
+      { typeInstances: typeInstancesInput }
     );
-  }
 
-  return aliasMappings;
+    // HINT: returned records may be sometimes duplicated, so we need to reduce them and create an expected mapping upfront.
+    const aliasMappings = mapAliasesToIDs(createTypeInstanceResult);
+    if (Object.keys(aliasMappings).length !== typeInstancesInput.length) {
+      throw new Error(
+        "Failed to create some TypeInstances. Please verify, if you provided all the required fields for TypeInstances."
+      );
+    }
+
+    return aliasMappings;
+  } catch (e) {
+    let err = e as Error;
+    const customErr = tryToExtractCustomCypherError(err);
+    if (customErr) {
+      switch (customErr.code) {
+        case CustomCypherErrorCode.NotFound:
+          err = generateNotFoundBackendError(customErr);
+          break;
+        default:
+          err = Error(`Unexpected error code ${customErr.code}`);
+          break;
+      }
+    }
+    throw err;
+  }
+}
+
+function generateNotFoundBackendError(customErr: CustomCypherErrorOutput) {
+  if (!Object.prototype.hasOwnProperty.call(customErr, "ids")) {
+    // it shouldn't happen
+    return Error(`Detected unregistered storage backends`);
+  }
+  return Error(
+    `TypeInstances for storage backends with IDs "${customErr.ids}" were not found`
+  );
 }
 
 async function updateTypeInstancesContextInDB(
   tx: Transaction,
   updatedContexts: UpdatedContexts
 ) {
+  if (Object.keys(updatedContexts).length) {
+    logger.debug("Executing query to update backend contexts");
+  }
+
   await tx.run(
     `
       UNWIND keys($updatedContexts) AS id
@@ -186,11 +246,9 @@ async function updateTypeInstancesContextInDB(
 }
 
 function setDefaults(ti: CreateTypeInstanceInput): TypeInstanceInput {
-  ti.backend = {
-    id: ti.backend?.id || BUILTIN_STORAGE_BACKEND_ID, // if not provided, store in built-in
-    abstract: !ti.backend,
-    context: ti.backend?.context,
-  } as TypeInstanceBackendDetails;
+  ti.backend = ti.backend
+    ? enrichWithAbstract(ti.backend)
+    : builtinStorageBackendDetails();
 
   // ensure that alias is set, so we can correlate returned ID from Cypher with an input TypeInstance
   // and map it to proper storage backend.
@@ -199,7 +257,16 @@ function setDefaults(ti: CreateTypeInstanceInput): TypeInstanceInput {
   return ti as TypeInstanceInput;
 }
 
-function mapAliasesToIDs(createResult: QueryResult): aliasMapping {
+function enrichWithAbstract(
+  backend: TypeInstanceBackendInput
+): TypeInstanceBackendDetails {
+  return {
+    ...backend,
+    abstract: backend.id === BUILTIN_STORAGE_BACKEND_ID,
+  };
+}
+
+function mapAliasesToIDs(createResult: QueryResult): AliasMapping {
   return createResult.records.reduce((acc: { [key: string]: string }, cur) => {
     const uuid = cur.get("uuid");
     const alias = cur.get("alias");
@@ -212,12 +279,14 @@ function mapAliasesToIDs(createResult: QueryResult): aliasMapping {
 }
 
 function getExternallyStoredValues(
-  aliasMappings: aliasMapping,
+  aliasMappings: AliasMapping,
   tis: TypeInstanceInput[]
 ) {
   return tis
     .filter((ti) => ti.backend && ti.alias && !ti.backend.abstract)
     .map((ti) => {
+      // We filter out wrong TypeInstances
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const tiID = aliasMappings[ti.alias!];
       return {
         backend: ti.backend,
@@ -231,7 +300,7 @@ function getExternallyStoredValues(
 
 async function setTypeInstanceRelationsInDB(
   tx: Transaction,
-  aliasMappings: aliasMapping,
+  aliasMappings: AliasMapping,
   usesRelations: TypeInstanceUsesRelationInput[]
 ) {
   const usesRelationsParams = usesRelations.map(({ from, to }) => ({

@@ -103,7 +103,14 @@ graphql::run_checks() {
 hub_js::lint() {
   pushd "${REPO_ROOT_DIR}/hub-js" > /dev/null
   npm ci
-  npm run lint:prettier
+  if [[ "${LINT_FORCE_FIX:-x}" == "true" ]]; then
+    npm run lint
+    npm run prettier
+  else
+    npm run lint:check
+    npm run prettier:check
+  fi
+
   popd > /dev/null
 }
 

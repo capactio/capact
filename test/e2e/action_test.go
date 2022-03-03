@@ -482,11 +482,10 @@ func runActionAndWaitForStatus(ctx context.Context, engineClient *engine.Client,
 }
 
 func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, func()) {
-	createdTypeInstance, err := hubClient.CreateTypeInstance(ctx, in)
+	typeInstanceID, err := hubClient.CreateTypeInstance(ctx, in)
 	Expect(err).ToNot(HaveOccurred())
 
-	Expect(createdTypeInstance).NotTo(BeNil())
-	typeInstanceID := createdTypeInstance.ID
+	Expect(typeInstanceID).NotTo(BeEmpty())
 
 	typeInstance, err := hubClient.FindTypeInstance(ctx, typeInstanceID)
 	Expect(err).ToNot(HaveOccurred())

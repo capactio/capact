@@ -26,7 +26,7 @@ type Hub interface {
 	ListTypeInstances(ctx context.Context, filter *gqllocalapi.TypeInstanceFilter, opts ...local.TypeInstancesOption) ([]gqllocalapi.TypeInstance, error)
 	ListImplementationRevisions(ctx context.Context, opts ...public.ListImplementationRevisionsOption) ([]*gqlpublicapi.ImplementationRevision, error)
 	FindTypeInstance(ctx context.Context, id string, opts ...local.TypeInstancesOption) (*gqllocalapi.TypeInstance, error)
-	CreateTypeInstance(ctx context.Context, in *gqllocalapi.CreateTypeInstanceInput) (*gqllocalapi.CreateTypeInstanceOutput, error)
+	CreateTypeInstance(ctx context.Context, in *gqllocalapi.CreateTypeInstanceInput) (string, error)
 	CreateTypeInstances(ctx context.Context, in *gqllocalapi.CreateTypeInstancesInput) ([]gqllocalapi.CreateTypeInstanceOutput, error)
 	UpdateTypeInstances(ctx context.Context, in []gqllocalapi.UpdateTypeInstancesInput, opts ...local.TypeInstancesOption) ([]gqllocalapi.TypeInstance, error)
 	DeleteTypeInstance(ctx context.Context, id string) error

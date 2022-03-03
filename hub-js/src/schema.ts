@@ -1,8 +1,8 @@
 import { GraphQLSchema } from "graphql";
 import { Driver } from "neo4j-driver";
 import { assertSchema } from "neo4j-graphql-js";
-import { schema as publicSchema } from "./public/public";
-import { schema as localSchema } from "./local/local";
+import { schema as publicSchema } from "./public";
+import { schema as localSchema } from "./local";
 
 export enum HubMode {
   Local = "local",

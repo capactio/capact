@@ -95,7 +95,7 @@ main() {
     echo "- Processing ${path}..."
     pushd "${REPO_ROOT_DIR}$path" > /dev/null
     protoc -I=. \
-    --ts_proto_out="${REPO_ROOT_DIR}/hub-js/grpc" \
+    --ts_proto_out="${REPO_ROOT_DIR}/hub-js/src/generated/grpc" \
     --ts_proto_opt=esModuleInterop=true,outputServices=generic-definitions,useExactTypes=false \
     --go_out="${REPO_ROOT_DIR}/pkg/hub/api/grpc"  \
     --go-grpc_out="${REPO_ROOT_DIR}/pkg/hub/api/grpc"  \
