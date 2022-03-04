@@ -1192,6 +1192,100 @@ func TestPolicyEnforcedClient_mergeTypeInstancePoliciesForDefault(t *testing.T) 
 		order    policy.MergeOrder
 	}{
 		{
+			name: "TypeInstance with different Typeref for Global and Action Policy",
+			global: policy.Policy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("A"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "3333-3333-3333",
+										Description: ptr.String("C"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.gcp.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			action: policy.ActionPolicy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1111-2222-3333",
+										Description: ptr.String("B"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.2.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: policy.Policy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("A"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "3333-3333-3333",
+										Description: ptr.String("C"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.gcp.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1111-2222-3333",
+										Description: ptr.String("B"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.2.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Global, policy.Action},
+		},
+		{
 			name: "TypeInstance with the same Typeref for Global and Action Policy",
 			global: policy.Policy{
 				Interface: policy.InterfacePolicy{
@@ -1254,6 +1348,70 @@ func TestPolicyEnforcedClient_mergeTypeInstancePoliciesForDefault(t *testing.T) 
 				},
 			},
 			order: policy.MergeOrder{policy.Global, policy.Action},
+		},
+		{
+			name: "TypeInstance with the same Typeref for Global and Action Policy but Action has higher priority",
+			global: policy.Policy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("A"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			action: policy.ActionPolicy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1111-2222-3333",
+										Description: ptr.String("B"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: policy.Policy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "1234-123-123",
+										Description: ptr.String("A"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.aws.auth.credentials",
+											Revision: "0.1.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Action, policy.Global},
 		},
 	}
 	for _, test := range tests {
@@ -1380,7 +1538,69 @@ func TestRequiredTypeInstancesForRule(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "TypeInstaces are correctly distinguished based on Typeref",
+			rule: policy.Rule{
+				Inject: &policy.InjectData{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID:          "1111-1111-1111",
+								Description: ptr.String("Sample TI"),
+								TypeRef: &types.TypeRef{
+									Path:     "cap.type.gcp.auth.service-account",
+									Revision: "0.1.0",
+								},
+							},
+						},
+					},
+				},
+			},
+			global: policy.Policy{
+				Interface: policy.InterfacePolicy{
+					Default: &policy.InterfaceDefault{
+						Inject: &policy.DefaultInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									TypeInstanceReference: policy.TypeInstanceReference{
+										ID:          "2222-2222-2222",
+										Description: ptr.String("Sample TI"),
+										TypeRef: &types.TypeRef{
+											Path:     "cap.type.gcp.auth.service-account",
+											Revision: "0.2.0",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: []policy.RequiredTypeInstanceToInject{
+				{
+					TypeInstanceReference: policy.TypeInstanceReference{
+						ID:          "2222-2222-2222",
+						Description: ptr.String("Sample TI"),
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.gcp.auth.service-account",
+							Revision: "0.2.0",
+						},
+					},
+				},
+				{
+					TypeInstanceReference: policy.TypeInstanceReference{
+						ID:          "1111-1111-1111",
+						Description: ptr.String("Sample TI"),
+						TypeRef: &types.TypeRef{
+							Path:     "cap.type.gcp.auth.service-account",
+							Revision: "0.1.0",
+						},
+					},
+				},
+			},
+		},
 	}
+
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
