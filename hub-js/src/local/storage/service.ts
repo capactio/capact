@@ -1,9 +1,9 @@
 import {
   GetValueRequest,
   OnCreateRequest,
-  OnDeleteRequest,
+  OnDeleteRequest, OnLockRequest, OnUnlockRequest,
   OnUpdateRequest,
-  StorageBackendDefinition,
+  StorageBackendDefinition
 } from "../../generated/grpc/storage_backend";
 import { createChannel, createClient, Client } from "nice-grpc";
 import { Driver } from "neo4j-driver";
@@ -56,6 +56,21 @@ export interface DeleteInput {
   };
 }
 
+export interface LockInput {
+  backend: TypeInstanceBackendInput;
+  typeInstance: {
+    id: string;
+    lockedBy: string;
+  };
+}
+
+export interface UnlockInput {
+  backend: TypeInstanceBackendInput;
+  typeInstance: {
+    id: string;
+  };
+}
+
 export interface UpdatedContexts {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -98,7 +113,7 @@ export default class DelegatedStorageService {
         value: new TextEncoder().encode(
           JSON.stringify(input.typeInstance.value)
         ),
-        context: this.encode(input.backend.context),
+        context: this.encode(input.backend.context)
       };
       const res = await cli.onCreate(req);
 
@@ -109,7 +124,7 @@ export default class DelegatedStorageService {
       const updateCtx = JSON.parse(res.context.toString());
       mapping = {
         ...mapping,
-        [input.typeInstance.id]: updateCtx,
+        [input.typeInstance.id]: updateCtx
       };
     }
 
@@ -142,7 +157,7 @@ export default class DelegatedStorageService {
         newValue: new TextEncoder().encode(
           JSON.stringify(input.typeInstance.newValue)
         ),
-        context: this.encode(input.backend.context),
+        context: this.encode(input.backend.context)
       };
 
       await cli.onUpdate(req);
@@ -173,7 +188,7 @@ export default class DelegatedStorageService {
       const req: GetValueRequest = {
         typeInstanceId: input.typeInstance.id,
         resourceVersion: input.typeInstance.resourceVersion,
-        context: this.encode(input.backend.context),
+        context: this.encode(input.backend.context)
       };
       const res = await cli.getValue(req);
 
@@ -186,7 +201,7 @@ export default class DelegatedStorageService {
       const decodeRes = JSON.parse(res.value.toString());
       result = {
         ...result,
-        [input.typeInstance.id]: decodeRes,
+        [input.typeInstance.id]: decodeRes
       };
     }
 
@@ -212,13 +227,63 @@ export default class DelegatedStorageService {
 
       const req: OnDeleteRequest = {
         typeInstanceId: input.typeInstance.id,
-        context: new TextEncoder().encode(
-          DelegatedStorageService.convertToJSONIfObject(input.backend.context)
-        ),
+        context: this.encode(input.backend.context)
       };
       await cli.onDelete(req);
     }
   }
+
+  /**
+   * Lock a given TypeInstance
+   *
+   * @param inputs - Describes what should be locked. Owner ID is needed.
+   *
+   */
+  async Lock(...inputs: LockInput[]) {
+    for (const input of inputs) {
+      logger.debug(
+        `Locking TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
+      );
+      const cli = await this.getClient(input.backend.id);
+      if (!cli) {
+        // TODO: remove after using a real backend in e2e tests.
+        continue;
+      }
+
+      const req: OnLockRequest = {
+        typeInstanceId: input.typeInstance.id,
+        lockedBy: input.typeInstance.lockedBy,
+        context: this.encode(input.backend.context)
+      };
+      await cli.onLock(req);
+    }
+  }
+
+  /**
+   * Unlock a given TypeInstance
+   *
+   * @param inputs - Describes what should be unlocked. Owner ID is not needed.
+   *
+   */
+  async Unlock(...inputs: UnlockInput[]) {
+    for (const input of inputs) {
+      logger.debug(
+        `Unlocking TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
+      );
+      const cli = await this.getClient(input.backend.id);
+      if (!cli) {
+        // TODO: remove after using a real backend in e2e tests.
+        continue;
+      }
+
+      const req: OnUnlockRequest = {
+        typeInstanceId: input.typeInstance.id,
+        context: this.encode(input.backend.context)
+      };
+      await cli.onUnlock(req);
+    }
+  }
+
 
   private async storageInstanceDetailsFetcher(
     id: string
@@ -297,4 +362,5 @@ export default class DelegatedStorageService {
       DelegatedStorageService.convertToJSONIfObject(val)
     );
   }
+
 }

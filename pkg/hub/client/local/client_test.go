@@ -122,6 +122,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	//t.Logf("err for %v: %v", member.ID, err)
 	//}
 	//}()
+	fmt.Print("\n\n======== After create result  ============\n\n")
 	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
 
@@ -150,10 +151,42 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 
 	updatedFamily, err := cli.UpdateTypeInstances(ctx, toUpdate)
 	require.NoError(t, err)
-	//
+
+	fmt.Print("\n\n======== After update result  ============\n\n")
 	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, updatedFamily))))
-	fmt.Println("Data after update")
 	require.NoError(t, resourcePrinter.Print(updatedFamily))
+
+	var ids []string
+	for _, member := range familyDetails {
+		ids = append(ids, member.ID)
+	}
+	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+		Ids:     ids,
+		OwnerID: "demo/testing",
+	})
+	require.NoError(t, err)
+	familyDetails, err = cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
+		CreatedBy: ptr.String("nature"),
+	}, WithFields(TypeInstanceAllFields))
+	require.NoError(t, err)
+
+	fmt.Print("\n\n======== After locking result  ============\n\n")
+	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
+	require.NoError(t, resourcePrinter.Print(familyDetails))
+
+	err = cli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
+		Ids:     ids,
+		OwnerID: "demo/testing",
+	})
+	require.NoError(t, err)
+	familyDetails, err = cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
+		CreatedBy: ptr.String("nature"),
+	}, WithFields(TypeInstanceAllFields))
+	require.NoError(t, err)
+
+	fmt.Print("\n\n======== After unlocking result  ============\n\n")
+	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
+	require.NoError(t, resourcePrinter.Print(familyDetails))
 
 }
 
@@ -202,7 +235,12 @@ func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput
 	}
 }
 
-func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi.TypeInstance) map[string]string {
+type externalData struct {
+	Value    string
+	LockedBy *string
+}
+
+func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi.TypeInstance) map[string]externalData {
 	t.Helper()
 
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -211,23 +249,32 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 	ctx := context.Background()
 	client := pb.NewStorageBackendClient(conn)
 
-	var out = map[string]string{}
+	var out = map[string]externalData{}
 	for _, ti := range details {
-		got, err := client.GetValue(ctx, &pb.GetValueRequest{
+		val, err := client.GetValue(ctx, &pb.GetValueRequest{
 			TypeInstanceId:  ti.ID,
 			ResourceVersion: uint32(ti.LatestResourceVersion.ResourceVersion),
 		})
-		//require.NoError(t, err)
 		if err != nil {
 			continue
 		}
 
-		out[ti.ID] = string(got.Value)
+		locked, err := client.GetLockedBy(ctx, &pb.GetLockedByRequest{
+			TypeInstanceId: ti.ID,
+		})
+		if err != nil {
+			continue
+		}
+
+		out[ti.ID] = externalData{
+			Value:    string(val.Value),
+			LockedBy: locked.LockedBy,
+		}
 	}
 	return out
 }
 
-func typeInstanceDetailsMapper(family []gqllocalapi.CreateTypeInstanceOutput, storage map[string]string) func(inRaw interface{}) (cliprinter.TableData, error) {
+func typeInstanceDetailsMapper(family []gqllocalapi.CreateTypeInstanceOutput, storage map[string]externalData) func(inRaw interface{}) (cliprinter.TableData, error) {
 	mapping := map[string]string{}
 	for _, member := range family {
 		mapping[member.ID] = member.Alias
@@ -243,16 +290,18 @@ func typeInstanceDetailsMapper(family []gqllocalapi.CreateTypeInstanceOutput, st
 
 		switch in := inRaw.(type) {
 		case []gqllocalapi.TypeInstance:
-			out.Headers = []string{"TYPE INSTANCE ID", "ALIAS", "TYPE", "DATA FROM GQL", "BACKEND", "BACKEND CONTEXT", "DATA IN EXTERNAL BACKEND"}
+			out.Headers = []string{"TYPE INSTANCE ID", "ALIAS", "TYPE", "LOCKED", "DATA FROM GQL", "BACKEND", "BACKEND CONTEXT", "DATA IN EXTERNAL BACKEND", "LOCKED_BY IN EXTERNAL BACKEND"}
 			for _, ti := range in {
 				out.MultipleRows = append(out.MultipleRows, []string{
 					ti.ID,
 					mapping[ti.ID],
 					fmt.Sprintf("%s:%s", ti.TypeRef.Path, ti.TypeRef.Revision),
+					stringDefault(ti.LockedBy, "-"),
 					mustMarshal(ti.LatestResourceVersion.Spec.Value),
 					fmt.Sprintf("%s%s", ti.Backend.ID, labelIfAbstract(ti.Backend.Abstract)),
 					mustMarshal(ti.LatestResourceVersion.Spec.Backend.Context),
-					storage[ti.ID],
+					storage[ti.ID].Value,
+					stringDefault(storage[ti.ID].LockedBy, "-"),
 				})
 			}
 		default:
@@ -271,6 +320,12 @@ func mustMarshal(v interface{}) string {
 	return string(out)
 }
 
+func stringDefault(in *string, def string) string {
+	if in == nil {
+		return def
+	}
+	return *in
+}
 func typeRef(in string) *gqllocalapi.TypeInstanceTypeReferenceInput {
 	out := strings.Split(in, ":")
 	return &gqllocalapi.TypeInstanceTypeReferenceInput{Path: out[0], Revision: out[1]}
