@@ -1,7 +1,7 @@
 import { Transaction } from "neo4j-driver";
 import { Context } from "./context";
 import { logger } from "../../logger";
-import { TypeInstanceBackendDetails, TypeInstanceBackendInput } from "../types/type-instance";
+import { TypeInstanceBackendDetails } from "../types/type-instance";
 import { LockInput } from "../storage/service";
 
 export interface LockingTypeInstanceInput {
@@ -47,7 +47,11 @@ export async function lockTypeInstances(
             SET ti.lockedBy = $in.ownerID
             RETURN true as executed`
       );
-      const lockExternals = await getTypeInstanceStoreExternally(tx, args.in.ids, args.in.ownerID);
+      const lockExternals = await getTypeInstanceStoredExternally(
+        tx,
+        args.in.ids,
+        args.in.ownerID
+      );
       await context.delegatedStorage.Lock(...lockExternals);
 
       return args.in.ids;
@@ -112,7 +116,7 @@ export async function switchLocking(
   const resultRow: LockingResult = {
     allIDs: record.get("allIDs"),
     lockedIDs: record.get("lockedIDs"),
-    lockingProcess: record.get("lockingProcess")
+    lockingProcess: record.get("lockingProcess"),
   };
 
   validateLockingProcess(resultRow, args.in.ids);
@@ -125,17 +129,13 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
     const foundIDs = result.allIDs.map((item) => item.properties.id);
     const notFoundIDs = expIDs.filter((x) => !foundIDs.includes(x));
     if (notFoundIDs.length !== 0) {
-      errMsg.push(
-        `TypeInstances with IDs "${notFoundIDs.join("\", \"")}" were not found`
-      );
+      errMsg.push(`TypeInstances with IDs "${notFoundIDs}" were not found`);
     }
 
     const lockedIDs = result.lockedIDs.map((item) => item.properties.id);
     if (lockedIDs.length !== 0) {
       errMsg.push(
-        `TypeInstances with IDs "${lockedIDs.join(
-          "\", \""
-        )}" are locked by different owner`
+        `TypeInstances with IDs "${lockedIDs}" are locked by different owner`
       );
     }
 
@@ -152,10 +152,11 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
   }
 }
 
-export async function getTypeInstanceStoreExternally(
+export async function getTypeInstanceStoredExternally(
   tx: Transaction,
   ids: string[],
-  lockedBy: string): Promise<LockInput[]> {
+  lockedBy: string
+): Promise<LockInput[]> {
   const result = await tx.run(
     `
            UNWIND $ids as id
@@ -183,15 +184,18 @@ export async function getTypeInstanceStoreExternally(
     { ids: ids }
   );
 
-  const output = result.records.map((record) => record.get("value") as ExternallyStoredOutput);
-  return output.filter(x => !x.backend.abstract).map(x => {
-    return {
-      backend: x.backend,
-      typeInstance: {
-        id: x.typeInstanceId,
-        lockedBy: lockedBy
-      }
-    };
-  });
-
+  const output = result.records.map(
+    (record) => record.get("value") as ExternallyStoredOutput
+  );
+  return output
+    .filter((x) => !x.backend.abstract)
+    .map((x) => {
+      return {
+        backend: x.backend,
+        typeInstance: {
+          id: x.typeInstanceId,
+          lockedBy: lockedBy,
+        },
+      };
+    });
 }

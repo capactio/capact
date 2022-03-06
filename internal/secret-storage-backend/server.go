@@ -273,34 +273,28 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 }
 
 func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, []byte, error) {
-	if len(contextBytes) == 0 {
-		// try to get the default provider
-		provider, err := h.providers.GetDefault()
-		if err != nil {
-			return nil, nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
-		}
-
-		return provider, nil, nil
+	def, err := h.providers.GetDefault()
+	if err != nil {
+		return nil, nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
 	}
 
-	var context Context
-	err := json.Unmarshal(contextBytes, &context)
+	if len(contextBytes) == 0 {
+		return def, nil, nil
+	}
+
+	var ctx Context
+	err = json.Unmarshal(contextBytes, &ctx)
 	if err != nil {
 		return nil, nil, h.internalError(errors.Wrap(err, "while unmarshaling additional parameters"))
 	}
 
-	if context.Provider == "mock-me" {
-		provider, err := h.providers.GetDefault()
-		if err != nil {
-			return nil, nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
-		}
-
-		return provider, []byte(`{"modified": "by-backend-storage"}`), nil
+	if ctx.Provider == "mock-me" {
+		return def, []byte(`{"modified": "by-backend-storage"}`), nil
 	}
 
-	provider, ok := h.providers[context.Provider]
+	provider, ok := h.providers[ctx.Provider]
 	if !ok {
-		return nil, nil, h.failedPreconditionError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
+		return def, nil, nil
 	}
 
 	return provider, nil, nil

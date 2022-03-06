@@ -101,7 +101,7 @@ function generateConflictError(customErr: CustomCypherErrorOutput) {
 // Simplified version of: https://github.com/neo4j-graphql/neo4j-graphql-js/blob/381ef0302bbd11ecd0f94f978045cdbc61c39b8e/src/utils.js#L57
 // We know the variable name as the mutation is written by us, and this function is not meant to be generic.
 function extractUpdateMutationResult(result: QueryResult) {
-  let data = result.records.map((record) => record.get("typeInstance"));
+  const data = result.records.map((record) => record.get("typeInstance"));
   // handle Integer fields
   // @ts-ignore
   return _.cloneDeepWith(data, (field) => {

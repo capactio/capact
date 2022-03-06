@@ -1,6 +1,10 @@
 import { Transaction } from "neo4j-driver";
 import { Context } from "./context";
-import { getTypeInstanceStoreExternally, LockingTypeInstanceInput, switchLocking } from "./lock-type-instances";
+import {
+  getTypeInstanceStoredExternally,
+  LockingTypeInstanceInput,
+  switchLocking,
+} from "./lock-type-instances";
 import { logger } from "../../logger";
 
 interface UnLockTypeInstanceInput extends LockingTypeInstanceInput {}
@@ -24,7 +28,11 @@ export async function unlockTypeInstances(
             SET ti.lockedBy = null
             RETURN true as executed`
       );
-      const unlockExternals = await getTypeInstanceStoreExternally(tx, args.in.ids, args.in.ownerID);
+      const unlockExternals = await getTypeInstanceStoredExternally(
+        tx,
+        args.in.ids,
+        args.in.ownerID
+      );
       await context.delegatedStorage.Unlock(...unlockExternals);
 
       return args.in.ids;

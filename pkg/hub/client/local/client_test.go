@@ -18,6 +18,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+// TODO(review): THIS FILE WILL BE REMOVED BEFORE MERGING. IT WAS ADDED ONLY FOR DEMO/PR TESTING PURPOSES.
+
 // #nosec G101
 const secretStorageBackendAddr = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
 
@@ -32,6 +34,9 @@ type StorageValue struct {
 // - create a new TypeInstance stored in built-in backend
 // - create a new TypeInstance stored in registered external backend
 // - create a new TypeInstance stored in registered external backend with custom context
+// - update TypeInstances
+// - lock/unlock TypeInstance
+// - delete all created TypeInstance
 //
 // Prerequisite:
 //   Before running this test, make sure that the external backend is running:
@@ -49,102 +54,126 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 
 	ctx := context.Background()
 	cli := NewDefaultClient("http://localhost:8080/graphql")
-	//dotenvHubStorage, _ := registerExternalDotenvStorage(ctx, t, cli, srvAddr)
-	//defer cleanup()
+	dotenvHubStorage, cleanup := registerExternalDotenvStorage(ctx, t, cli, srvAddr)
+	defer cleanup()
 
-	//_, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
-	//	TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
-	//		{
-	//			Alias:     ptr.String("child"),
-	//			CreatedBy: ptr.String("nature"),
-	//			TypeRef:   typeRef("cap.type.child:0.1.0"),
-	//			Value: map[string]interface{}{
-	//				"name": "Luke Skywalker",
-	//			},
-	//		},
-	//		{
-	//			Alias:     ptr.String("second-child"),
-	//			CreatedBy: ptr.String("nature"),
-	//			TypeRef:   typeRef("cap.type.child:0.2.0"),
-	//			Value: map[string]interface{}{
-	//				"name": "Leia Organa",
-	//			},
-	//			Backend: &gqllocalapi.TypeInstanceBackendInput{
-	//				ID: dotenvHubStorage.ID,
-	//				Context: map[string]interface{}{
-	//					"provider": "mock-me", // this will inform external backend to return mutated context
-	//				},
-	//			},
-	//		},
-	//		{
-	//			Alias:     ptr.String("third-child"),
-	//			CreatedBy: ptr.String("nature"),
-	//			TypeRef:   typeRef("cap.type.child:0.2.0"),
-	//			Value: map[string]interface{}{
-	//				"name": "Leia Organa v2",
-	//			},
-	//			Backend: &gqllocalapi.TypeInstanceBackendInput{
-	//				ID: dotenvHubStorage.ID,
-	//				// no context
-	//			},
-	//		},
-	//		{
-	//			Alias:     ptr.String("parent"),
-	//			CreatedBy: ptr.String("nature"),
-	//			TypeRef:   typeRef("cap.type.complex:0.1.0"),
-	//			Value: map[string]interface{}{
-	//				"name": "Darth Vader",
-	//			},
-	//			Backend: &gqllocalapi.TypeInstanceBackendInput{
-	//				ID: dotenvHubStorage.ID,
-	//				Context: map[string]interface{}{
-	//					"provider": "dotenv",
-	//				},
-	//			},
-	//		},
-	//	},
-	//	UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
-	//		{From: "parent", To: "child"},
-	//		{From: "parent", To: "second-child"},
-	//		{From: "parent", To: "third-child"},
-	//	},
-	//})
-	//require.NoError(t, err)
+	// SCENARIO - CREATE
+	_, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
+		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
+			{
+				// This TypeInstance:
+				// - is stored in built-in backend
+				// - doesn't have backend context
+				Alias:     ptr.String("child"),
+				CreatedBy: ptr.String("nature"),
+				TypeRef:   typeRef("cap.type.child:0.1.0"),
+				Value: map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+			},
+			{
+				// This TypeInstance:
+				// - is stored in external backend
+				// - has additional context
+				// - should be stored with mutated context (from create req)
+				Alias:     ptr.String("second-child"),
+				CreatedBy: ptr.String("nature"),
+				TypeRef:   typeRef("cap.type.child:0.2.0"),
+				Value: map[string]interface{}{
+					"name": "Leia Organa",
+				},
+				Backend: &gqllocalapi.TypeInstanceBackendInput{
+					ID: dotenvHubStorage.ID,
+					Context: map[string]interface{}{
+						"provider": "mock-me", // this will inform external backend to return mutated context
+					},
+				},
+			},
+			{
+				// This TypeInstance:
+				// - is stored in external backend
+				// - doesn't have additional context
+				// - should be stored without mutated context
+				Alias:     ptr.String("original"),
+				CreatedBy: ptr.String("nature"),
+				TypeRef:   typeRef("cap.type.original:0.2.0"),
+				Value: map[string]interface{}{
+					"name": "Anakin Skywalke",
+				},
+				Backend: &gqllocalapi.TypeInstanceBackendInput{
+					ID: dotenvHubStorage.ID,
+					// no context
+				},
+			},
+			{
+				// This TypeInstance:
+				// - is stored in external backend
+				// - has additional context
+				// - should be stored without mutated context
+				Alias:     ptr.String("parent"),
+				CreatedBy: ptr.String("nature"),
+				TypeRef:   typeRef("cap.type.parent:0.1.0"),
+				Value: map[string]interface{}{
+					"name": "Darth Vader",
+				},
+				Backend: &gqllocalapi.TypeInstanceBackendInput{
+					ID: dotenvHubStorage.ID,
+					Context: map[string]interface{}{
+						"provider": "dotenv",
+					},
+				},
+			},
+		},
+		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
+			{From: "parent", To: "child"},
+			{From: "parent", To: "second-child"},
+			{From: "parent", To: "original"},
+		},
+	})
+	require.NoError(t, err)
 
 	familyDetails, err := cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
 		CreatedBy: ptr.String("nature"),
 	}, WithFields(TypeInstanceAllFields))
 	require.NoError(t, err)
 
-	//defer func() {
-	//for _, member := range familyDetails {
-	//err = cli.DeleteTypeInstance(ctx, member.ID)
-	//t.Logf("err for %v: %v", member.ID, err)
-	//}
-	//}()
+	defer removeAllMembers(t, cli, familyDetails)
+
 	fmt.Print("\n\n======== After create result  ============\n\n")
 	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
 
+	// SCENARIO - UPDATE
+	// - for cap.type.parent don't update `value` and `context` - use old ones
+	// - for cap.type.original:0.2.0 don't update `value`, and zero the `context`
+	// - for all others, update both `value` and `context`
 	toUpdate := make([]gqllocalapi.UpdateTypeInstancesInput, 0, len(familyDetails))
 	for idx, member := range familyDetails {
 		val := map[string]interface{}{
 			"updated-value": fmt.Sprintf("context %d", idx),
 		}
-		if member.LatestResourceVersion.Spec.Backend.Context == nil && member.TypeRef.Revision == "0.2.0" {
+		backend := &gqllocalapi.UpdateTypeInstanceBackendInput{
+			Context: map[string]interface{}{
+				"updated": fmt.Sprintf("context %d", idx),
+			},
+		}
+		// For cap.type.original:0.2.0 don't update value, and zero the `context`.
+		if member.TypeRef.Path == "cap.type.original" {
 			val = nil
+			backend.Context = nil
+		}
+
+		// For cap.type.parent don't update value and `context` - use old ones
+		if member.TypeRef.Path == "cap.type.parent" {
+			val = nil
+			backend = nil
 		}
 		toUpdate = append(toUpdate, gqllocalapi.UpdateTypeInstancesInput{
 			ID:        member.ID,
 			CreatedBy: ptr.String("update"),
 			TypeInstance: &gqllocalapi.UpdateTypeInstanceInput{
-				Attributes: nil,
-				Value:      val,
-				Backend: &gqllocalapi.UpdateTypeInstanceBackendInput{
-					Context: map[string]interface{}{
-						"updated": fmt.Sprintf("context %d", idx),
-					},
-				},
+				Value:   val,
+				Backend: backend,
 			},
 		})
 	}
@@ -156,6 +185,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, updatedFamily))))
 	require.NoError(t, resourcePrinter.Print(updatedFamily))
 
+	// SCENARIO - LOCK
 	var ids []string
 	for _, member := range familyDetails {
 		ids = append(ids, member.ID)
@@ -174,6 +204,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
 
+	// SCENARIO - UNLOCK
 	err = cli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
 		Ids:     ids,
 		OwnerID: "demo/testing",
@@ -199,7 +230,7 @@ func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *Clien
 	dotenvHubStorage := ti[0]
 
 	return dotenvHubStorage, func() {
-		//_ = cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
+		_ = cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
 	}
 }
 
@@ -234,6 +265,8 @@ func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput
 		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{},
 	}
 }
+
+// ======= HELPERS =======
 
 type externalData struct {
 	Value    string
@@ -290,17 +323,17 @@ func typeInstanceDetailsMapper(family []gqllocalapi.CreateTypeInstanceOutput, st
 
 		switch in := inRaw.(type) {
 		case []gqllocalapi.TypeInstance:
-			out.Headers = []string{"TYPE INSTANCE ID", "ALIAS", "TYPE", "LOCKED", "DATA FROM GQL", "BACKEND", "BACKEND CONTEXT", "DATA IN EXTERNAL BACKEND", "LOCKED_BY IN EXTERNAL BACKEND"}
+			out.Headers = []string{"TYPE INSTANCE ID", "ALIAS", "TYPE", "BACKEND", "BACKEND CONTEXT", "DATA IN GQL", "DATA IN exBACKEND", "LOCKED", "LOCKED IN exBACKEND"}
 			for _, ti := range in {
 				out.MultipleRows = append(out.MultipleRows, []string{
 					ti.ID,
 					mapping[ti.ID],
 					fmt.Sprintf("%s:%s", ti.TypeRef.Path, ti.TypeRef.Revision),
-					stringDefault(ti.LockedBy, "-"),
-					mustMarshal(ti.LatestResourceVersion.Spec.Value),
 					fmt.Sprintf("%s%s", ti.Backend.ID, labelIfAbstract(ti.Backend.Abstract)),
 					mustMarshal(ti.LatestResourceVersion.Spec.Backend.Context),
+					mustMarshal(ti.LatestResourceVersion.Spec.Value),
 					storage[ti.ID].Value,
+					stringDefault(ti.LockedBy, "-"),
 					stringDefault(storage[ti.ID].LockedBy, "-"),
 				})
 			}
@@ -326,7 +359,32 @@ func stringDefault(in *string, def string) string {
 	}
 	return *in
 }
+
 func typeRef(in string) *gqllocalapi.TypeInstanceTypeReferenceInput {
 	out := strings.Split(in, ":")
 	return &gqllocalapi.TypeInstanceTypeReferenceInput{Path: out[0], Revision: out[1]}
+}
+
+func removeAllMembers(t *testing.T, cli *Client, familyDetails []gqllocalapi.TypeInstance) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	var parent string
+	for _, member := range familyDetails {
+		if member.TypeRef.Path == "cap.type.parent" {
+			parent = member.ID // delete as the last one, to get rid of the problem that it is used by others
+			continue
+		}
+		err := cli.DeleteTypeInstance(ctx, member.ID)
+		if err != nil {
+			t.Logf("err for %v: %v", member.ID, err)
+		}
+	}
+
+	err := cli.DeleteTypeInstance(ctx, parent)
+	if err != nil {
+		t.Logf("err for %v: %v", parent, err)
+	}
+
 }

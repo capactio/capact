@@ -22,6 +22,14 @@ export default class UpdateArgsContext {
     this.currentOperation = Operation.None;
   }
 
+  /**
+   * SetOperation set which operation started the GraphQL request.
+   * It is used to correlate proper flow between different resolvers.
+   *
+   *
+   * @param op - GraphQL request operation.
+   *
+   */
   SetOperation(op: Operation) {
     if (this.currentOperation == op) {
       return;
@@ -34,23 +42,62 @@ export default class UpdateArgsContext {
     this.currentOperation = op;
   }
 
+  /**
+   * GetOperation describe which operation is currently in progress.
+   *
+   *
+   * @return - GraphQL request operation.
+   *
+   */
   GetOperation(): Operation {
     return this.currentOperation;
   }
 
+  /**
+   * SetValue gives an option to transmit the input value between resolvers.
+   *
+   *
+   * @param id - TypeInstance's ID.
+   * @param value - User specified TypeInstance's value.
+   *
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   SetValue(id: string, value: any) {
     return this.valuesPerTypeInstance.set(id, value);
   }
 
+  /**
+   * GetValue gives an option to fetch the input set by other resolver.
+   *
+   *
+   * @return - TypeInstance's value if set by other resolver.
+   *
+   */
   GetValue(id: string): GetValueOutput {
     return this.valuesPerTypeInstance.get(id);
   }
 
+  /**
+   * SetLastKnownRev informs which TypeInstance's version was already processed a stored.
+   *
+   *
+   * @param id - TypeInstance's ID.
+   * @param rev - TypeInstance's last revision version.
+   *
+   */
   SetLastKnownRev(id: string, rev: number) {
     this.latestKnownRevPerTypeInstance.set(id, rev);
   }
 
+  /**
+   * GetLastKnownRev returns latest TypeInstance's revision version.
+   * Used to optimize number of request. If already stored, we don't need to trigger the udpate logic.
+   *
+   * @param id - TypeInstance's ID.
+   * @return - - TypeInstance's last revision version. If not set, returns 0.
+   * It's a safe assumption as Local Hub starts counting revision with 1.
+   *
+   */
   GetLastKnownRev(id: string) {
     return this.latestKnownRevPerTypeInstance.get(id) || 0;
   }

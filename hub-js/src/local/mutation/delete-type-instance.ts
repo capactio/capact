@@ -2,6 +2,7 @@ import { Transaction } from "neo4j-driver";
 import { Context } from "./context";
 import {
   CustomCypherErrorCode,
+  CustomCypherErrorOutput,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
 import { logger } from "../../logger";
@@ -41,10 +42,12 @@ export async function deleteTypeInstance(
                 WITH ti
                 WITH ti
                 MATCH (ti)-[:USES]->(others:TypeInstance)
-                WITH count(others) as othersLen
-                RETURN  othersLen > 1 as isUsed
+                MATCH (ti)-[:STORED_IN]->(backendRef: TypeInstanceBackendReference)
+                WITH backendRef, collect(others.id) as allUsedIds
+                WITH  [x IN allUsedIds WHERE x <> backendRef.id ] as usedIds
+                RETURN  usedIds
             }
-            CALL apoc.util.validate(isUsed, apoc.convert.toJson({code: 400}), null)
+            CALL apoc.util.validate(size(usedIds) > 0, apoc.convert.toJson({ids: usedIds, code: 400}), null)
 
             WITH ti
             MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
@@ -89,6 +92,8 @@ export async function deleteTypeInstance(
         { id: args.id, ownerID: args.ownerID || null }
       );
 
+      // NOTE: Use map to ensure that external storage is not called multiple time for the same ID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const deleteExternally = new Map<string, any>();
       result.records.forEach((record) => {
         const out = record.get("out");
@@ -120,6 +125,9 @@ export async function deleteTypeInstance(
         case CustomCypherErrorCode.NotFound:
           err = Error(`TypeInstance was not found`);
           break;
+        case CustomCypherErrorCode.BadRequest:
+          err = generateBadRequestError(customErr);
+          break;
         default:
           err = Error(`Unexpected error code ${customErr.code}`);
           break;
@@ -132,4 +140,14 @@ export async function deleteTypeInstance(
   } finally {
     await neo4jSession.close();
   }
+}
+
+function generateBadRequestError(customErr: CustomCypherErrorOutput) {
+  if (!Object.prototype.hasOwnProperty.call(customErr, "ids")) {
+    // it shouldn't happen
+    return Error(`ypeInstance is used by other TypeInstances`);
+  }
+  return Error(
+    `TypeInstance is used by other TypeInstances, you must first remove ${customErr.ids}`
+  );
 }

@@ -1,9 +1,11 @@
 import {
   GetValueRequest,
   OnCreateRequest,
-  OnDeleteRequest, OnLockRequest, OnUnlockRequest,
+  OnDeleteRequest,
+  OnLockRequest,
+  OnUnlockRequest,
   OnUpdateRequest,
-  StorageBackendDefinition
+  StorageBackendDefinition,
 } from "../../generated/grpc/storage_backend";
 import { createChannel, createClient, Client } from "nice-grpc";
 import { Driver } from "neo4j-driver";
@@ -113,7 +115,7 @@ export default class DelegatedStorageService {
         value: new TextEncoder().encode(
           JSON.stringify(input.typeInstance.value)
         ),
-        context: this.encode(input.backend.context)
+        context: this.encode(input.backend.context),
       };
       const res = await cli.onCreate(req);
 
@@ -124,7 +126,7 @@ export default class DelegatedStorageService {
       const updateCtx = JSON.parse(res.context.toString());
       mapping = {
         ...mapping,
-        [input.typeInstance.id]: updateCtx
+        [input.typeInstance.id]: updateCtx,
       };
     }
 
@@ -157,7 +159,7 @@ export default class DelegatedStorageService {
         newValue: new TextEncoder().encode(
           JSON.stringify(input.typeInstance.newValue)
         ),
-        context: this.encode(input.backend.context)
+        context: this.encode(input.backend.context),
       };
 
       await cli.onUpdate(req);
@@ -188,7 +190,7 @@ export default class DelegatedStorageService {
       const req: GetValueRequest = {
         typeInstanceId: input.typeInstance.id,
         resourceVersion: input.typeInstance.resourceVersion,
-        context: this.encode(input.backend.context)
+        context: this.encode(input.backend.context),
       };
       const res = await cli.getValue(req);
 
@@ -201,7 +203,7 @@ export default class DelegatedStorageService {
       const decodeRes = JSON.parse(res.value.toString());
       result = {
         ...result,
-        [input.typeInstance.id]: decodeRes
+        [input.typeInstance.id]: decodeRes,
       };
     }
 
@@ -227,7 +229,7 @@ export default class DelegatedStorageService {
 
       const req: OnDeleteRequest = {
         typeInstanceId: input.typeInstance.id,
-        context: this.encode(input.backend.context)
+        context: this.encode(input.backend.context),
       };
       await cli.onDelete(req);
     }
@@ -253,7 +255,7 @@ export default class DelegatedStorageService {
       const req: OnLockRequest = {
         typeInstanceId: input.typeInstance.id,
         lockedBy: input.typeInstance.lockedBy,
-        context: this.encode(input.backend.context)
+        context: this.encode(input.backend.context),
       };
       await cli.onLock(req);
     }
@@ -278,12 +280,11 @@ export default class DelegatedStorageService {
 
       const req: OnUnlockRequest = {
         typeInstanceId: input.typeInstance.id,
-        context: this.encode(input.backend.context)
+        context: this.encode(input.backend.context),
       };
       await cli.onUnlock(req);
     }
   }
-
 
   private async storageInstanceDetailsFetcher(
     id: string
@@ -350,6 +351,7 @@ export default class DelegatedStorageService {
     return this.registeredClients.get(id);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static convertToJSONIfObject(val: any) {
     if (val instanceof Array || val instanceof Object) {
       return JSON.stringify(val);
@@ -357,10 +359,10 @@ export default class DelegatedStorageService {
     return val;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private encode(val: any) {
     return new TextEncoder().encode(
       DelegatedStorageService.convertToJSONIfObject(val)
     );
   }
-
 }

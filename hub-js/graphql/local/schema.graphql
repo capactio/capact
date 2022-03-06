@@ -327,7 +327,7 @@ input UpdateTypeInstanceInput {
 }
 
 input UpdateTypeInstanceBackendInput {
-  context: Any!
+  context: Any
 }
 
 input UpdateTypeInstancesInput {
@@ -483,7 +483,7 @@ type Mutation {
         '
           SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec
         ',
-          storageRef.abstract AND item.typeInstance.value IS NULL, // built-in:  no value, so use old one
+          storageRef.abstract AND item.typeInstance.value IS NULL, // built-in: no value, so use old one
         '
           MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
           SET spec.value = latestSpec.value RETURN spec
@@ -494,6 +494,7 @@ type Mutation {
         ',
       {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
 
+      // Handle the `backend.context`
       WITH ti, tir, spec, latestRevision, item
       CALL apoc.do.when(
           item.typeInstance.backend IS NOT NULL,

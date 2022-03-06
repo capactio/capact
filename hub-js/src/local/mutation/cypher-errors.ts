@@ -1,4 +1,5 @@
 export enum CustomCypherErrorCode {
+  BadRequest = 400,
   Conflict = 409,
   NotFound = 404,
 }
