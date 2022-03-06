@@ -116,11 +116,28 @@ function validate(input: TypeInstanceInput[]) {
     );
   }
 
-  const notAllowedBackendCtx = input.filter(
-    (x) => x.backend.id === BUILTIN_STORAGE_BACKEND_ID && x.backend.context
-  );
-  if (notAllowedBackendCtx.length) {
-    throw new Error("Built-in storage backend does not accept context");
+  const notAllowedBackendCtx = [
+    ...new Set(
+      input
+        .filter(
+          (x) =>
+            x.backend.id === BUILTIN_STORAGE_BACKEND_ID && x.backend.context
+        )
+        .map((x) => x.backend.id)
+    ),
+  ];
+
+  switch (notAllowedBackendCtx.length) {
+    case 0:
+      break;
+    case 1:
+      throw new Error(
+        `Built-in storage backend with ID ${notAllowedBackendCtx} does not accept context`
+      );
+    default:
+      throw new Error(
+        `Built-in storage backends with IDs ${notAllowedBackendCtx} do not accept context`
+      );
   }
 }
 
