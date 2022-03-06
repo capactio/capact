@@ -53,7 +53,7 @@ npm install
 To run Hub in the local mode, use the following command:
 
 ```bash
-APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=local npm run dev
+APP_LOGGER_LEVEL="debug" APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=local npm run dev
 ```
 
 ### Public Hub
@@ -61,7 +61,7 @@ APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=lo
 To run Hub in the public mode, use the following command:
 
 ```bash
-APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=public npm run dev
+APP_LOGGER_LEVEL="debug" APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=public npm run dev
 ```
 
 ### GraphQL Playground
@@ -83,14 +83,15 @@ query {
 
 The following environment variables can be set to configure Hub:
 
-| Name                        | Required | Default                 | Description                                            |
-|-----------------------------|----------|-------------------------|--------------------------------------------------------|
-| APP_HUB_MODE                | no       | `public`                | Mode, in which Hub is run. Must be "public" or "local" |
-| APP_GRAPH_QL_ADDR           | no       | `:8080`                 | The address, where GraphQL endpoints binds to          |
-| APP_NEO4J_ENDPOINT          | no       | `bolt://localhost:7687` | The Neo4j database Bolt protocol endpoint              |
-| APP_NEO4J_USERNAME          | no       | `neo4j`                 | Neo4j database username                                |
-| APP_NEO4J_PASSWORD          | yes      |                         | Neo4j database password                                |
-| APP_EXPRESS_BODY_SIZE_LIMIT | no       | `32mb`                  | The limit of the maximum HTTP request body size        |
+| Name                        | Required | Default                 | Description                                                                                                                                           |
+| --------------------------- | -------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APP_HUB_MODE                | no       | `public`                | Mode, in which Hub is run. Must be "public" or "local"                                                                                                |
+| APP_LOGGER_LEVEL            | no       | `info`                  | Specifies which log entries should be logged. Allowed values are described in [winston](https://github.com/winstonjs/winston#logging-levels) library. |
+| APP_GRAPH_QL_ADDR           | no       | `:8080`                 | The address, where GraphQL endpoints binds to                                                                                                         |
+| APP_NEO4J_ENDPOINT          | no       | `bolt://localhost:7687` | The Neo4j database Bolt protocol endpoint                                                                                                             |
+| APP_NEO4J_USERNAME          | no       | `neo4j`                 | Neo4j database username                                                                                                                               |
+| APP_NEO4J_PASSWORD          | yes      |                         | Neo4j database password                                                                                                                               |
+| APP_EXPRESS_BODY_SIZE_LIMIT | no       | `32mb`                  | The limit of the maximum HTTP request body size                                                                                                       |
 
 ## Development
 

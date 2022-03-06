@@ -589,10 +589,10 @@ type Query @additionalLabels(labels: ["published"]) {
       // Flat collection of specify Types and attached children
       UNWIND [type, children] AS res
 
-			WITH res
-			// OPTIONAL MATCH may produce NULL values
+      WITH res
+      // OPTIONAL MATCH may produce NULL values
       WHERE res is NOT NULL
-			// Get rid of duplicates
+      // Get rid of duplicates
       RETURN DISTINCT res
       """
     )

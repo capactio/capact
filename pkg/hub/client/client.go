@@ -20,7 +20,7 @@ type Client struct {
 
 // Local interface aggregates methods to interact with Capact Local Hub.
 type Local interface {
-	CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput, opts ...local.TypeInstancesOption) (*hublocalgraphql.TypeInstance, error)
+	CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (string, error)
 	CreateTypeInstances(ctx context.Context, in *hublocalgraphql.CreateTypeInstancesInput) ([]hublocalgraphql.CreateTypeInstanceOutput, error)
 	FindTypeInstance(ctx context.Context, id string, opts ...local.TypeInstancesOption) (*hublocalgraphql.TypeInstance, error)
 	ListTypeInstances(ctx context.Context, filter *hublocalgraphql.TypeInstanceFilter, opts ...local.TypeInstancesOption) ([]hublocalgraphql.TypeInstance, error)

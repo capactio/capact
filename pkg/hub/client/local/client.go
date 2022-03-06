@@ -35,31 +35,25 @@ func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
 }
 
 // CreateTypeInstance creates a new TypeInstances in the local Hub.
-func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput, opts ...TypeInstancesOption) (*hublocalgraphql.TypeInstance, error) {
-	tiOpts := newTypeInstancesOptions(TypeInstanceAllFields)
-	tiOpts.Apply(opts...)
-	query := fmt.Sprintf(`mutation CreateTypeInstance($in: CreateTypeInstanceInput!) {
+func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (string, error) {
+	req := graphql.NewRequest(`mutation CreateTypeInstance($in: CreateTypeInstanceInput!) {
 		createTypeInstance(
 			in: $in
-		) {
-			%s
-		}
-	}`, tiOpts.fields)
-
-	req := graphql.NewRequest(query)
+		)
+	}`)
 	req.Var("in", in)
 
 	var resp struct {
-		TypeInstance *hublocalgraphql.TypeInstance `json:"createTypeInstance"`
+		CreatedTypeInstance string `json:"createTypeInstance"`
 	}
 	err := retry.Do(func() error {
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
 	if err != nil {
-		return nil, errors.Wrap(err, "while executing mutation to create TypeInstance")
+		return "", errors.Wrap(err, "while executing mutation to create TypeInstance")
 	}
 
-	return resp.TypeInstance, nil
+	return resp.CreatedTypeInstance, nil
 }
 
 // CreateTypeInstances creates new TypeInstances and allows to define "uses" relationships between them.
@@ -125,7 +119,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string, opts ...TypeIn
 
 	query := fmt.Sprintf(`query FindTypeInstance($id: ID!) {
 		typeInstance(id: $id) {
-			%s	
+			%s
 		}
 	}`, tiOpts.fields)
 
@@ -154,13 +148,13 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 
 	body := bytes.Buffer{}
 	for idx, id := range ids {
-		body.WriteString(fmt.Sprintf(`		
+		body.WriteString(fmt.Sprintf(`
 		id_%d:typeInstance(id: %q) {
 			id
 			typeRef {
 			  path
 			  revision
-			}	
+			}
 		}`, idx, id))
 	}
 
@@ -194,7 +188,7 @@ func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.
 
 	query := fmt.Sprintf(`query ListTypeInstances($filter: TypeInstanceFilter) {
 		typeInstances(filter: $filter) {
-			%s	
+			%s
 		}
 	}`, tiOpts.fields)
 

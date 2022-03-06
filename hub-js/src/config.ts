@@ -5,6 +5,9 @@ if (process.env.APP_NEO4J_PASSWORD === undefined) {
 const graphqlBindAddress = process.env.APP_GRAPH_QL_ADDR || ":8080";
 const [graphQLAddr, graphQLPort] = graphqlBindAddress.split(":", 2);
 
+export const BUILTIN_STORAGE_BACKEND_ID =
+  "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+
 export const config = {
   neo4j: {
     endpoint: process.env.APP_NEO4J_ENDPOINT || "bolt://localhost:7687",
@@ -16,6 +19,9 @@ export const config = {
     bindPort: Number(graphQLPort),
   },
   hubMode: process.env.APP_HUB_MODE || "public",
+  logger: {
+    level: process.env.APP_LOGGER_LEVEL || "info",
+  },
   express: {
     bodySizeLimit: process.env.APP_EXPRESS_BODY_SIZE_LIMIT || "32mb",
   },

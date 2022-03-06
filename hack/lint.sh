@@ -100,6 +100,20 @@ graphql::run_checks() {
   echo -e "${GREEN}√ run graphql-schema-linter${NC}"
 }
 
+hub_js::lint() {
+  pushd "${REPO_ROOT_DIR}/hub-js" > /dev/null
+  npm ci
+  if [[ "${LINT_FORCE_FIX:-x}" == "true" ]]; then
+    npm run lint
+    npm run prettier
+  else
+    npm run lint:check
+    npm run prettier:check
+  fi
+
+  popd > /dev/null
+}
+
 main() {
   if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
       host::install::golangci
@@ -114,6 +128,8 @@ main() {
   shellcheck::run_checks
 
   graphql::run_checks
+
+  hub_js::lint
 }
 
 main

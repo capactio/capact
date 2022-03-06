@@ -1,7 +1,8 @@
 import { createLogger, format, transports } from "winston";
+import { config } from "./config";
 
 export const logger = createLogger({
-  level: "info",
+  level: config.logger.level,
   format: format.combine(
     format.timestamp(),
     format.printf(({ timestamp, level, message, ...fields }) => {

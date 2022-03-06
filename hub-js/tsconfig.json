@@ -14,9 +14,10 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "outDir": "dist",
-    "typeRoots": ["src/types"]
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "src/types/**/*"]
+  "exclude": ["node_modules"]
 }

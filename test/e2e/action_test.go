@@ -402,7 +402,7 @@ func fixHelmStorageTypeInstanceCreateInput() *hublocalgraphql.CreateTypeInstance
 		},
 		Attributes: []*hublocalgraphql.AttributeReferenceInput{},
 		Value: map[string]interface{}{
-			"url":         "helm-release.default:50051",
+			"url":         "e2e-test-backend-mock-url:50051",
 			"acceptValue": true,
 			"contextSchema": heredoc.Doc(`
 				{
@@ -482,11 +482,13 @@ func runActionAndWaitForStatus(ctx context.Context, engineClient *engine.Client,
 }
 
 func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, func()) {
-	createdTypeInstance, err := hubClient.CreateTypeInstance(ctx, in)
+	typeInstanceID, err := hubClient.CreateTypeInstance(ctx, in)
 	Expect(err).ToNot(HaveOccurred())
 
-	Expect(createdTypeInstance).NotTo(BeNil())
-	typeInstanceID := createdTypeInstance.ID
+	Expect(typeInstanceID).NotTo(BeEmpty())
+
+	typeInstance, err := hubClient.FindTypeInstance(ctx, typeInstanceID)
+	Expect(err).ToNot(HaveOccurred())
 
 	cleanupFn := func() {
 		err := hubClient.DeleteTypeInstance(ctx, typeInstanceID)
@@ -495,7 +497,7 @@ func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hu
 		}
 	}
 
-	return createdTypeInstance, cleanupFn
+	return typeInstance, cleanupFn
 }
 
 type policyOption func(*enginegraphql.PolicyInput)

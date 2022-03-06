@@ -10,9 +10,7 @@ mutation CreateTypeInstance {
       value: { hello: "world" }
       attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
     }
-  ) {
-    ...TypeInstance
-  }
+  )
 }
 
 mutation CreateTypeInstances {
@@ -116,18 +114,22 @@ mutation DeleteTypeInstance($typeInstanceID: ID!) {
 
 # Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "5977174e-ae64-4571-aecf-cca9cbac5756"}
 mutation LockTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
-  lockTypeInstances(in: {
-    ids: [$typeInstanceID, $secondTypeInstanceID]
-    ownerID: "namespace/name"
-  })
+  lockTypeInstances(
+    in: {
+      ids: [$typeInstanceID, $secondTypeInstanceID]
+      ownerID: "namespace/name"
+    }
+  )
 }
 
 # Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "5977174e-ae64-4571-aecf-cca9cbac5756"}
 mutation UnlockTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
-  unlockTypeInstances(in: {
-    ids: [$typeInstanceID, $secondTypeInstanceID]
-    ownerID: "namespace/name"
-  })
+  unlockTypeInstances(
+    in: {
+      ids: [$typeInstanceID, $secondTypeInstanceID]
+      ownerID: "namespace/name"
+    }
+  )
 }
 
 # Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
@@ -207,6 +209,9 @@ fragment TypeInstanceResourceVersion on TypeInstanceResourceVersion {
   }
   spec {
     value
+    backend {
+      context
+    }
   }
 }
 
