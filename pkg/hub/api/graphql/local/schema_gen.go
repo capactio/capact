@@ -705,7 +705,33 @@ type TypeInstanceResourceVersionSpec {
   value: Any!
     @cypher(
       statement: """
-      RETURN apoc.convert.fromJsonMap(this.value)
+      MATCH (this)<-[:SPECIFIED_BY]-(rev:TypeInstanceResourceVersion)<-[:CONTAINS]-(ti:TypeInstance)
+      MATCH (this)-[:WITH_BACKEND]->(backendCtx)
+      MATCH (ti)-[:STORED_IN]->(backendRef)
+      WITH *
+      CALL apoc.when(
+          backendRef.abstract,
+          '
+              WITH {
+                abstract: backendRef.abstract,
+                builtinValue: apoc.convert.fromJsonMap(spec.value)
+              } AS value
+              RETURN value
+          ',
+          '
+              WITH {
+                abstract: backendRef.abstract,
+                fetchInput: {
+                   typeInstance: { resourceVersion: rev.resourceVersion, id: ti.id },
+                   backend: { context: backendCtx.context, id: backendRef.id}
+                }
+              } AS value
+              RETURN value
+          ',
+          {spec: this, rev: rev, ti: ti, backendRef: backendRef, backendCtx: backendCtx}
+      ) YIELD value as out
+
+      RETURN out.value
       """
     )
 
@@ -893,6 +919,15 @@ input UpdateTypeInstanceInput {
   The value property is optional. If not provided, previous value is used.
   """
   value: Any
+
+  """
+  The backend property is optional. If not provided, previous value is used.
+  """
+  backend: UpdateTypeInstanceBackendInput
+}
+
+input UpdateTypeInstanceBackendInput {
+  context: Any!
 }
 
 input UpdateTypeInstancesInput {
@@ -1040,8 +1075,10 @@ type Mutation {
       CREATE (tir)-[:SPECIFIED_BY]->(spec)
 
       WITH ti, tir, spec, latestRevision, item
+      MATCH (ti)-[:STORED_IN]->(storageRef:TypeInstanceBackendReference)
+
       CALL apoc.do.when(
-          item.typeInstance.value IS NOT NULL,
+         item.typeInstance.value IS NOT NULL AND storageRef.abstract, // If there is some value and storage is built-in
         '
           SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec
         ',
@@ -1049,16 +1086,26 @@ type Mutation {
           MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
           SET spec.value = latestSpec.value RETURN spec
         ',
-        {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
+      {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
+
+      WITH ti, tir, spec, latestRevision, item
+      CALL apoc.do.when(
+          item.typeInstance.backend IS NOT NULL,
+        '
+          CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(item.typeInstance.backend.context)})
+          RETURN specBackend
+        ',
+        '
+          CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(item.typeInstance.backend.context)})
+          RETURN specBackend
+        ',
+      {spec:spec, latestRevision: latestRevision, item: item}) YIELD value as backendRef
+      WITH ti, tir, spec, latestRevision, item, backendRef.specBackend as specBackend
+      CREATE (spec)-[:WITH_BACKEND]->(specBackend)
 
       // Handle the ` + "`" + `metadata.attributes` + "`" + ` property
       CREATE (metadata: TypeInstanceResourceVersionMetadata)
       CREATE (tir)-[:DESCRIBED_BY]->(metadata)
-
-      // TODO: Temporary don't allow backend update, will be fixed in follow-up PR
-      WITH *
-      MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)-[:WITH_BACKEND]->(specBackend: TypeInstanceResourceVersionSpecBackend)
-      CREATE (spec)-[:WITH_BACKEND]->(specBackend)
 
       WITH ti, tir, latestRevision, metadata, item
       CALL apoc.do.when(
@@ -1619,7 +1666,7 @@ func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, f
 			return ec.resolvers.Mutation().UpdateTypeInstances(rctx, args["in"].([]*UpdateTypeInstancesInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CALL {\n  UNWIND $in AS item\n  RETURN collect(item.id) as allInputIDs\n}\n\n// Check if all TypeInstances were found\nWITH *\nCALL {\n  WITH allInputIDs\n  MATCH (ti:TypeInstance)\n  WHERE ti.id IN allInputIDs\n  WITH collect(ti.id) as foundIDs\n  RETURN foundIDs\n}\nCALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)\n\n// Check if given TypeInstances are not already locked by others\nWITH *\nCALL {\n    WITH *\n    UNWIND $in AS item\n    MATCH (tic:TypeInstance {id: item.id})\n    WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)\n    WITH collect(tic.id) as lockedIDs\n    RETURN lockedIDs\n}\nCALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)\n\nUNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\n// TODO: Temporary don't allow backend update, will be fixed in follow-up PR\nWITH *\nMATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)-[:WITH_BACKEND]->(specBackend: TypeInstanceResourceVersionSpecBackend)\nCREATE (spec)-[:WITH_BACKEND]->(specBackend)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CALL {\n  UNWIND $in AS item\n  RETURN collect(item.id) as allInputIDs\n}\n\n// Check if all TypeInstances were found\nWITH *\nCALL {\n  WITH allInputIDs\n  MATCH (ti:TypeInstance)\n  WHERE ti.id IN allInputIDs\n  WITH collect(ti.id) as foundIDs\n  RETURN foundIDs\n}\nCALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)\n\n// Check if given TypeInstances are not already locked by others\nWITH *\nCALL {\n    WITH *\n    UNWIND $in AS item\n    MATCH (tic:TypeInstance {id: item.id})\n    WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)\n    WITH collect(tic.id) as lockedIDs\n    RETURN lockedIDs\n}\nCALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)\n\nUNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nMATCH (ti)-[:STORED_IN]->(storageRef:TypeInstanceBackendReference)\n\nCALL apoc.do.when(\n   item.typeInstance.value IS NOT NULL AND storageRef.abstract, // If there is some value and storage is built-in\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n{spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.backend IS NOT NULL,\n  '\n    CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(item.typeInstance.backend.context)})\n    RETURN specBackend\n  ',\n  '\n    CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(item.typeInstance.backend.context)})\n    RETURN specBackend\n  ',\n{spec:spec, latestRevision: latestRevision, item: item}) YIELD value as backendRef\nWITH ti, tir, spec, latestRevision, item, backendRef.specBackend as specBackend\nCREATE (spec)-[:WITH_BACKEND]->(specBackend)\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -3382,7 +3429,7 @@ func (ec *executionContext) _TypeInstanceResourceVersionSpec_value(ctx context.C
 			return obj.Value, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "RETURN apoc.convert.fromJsonMap(this.value)")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)<-[:SPECIFIED_BY]-(rev:TypeInstanceResourceVersion)<-[:CONTAINS]-(ti:TypeInstance)\nMATCH (this)-[:WITH_BACKEND]->(backendCtx)\nMATCH (ti)-[:STORED_IN]->(backendRef)\nWITH *\nCALL apoc.when(\n    backendRef.abstract,\n    '\n        WITH {\n          abstract: backendRef.abstract,\n          builtinValue: apoc.convert.fromJsonMap(spec.value)\n        } AS value\n        RETURN value\n    ',\n    '\n        WITH {\n          abstract: backendRef.abstract,\n          fetchInput: {\n             typeInstance: { resourceVersion: rev.resourceVersion, id: ti.id },\n             backend: { context: backendCtx.context, id: backendRef.id}\n          }\n        } AS value\n        RETURN value\n    ',\n    {spec: this, rev: rev, ti: ti, backendRef: backendRef, backendCtx: backendCtx}\n) YIELD value as out\n\nRETURN out.value")
 			if err != nil {
 				return nil, err
 			}
@@ -5115,6 +5162,26 @@ func (ec *executionContext) unmarshalInputUnlockTypeInstancesInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateTypeInstanceBackendInput(ctx context.Context, obj interface{}) (UpdateTypeInstanceBackendInput, error) {
+	var it UpdateTypeInstanceBackendInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "context":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("context"))
+			it.Context, err = ec.unmarshalNAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Context, obj interface{}) (UpdateTypeInstanceInput, error) {
 	var it UpdateTypeInstanceInput
 	var asMap = obj.(map[string]interface{})
@@ -5134,6 +5201,14 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Co
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalOAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "backend":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backend"))
+			it.Backend, err = ec.unmarshalOUpdateTypeInstanceBackendInput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐUpdateTypeInstanceBackendInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7010,6 +7085,14 @@ func (ec *executionContext) unmarshalOTypeRefFilterInput2ᚖcapactᚗioᚋcapact
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputTypeRefFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOUpdateTypeInstanceBackendInput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋlocalᚐUpdateTypeInstanceBackendInput(ctx context.Context, v interface{}) (*UpdateTypeInstanceBackendInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputUpdateTypeInstanceBackendInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -162,6 +162,10 @@ type UnlockTypeInstancesInput struct {
 	OwnerID string   `json:"ownerID"`
 }
 
+type UpdateTypeInstanceBackendInput struct {
+	Context interface{} `json:"context"`
+}
+
 type FilterRule string
 
 const (

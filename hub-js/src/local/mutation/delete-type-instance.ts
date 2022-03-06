@@ -1,21 +1,16 @@
 import { Transaction } from "neo4j-driver";
-import { ContextWithDriver } from "./context";
+import { Context } from "./context";
 import {
   CustomCypherErrorCode,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
 import { logger } from "../../logger";
 
-export interface UpdateTypeInstanceError {
-  code: CustomCypherErrorCode;
-  ids: string[];
-}
-
 export async function deleteTypeInstance(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _: any,
   args: { id: string; ownerID: string },
-  context: ContextWithDriver
+  context: Context
 ) {
   const neo4jSession = context.driver.session();
   try {
@@ -24,7 +19,7 @@ export async function deleteTypeInstance(
         "Executing query to delete TypeInstance from database",
         args
       );
-      await tx.run(
+      const result = await tx.run(
         `
             OPTIONAL MATCH (ti:TypeInstance {id: $id})
 
@@ -54,13 +49,19 @@ export async function deleteTypeInstance(
             WITH ti
             MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
             MATCH (ti)-[:OF_TYPE]->(typeRef: TypeInstanceTypeReference)
+            MATCH (ti)-[:STORED_IN]->(backendRef: TypeInstanceBackendReference)
             MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
             MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
+            MATCH (spec)-[:WITH_BACKEND]->(specBackend: TypeInstanceResourceVersionSpecBackend)
+
             OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
 
-            DETACH DELETE ti, metadata, spec, tirs
+            // NOTE: Need to be preserved with 'WITH' statement, otherwise we won't be able
+            // to access node's properties after 'DETACH DELETE' statement.
+            WITH *, {id: ti.id, backend: { id: backendRef.id, context: specBackend.context, abstract: backendRef.abstract}} as out
+            DETACH DELETE ti, metadata, spec, tirs, specBackend
 
-            WITH typeRef
+            WITH *
             CALL {
               MATCH (typeRef)
               WHERE NOT (typeRef)--()
@@ -70,15 +71,42 @@ export async function deleteTypeInstance(
 
             WITH *
             CALL {
-              MATCH (attrRef)
+              MATCH (backendRef)
+              WHERE NOT (backendRef)--()
+              DELETE (backendRef)
+              RETURN 'remove backendRef'
+            }
+
+            WITH *
+            CALL {
+              OPTIONAL MATCH (attrRef)
               WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
               DELETE (attrRef)
               RETURN 'remove attr'
             }
 
-            RETURN $id`,
+            RETURN out`,
         { id: args.id, ownerID: args.ownerID || null }
       );
+
+      const deleteExternally = new Map<string, any>();
+      result.records.forEach((record) => {
+        const out = record.get("out");
+        if (out.backend.abstract) {
+          return;
+        }
+        deleteExternally.set(out.id, out.backend);
+      });
+
+      for (const [id, backend] of deleteExternally) {
+        await context.delegatedStorage.Delete({
+          typeInstance: {
+            id,
+          },
+          backend,
+        });
+      }
+
       return args.id;
     });
   } catch (e) {

@@ -1,6 +1,8 @@
 import {
+  GetValueRequest,
   OnCreateRequest,
   OnDeleteRequest,
+  OnUpdateRequest,
   StorageBackendDefinition,
 } from "../../generated/grpc/storage_backend";
 import { createChannel, createClient, Client } from "nice-grpc";
@@ -26,6 +28,24 @@ export interface StoreInput {
     id: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any;
+  };
+}
+
+export interface UpdateInput {
+  backend: TypeInstanceBackendInput;
+  typeInstance: {
+    id: string;
+    newResourceVersion: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    newValue: any;
+  };
+}
+
+export interface GetInput {
+  backend: TypeInstanceBackendInput;
+  typeInstance: {
+    id: string;
+    resourceVersion: number;
   };
 }
 
@@ -57,6 +77,8 @@ export default class DelegatedStorageService {
    * @param inputs - Describes what should be stored.
    * @returns The update backend's context. If there was no update, it's undefined.
    *
+   *  TODO: validate if `input.value` is allowed by backend (`backend.acceptValue`)
+   *  TODO: validate `input.backend.context` against `backend.contextSchema`.
    */
   async Store(...inputs: StoreInput[]): Promise<UpdatedContexts> {
     let mapping: UpdatedContexts = {};
@@ -76,9 +98,7 @@ export default class DelegatedStorageService {
         value: new TextEncoder().encode(
           JSON.stringify(input.typeInstance.value)
         ),
-        context: new TextEncoder().encode(
-          JSON.stringify(input.backend.context)
-        ),
+        context: this.encode(input.backend.context),
       };
       const res = await cli.onCreate(req);
 
@@ -94,6 +114,83 @@ export default class DelegatedStorageService {
     }
 
     return mapping;
+  }
+
+  /**
+   * Update the TypeInstance's value in a given backend.
+   *
+   *
+   * @param inputs - Describes what should be updated.
+   *
+   *  TODO: validate if `input.value` is allowed by backend (`backend.acceptValue`)
+   *  TODO: validate `input.backend.context` against `backend.contextSchema`.
+   */
+  async Update(...inputs: UpdateInput[]) {
+    for (const input of inputs) {
+      logger.debug(
+        `Updating TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
+      );
+      const cli = await this.getClient(input.backend.id);
+      if (!cli) {
+        // TODO: remove after using a real backend in e2e tests.
+        continue;
+      }
+
+      const req: OnUpdateRequest = {
+        typeInstanceId: input.typeInstance.id,
+        newResourceVersion: input.typeInstance.newResourceVersion,
+        newValue: new TextEncoder().encode(
+          JSON.stringify(input.typeInstance.newValue)
+        ),
+        context: this.encode(input.backend.context),
+      };
+
+      await cli.onUpdate(req);
+    }
+  }
+
+  /**
+   * Get the TypeInstance's value from a given backend.
+   *
+   *
+   * @param inputs - Describes what should be stored.
+   * @returns The update backend's context. If there was no update, it's undefined.
+   *
+   */
+  async Get(...inputs: GetInput[]): Promise<UpdatedContexts> {
+    let result: UpdatedContexts = {};
+
+    for (const input of inputs) {
+      logger.debug(
+        `Fetching TypeInstance ${input.typeInstance.id} from external backend ${input.backend.id}`
+      );
+      const cli = await this.getClient(input.backend.id);
+      if (!cli) {
+        // TODO: remove after using a real backend in e2e tests.
+        continue;
+      }
+
+      const req: GetValueRequest = {
+        typeInstanceId: input.typeInstance.id,
+        resourceVersion: input.typeInstance.resourceVersion,
+        context: this.encode(input.backend.context),
+      };
+      const res = await cli.getValue(req);
+
+      if (!res.value) {
+        throw Error(
+          `Got empty response for TypeInstance ${input.typeInstance.id} from external backend ${input.backend.id}`
+        );
+      }
+
+      const decodeRes = JSON.parse(res.value.toString());
+      result = {
+        ...result,
+        [input.typeInstance.id]: decodeRes,
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -116,7 +213,7 @@ export default class DelegatedStorageService {
       const req: OnDeleteRequest = {
         typeInstanceId: input.typeInstance.id,
         context: new TextEncoder().encode(
-          JSON.stringify(input.backend.context)
+          DelegatedStorageService.convertToJSONIfObject(input.backend.context)
         ),
       };
       await cli.onDelete(req);
@@ -142,10 +239,15 @@ export default class DelegatedStorageService {
           `,
         { id: id }
       );
-      if (fetchRevisionResult.records.length !== 1) {
-        throw new Error(
-          `Internal Server Error, unexpected response row length, want 1, got ${fetchRevisionResult.records.length}`
-        );
+      switch (fetchRevisionResult.records.length) {
+        case 0:
+          throw new Error(`TypeInstance not found`);
+        case 1:
+          break;
+        default:
+          throw new Error(
+            `Found ${fetchRevisionResult.records.length} TypeInstances with the same id`
+          );
       }
 
       const record = fetchRevisionResult.records[0];
@@ -181,5 +283,18 @@ export default class DelegatedStorageService {
     }
 
     return this.registeredClients.get(id);
+  }
+
+  private static convertToJSONIfObject(val: any) {
+    if (val instanceof Array || val instanceof Object) {
+      return JSON.stringify(val);
+    }
+    return val;
+  }
+
+  private encode(val: any) {
+    return new TextEncoder().encode(
+      DelegatedStorageService.convertToJSONIfObject(val)
+    );
   }
 }

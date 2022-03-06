@@ -182,7 +182,20 @@ async function createTypeInstancesInDB(
            CREATE (ti)-[:CONTAINS]->(tir)
 
            CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
-           CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson(typeInstance.value)})
+           CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
+           WITH *
+           CALL apoc.do.when(
+               typeInstance.backend.abstract,
+               '
+                   SET spec.value = apoc.convert.toJson(typeInstance.value)
+                   RETURN true as executed
+               ',
+               '
+                   RETURN false as executed
+               ',
+               {typeInstance: typeInstance, spec: spec}
+           ) YIELD value
+
            CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(typeInstance.backend.context)})
            CREATE (spec)-[:WITH_BACKEND]->(specBackend)
 
@@ -237,7 +250,7 @@ async function updateTypeInstancesContextInDB(
   updatedContexts: UpdatedContexts
 ) {
   if (Object.keys(updatedContexts).length) {
-    logger.debug("Executing query to update backend contexts");
+    logger.debug("Executing query to update backend contexts", updatedContexts);
   }
 
   await tx.run(

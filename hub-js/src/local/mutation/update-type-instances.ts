@@ -1,22 +1,59 @@
-import { Neo4jContext, neo4jgraphql } from "neo4j-graphql-js";
+import { cypherMutation } from "neo4j-graphql-js";
 import { GraphQLResolveInfo } from "graphql";
+import _ from "lodash";
+import neo4j, { QueryResult, Transaction } from "neo4j-driver";
 import {
   CustomCypherErrorCode,
   CustomCypherErrorOutput,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
 import { logger } from "../../logger";
+import { Context } from "./context";
+import { Operation } from "../storage/update-args-context";
+
+interface UpdateTypeInstancesInput {
+  in: [
+    {
+      id: string;
+      typeInstance: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value?: any;
+      };
+    }
+  ];
+}
 
 export async function updateTypeInstances(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: any,
-  args: { in: [{ id: string }] },
-  context: Neo4jContext,
+  _: any,
+  args: UpdateTypeInstancesInput,
+  context: Context,
   resolveInfo: GraphQLResolveInfo
 ) {
+  logger.debug("Executing query to update TypeInstance(s)", args);
+
+  context.updateArgs.SetOperation(Operation.UpdateTypeInstancesMutation);
+  args.in.forEach((x) => {
+    context.updateArgs.SetValue(x.id, x.typeInstance.value);
+  });
+
+  const neo4jSession = context.driver.session();
+
   try {
-    logger.debug("Executing query to update TypeInstance(s)", args);
-    return await neo4jgraphql(obj, args, context, resolveInfo);
+    return await neo4jSession.writeTransaction(async (tx: Transaction) => {
+      // NOTE: we need to record for each input TypeInstance's id, current latest
+      // revision in order to know for which revision the value property is already known and
+      // stored.
+      const instancesResult = await getLatestRevisionVersions(tx, args);
+      instancesResult.records.forEach((record) => {
+        context.updateArgs.SetLastKnownRev(record.get("id"), record.get("ver"));
+      });
+
+      const [query, queryParams] = cypherMutation(args, context, resolveInfo);
+      const outputResult = await tx.run(query, queryParams);
+
+      return extractUpdateMutationResult(outputResult);
+    });
   } catch (e) {
     let err = e as Error;
 
@@ -58,5 +95,44 @@ function generateConflictError(customErr: CustomCypherErrorOutput) {
   const conflictIDs = customErr.ids.join(`", "`);
   return Error(
     `TypeInstances with IDs "${conflictIDs}" are locked by different owner`
+  );
+}
+
+// Simplified version of: https://github.com/neo4j-graphql/neo4j-graphql-js/blob/381ef0302bbd11ecd0f94f978045cdbc61c39b8e/src/utils.js#L57
+// We know the variable name as the mutation is written by us, and this function is not meant to be generic.
+function extractUpdateMutationResult(result: QueryResult) {
+  let data = result.records.map((record) => record.get("typeInstance"));
+  // handle Integer fields
+  // @ts-ignore
+  return _.cloneDeepWith(data, (field) => {
+    if (neo4j.isInt(field)) {
+      // See: https://neo4j.com/docs/api/javascript-driver/current/class/src/v1/integer.js~Integer.html
+      return field.inSafeRange() ? field.toNumber() : field.toString();
+    }
+  });
+}
+
+async function getLatestRevisionVersions(
+  tx: Transaction,
+  args: UpdateTypeInstancesInput
+) {
+  const typeInstanceIds = args.in.map((x) => x.id);
+  return tx.run(
+    `
+           UNWIND $ids as id
+           MATCH (ti:TypeInstance {id: id})
+
+           WITH *
+           // Get Latest Revision
+           CALL {
+               WITH ti
+               WITH ti
+               MATCH (ti)-[:CONTAINS]->(tir:TypeInstanceResourceVersion)
+               RETURN tir ORDER BY tir.resourceVersion DESC LIMIT 1
+           }
+
+           RETURN id, tir.resourceVersion as ver
+        `,
+    { ids: typeInstanceIds }
   );
 }
