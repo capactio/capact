@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// TODO(review): ALL CHANGES WILL BE REVERTED BEFORE MERGING. IT WAS CHANGED ONLY FOR DEMO/PR TESTING PURPOSES.
+
 // Context holds Secret storage backend specific parameters.
 type Context struct {
 	Provider string `json:"provider"`
@@ -81,7 +83,7 @@ func (h *Handler) GetValue(_ context.Context, request *pb.GetValueRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, _, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +109,7 @@ func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest)
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, _, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, updatedCtx, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +159,9 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 		return nil, err
 	}
 
-	return &pb.OnCreateResponse{}, nil
+	return &pb.OnCreateResponse{
+		Context: updatedCtx,
+	}, nil
 }
 
 // OnUpdate handles TypeInstance update by updating secret in a given provider.
@@ -166,7 +170,7 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, _, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +196,7 @@ func (h *Handler) OnLock(_ context.Context, request *pb.OnLockRequest) (*pb.OnLo
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, _, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +222,7 @@ func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, _, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +251,7 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 		return nil, NilRequestInputError
 	}
 
-	provider, err := h.getProviderFromContext(request.Context)
+	provider, _, err := h.getProviderFromContext(request.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -268,29 +272,38 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 	return &pb.OnDeleteResponse{}, nil
 }
 
-func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, error) {
+func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, []byte, error) {
 	if len(contextBytes) == 0 {
 		// try to get the default provider
 		provider, err := h.providers.GetDefault()
 		if err != nil {
-			return nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
+			return nil, nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
 		}
 
-		return provider, nil
+		return provider, nil, nil
 	}
 
 	var context Context
 	err := json.Unmarshal(contextBytes, &context)
 	if err != nil {
-		return nil, h.internalError(errors.Wrap(err, "while unmarshaling additional parameters"))
+		return nil, nil, h.internalError(errors.Wrap(err, "while unmarshaling additional parameters"))
+	}
+
+	if context.Provider == "mock-me" {
+		provider, err := h.providers.GetDefault()
+		if err != nil {
+			return nil, nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
+		}
+
+		return provider, []byte(`{"modified": "by-backend-storage"}`), nil
 	}
 
 	provider, ok := h.providers[context.Provider]
 	if !ok {
-		return nil, h.failedPreconditionError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
+		return nil, nil, h.failedPreconditionError(fmt.Errorf("missing loaded provider with name %q", context.Provider))
 	}
 
-	return provider, nil
+	return provider, nil, nil
 }
 
 func (h *Handler) getEntry(provider tellercore.Provider, key tellercore.KeyPath) (*tellercore.EnvEntry, error) {
