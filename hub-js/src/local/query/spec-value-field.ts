@@ -20,7 +20,7 @@ interface InputObject {
   };
 }
 
-export async function getTypeInstanceResourceVersionSpecValueField(
+export async function typeInstanceResourceVersionSpecValueField(
   { value: obj }: InputObject,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _: any,
@@ -103,7 +103,7 @@ async function resolveMutationReturnValue(
   await context.delegatedStorage.Update(update);
 
   // 3. Update last known revision, so if `value` resolver is called next time we won't update it once again
-  // run into `ALREADY_EXISTS` error.
+  // and run into `ALREADY_EXISTS` error.
   context.updateArgs.SetLastKnownRev(
     update.typeInstance.id,
     update.typeInstance.newResourceVersion

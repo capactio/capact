@@ -108,7 +108,7 @@ function extractUpdateMutationResult(result: QueryResult) {
       // See: https://neo4j.com/docs/api/javascript-driver/current/class/src/v1/integer.js~Integer.html
       return field.inSafeRange() ? field.toNumber() : field.toString();
     }
-    return
+    return;
   });
 }
 

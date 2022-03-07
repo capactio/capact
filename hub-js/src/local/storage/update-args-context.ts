@@ -23,7 +23,7 @@ export default class UpdateArgsContext {
   }
 
   /**
-   * SetOperation set which operation started the GraphQL request.
+   * Sets which operation started the GraphQL request.
    * It is used to correlate proper flow between different resolvers.
    *
    *
@@ -43,7 +43,7 @@ export default class UpdateArgsContext {
   }
 
   /**
-   * GetOperation describe which operation is currently in progress.
+   * Describes which operation is currently in progress.
    *
    *
    * @return - GraphQL request operation.
@@ -54,7 +54,7 @@ export default class UpdateArgsContext {
   }
 
   /**
-   * SetValue gives an option to transmit the input value between resolvers.
+   * Gives an option to transmit the TypeInstance's input value between resolvers.
    *
    *
    * @param id - TypeInstance's ID.
@@ -67,7 +67,7 @@ export default class UpdateArgsContext {
   }
 
   /**
-   * GetValue gives an option to fetch the input set by other resolver.
+   * Gives an option to fetch the input set by other resolver.
    *
    *
    * @return - TypeInstance's value if set by other resolver.
@@ -78,7 +78,7 @@ export default class UpdateArgsContext {
   }
 
   /**
-   * SetLastKnownRev informs which TypeInstance's version was already processed a stored.
+   * Informs which TypeInstance's version was already processed a stored.
    *
    *
    * @param id - TypeInstance's ID.
@@ -90,7 +90,7 @@ export default class UpdateArgsContext {
   }
 
   /**
-   * GetLastKnownRev returns latest TypeInstance's revision version.
+   * Returns latest TypeInstance's revision version.
    * Used to optimize number of request. If already stored, we don't need to trigger the udpate logic.
    *
    * @param id - TypeInstance's ID.

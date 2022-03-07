@@ -146,7 +146,7 @@ export async function deleteTypeInstance(
 function generateBadRequestError(customErr: CustomCypherErrorOutput) {
   if (!Object.prototype.hasOwnProperty.call(customErr, "ids")) {
     // it shouldn't happen
-    return Error(`ypeInstance is used by other TypeInstances`);
+    return Error(`TypeInstance is used by other TypeInstances`);
   }
   return Error(
     `TypeInstance is used by other TypeInstances, you must first remove ${customErr.ids}`

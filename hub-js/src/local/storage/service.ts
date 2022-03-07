@@ -133,7 +133,7 @@ export default class DelegatedStorageService {
   }
 
   /**
-   * Update the TypeInstance's value in a given backend.
+   * Updates the TypeInstance's value in a given backend.
    *
    *
    * @param inputs - Describes what should be updated.
@@ -165,7 +165,7 @@ export default class DelegatedStorageService {
   }
 
   /**
-   * Get the TypeInstance's value from a given backend.
+   * Gets the TypeInstance's value from a given backend.
    *
    *
    * @param inputs - Describes what should be stored.
@@ -183,6 +183,12 @@ export default class DelegatedStorageService {
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
+        result = {
+          ...result,
+          [input.typeInstance.id]: {
+            mockedKey: "mocked-val",
+          },
+        };
         continue;
       }
 
@@ -210,7 +216,7 @@ export default class DelegatedStorageService {
   }
 
   /**
-   * Delete a given TypeInstance
+   * Deletes a given TypeInstance
    *
    * @param inputs - Describes what should be deleted.
    *
@@ -236,7 +242,7 @@ export default class DelegatedStorageService {
   }
 
   /**
-   * Lock a given TypeInstance
+   * Locks a given TypeInstance
    *
    * @param inputs - Describes what should be locked. Owner ID is needed.
    *
@@ -263,7 +269,7 @@ export default class DelegatedStorageService {
   }
 
   /**
-   * Unlock a given TypeInstance
+   * Unlocks a given TypeInstance
    *
    * @param inputs - Describes what should be unlocked. Owner ID is not needed.
    *

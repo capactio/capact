@@ -6,7 +6,7 @@ import { deleteTypeInstance } from "./mutation/delete-type-instance";
 import { createTypeInstance } from "./mutation/create-type-instance";
 import { lockTypeInstances } from "./mutation/lock-type-instances";
 import { unlockTypeInstances } from "./mutation/unlock-type-instances";
-import { getTypeInstanceResourceVersionSpecValueField } from "./query/spec-value-field";
+import { typeInstanceResourceVersionSpecValueField } from "./query/spec-value-field";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
@@ -22,7 +22,7 @@ export const schema = makeAugmentedSchema({
       unlockTypeInstances,
     },
     TypeInstanceResourceVersionSpec: {
-      value: getTypeInstanceResourceVersionSpecValueField,
+      value: typeInstanceResourceVersionSpecValueField,
     },
   },
   config: {

@@ -129,13 +129,17 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
     const foundIDs = result.allIDs.map((item) => item.properties.id);
     const notFoundIDs = expIDs.filter((x) => !foundIDs.includes(x));
     if (notFoundIDs.length !== 0) {
-      errMsg.push(`TypeInstances with IDs "${notFoundIDs}" were not found`);
+      errMsg.push(
+        `TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`
+      );
     }
 
     const lockedIDs = result.lockedIDs.map((item) => item.properties.id);
     if (lockedIDs.length !== 0) {
       errMsg.push(
-        `TypeInstances with IDs "${lockedIDs}" are locked by different owner`
+        `TypeInstances with IDs "${lockedIDs.join(
+          '", "'
+        )}" are locked by different owner`
       );
     }
 

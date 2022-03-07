@@ -218,7 +218,6 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	fmt.Print("\n\n======== After unlocking result  ============\n\n")
 	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
-
 }
 
 // ======= HELPERS =======
@@ -386,5 +385,4 @@ func removeAllMembers(t *testing.T, cli *Client, familyDetails []gqllocalapi.Typ
 	if err != nil {
 		t.Logf("err for %v: %v", parent, err)
 	}
-
 }
