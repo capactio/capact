@@ -41,11 +41,8 @@ export async function deleteTypeInstance(
             CALL {
                 WITH ti
                 WITH ti
-                MATCH (ti)-[:USES]->(others:TypeInstance)
-                MATCH (ti)-[:STORED_IN]->(backendRef: TypeInstanceBackendReference)
-                WITH backendRef, collect(others.id) as allUsedIds
-                WITH  [x IN allUsedIds WHERE x <> backendRef.id ] as usedIds
-                RETURN  usedIds
+                MATCH (others:TypeInstance)-[:USES]->(ti)
+                RETURN  collect(others.id) as usedIds
             }
             CALL apoc.util.validate(size(usedIds) > 0, apoc.convert.toJson({ids: usedIds, code: 400}), null)
 

@@ -369,20 +369,25 @@ func removeAllMembers(t *testing.T, cli *Client, familyDetails []gqllocalapi.Typ
 
 	ctx := context.Background()
 
-	var parent string
 	for _, member := range familyDetails {
-		if member.TypeRef.Path == "cap.type.parent" {
-			parent = member.ID // delete as the last one, to get rid of the problem that it is used by others
+		if member.TypeRef.Path != "cap.type.parent" {
+			defer func(id string) { // delay the child deletions
+				fmt.Println("Delete child", id)
+				err := cli.DeleteTypeInstance(ctx, id)
+				if err != nil {
+					t.Logf("err for %v: %v", id, err)
+				}
+			}(member.ID)
+
 			continue
 		}
+
+		fmt.Println("Delete parent", member.ID)
+
+		// Delete parent first, to unblock deletion of children
 		err := cli.DeleteTypeInstance(ctx, member.ID)
 		if err != nil {
 			t.Logf("err for %v: %v", member.ID, err)
 		}
-	}
-
-	err := cli.DeleteTypeInstance(ctx, parent)
-	if err != nil {
-		t.Logf("err for %v: %v", parent, err)
 	}
 }
