@@ -101,9 +101,10 @@ export default class DelegatedStorageService {
     let mapping: UpdatedContexts = {};
 
     for (const input of inputs) {
-      logger.debug(
-        `Storing TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
-      );
+      logger.debug("Storing TypeInstance in external backend", {
+        typeInstanceId: input.typeInstance.id,
+        backendId: input.backend.id,
+      });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -112,9 +113,7 @@ export default class DelegatedStorageService {
 
       const req: OnCreateRequest = {
         typeInstanceId: input.typeInstance.id,
-        value: new TextEncoder().encode(
-          JSON.stringify(input.typeInstance.value)
-        ),
+        value: this.encode(input.typeInstance.value),
         context: this.encode(input.backend.context),
       };
       const res = await cli.onCreate(req);
@@ -144,9 +143,10 @@ export default class DelegatedStorageService {
    */
   async Update(...inputs: UpdateInput[]) {
     for (const input of inputs) {
-      logger.debug(
-        `Updating TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
-      );
+      logger.debug("Updating TypeInstance in external backend", {
+        typeInstanceId: input.typeInstance.id,
+        backendId: input.backend.id,
+      });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -156,9 +156,7 @@ export default class DelegatedStorageService {
       const req: OnUpdateRequest = {
         typeInstanceId: input.typeInstance.id,
         newResourceVersion: input.typeInstance.newResourceVersion,
-        newValue: new TextEncoder().encode(
-          JSON.stringify(input.typeInstance.newValue)
-        ),
+        newValue: this.encode(input.typeInstance.newValue),
         context: this.encode(input.backend.context),
       };
 
@@ -178,9 +176,10 @@ export default class DelegatedStorageService {
     let result: UpdatedContexts = {};
 
     for (const input of inputs) {
-      logger.debug(
-        `Fetching TypeInstance ${input.typeInstance.id} from external backend ${input.backend.id}`
-      );
+      logger.debug("Fetching TypeInstance from external backend", {
+        typeInstanceId: input.typeInstance.id,
+        backendId: input.backend.id,
+      });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -218,9 +217,10 @@ export default class DelegatedStorageService {
    */
   async Delete(...inputs: DeleteInput[]) {
     for (const input of inputs) {
-      logger.debug(
-        `Deleting TypeInstance ${input.typeInstance.id} from external backend ${input.backend.id}`
-      );
+      logger.debug("Deleting TypeInstance from external backend", {
+        typeInstanceId: input.typeInstance.id,
+        backendId: input.backend.id,
+      });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -243,9 +243,10 @@ export default class DelegatedStorageService {
    */
   async Lock(...inputs: LockInput[]) {
     for (const input of inputs) {
-      logger.debug(
-        `Locking TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
-      );
+      logger.debug("Locking TypeInstance in external backend", {
+        typeInstanceId: input.typeInstance.id,
+        backendId: input.backend.id,
+      });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -269,9 +270,10 @@ export default class DelegatedStorageService {
    */
   async Unlock(...inputs: UnlockInput[]) {
     for (const input of inputs) {
-      logger.debug(
-        `Unlocking TypeInstance ${input.typeInstance.id} in external backend ${input.backend.id}`
-      );
+      logger.debug(`Unlocking TypeInstance in external backend`, {
+        typeInstanceId: input.typeInstance.id,
+        backendId: input.backend.id,
+      });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
         // TODO: remove after using a real backend in e2e tests.
@@ -339,7 +341,10 @@ export default class DelegatedStorageService {
         return undefined;
       }
 
-      logger.debug(`Initialize gRPC client for Backend ${id} with URL ${url}`);
+      logger.debug("Initialize gRPC client", {
+        backend: id,
+        url,
+      });
       const channel = createChannel(url);
       const client: StorageClient = createClient(
         StorageBackendDefinition,

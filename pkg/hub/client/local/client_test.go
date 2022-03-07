@@ -58,7 +58,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	defer cleanup()
 
 	// SCENARIO - CREATE
-	_, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
+	family, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
 		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
 			{
 				// This TypeInstance:
@@ -140,7 +140,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	defer removeAllMembers(t, cli, familyDetails)
 
 	fmt.Print("\n\n======== After create result  ============\n\n")
-	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
+	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
 
 	// SCENARIO - UPDATE
@@ -182,7 +182,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Print("\n\n======== After update result  ============\n\n")
-	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, updatedFamily))))
+	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, updatedFamily))))
 	require.NoError(t, resourcePrinter.Print(updatedFamily))
 
 	// SCENARIO - LOCK
@@ -201,7 +201,7 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Print("\n\n======== After locking result  ============\n\n")
-	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
+	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
 
 	// SCENARIO - UNLOCK
@@ -216,10 +216,12 @@ func TestThatShowcaseExternalStorage(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Print("\n\n======== After unlocking result  ============\n\n")
-	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(nil, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
+	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
 	require.NoError(t, resourcePrinter.Print(familyDetails))
 
 }
+
+// ======= HELPERS =======
 
 func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func()) {
 	t.Helper()
@@ -265,8 +267,6 @@ func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput
 		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{},
 	}
 }
-
-// ======= HELPERS =======
 
 type externalData struct {
 	Value    string

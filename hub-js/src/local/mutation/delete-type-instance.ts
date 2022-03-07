@@ -69,7 +69,7 @@ export async function deleteTypeInstance(
               MATCH (typeRef)
               WHERE NOT (typeRef)--()
               DELETE (typeRef)
-              RETURN 'remove typeRef'
+              RETURN count([]) as _tmp0
             }
 
             WITH *
@@ -77,7 +77,7 @@ export async function deleteTypeInstance(
               MATCH (backendRef)
               WHERE NOT (backendRef)--()
               DELETE (backendRef)
-              RETURN 'remove backendRef'
+              RETURN count([]) as _tmp1
             }
 
             WITH *
@@ -85,7 +85,7 @@ export async function deleteTypeInstance(
               OPTIONAL MATCH (attrRef)
               WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
               DELETE (attrRef)
-              RETURN 'remove attr'
+              RETURN count([]) as _tmp2
             }
 
             RETURN out`,
@@ -97,6 +97,7 @@ export async function deleteTypeInstance(
       const deleteExternally = new Map<string, any>();
       result.records.forEach((record) => {
         const out = record.get("out");
+
         if (out.backend.abstract) {
           return;
         }

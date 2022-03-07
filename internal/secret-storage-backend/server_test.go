@@ -719,7 +719,7 @@ func TestHandler_GetProviderFromContext(t *testing.T) {
 			handler := secret_storage_backend.NewHandler(logger.Noop(), testCase.InputProviders)
 
 			// when
-			provider, err := handler.GetProviderFromContext(testCase.InputContextBytes)
+			provider, _, err := handler.GetProviderFromContext(testCase.InputContextBytes)
 
 			// then
 			if testCase.ExpectedErrorMessage != nil {

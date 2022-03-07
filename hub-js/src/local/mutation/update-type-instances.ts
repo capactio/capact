@@ -103,12 +103,12 @@ function generateConflictError(customErr: CustomCypherErrorOutput) {
 function extractUpdateMutationResult(result: QueryResult) {
   const data = result.records.map((record) => record.get("typeInstance"));
   // handle Integer fields
-  // @ts-ignore
   return _.cloneDeepWith(data, (field) => {
     if (neo4j.isInt(field)) {
       // See: https://neo4j.com/docs/api/javascript-driver/current/class/src/v1/integer.js~Integer.html
       return field.inSafeRange() ? field.toNumber() : field.toString();
     }
+    return
   });
 }
 
