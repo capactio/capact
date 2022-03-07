@@ -8,7 +8,7 @@ import (
 	"capact.io/capact/pkg/engine/k8s/policy"
 )
 
-func (e *PolicyEnforcedClient) mergePolicies() {
+func (e *PolicyEnforcedClient) mergePolicies() policy.Policy {
 	currentPolicy := policy.Policy{}
 
 	for _, p := range e.policyOrder {
@@ -27,12 +27,12 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 			}
 		}
 	}
-	e.mergedPolicy = currentPolicy
+	return currentPolicy
 }
 
-// RequiredTypeInstancesForRule returns the merged list of TypeInstances from Rule and Defaults.
-func (e *PolicyEnforcedClient) RequiredTypeInstancesForRule(policyRule policy.Rule) []policy.RequiredTypeInstanceToInject {
-	mergedPolicy := e.Policy()
+// MergeRequiredTypeInstancesForRule returns the merged list of TypeInstances from Rule and Defaults.
+func (e *PolicyEnforcedClient) MergeRequiredTypeInstancesForRule(policyRule policy.Rule) []policy.RequiredTypeInstanceToInject {
+	mergedPolicy := e.MergedPolicy()
 	// prefer policy Rule over Default
 	return mergeRequiredTypeInstances(mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject(), policyRule.RequiredTypeInstancesToInject())
 }

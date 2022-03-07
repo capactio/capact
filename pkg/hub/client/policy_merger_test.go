@@ -800,7 +800,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			cli.SetActionPolicy(tt.action)
 
 			// expect
-			assert.Equal(t, tt.expected, cli.Policy())
+			assert.Equal(t, tt.expected, cli.MergedPolicy())
 		})
 	}
 }
@@ -1178,7 +1178,7 @@ func TestPolicyEnforcedClient_mergeTypeInstancePolicies(t *testing.T) {
 			cli.SetActionPolicy(tt.action)
 
 			// expect
-			assert.Equal(t, tt.expected, cli.Policy())
+			assert.Equal(t, tt.expected, cli.MergedPolicy())
 		})
 	}
 }
@@ -1424,7 +1424,7 @@ func TestPolicyEnforcedClient_mergeTypeInstancePoliciesForDefault(t *testing.T) 
 			cli.SetActionPolicy(tt.action)
 
 			// expect
-			assert.Equal(t, tt.expected, cli.Policy())
+			assert.Equal(t, tt.expected, cli.MergedPolicy())
 		})
 	}
 }
@@ -1609,7 +1609,7 @@ func TestRequiredTypeInstancesForRule(t *testing.T) {
 			cli.SetGlobalPolicy(tt.global)
 
 			// expect
-			assert.Equal(t, tt.expected, cli.RequiredTypeInstancesForRule(tt.rule))
+			assert.Equal(t, tt.expected, cli.MergeRequiredTypeInstancesForRule(tt.rule))
 		})
 	}
 }
@@ -1628,14 +1628,14 @@ func TestNestedWorkflowPolicy(t *testing.T) {
 
 	err = cli.PushWorkflowStepPolicy(w1)
 	assert.NoError(t, err)
-	assert.Equal(t, expected1, cli.Policy())
+	assert.Equal(t, expected1, cli.MergedPolicy())
 
 	err = cli.PushWorkflowStepPolicy(w2)
 	assert.NoError(t, err)
-	assert.Equal(t, expected2, cli.Policy())
+	assert.Equal(t, expected2, cli.MergedPolicy())
 
 	cli.PopWorkflowStepPolicy()
-	assert.Equal(t, expected1, cli.Policy())
+	assert.Equal(t, expected1, cli.MergedPolicy())
 }
 
 func workflowPolicyWithAdditionalInput(input map[string]interface{}) policy.WorkflowPolicy {
