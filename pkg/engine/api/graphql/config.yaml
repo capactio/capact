@@ -32,4 +32,6 @@ models:
     model: "capact.io/capact/pkg/engine/api/graphql.RequiredTypeInstanceReference"
   AdditionalTypeInstanceReference:
     model: "capact.io/capact/pkg/engine/api/graphql.AdditionalTypeInstanceReference"
+  InterfacePolicy:
+    model: "capact.io/capact/pkg/engine/api/graphql.InterfacePolicy"
 

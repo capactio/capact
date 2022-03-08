@@ -64,7 +64,6 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 		if typeRef, exists := resolvedTypeRefs[ti.ID]; exists && typeRef.Path != "" && typeRef.Revision != "" {
 			continue
 		}
-
 		multiErr = multierr.Append(multiErr, fmt.Errorf("missing Type reference for %s", ti.String(true)))
 	}
 	if multiErr.ErrorOrNil() != nil {
@@ -78,6 +77,7 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 
 	r.setTypeRefsForAdditionalTypeInstances(policy, typeRefWithParentNodes)
 	r.setTypeRefsForRequiredTypeInstances(policy, typeRefWithParentNodes)
+	r.setTypeRefsForDefaultTypeInstances(policy, typeRefWithParentNodes)
 	r.setTypeRefsForBackendTypeInstances(policy, typeRefWithParentNodes)
 
 	return nil
@@ -113,6 +113,24 @@ func (r *Resolver) mapToTypeRefs(in map[string]hublocalgraphql.TypeInstanceTypeR
 		out = append(out, types.TypeRef(expType))
 	}
 	return out
+}
+
+func (r *Resolver) setTypeRefsForDefaultTypeInstances(policy *policy.Policy, typeRefs map[string]TypeRefWithAdditionalRefs) {
+	if policy.Interface.Default == nil || policy.Interface.Default.Inject == nil {
+		return
+	}
+	for reqTIIdx, reqTI := range policy.Interface.Default.Inject.RequiredTypeInstances {
+		typeRef, exists := typeRefs[reqTI.ID]
+		if !exists {
+			continue
+		}
+
+		policy.Interface.Default.Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.TypeRef{
+			Path:     typeRef.Path,
+			Revision: typeRef.Revision,
+		}
+		policy.Interface.Default.Inject.RequiredTypeInstances[reqTIIdx].ExtendsHubStorage = r.isExtendingHubStorage(typeRef)
+	}
 }
 
 func (r *Resolver) setTypeRefsForRequiredTypeInstances(policy *policy.Policy, typeRefs map[string]TypeRefWithAdditionalRefs) {

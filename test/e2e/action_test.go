@@ -141,7 +141,7 @@ var _ = Describe("Action", func() {
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTIOutput, uploadedTIOutput), HaveLen(2)))
 		})
 
-		It("should pick Implementation B", func() {
+		It("should pick Implementation B based on Policy rule", func() {
 			implIndicatorValue := "Implementation B"
 
 			// TODO: This can be extracted after switching to ginkgo v2
@@ -174,7 +174,7 @@ var _ = Describe("Action", func() {
 				},
 			}
 
-			By("2. Modifying Policy to pick Implementation B...")
+			By("2. Modifying rule Policy to pick Implementation B...")
 			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
 				{
 					ID:          injectTypeInstance.ID,
@@ -186,6 +186,68 @@ var _ = Describe("Action", func() {
 				},
 			}
 			setGlobalTestPolicy(ctx, engineClient, prependInjectRuleForPassingActionInterface(globalPolicyRequiredTypeInstances))
+
+			By("3. Expecting Implementation B is picked and injected Helm storage is used...")
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
+			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
+			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
+
+			By("4.1 Check uploaded TypeInstances")
+			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
+			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
+
+			By("4.2 Check Action output TypeInstances")
+			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
+		})
+
+		It("should pick Implementation B based on Interface default", func() {
+			implIndicatorValue := "Implementation B"
+
+			// TODO: This can be extracted after switching to ginkgo v2
+			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
+			By("1. Preparing input Type Instances")
+			By("1.1 Creating TypeInstance which will be downloaded")
+			download := getTypeInstanceInputForDownload(implIndicatorValue)
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
+			defer downloadTICleanup()
+
+			By("1.2 Creating TypeInstance which will be downloaded and updated")
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
+			defer updateTICleanup()
+
+			By("1.3 Creating TypeInstance that describes Helm storage")
+			helmStorage := fixHelmStorageTypeInstanceCreateInput()
+			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
+			defer helmStorageTICleanup()
+
+			By("1.4 Create TypeInstance which is required for Implementation B to be picked based on Policy")
+			typeInstanceValue := getTypeInstanceInputForPolicy()
+			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
+			defer tiCleanupFn()
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: []*enginegraphql.InputTypeInstanceData{
+					{Name: "testInput", ID: downloadTI.ID},
+					{Name: "testUpdate", ID: updateTI.ID},
+				},
+			}
+
+			By("2. Modifying default Policy to pick Implementation B...")
+			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
+				{
+					ID:          injectTypeInstance.ID,
+					Description: ptr.String("Test TypeInstance"),
+				},
+				{
+					ID:          helmStorageTI.ID,
+					Description: ptr.String("Helm backend TypeInstance"),
+				},
+			}
+			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
 
 			By("3. Expecting Implementation B is picked and injected Helm storage is used...")
 			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
@@ -545,6 +607,36 @@ func prependInjectRuleForPassingActionInterface(reqInput []*enginegraphql.Requir
 					},
 				},
 			}, policy.Interface.Rules[idx].OneOf...)
+		}
+	}
+}
+
+func addInterfacePolicyDefaultInjectionForPassingActionInterface(reqInput []*enginegraphql.RequiredTypeInstanceReferenceInput) policyOption {
+	manifestRef := func(path string) []*enginegraphql.ManifestReferenceInput {
+		return []*enginegraphql.ManifestReferenceInput{
+			{
+				Path: path,
+			},
+		}
+	}
+	return func(policy *enginegraphql.PolicyInput) {
+		for idx, rule := range policy.Interface.Rules {
+			if rule.Interface.Path != actionPassingInterfacePath {
+				continue
+			}
+			policy.Interface.Rules[idx].OneOf = append([]*enginegraphql.PolicyRuleInput{
+				{
+					ImplementationConstraints: &enginegraphql.PolicyRuleImplementationConstraintsInput{
+						Requires:   manifestRef(singleKeyTypePath),
+						Attributes: manifestRef("cap.attribute.capactio.capact.validation.policy.most-preferred"),
+					},
+				},
+			}, policy.Interface.Rules[idx].OneOf...)
+		}
+		policy.Interface.Default = &enginegraphql.DefaultForInterfaceInput{
+			Inject: &enginegraphql.DefaultInjectForInterfaceInput{
+				RequiredTypeInstances: reqInput,
+			},
 		}
 	}
 }

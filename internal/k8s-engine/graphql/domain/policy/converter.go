@@ -49,7 +49,19 @@ func (c *Converter) interfaceFromGraphQLInput(in *graphql.InterfacePolicyInput) 
 		})
 	}
 
-	return policy.InterfacePolicy{Rules: rules}, nil
+	var interfaceDefaults *policy.InterfaceDefault
+	if in.Default != nil && in.Default.Inject != nil {
+		interfaceDefaults = &policy.InterfaceDefault{
+			Inject: &policy.DefaultInject{
+				RequiredTypeInstances: c.requiredTypeInstancesToInjectFromGraphQLInput(in.Default.Inject.RequiredTypeInstances),
+			},
+		}
+	}
+
+	return policy.InterfacePolicy{
+		Default: interfaceDefaults,
+		Rules:   rules,
+	}, nil
 }
 
 func (c *Converter) typeInstanceFromGraphQLInput(in *graphql.TypeInstancePolicyInput) policy.TypeInstancePolicy {
@@ -117,8 +129,18 @@ func (c *Converter) interfaceToGraphQL(in policy.InterfacePolicy) *graphql.Inter
 		})
 	}
 
+	var defaultForInterface *graphql.DefaultForInterface
+	if in.DefaultRequiredTypeInstancesToInject() != nil {
+		defaultForInterface = &graphql.DefaultForInterface{
+			Inject: &graphql.DefaultInjectForInterface{
+				RequiredTypeInstances: c.requiredTypeInstancesToInjectToGraphQL(in.Default.Inject.RequiredTypeInstances),
+			},
+		}
+	}
+
 	return &graphql.InterfacePolicy{
-		Rules: gqlRules,
+		Default: defaultForInterface,
+		Rules:   gqlRules,
 	}
 }
 

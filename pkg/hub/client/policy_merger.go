@@ -8,7 +8,7 @@ import (
 	"capact.io/capact/pkg/engine/k8s/policy"
 )
 
-func (e *PolicyEnforcedClient) mergePolicies() {
+func (e *PolicyEnforcedClient) mergePolicies() policy.Policy {
 	currentPolicy := policy.Policy{}
 
 	for _, p := range e.policyOrder {
@@ -27,13 +27,32 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 			}
 		}
 	}
-	e.mergedPolicy = currentPolicy
+	return currentPolicy
 }
 
-// from new policy we are checking if there are the same rules. If yes we fill missing data,
-// if not we add a rule to the end
-// current policy is a higher priority policy
+// MergeRequiredTypeInstancesForRule returns the merged list of TypeInstances from Rule and Defaults.
+func (e *PolicyEnforcedClient) MergeRequiredTypeInstancesForRule(policyRule policy.Rule) []policy.RequiredTypeInstanceToInject {
+	mergedPolicy := e.MergedPolicy()
+	// prefer policy Rule over Default
+	return mergeRequiredTypeInstances(mergedPolicy.Interface.DefaultRequiredTypeInstancesToInject(), policyRule.RequiredTypeInstancesToInject())
+}
+
 func applyInterfacePolicy(currentPolicy *policy.InterfacePolicy, newPolicy policy.InterfacePolicy) {
+	// Default
+	if len(newPolicy.DefaultRequiredTypeInstancesToInject()) > 0 {
+		if currentPolicy.Default == nil || currentPolicy.Default.Inject == nil {
+			currentPolicy.Default = &policy.InterfaceDefault{
+				Inject: &policy.DefaultInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{},
+				},
+			}
+		}
+		currentPolicy.Default.Inject.RequiredTypeInstances = mergeRequiredTypeInstances(currentPolicy.Default.Inject.RequiredTypeInstances, newPolicy.Default.Inject.RequiredTypeInstances)
+	}
+
+	// from new policy we are checking if there are the same rules. If yes we fill missing data,
+	// if not we add a rule to the end
+	// current policy is a higher priority policy
 	for _, newRuleForInterface := range newPolicy.Rules {
 		policyRuleIndex := getIndexOfInterfacePolicyRule(currentPolicy, newRuleForInterface)
 		if policyRuleIndex == -1 {

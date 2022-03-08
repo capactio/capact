@@ -166,6 +166,16 @@ mutation UpdatePolicy {
     updatePolicy(
         in: {
             interface: {
+                default: {
+                    inject: {
+                        requiredTypeInstances: [
+                            {
+                                id: "28806e5a-3b13-4d58-915b-8357a51c3e95"
+                                description: "My TypeInstance"
+                            }
+                        ]
+                    }
+                }
                 rules: [
                     {
                         interface: {
@@ -294,6 +304,14 @@ fragment ActionFields on Action {
 
 fragment PolicyFields on Policy {
     interface {
+        default {
+            inject {
+                requiredTypeInstances {
+                    id
+                    description
+                }
+            }
+        }
         rules {
             interface {
                 path

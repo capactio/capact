@@ -74,6 +74,14 @@ var actionFields = fmt.Sprintf(`
 
 const policyFields = `
 	interface {
+		default {
+			inject {
+				requiredTypeInstances {
+					id
+					description
+				}
+			}
+		}
 		rules {
 			interface {
 				path

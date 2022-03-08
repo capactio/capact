@@ -49,7 +49,6 @@ type PolicyEnforcedClient struct {
 	hubCli                 HubClient
 	globalPolicy           policy.Policy
 	actionPolicy           policy.Policy
-	mergedPolicy           policy.Policy
 	policyOrder            policy.MergeOrder
 	workflowStepPolicies   []policy.Policy
 	validator              PolicyIOValidator
@@ -107,17 +106,13 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 // ListTypeInstancesBackendsBasedOnPolicy returns default backends defined in Policy and those specified explicitly in a given policy rule.
 func (e *PolicyEnforcedClient) ListTypeInstancesBackendsBasedOnPolicy(_ context.Context, rule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (policy.TypeInstanceBackendCollection, error) {
 	out := policy.TypeInstanceBackendCollection{}
-
 	// 1. Global Defaults based on TypeRefs
-	for _, rule := range e.mergedPolicy.TypeInstance.Rules {
+	mergedPolicy := e.MergedPolicy()
+	for _, rule := range mergedPolicy.TypeInstance.Rules {
 		out.SetByTypeRef(rule.TypeRef, rule.Backend)
 	}
 
-	// TODO(https://github.com/capactio/capact/issues/635):
-	// 2. Global defaults based on required TypeInstance injection
-	// e.mergedPolicy.Interface.Defaults
-
-	//3. Override defaults with specific Interface Policy rule
+	//2. Override defaults with specific Interface Policy rule
 	inject, err := e.listRequiredTypeInstancesToInjectBasedOnPolicy(rule, implRev)
 	if err != nil {
 		return policy.TypeInstanceBackendCollection{}, err
@@ -153,7 +148,8 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 type requiredTypeInstanceToInject map[string]policy.RequiredTypeInstanceToInject
 
 func (e *PolicyEnforcedClient) listRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (requiredTypeInstanceToInject, error) {
-	requiredTIs := policyRule.RequiredTypeInstancesToInject()
+	requiredTIs := e.MergeRequiredTypeInstancesForRule(policyRule)
+
 	if len(requiredTIs) == 0 {
 		return nil, nil
 	}
@@ -255,7 +251,6 @@ func (e *PolicyEnforcedClient) FindInterfaceRevision(ctx context.Context, ref hu
 func (e *PolicyEnforcedClient) SetPolicyOrder(order policy.MergeOrder) {
 	e.mu.Lock()
 	e.policyOrder = order
-	e.mergePolicies()
 	e.mu.Unlock()
 }
 
@@ -263,7 +258,6 @@ func (e *PolicyEnforcedClient) SetPolicyOrder(order policy.MergeOrder) {
 func (e *PolicyEnforcedClient) SetGlobalPolicy(p policy.Policy) {
 	e.mu.Lock()
 	e.globalPolicy = p
-	e.mergePolicies()
 	e.mu.Unlock()
 }
 
@@ -271,7 +265,6 @@ func (e *PolicyEnforcedClient) SetGlobalPolicy(p policy.Policy) {
 func (e *PolicyEnforcedClient) SetActionPolicy(p policy.ActionPolicy) {
 	e.mu.Lock()
 	e.actionPolicy = policy.Policy(p)
-	e.mergePolicies()
 	e.mu.Unlock()
 }
 
@@ -283,7 +276,6 @@ func (e *PolicyEnforcedClient) PushWorkflowStepPolicy(workflowPolicy policy.Work
 		return errors.Wrap(err, "while getting Policy from WorkflowPolicy")
 	}
 	e.workflowStepPolicies = append(e.workflowStepPolicies, p)
-	e.mergePolicies()
 	e.mu.Unlock()
 	return nil
 }
@@ -294,19 +286,18 @@ func (e *PolicyEnforcedClient) PopWorkflowStepPolicy() {
 	if len(e.workflowStepPolicies) > 0 {
 		e.workflowStepPolicies = e.workflowStepPolicies[:len(e.workflowStepPolicies)-1]
 	}
-	e.mergePolicies()
 	e.mu.Unlock()
 }
 
-// Policy gets policy which the Client uses. This getter is thread safe.
-func (e *PolicyEnforcedClient) Policy() policy.Policy {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	return e.mergedPolicy
+// MergedPolicy gets policy which the Client uses. This getter is thread safe.
+func (e *PolicyEnforcedClient) MergedPolicy() policy.Policy {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.mergePolicies()
 }
 
 func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef hubpublicgraphql.InterfaceReference) policy.RulesForInterface {
-	rulesMap := e.interfaceRulesMapForPolicy(e.Policy())
+	rulesMap := e.interfaceRulesMapForPolicy(e.MergedPolicy())
 
 	ruleKeysToCheck := []string{
 		fmt.Sprintf("%s:%s", interfaceRef.Path, interfaceRef.Revision),
@@ -327,17 +318,34 @@ func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef hubpublicgraph
 }
 
 func (e *PolicyEnforcedClient) resolvePolicyTIMetadataIfShould(ctx context.Context) error {
-	if e.validator.AreTypeInstancesMetadataResolved(e.mergedPolicy) {
+	resolvePolicyIfShouldFn := func(ctx context.Context, policyToResolve *policy.Policy) error {
+		if policyToResolve == nil {
+			return errors.New("policy cannot be nil")
+		}
+
+		if e.validator.AreTypeInstancesMetadataResolved(*policyToResolve) {
+			return nil
+		}
+
+		err := e.policyMetadataResolver.ResolveTypeInstanceMetadata(ctx, policyToResolve)
+		if err != nil {
+			return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
+		}
+
+		if res := e.validator.ValidateTypeInstancesMetadata(*policyToResolve); res.ErrorOrNil() != nil {
+			return e.wrapValidationResultError(res.ErrorOrNil(), "while TypeInstance metadata validation after resolving TypeRefs")
+		}
+
 		return nil
 	}
 
-	err := e.policyMetadataResolver.ResolveTypeInstanceMetadata(ctx, &e.mergedPolicy)
-	if err != nil {
-		return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
-	}
-
-	if res := e.validator.ValidateTypeInstancesMetadata(e.mergedPolicy); res.ErrorOrNil() != nil {
-		return e.wrapValidationResultError(res.ErrorOrNil(), "while TypeInstance metadata validation after resolving TypeRefs")
+	// Ignore workflow policies as there's no TypeRefs to resolve anyway
+	policiesToResolve := []policy.Policy{e.globalPolicy, e.actionPolicy}
+	for i := range policiesToResolve {
+		err := resolvePolicyIfShouldFn(ctx, &policiesToResolve[i])
+		if err != nil {
+			return errors.Wrap(err, "while resolving policy TypeInstances")
+		}
 	}
 
 	return nil
@@ -431,9 +439,10 @@ func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeI
 	filter.RequirementsSatisfiedBy = allTypeInstances
 
 	// Requirements Injection
-	if rule.Inject != nil {
+	tisToInject := e.MergeRequiredTypeInstancesForRule(rule)
+	if len(tisToInject) > 0 {
 		var injectedRequiredTypeInstances []*hubpublicgraphql.TypeInstanceValue
-		for _, ti := range rule.Inject.RequiredTypeInstances {
+		for _, ti := range tisToInject {
 			injectedRequiredTypeInstances = append(injectedRequiredTypeInstances, &hubpublicgraphql.TypeInstanceValue{
 				TypeRef: &hubpublicgraphql.TypeReferenceInput{
 					Path:     ti.TypeRef.Path,
@@ -444,7 +453,6 @@ func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeI
 		}
 		filter.RequiredTypeInstancesInjectionSatisfiedBy = injectedRequiredTypeInstances
 	}
-
 	return filter
 }
 
