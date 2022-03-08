@@ -119,7 +119,32 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 			return ErrMissingTypeInstanceValue(*typeInstance.Alias)
 		}
 
-		typeInstance.Value = value
+		// render value
+		if _, ok = value["value"]; ok {
+			typeInstanceValue, ok := value["value"].(map[string]interface{})
+			if !ok {
+				return ErrTypeConversion("value", "map[string]interface{}", *typeInstance.Alias)
+			}
+			typeInstance.Value = typeInstanceValue
+		} else {
+			// for backward compatibility, if there is an artifact without value/backend syntax,
+			// treat it as a value for TypeInstance
+			typeInstance.Value = value
+			continue
+		}
+
+		// render backend
+		if _, ok := value["backend"]; ok {
+			typeInstanceBackend, ok := value["backend"].(map[string]interface{})
+			if !ok {
+				return ErrTypeConversion("backend", "map[string]interface{}", *typeInstance.Alias)
+			}
+			backendContext, ok := typeInstanceBackend["context"].(map[string]interface{})
+			if !ok {
+				return ErrTypeConversion("backend.context", "map[string]interface{}", *typeInstance.Alias)
+			}
+			typeInstance.Backend.Context = backendContext
+		}
 	}
 	return nil
 }

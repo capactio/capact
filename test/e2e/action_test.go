@@ -72,7 +72,7 @@ var _ = Describe("Action", func() {
 			By("1. Preparing input Type Instances")
 
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(implIndicatorValue)
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue})
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
@@ -148,7 +148,7 @@ var _ = Describe("Action", func() {
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(implIndicatorValue)
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue})
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
@@ -210,7 +210,7 @@ var _ = Describe("Action", func() {
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(implIndicatorValue)
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue})
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
@@ -263,6 +263,138 @@ var _ = Describe("Action", func() {
 			By("4.2 Check Action output TypeInstances")
 			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
+		})
+
+		It("should propagate context provider to storage backend", func() {
+			implIndicatorValue := "Implementation C"
+
+			// TODO: This can be extracted after switching to ginkgo v2
+			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
+			By("1. Preparing input Type Instances")
+			By("1.1 Creating TypeInstance which will be downloaded")
+			download := getTypeInstanceInputForDownload(map[string]interface{}{
+				"value": map[string]interface{}{
+					"key": implIndicatorValue,
+				},
+				"backend": map[string]interface{}{
+					"context": map[string]interface{}{
+						"provider": "dotenv",
+					},
+				},
+			})
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
+			defer downloadTICleanup()
+
+			By("1.2 Creating TypeInstance which will be downloaded and updated")
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
+			defer updateTICleanup()
+
+			By("1.3 Creating TypeInstance that describes Validation storage")
+			validationStorage := fixValidationStorageTypeInstanceCreateInput("secret-storage-backend")
+			validationStorageTI, validationStorageTICleanup := createTypeInstance(ctx, hubClient, validationStorage)
+			defer validationStorageTICleanup()
+
+			By("1.4 Create TypeInstance which is required for Implementation C to be picked based on Policy")
+			typeInstanceValue := getTypeInstanceInputForPolicy()
+			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
+			defer tiCleanupFn()
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: []*enginegraphql.InputTypeInstanceData{
+					{Name: "testInput", ID: downloadTI.ID},
+					{Name: "testUpdate", ID: updateTI.ID},
+				},
+			}
+
+			By("2. Modifying default Policy to pick Implementation C...")
+			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
+				{
+					ID:          injectTypeInstance.ID,
+					Description: ptr.String("Test TypeInstance"),
+				},
+				{
+					ID:          validationStorageTI.ID,
+					Description: ptr.String("Validation storage backend TypeInstance"),
+				},
+			}
+			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
+
+			By("3. Expecting Implementation C is picked and injected Validation storage is used...")
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
+			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
+			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
+
+			By("4.1 Check uploaded TypeInstances")
+			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: validationStorageTI.ID, Abstract: false}
+			fmt.Println("expUploadTIBackend", expUploadTIBackend.ID)
+			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanupUploaded()
+			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
+
+			By("4.2 Check Action output TypeInstances")
+			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
+		})
+
+		It("should fail due to incorrect storage provider", func() {
+			implIndicatorValue := "Implementation C"
+
+			// TODO: This can be extracted after switching to ginkgo v2
+			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
+			By("1. Preparing input Type Instances")
+			By("1.1 Creating TypeInstance which will be downloaded")
+			download := getTypeInstanceInputForDownload(map[string]interface{}{
+				"value": map[string]interface{}{
+					"key": implIndicatorValue,
+				},
+				"backend": map[string]interface{}{
+					"context": map[string]interface{}{
+						"provider": "incorrect",
+					},
+				},
+			})
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
+			defer downloadTICleanup()
+
+			By("1.2 Creating TypeInstance which will be downloaded and updated")
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
+			defer updateTICleanup()
+
+			By("1.3 Creating TypeInstance that describes Validation storage")
+			validationStorage := fixValidationStorageTypeInstanceCreateInput("secret-storage-backend")
+			validationStorageTI, validationStorageTICleanup := createTypeInstance(ctx, hubClient, validationStorage)
+			defer validationStorageTICleanup()
+
+			By("1.4 Create TypeInstance which is required for Implementation C to be picked based on Policy")
+			typeInstanceValue := getTypeInstanceInputForPolicy()
+			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
+			defer tiCleanupFn()
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: []*enginegraphql.InputTypeInstanceData{
+					{Name: "testInput", ID: downloadTI.ID},
+					{Name: "testUpdate", ID: updateTI.ID},
+				},
+			}
+
+			By("2. Modifying default Policy to pick Implementation C...")
+			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
+				{
+					ID:          injectTypeInstance.ID,
+					Description: ptr.String("Test TypeInstance"),
+				},
+				{
+					ID:          validationStorageTI.ID,
+					Description: ptr.String("Validation storage backend TypeInstance"),
+				},
+			}
+			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
+
+			By("3. Create action and wait for a status phase failed")
+			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
+			runActionAndWaitForStatus(ctx, engineClient, actionName, enginegraphql.ActionStatusPhaseFailed)
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -424,13 +556,13 @@ func getTypeInstanceInputForPolicy() *hublocalgraphql.CreateTypeInstanceInput {
 	}
 }
 
-func getTypeInstanceInputForDownload(testValue string) *hublocalgraphql.CreateTypeInstanceInput {
+func getTypeInstanceInputForDownload(testValues map[string]interface{}) *hublocalgraphql.CreateTypeInstanceInput {
 	return &hublocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.capactio.capact.validation.download",
 			Revision: "0.1.0",
 		},
-		Value: map[string]interface{}{"key": testValue},
+		Value: testValues,
 		Attributes: []*hublocalgraphql.AttributeReferenceInput{
 			{
 				Path:     "cap.attribute.capactio.capact.attribute1",
@@ -452,6 +584,39 @@ func getTypeInstanceInputForUpdate() *hublocalgraphql.CreateTypeInstanceInput {
 				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
 			},
+		},
+	}
+}
+
+func fixValidationStorageTypeInstanceCreateInput(deploymentName string) *hublocalgraphql.CreateTypeInstanceInput {
+	return &hublocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
+			Path:     "cap.type.capactio.capact.validation.storage",
+			Revision: "0.1.0",
+		},
+		Attributes: []*hublocalgraphql.AttributeReferenceInput{},
+		Value: map[string]interface{}{
+			"url":         deploymentName + ".capact-system:50051",
+			"acceptValue": true,
+			"contextSchema": heredoc.Doc(`
+				{
+					"$schema": "http://json-schema.org/draft-07/schema",
+					"type": "object",
+					"required": [
+						"provider"
+					],
+					"properties": {
+						"provider": {
+							"$id": "#/properties/contextSchema/properties/name",
+							"type": "string"
+							"enum": [
+								"aws_secretsmanager",
+								"dotenv"
+						  	]
+						}
+					},
+					"additionalProperties": false
+				}`),
 		},
 	}
 }

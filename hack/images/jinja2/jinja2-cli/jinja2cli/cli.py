@@ -314,6 +314,8 @@ def cli(opts, args, config):  # noqa: C901
 
     if config.get("prefix") is not None and len(parsed_data) != 0:
         parsed_data = {config["prefix"]: parsed_data}
+    if config.get("strip-value") is True and len(parsed_data) != 0 and "value" in parsed_data:
+        parsed_data = parsed_data.get("value", {})
 
     template_path = os.path.abspath(template_path)
     out.write(render(template_path, parsed_data, extensions, opts.filters, opts.strict))

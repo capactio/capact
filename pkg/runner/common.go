@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 )
 
 // DefaultFilePermissions are the default file permissions
@@ -17,4 +18,22 @@ func SaveToFile(path string, bytes []byte) error {
 		return errors.Wrapf(err, "while writing file to %q", path)
 	}
 	return nil
+}
+
+// NestingOutputUnderValue write output to "value" key in YAML.
+func NestingOutputUnderValue(output []byte) ([]byte, error) {
+	unmarshalled := map[string]interface{}{}
+	err := yaml.Unmarshal([]byte(output), &unmarshalled)
+	if err != nil {
+		return nil, errors.Wrap(err, "while unmarshalling output to map[string]interface{}")
+	}
+
+	nestingOutputValue := map[string]interface{}{
+		"value": unmarshalled,
+	}
+	result, err := yaml.Marshal(&nestingOutputValue)
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling output under a value key")
+	}
+	return result, nil
 }

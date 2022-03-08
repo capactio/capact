@@ -3,10 +3,16 @@
 SRC=${SRC:-"/yamls"}
 OUT=${OUT:-"/merged.yaml"}
 
-# prefix each file with its filename
 for filename in "${SRC}"/*; do
   filename=$(basename -- "$filename")
   prefix="${filename%.*}"
+
+  # remove value key if exists
+  if [[ $(yq e 'has("value")' "${SRC}"/"${filename}") == "true" ]]; then
+    yq e '.value' -i "${SRC}"/"${filename}"
+  fi 
+
+  # prefix each file with its filename
   yq e -i "{\"${prefix}\": . }" "${SRC}"/"${filename}"
 done
 

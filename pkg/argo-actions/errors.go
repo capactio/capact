@@ -11,3 +11,8 @@ func ErrMissingTypeInstanceValue(typeInstanceName string) error {
 func ErrMissingResourceVersion() error {
 	return errors.Errorf("resourceVersion is missing")
 }
+
+// ErrTypeConversion returns an error indicating incorrect type conversion.
+func ErrTypeConversion(field string, targetType string, typeInstanceName string) error {
+	return errors.Errorf("%s cannot be converted to %s for TypeInstances %s", field, targetType, typeInstanceName)
+}
