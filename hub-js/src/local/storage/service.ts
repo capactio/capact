@@ -94,8 +94,8 @@ export default class DelegatedStorageService {
    * @param inputs - Describes what should be stored.
    * @returns The update backend's context. If there was no update, it's undefined.
    *
-   *  TODO(https://github.com/capactio/capact/issues/604): validate if `input.value` is allowed by backend (`backend.acceptValue`)
-   *  TODO(https://github.com/capactio/capact/issues/604): validate `input.backend.context` against `backend.contextSchema`.
+   *  TODO(https://github.com/capactio/capact/issues/656): validate if `input.value` is allowed by backend (`backend.acceptValue`)
+   *  TODO(https://github.com/capactio/capact/issues/656): validate `input.backend.context` against `backend.contextSchema`.
    */
   async Store(...inputs: StoreInput[]): Promise<UpdatedContexts> {
     let mapping: UpdatedContexts = {};
@@ -138,8 +138,8 @@ export default class DelegatedStorageService {
    *
    * @param inputs - Describes what should be updated.
    *
-   *  TODO(https://github.com/capactio/capact/issues/604): validate if `input.value` is allowed by backend (`backend.acceptValue`)
-   *  TODO(https://github.com/capactio/capact/issues/604): validate `input.backend.context` against `backend.contextSchema`.
+   *  TODO(https://github.com/capactio/capact/issues/656): validate if `input.value` is allowed by backend (`backend.acceptValue`)
+   *  TODO(https://github.com/capactio/capact/issues/656): validate `input.backend.context` against `backend.contextSchema`.
    */
   async Update(...inputs: UpdateInput[]) {
     for (const input of inputs) {
@@ -325,7 +325,7 @@ export default class DelegatedStorageService {
       }
 
       const record = fetchRevisionResult.records[0];
-      return record.get("value"); // TODO(https://github.com/capactio/capact/issues/604): validate against Storage JSON Schema.
+      return record.get("value"); // TODO(https://github.com/capactio/capact/issues/656): validate against Storage JSON Schema.
     } catch (e) {
       const err = e as Error;
       throw new Error(
