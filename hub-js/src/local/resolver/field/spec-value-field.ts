@@ -1,7 +1,7 @@
-import { logger } from "../../logger";
-import { GetInput } from "../storage/service";
+import { logger } from "../../../logger";
+import { GetInput } from "../../storage/service";
 import { Context } from "../mutation/context";
-import { Operation } from "../storage/update-args-context";
+import { Operation } from "../../storage/update-args-context";
 import _ from "lodash";
 import { Mutex } from "async-mutex";
 
@@ -13,8 +13,7 @@ interface InputObject {
     // specifies whether data is stored in built-in or external storage
     abstract: boolean;
     // holds the TypeInstance's value stored in built-in storage
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    builtinValue: any;
+    builtinValue: undefined;
     // holds information needed to fetch the TypeInstance's value from external storage
     fetchInput: GetInput;
   };
@@ -22,8 +21,7 @@ interface InputObject {
 
 export async function typeInstanceResourceVersionSpecValueField(
   { value: obj }: InputObject,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: undefined,
   context: Context
 ) {
   // This is a field resolver, it can be called multiple times within the same `query/mutation`.

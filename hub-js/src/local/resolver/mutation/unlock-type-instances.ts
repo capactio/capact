@@ -5,13 +5,12 @@ import {
   LockingTypeInstanceInput,
   switchLocking,
 } from "./lock-type-instances";
-import { logger } from "../../logger";
+import { logger } from "../../../logger";
 
 interface UnLockTypeInstanceInput extends LockingTypeInstanceInput {}
 
 export async function unlockTypeInstances(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: undefined,
   args: UnLockTypeInstanceInput,
   context: Context
 ) {

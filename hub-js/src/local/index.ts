@@ -1,12 +1,12 @@
 import { readFileSync } from "fs";
 import { makeAugmentedSchema } from "neo4j-graphql-js";
-import { createTypeInstances } from "./mutation/create-type-instances";
-import { updateTypeInstances } from "./mutation/update-type-instances";
-import { deleteTypeInstance } from "./mutation/delete-type-instance";
-import { createTypeInstance } from "./mutation/create-type-instance";
-import { lockTypeInstances } from "./mutation/lock-type-instances";
-import { unlockTypeInstances } from "./mutation/unlock-type-instances";
-import { typeInstanceResourceVersionSpecValueField } from "./query/spec-value-field";
+import { createTypeInstances } from "./resolver/mutation/create-type-instances";
+import { updateTypeInstances } from "./resolver/mutation/update-type-instances";
+import { deleteTypeInstance } from "./resolver/mutation/delete-type-instance";
+import { createTypeInstance } from "./resolver/mutation/create-type-instance";
+import { lockTypeInstances } from "./resolver/mutation/lock-type-instances";
+import { unlockTypeInstances } from "./resolver/mutation/unlock-type-instances";
+import { typeInstanceResourceVersionSpecValueField } from "./resolver/field/spec-value-field";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 

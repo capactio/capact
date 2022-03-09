@@ -1,6 +1,6 @@
 import { Driver } from "neo4j-driver";
-import DelegatedStorageService from "../storage/service";
-import UpdateArgsContext from "../storage/update-args-context";
+import DelegatedStorageService from "../../storage/service";
+import UpdateArgsContext from "../../storage/update-args-context";
 
 export interface ContextWithDriver {
   driver: Driver;

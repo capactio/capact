@@ -5,11 +5,10 @@ import {
   CustomCypherErrorOutput,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
-import { logger } from "../../logger";
+import { logger } from "../../../logger";
 
 export async function deleteTypeInstance(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: undefined,
   args: { id: string; ownerID: string },
   context: Context
 ) {
@@ -146,6 +145,8 @@ function generateBadRequestError(customErr: CustomCypherErrorOutput) {
     return Error(`TypeInstance is used by other TypeInstances`);
   }
   return Error(
-    `TypeInstance is used by other TypeInstances, you must first remove ${customErr.ids}`
+    `TypeInstance is used by other TypeInstances, you must first remove ${customErr.ids.join(
+      '", "'
+    )}`
   );
 }

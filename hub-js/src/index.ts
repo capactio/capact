@@ -12,7 +12,7 @@ import { GraphQLSchema } from "graphql";
 import { assertSchemaOnDatabase, getSchemaForMode, HubMode } from "./schema";
 import { config } from "./config";
 import { logger } from "./logger";
-import { ensureCoreStorageTypeInstance } from "./local/mutation/register-built-in-storage";
+import { ensureCoreStorageTypeInstance } from "./local/resolver/mutation/register-built-in-storage";
 import DelegatedStorageService from "./local/storage/service";
 import UpdateArgsContext from "./local/storage/update-args-context";
 

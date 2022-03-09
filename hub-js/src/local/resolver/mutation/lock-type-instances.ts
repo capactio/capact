@@ -1,8 +1,8 @@
 import { Transaction } from "neo4j-driver";
 import { Context } from "./context";
-import { logger } from "../../logger";
-import { TypeInstanceBackendDetails } from "../types/type-instance";
-import { LockInput } from "../storage/service";
+import { logger } from "../../../logger";
+import { TypeInstanceBackendDetails } from "../../types/type-instance";
+import { LockInput } from "../../storage/service";
 
 export interface LockingTypeInstanceInput {
   in: {
@@ -29,8 +29,7 @@ interface ExternallyStoredOutput {
 }
 
 export async function lockTypeInstances(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: undefined,
   args: LockingTypeInstanceInput,
   context: Context
 ) {

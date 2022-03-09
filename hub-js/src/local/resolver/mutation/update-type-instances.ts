@@ -7,25 +7,23 @@ import {
   CustomCypherErrorOutput,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
-import { logger } from "../../logger";
+import { logger } from "../../../logger";
 import { Context } from "./context";
-import { Operation } from "../storage/update-args-context";
+import { Operation } from "../../storage/update-args-context";
 
 interface UpdateTypeInstancesInput {
   in: [
     {
       id: string;
       typeInstance: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value?: any;
+        value?: undefined;
       };
     }
   ];
 }
 
 export async function updateTypeInstances(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: undefined,
   args: UpdateTypeInstancesInput,
   context: Context,
   resolveInfo: GraphQLResolveInfo

@@ -12,7 +12,7 @@ import { Driver } from "neo4j-driver";
 import { TypeInstanceBackendInput } from "../types/type-instance";
 import { logger } from "../../logger";
 
-// TODO(https://github.com/capactio/capact/issues/604):
+// TODO(https://github.com/capactio/capact/issues/634):
 // Represents the fake storage backend URL that should be ignored
 // as the backend server is not deployed.
 // It should be removed after a real backend is used in `test/e2e/action_test.go` scenarios.
@@ -149,7 +149,7 @@ export default class DelegatedStorageService {
       });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend in e2e tests.
+        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
       }
 
@@ -182,7 +182,7 @@ export default class DelegatedStorageService {
       });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend in e2e tests.
+        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         result = {
           ...result,
           [input.typeInstance.id]: {
@@ -229,7 +229,7 @@ export default class DelegatedStorageService {
       });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend in e2e tests.
+        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
       }
 
@@ -255,7 +255,7 @@ export default class DelegatedStorageService {
       });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend in e2e tests.
+        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
       }
 
@@ -282,7 +282,7 @@ export default class DelegatedStorageService {
       });
       const cli = await this.getClient(input.backend.id);
       if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend in e2e tests.
+        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
       }
 
@@ -343,7 +343,7 @@ export default class DelegatedStorageService {
         logger.debug(
           "Skipping a real call as backend was classified as a fake one"
         );
-        // TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend in e2e tests.
+        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         return undefined;
       }
 
@@ -364,7 +364,7 @@ export default class DelegatedStorageService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static convertToJSONIfObject(val: any) {
-    if (val instanceof Array || val instanceof Object) {
+    if (val instanceof Array || typeof val === "object") {
       return JSON.stringify(val);
     }
     return val;

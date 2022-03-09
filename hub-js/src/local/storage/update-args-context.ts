@@ -4,8 +4,7 @@ export enum Operation {
 }
 
 interface GetValueOutput {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
+  value: undefined;
   latestKnownRevision: number;
 }
 
@@ -91,7 +90,7 @@ export default class UpdateArgsContext {
 
   /**
    * Returns latest TypeInstance's revision version.
-   * Used to optimize number of request. If already stored, we don't need to trigger the udpate logic.
+   * Used to optimize number of request. If already stored, we don't need to trigger the update logic.
    *
    * @param id - TypeInstance's ID.
    * @return - - TypeInstance's last revision version. If not set, returns 0.
