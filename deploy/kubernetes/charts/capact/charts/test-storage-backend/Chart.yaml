@@ -1,0 +1,13 @@
+apiVersion: v2
+name: test-storage-backend
+description: A wrapper for Secret Storage Backend Helm chart for testing purporses
+
+type: application
+
+version: 0.1.0
+appVersion: 0.0.1
+
+dependencies:
+  - name: secret-storage-backend
+    version: "^0.6.0"
+    repository: "file://../../../secret-storage-backend"

@@ -30,3 +30,7 @@ dependencies:
 - name: dashboard
   version: "0.0.1"
   repository: "file://charts/dashboard"
+- name: test-storage-backend
+  version: "0.0.1"
+  repository: "file://charts/test-storage-backend"
+  condition: testStorageBackend.enabled
