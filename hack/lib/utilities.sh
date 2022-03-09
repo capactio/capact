@@ -260,7 +260,7 @@ capact::install() {
     fi
 
     if [[ "${USE_TEST_SETUP}" == "true" ]]; then
-      BUILD_IMAGES_LIST=+",secret-storage-backend"
+      BUILD_IMAGES_LIST+=",secret-storage-backend"
     fi
 
     if [ -n "${CAPACT_HELM_REPO:-}" ]; then

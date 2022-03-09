@@ -1,3 +1,6 @@
+secret-storage-backend:
+  fullnameOverride: "capact-test-storage-backend"
+
 supportedProviders:
   - "dotenv"
   # this provider doesn't have AWS credentials configured on purpose

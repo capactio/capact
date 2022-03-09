@@ -13,6 +13,7 @@ func NewRegister(cliName string) *cobra.Command {
 
 	hub.AddCommand(
 		NewCapactInstallation(cliName),
+		NewTestStorageBackend(cliName),
 		NewOCFManifests(cliName),
 	)
 	return hub

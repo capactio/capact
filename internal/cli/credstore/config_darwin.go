@@ -4,8 +4,9 @@
 package credstore
 
 import (
-	"capact.io/capact/internal/cli/config"
 	"fmt"
+
+	"capact.io/capact/internal/cli/config"
 	"github.com/99designs/keyring"
 	"github.com/pkg/errors"
 )
@@ -32,5 +33,4 @@ func openStore() (Keyring, error) {
 	default:
 		return nil, errors.New("backend not supported")
 	}
-
 }
