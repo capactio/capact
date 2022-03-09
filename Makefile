@@ -171,13 +171,18 @@ gen-go-source-code:
 	go generate -x ./...
 .PHONY: gen-go-source-code
 
-gen-docs: gen-docs-cli ## Generate all documentation
+gen-docs: gen-docs-cli gen-docs-populator ## Generate all documentation
 .PHONY: gen-docs
 
 gen-docs-cli:
 	rm -f ./cmd/cli/docs/*
 	go run cmd/cli/main.go gen-usage-docs
 .PHONY: gen-docs-cli
+
+gen-docs-populator:
+	rm -f ./cmd/populator/docs/*
+	go run cmd/populator/main.go gen-usage-docs
+.PHONY: gen-docs-populator
 
 ###############
 # Development #

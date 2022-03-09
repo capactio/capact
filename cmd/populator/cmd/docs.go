@@ -7,17 +7,17 @@ import (
 )
 
 const (
-	docsTargetDir = "./cmd/cli/docs"
+	docsTargetDir = "./cmd/populator/docs"
 )
 
-// NewDocs returns a cobra.Command for generating Capact CLI documentation.
-func NewDocs() *cobra.Command {
+// NewDocs returns a cobra.Command for generating Populator documentation.
+func NewDocs(cliName string) *cobra.Command {
 	return &cobra.Command{
 		Use:    "gen-usage-docs",
 		Hidden: true,
 		Short:  "Generate usage documentation",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			root := NewRoot()
+			root := NewRoot(cliName)
 			root.DisableAutoGenTag = true
 
 			defaultLinkHandler := func(s string) string { return s }
