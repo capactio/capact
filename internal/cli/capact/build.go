@@ -16,8 +16,9 @@ import (
 )
 
 type image struct {
-	Dir    string
-	Target string
+	Dir              string
+	Target           string
+	IgnoredByDefault bool
 
 	ExtraBuildArgs  []string
 	DisableBuildKit bool
@@ -25,10 +26,22 @@ type image struct {
 
 type images map[string]image
 
-func (i images) All() []string {
+func (i images) FullList() []string {
+	return i.toStringSlice(false)
+}
+
+func (i images) DefaultList() []string {
+	return i.toStringSlice(true)
+}
+
+func (i images) toStringSlice(skipIgnoredByDefault bool) []string {
 	var all []string
-	for img := range i {
-		all = append(all, img)
+	for key, val := range i {
+		if skipIgnoredByDefault && val.IgnoredByDefault {
+			continue
+		}
+
+		all = append(all, key)
 	}
 
 	// We generate doc automatically, so it needs to be deterministic
@@ -47,8 +60,7 @@ var Images = images{
 		Target: "generic",
 	},
 	"hub-js": {
-		Dir: "hub-js",
-
+		Dir:             "hub-js",
 		DisableBuildKit: true,
 	},
 	"argo-runner": {
@@ -70,6 +82,11 @@ var Images = images{
 			"BUILD_CMD=go test -v -c",
 			"SOURCE_PATH=./test/e2e/*_test.go",
 		},
+	},
+	"secret-storage-backend": {
+		Dir:              ".",
+		Target:           "generic",
+		IgnoredByDefault: true, // used only for development and testing purposes
 	},
 }
 
@@ -111,7 +128,7 @@ func buildImage(ctx context.Context, status printer.Status, imgName string, img 
 func BuildImages(ctx context.Context, status printer.Status, repository, version string, names []string) ([]string, error) {
 	var created []string
 
-	for _, image := range Images.All() {
+	for _, image := range Images.FullList() {
 		if !slices.Contains(names, image) {
 			continue
 		}
