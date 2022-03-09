@@ -133,7 +133,7 @@ var _ = Describe("Action", func() {
 			By("8.1 Check uploaded TypeInstances")
 			expUploadTIBackend = &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
 
-			// TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend.
+			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
 			// for now, the Local Hub returns backend id under `key` property.
 			implIndicatorValue = expUploadTIBackend.ID
 
@@ -200,7 +200,7 @@ var _ = Describe("Action", func() {
 			By("4.1 Check uploaded TypeInstances")
 			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
 
-			// TODO(https://github.com/capactio/capact/issues/604): remove after using a real backend.
+			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
 			// for now, the Local Hub returns backend id under `key` property.
 			implIndicatorValue = expUploadTIBackend.ID
 
