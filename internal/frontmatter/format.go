@@ -14,8 +14,7 @@ title: %s
 `
 )
 
-// FilePrepender is a function which is used to have custom formatting while generating
-// markdown documentation for CLI tools.
+// FilePrepender is a function which is used for custom formatting while generating markdown documentation.
 func FilePrepender(filePath string) string {
 	fileName := filepath.Base(filePath)
 	fileNameWithoutExt := strings.TrimSuffix(fileName, filepath.Ext(fileName))

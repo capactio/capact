@@ -1,6 +1,6 @@
 apiVersion: v2
 name: test-storage-backend
-description: A wrapper for Secret Storage Backend Helm chart for testing purporses
+description: A wrapper for Secret Storage Backend Helm chart for testing purposes
 
 type: application
 
