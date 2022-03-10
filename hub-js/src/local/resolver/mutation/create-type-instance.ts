@@ -10,7 +10,7 @@ interface CreateTypeInstanceArgs {
 }
 
 export async function createTypeInstance(
-  _: undefined,
+  _: unknown,
   args: CreateTypeInstanceArgs,
   context: Context
 ) {

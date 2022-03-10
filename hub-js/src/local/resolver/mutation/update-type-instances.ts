@@ -9,21 +9,22 @@ import {
 } from "./cypher-errors";
 import { logger } from "../../../logger";
 import { Context } from "./context";
-import { Operation } from "../../storage/update-args-context";
+import { Operation } from "../../storage/update-args-container";
 
 interface UpdateTypeInstancesInput {
   in: [
     {
       id: string;
+      ownerID?: string;
       typeInstance: {
-        value?: undefined;
+        value?: unknown;
       };
     }
   ];
 }
 
 export async function updateTypeInstances(
-  _: undefined,
+  _: unknown,
   args: UpdateTypeInstancesInput,
   context: Context,
   resolveInfo: GraphQLResolveInfo
@@ -33,6 +34,7 @@ export async function updateTypeInstances(
   context.updateArgs.SetOperation(Operation.UpdateTypeInstancesMutation);
   args.in.forEach((x) => {
     context.updateArgs.SetValue(x.id, x.typeInstance.value);
+    context.updateArgs.SetOwnerID(x.id, x.ownerID);
   });
 
   const neo4jSession = context.driver.session();

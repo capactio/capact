@@ -48,7 +48,7 @@ export type TypeInstanceInput = Omit<CreateTypeInstanceInput, "backend"> & {
 };
 
 export async function createTypeInstances(
-  _: undefined,
+  _: unknown,
   args: CreateTypeInstancesArgs,
   context: Context
 ) {

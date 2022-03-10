@@ -14,7 +14,7 @@ import { config } from "./config";
 import { logger } from "./logger";
 import { ensureCoreStorageTypeInstance } from "./local/resolver/mutation/register-built-in-storage";
 import DelegatedStorageService from "./local/storage/service";
-import UpdateArgsContext from "./local/storage/update-args-context";
+import UpdateArgsContainer from "./local/storage/update-args-container";
 
 async function main() {
   logger.info("Using Neo4j database", { endpoint: config.neo4j.endpoint });
@@ -73,7 +73,7 @@ async function setupHttpServer(
       return {
         driver,
         delegatedStorage,
-        updateArgs: new UpdateArgsContext(),
+        updateArgs: new UpdateArgsContainer(),
       };
     },
   });

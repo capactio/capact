@@ -6,9 +6,10 @@ import {
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
 import { logger } from "../../../logger";
+import { TypeInstanceBackendInput } from "../../types/type-instance";
 
 export async function deleteTypeInstance(
-  _: undefined,
+  _: unknown,
   args: { id: string; ownerID: string },
   context: Context
 ) {
@@ -89,8 +90,7 @@ export async function deleteTypeInstance(
       );
 
       // NOTE: Use map to ensure that external storage is not called multiple time for the same ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const deleteExternally = new Map<string, any>();
+      const deleteExternally = new Map<string, unknown>();
       result.records.forEach((record) => {
         const out = record.get("out");
 
@@ -104,8 +104,9 @@ export async function deleteTypeInstance(
         await context.delegatedStorage.Delete({
           typeInstance: {
             id,
+            ownerID: args.ownerID,
           },
-          backend,
+          backend: backend as TypeInstanceBackendInput,
         });
       }
 

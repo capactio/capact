@@ -29,7 +29,7 @@ interface ExternallyStoredOutput {
 }
 
 export async function lockTypeInstances(
-  _: undefined,
+  _: unknown,
   args: LockingTypeInstanceInput,
   context: Context
 ) {

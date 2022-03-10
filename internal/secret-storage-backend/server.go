@@ -16,6 +16,7 @@ import (
 )
 
 // TODO(review): ALL CHANGES WILL BE REVERTED BEFORE MERGING. IT WAS CHANGED ONLY FOR DEMO/PR TESTING PURPOSES.
+// TODO(review): Changes related to ownerID will stay.
 
 // Context holds Secret storage backend specific parameters.
 type Context struct {
@@ -177,7 +178,7 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 
 	key := h.storageKeyForTypeInstanceValue(provider, request.TypeInstanceId, request.NewResourceVersion)
 
-	if err := h.ensureSecretCanBeUpdated(provider, key); err != nil {
+	if err := h.ensureSecretCanBeUpdated(provider, key, request.OwnerId); err != nil {
 		return nil, err
 	}
 
@@ -259,7 +260,7 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 	key := tellercore.KeyPath{
 		Path: h.storagePathForTypeInstance(provider, request.TypeInstanceId),
 	}
-	err = h.ensureSecretCanBeDeleted(provider, key)
+	err = h.ensureSecretCanBeDeleted(provider, key, request.OwnerId)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +383,7 @@ func (h *Handler) ensureSecretCanBeCreated(provider tellercore.Provider, key tel
 	return nil
 }
 
-func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tellercore.KeyPath) error {
+func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tellercore.KeyPath, ownerID *string) error {
 	entries, err := h.getEntriesForPath(provider, key)
 	if err != nil {
 		return h.internalError(err)
@@ -394,6 +395,9 @@ func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tel
 
 	for _, entry := range entries {
 		if entry.Key == lockedByField {
+			if ownerID != nil && entry.Value == *ownerID {
+				continue
+			}
 			return h.typeInstanceLockedError(key.Path, entry.Value)
 		}
 		if entry.Key == key.Field {
@@ -417,7 +421,7 @@ func (h *Handler) ensureSecretIsNotLocked(provider tellercore.Provider, typeInst
 	return nil
 }
 
-func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tellercore.KeyPath) error {
+func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tellercore.KeyPath, ownerID *string) error {
 	entries, err := h.getEntriesForPath(provider, key)
 	if err != nil {
 		return h.internalError(err)
@@ -429,6 +433,9 @@ func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tel
 
 	for _, entry := range entries {
 		if entry.Key != lockedByField {
+			continue
+		}
+		if ownerID != nil && entry.Value == *ownerID {
 			continue
 		}
 		return h.typeInstanceLockedError(key.Path, entry.Value)

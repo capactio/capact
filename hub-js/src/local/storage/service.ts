@@ -28,8 +28,7 @@ export interface StoreInput {
   backend: TypeInstanceBackendInput;
   typeInstance: {
     id: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any;
+    value: unknown;
   };
 }
 
@@ -38,8 +37,8 @@ export interface UpdateInput {
   typeInstance: {
     id: string;
     newResourceVersion: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    newValue: any;
+    newValue: unknown;
+    ownerID?: string;
   };
 }
 
@@ -55,6 +54,7 @@ export interface DeleteInput {
   backend: TypeInstanceBackendInput;
   typeInstance: {
     id: string;
+    ownerID?: string;
   };
 }
 
@@ -74,8 +74,7 @@ export interface UnlockInput {
 }
 
 export interface UpdatedContexts {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export default class DelegatedStorageService {
@@ -158,6 +157,7 @@ export default class DelegatedStorageService {
         newResourceVersion: input.typeInstance.newResourceVersion,
         newValue: this.encode(input.typeInstance.newValue),
         context: this.encode(input.backend.context),
+        ownerId: input.typeInstance.ownerID,
       };
 
       await cli.onUpdate(req);
@@ -236,6 +236,7 @@ export default class DelegatedStorageService {
       const req: OnDeleteRequest = {
         typeInstanceId: input.typeInstance.id,
         context: this.encode(input.backend.context),
+        ownerId: input.typeInstance.ownerID,
       };
       await cli.onDelete(req);
     }
@@ -362,16 +363,14 @@ export default class DelegatedStorageService {
     return this.registeredClients.get(id);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static convertToJSONIfObject(val: any) {
+  private static convertToJSONIfObject(val: unknown): string | undefined {
     if (val instanceof Array || typeof val === "object") {
       return JSON.stringify(val);
     }
-    return val;
+    return val as string;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private encode(val: any) {
+  private encode(val: unknown) {
     return new TextEncoder().encode(
       DelegatedStorageService.convertToJSONIfObject(val)
     );

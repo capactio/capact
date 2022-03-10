@@ -3,21 +3,16 @@ export enum Operation {
   UpdateTypeInstancesMutation,
 }
 
-interface GetValueOutput {
-  value: undefined;
-  latestKnownRevision: number;
-}
-
-export default class UpdateArgsContext {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private valuesPerTypeInstance: Map<string, any>;
+export default class UpdateArgsContainer {
+  private valuesPerTypeInstance: Map<string, unknown>;
   private latestKnownRevPerTypeInstance: Map<string, number>;
   private currentOperation: Operation;
+  private currentOperationOwnerID: Map<string, string | undefined>;
 
   constructor() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.valuesPerTypeInstance = new Map<string, any>();
-    this.latestKnownRevPerTypeInstance = new Map<string, number>();
+    this.valuesPerTypeInstance = new Map();
+    this.latestKnownRevPerTypeInstance = new Map();
+    this.currentOperationOwnerID = new Map();
     this.currentOperation = Operation.None;
   }
 
@@ -60,8 +55,7 @@ export default class UpdateArgsContext {
    * @param value - User specified TypeInstance's value.
    *
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  SetValue(id: string, value: any) {
+  SetValue(id: string, value: unknown) {
     return this.valuesPerTypeInstance.set(id, value);
   }
 
@@ -72,7 +66,7 @@ export default class UpdateArgsContext {
    * @return - TypeInstance's value if set by other resolver.
    *
    */
-  GetValue(id: string): GetValueOutput {
+  GetValue(id: string): unknown {
     return this.valuesPerTypeInstance.get(id);
   }
 
@@ -99,5 +93,26 @@ export default class UpdateArgsContext {
    */
   GetLastKnownRev(id: string) {
     return this.latestKnownRevPerTypeInstance.get(id) || 0;
+  }
+
+  /**
+   * Returns the owner id of the current operation (sent in GQL request).
+   *
+   * @return - current owner id.
+   *
+   */
+  GetOwnerID(id: string): string | undefined {
+    return this.currentOperationOwnerID.get(id);
+  }
+
+  /**
+   * Set the owner id of the current operation (sent in GQL request). May be undefined.
+   *
+   * @param id - related TypeInstance id.
+   * @param ownerId - current owner id.
+   *
+   */
+  SetOwnerID(id: string, ownerId?: string) {
+    this.currentOperationOwnerID.set(id, ownerId);
   }
 }

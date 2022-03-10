@@ -1,18 +1,18 @@
 export interface TypeInstanceBackendInput {
   id: string;
-  context?: undefined;
+  context?: unknown;
 }
 
 export interface CreateTypeInstanceInput {
   alias?: string;
   backend?: TypeInstanceBackendInput;
-  value?: undefined;
+  value?: unknown;
 }
 
 export interface TypeInstanceBackendDetails {
   abstract: boolean;
   id: string;
-  context?: undefined;
+  context?: unknown;
 }
 
 export interface CreateTypeInstancesInput {

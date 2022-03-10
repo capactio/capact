@@ -10,7 +10,7 @@ import { logger } from "../../../logger";
 interface UnLockTypeInstanceInput extends LockingTypeInstanceInput {}
 
 export async function unlockTypeInstances(
-  _: undefined,
+  _: unknown,
   args: UnLockTypeInstanceInput,
   context: Context
 ) {

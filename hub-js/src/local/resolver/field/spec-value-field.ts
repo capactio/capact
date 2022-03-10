@@ -1,7 +1,7 @@
 import { logger } from "../../../logger";
 import { GetInput } from "../../storage/service";
 import { Context } from "../mutation/context";
-import { Operation } from "../../storage/update-args-context";
+import { Operation } from "../../storage/update-args-container";
 import _ from "lodash";
 import { Mutex } from "async-mutex";
 
@@ -87,6 +87,7 @@ async function resolveMutationReturnValue(
     newValue = resp[tiId];
   }
 
+  console.log(context.updateArgs.GetOwnerID(fetchInput.typeInstance.id));
   // 2. Update TypeInstance's value
   const update = {
     backend: fetchInput.backend,
@@ -94,6 +95,7 @@ async function resolveMutationReturnValue(
       id: fetchInput.typeInstance.id,
       newResourceVersion: fetchInput.typeInstance.resourceVersion,
       newValue,
+      ownerID: context.updateArgs.GetOwnerID(fetchInput.typeInstance.id),
     },
   };
 
