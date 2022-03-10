@@ -7,14 +7,7 @@ import {
   OnUpdateRequest,
   StorageBackendDefinition,
 } from "../../generated/grpc/storage_backend";
-import {
-  Client,
-  ClientError,
-  ClientMiddleware,
-  createChannel,
-  createClientFactory,
-  Status,
-} from "nice-grpc";
+import { Client, createChannel, createClient } from "nice-grpc";
 import { Driver } from "neo4j-driver";
 import { TypeInstanceBackendInput } from "../types/type-instance";
 import { logger } from "../../logger";
@@ -25,7 +18,7 @@ import {
   StorageTypeInstanceSpecSchema,
 } from "./backend-schema";
 import { JSONSchemaType } from "ajv/lib/types/json-schema";
-import { TextDecoder, TextEncoder } from "util";
+import { TextEncoder } from "util";
 
 // TODO(https://github.com/capactio/capact/issues/634):
 // Represents the fake storage backend URL that should be ignored
@@ -33,7 +26,20 @@ import { TextDecoder, TextEncoder } from "util";
 // It should be removed after a real backend is used in `test/e2e/action_test.go` scenarios.
 export const FAKE_TEST_URL = "e2e-test-backend-mock-url:50051";
 
-type StorageClient = Client<typeof StorageBackendDefinition, DenyOptions>;
+type StorageClient = Client<typeof StorageBackendDefinition>;
+
+interface BackendContainer {
+  client: StorageClient;
+  validateSpec: ValidateBackendSpec;
+}
+
+interface ValidateBackendSpec {
+  backendId: string;
+  contextSchema: JSONSchemaType<unknown> | undefined;
+  acceptValue: boolean;
+}
+
+type ValidateInput = GetInput | UpdateInput | DeleteInput | StoreInput;
 
 export interface StoreInput {
   backend: TypeInstanceBackendInput;
@@ -89,12 +95,12 @@ export interface UpdatedContexts {
 }
 
 export default class DelegatedStorageService {
-  private registeredClients: Map<string, StorageClient>;
+  private registeredClients: Map<string, BackendContainer>;
   private readonly dbDriver: Driver;
   private readonly ajv: Ajv;
 
   constructor(dbDriver: Driver) {
-    this.registeredClients = new Map<string, StorageClient>();
+    this.registeredClients = new Map<string, BackendContainer>();
     this.dbDriver = dbDriver;
 
     this.ajv = new Ajv({ allErrors: true });
@@ -117,10 +123,17 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         backendId: input.backend.id,
       });
-      const cli = await this.getClient(input.backend.id);
-      if (!cli) {
+      const backend = await this.getBackendContainer(input.backend.id);
+      if (!backend?.client) {
         // TODO: remove after using a real backend in e2e tests.
         continue;
+      }
+
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
       }
 
       const req: OnCreateRequest = {
@@ -128,7 +141,8 @@ export default class DelegatedStorageService {
         value: DelegatedStorageService.encode(input.typeInstance.value),
         context: DelegatedStorageService.encode(input.backend.context),
       };
-      const res = await cli.onCreate(req);
+
+      const res = await backend.client.onCreate(req);
 
       if (!res.context) {
         continue;
@@ -157,10 +171,17 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         backendId: input.backend.id,
       });
-      const cli = await this.getClient(input.backend.id);
-      if (!cli) {
+      const backend = await this.getBackendContainer(input.backend.id);
+      if (!backend?.client) {
         // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
+      }
+
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
       }
 
       const req: OnUpdateRequest = {
@@ -171,7 +192,7 @@ export default class DelegatedStorageService {
         ownerId: input.typeInstance.ownerID,
       };
 
-      await cli.onUpdate(req);
+      await backend.client.onUpdate(req);
     }
   }
 
@@ -191,8 +212,8 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         backendId: input.backend.id,
       });
-      const cli = await this.getClient(input.backend.id);
-      if (!cli) {
+      const backend = await this.getBackendContainer(input.backend.id);
+      if (!backend?.client) {
         // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         result = {
           ...result,
@@ -203,12 +224,19 @@ export default class DelegatedStorageService {
         continue;
       }
 
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
+      }
+
       const req: GetValueRequest = {
         typeInstanceId: input.typeInstance.id,
         resourceVersion: input.typeInstance.resourceVersion,
         context: DelegatedStorageService.encode(input.backend.context),
       };
-      const res = await cli.getValue(req);
+      const res = await backend.client.getValue(req);
 
       if (!res.value) {
         throw Error(
@@ -238,18 +266,24 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         backendId: input.backend.id,
       });
-      const cli = await this.getClient(input.backend.id);
-      if (!cli) {
+      const backend = await this.getBackendContainer(input.backend.id);
+      if (!backend?.client) {
         // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
       }
 
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
+      }
       const req: OnDeleteRequest = {
         typeInstanceId: input.typeInstance.id,
         context: DelegatedStorageService.encode(input.backend.context),
         ownerId: input.typeInstance.ownerID,
       };
-      await cli.onDelete(req);
+      await backend.client.onDelete(req);
     }
   }
 
@@ -265,10 +299,17 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         backendId: input.backend.id,
       });
-      const cli = await this.getClient(input.backend.id);
-      if (!cli) {
+      const backend = await this.getBackendContainer(input.backend.id);
+      if (!backend?.client) {
         // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
+      }
+
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
       }
 
       const req: OnLockRequest = {
@@ -276,7 +317,7 @@ export default class DelegatedStorageService {
         lockedBy: input.typeInstance.lockedBy,
         context: DelegatedStorageService.encode(input.backend.context),
       };
-      await cli.onLock(req);
+      await backend.client.onLock(req);
     }
   }
 
@@ -292,17 +333,24 @@ export default class DelegatedStorageService {
         typeInstanceId: input.typeInstance.id,
         backendId: input.backend.id,
       });
-      const cli = await this.getClient(input.backend.id);
-      if (!cli) {
+      const backend = await this.getBackendContainer(input.backend.id);
+      if (!backend?.client) {
         // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
         continue;
+      }
+
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
       }
 
       const req: OnUnlockRequest = {
         typeInstanceId: input.typeInstance.id,
         context: DelegatedStorageService.encode(input.backend.context),
       };
-      await cli.onUnlock(req);
+      await backend.client.onUnlock(req);
     }
   }
 
@@ -353,7 +401,9 @@ export default class DelegatedStorageService {
     }
   }
 
-  private async getClient(id: string): Promise<StorageClient | undefined> {
+  private async getBackendContainer(
+    id: string
+  ): Promise<BackendContainer | undefined> {
     if (!this.registeredClients.has(id)) {
       const spec = await this.storageInstanceDetailsFetcher(id);
       if (spec.url === FAKE_TEST_URL) {
@@ -364,35 +414,34 @@ export default class DelegatedStorageService {
         return undefined;
       }
 
-      logger.debug("Initialize gRPC client", {
+      logger.debug("Initialize gRPC BackendContainer", {
         backend: id,
         url: spec.url,
       });
 
-      const clientFactory = createClientFactory().use(
-        newValidateMiddleware(this.ajv)
-      );
-
-      let contextSchema = null;
+      let contextSchema;
       if (spec.contextSchema) {
-        contextSchema = JSON.parse(spec.contextSchema) as JSONSchemaType<{
-          [key: string]: any;
-        }>;
+        const out = DelegatedStorageService.parseToObject(spec.contextSchema);
+        if (out.error) {
+          throw Error(
+            `failed to process the TypeInstance's backend "${id}": invalid spec.context: ${out.error.message}`
+          );
+        }
+        contextSchema = out.parsed as JSONSchemaType<unknown>;
       }
       const channel = createChannel(spec.url);
-      const client: StorageClient = clientFactory.create(
+      const client: StorageClient = createClient(
         StorageBackendDefinition,
-        channel,
-        {
-          "*": {
-            storageSpec: {
-              contextSchema,
-              acceptValue: spec.acceptValue,
-            },
-          },
-        }
+        channel
       );
-      this.registeredClients.set(id, client);
+
+      const storageSpec = {
+        backendId: id,
+        contextSchema,
+        acceptValue: spec.acceptValue,
+      };
+
+      this.registeredClients.set(id, { client, validateSpec: storageSpec });
     }
 
     return this.registeredClients.get(id);
@@ -410,6 +459,7 @@ export default class DelegatedStorageService {
       DelegatedStorageService.convertToJSONIfObject(val)
     );
   }
+
   private validateStorageSpecValue(storageSpec: StorageTypeInstanceSpec) {
     const validate = this.ajv.compile(StorageTypeInstanceSpecSchema);
 
@@ -421,72 +471,71 @@ export default class DelegatedStorageService {
       this.ajv.errorsText(validate.errors, { dataVar: "spec.value" })
     );
   }
-}
 
-interface ContextJSONSchema {
-  [key: string]: any;
-}
+  private static encode(val: unknown) {
+    return new TextEncoder().encode(
+      DelegatedStorageService.convertToJSONIfObject(val)
+    );
+  }
 
-interface DenyOptions {
-  storageSpec?: {
-    contextSchema: JSONSchemaType<ContextJSONSchema> | null;
-    acceptValue: boolean;
-  };
-}
+  private static normalizeInput(
+    input: GetInput | UpdateInput | DeleteInput | StoreInput
+  ) {
+    const out: { context?: unknown; value?: unknown } = {
+      context: input.backend.context,
+      value: undefined,
+    };
 
-function newValidateMiddleware(ajv: Ajv): ClientMiddleware<DenyOptions> {
-  return async function* denyMiddleware(call, options) {
-    if (!options.storageSpec) {
-      return yield* call.next(call.request, options);
+    if ("value" in input.typeInstance) {
+      out.value = input.typeInstance.value;
+    }
+    if ("newValue" in input.typeInstance) {
+      out.value = input.typeInstance.newValue;
+    }
+    return out;
+  }
+
+  private validateInput(
+    input: ValidateInput,
+    storageSpec: ValidateBackendSpec
+  ): Error | undefined {
+    const { value, context } = DelegatedStorageService.normalizeInput(input);
+
+    if (!storageSpec.acceptValue && value) {
+      return Error("input value not allowed");
     }
 
-    const { storageSpec, ...restOptions } = options;
-    const hasValue = Object.prototype.hasOwnProperty.call(
-      call.request,
-      "value"
-    );
-    const hasContext = Object.prototype.hasOwnProperty.call(
-      call.request,
-      "context"
-    );
-
-    if (!options.storageSpec?.acceptValue && hasValue) {
-      throw new ClientError(
-        call.method.path,
-        Status.INVALID_ARGUMENT,
-        "Delegated storage doesn't accept value"
-      );
-    }
-
-    if (hasContext) {
-      if (options.storageSpec.contextSchema === null) {
-        throw new ClientError(
-          call.method.path,
-          Status.INVALID_ARGUMENT,
-          "Delegated storage doesn't accept context"
-        );
+    if (context) {
+      if (storageSpec.contextSchema === undefined) {
+        return Error("input context not allowed");
       }
 
-      console.log(options.storageSpec.contextSchema);
-      const validate = ajv.compile(options.storageSpec.contextSchema);
-
-      // @ts-ignore
-      const ctx = new TextDecoder().decode(call.request.context);
-      const ctxObj: ContextJSONSchema = JSON.parse(ctx);
-      console.log(ctxObj);
-      console.log(typeof ctxObj);
-      console.log(typeof options.storageSpec.contextSchema);
-      if (validate(ctxObj)) {
-      } else {
-        throw new ClientError(
-          call.method.path,
-          Status.INVALID_ARGUMENT,
-          ajv.errorsText(validate.errors, { dataVar: "context" })
-        );
+      const validate = this.ajv.compile(storageSpec.contextSchema);
+      if (!validate(context)) {
+        const msg = this.ajv.errorsText(validate.errors, {
+          dataVar: "context",
+        });
+        return Error(`invalid input: ${msg}`);
       }
     }
-    return yield* call.next(call.request, {
-      ...restOptions,
-    });
-  };
+
+    return undefined;
+  }
+
+  private static parseToObject(input: string): {
+    error?: Error;
+    parsed: unknown;
+  } {
+    try {
+      return {
+        parsed: JSON.parse(input),
+      };
+    } catch (e) {
+      const err = e as Error;
+      return {
+        parsed: {},
+        error: err,
+      };
+    }
+  }
 }

@@ -1,253 +1,90 @@
 package local
 
 import (
-	"capact.io/capact/internal/cli/heredoc"
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
-	cliprinter "capact.io/capact/internal/cli/printer"
+	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/ptr"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
 )
 
 // TODO(review): THIS FILE WILL BE REMOVED BEFORE MERGING. IT WAS ADDED ONLY FOR DEMO/PR TESTING PURPOSES.
 
-// #nosec G101
-const secretStorageBackendAddr = "GRPC_SECRET_STORAGE_BACKEND_ADDR"
+const (
+	RunValidation       = "RUN_VALIDATION"
+	typeInstanceTypeRef = "cap.type.testing:0.1.0"
+)
 
-type StorageValue struct {
+type StorageSpec struct {
 	URL           *string `json:"url,omitempty"`
 	AcceptValue   *bool   `json:"acceptValue,omitempty"`
 	ContextSchema *string `json:"contextSchema,omitempty"`
 }
 
-// This test showcase how to use GraphQL client to:
-// - register TypeInstance for external Storage Backend
-// - create a new TypeInstance stored in built-in backend
-// - create a new TypeInstance stored in registered external backend
-// - create a new TypeInstance stored in registered external backend with custom context
-// - update TypeInstances
-// - lock/unlock TypeInstance
-// - delete all created TypeInstance
-//
 // Prerequisite:
-//   Before running this test, make sure that the external backend is running:
-//     APP_LOGGER_DEV_MODE=true APP_SUPPORTED_PROVIDERS="dotenv" go run ./cmd/secret-storage-backend/main.go
-//   and Local Hub:
-//     cd hub-js; APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=local npm run dev; cd ..
+//   Before running this test, make sure that Local Hub is running:
+//     cd hub-js; APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_HUB_MODE=local npm run dev
 //
 // To run this test, execute:
-// GRPC_SECRET_STORAGE_BACKEND_ADDR="http://0.0.0.0:50051" go test ./pkg/hub/client/local/ -v -count 1
-func TestThatShowcaseExternalStorage(t *testing.T) {
-	srvAddr := os.Getenv(secretStorageBackendAddr)
-	if srvAddr == "" {
-		t.Skipf("skipping running example test as the env %s is not provided", secretStorageBackendAddr)
+// RUN_VALIDATION=true go test ./pkg/hub/client/local/ -v -count 1
+func TestExternalStorageInputValidation(t *testing.T) {
+	run := os.Getenv(RunValidation)
+	if run == "" {
+		t.Skipf("skipping running example test as the env %s is not provided", RunValidation)
 	}
 
 	ctx := context.Background()
 	cli := NewDefaultClient("http://localhost:8080/graphql")
-	dotenvHubStorage, cleanup := registerExternalDotenvStorage(ctx, t, cli, srvAddr)
-	defer cleanup()
 
-	// SCENARIO - CREATE
-	family, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
-		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
-			{
-				// This TypeInstance:
-				// - is stored in built-in backend
-				// - doesn't have backend context
-				Alias:     ptr.String("child"),
-				CreatedBy: ptr.String("nature"),
-				TypeRef:   typeRef("cap.type.child:0.1.0"),
-				Value: map[string]interface{}{
-					"name": "Luke Skywalker",
-				},
+	tests := map[string]struct {
+		// given
+		storageSpec interface{}
+		value       map[string]interface{}
+		context     interface{}
+
+		// then
+		expErrMsg string
+	}{
+		"Should rejected value": {
+			storageSpec: StorageSpec{
+				URL:         ptr.String("http://localhost:5000/fake"),
+				AcceptValue: ptr.Bool(false),
 			},
-			{
-				// This TypeInstance:
-				// - is stored in external backend
-				// - has additional context
-				// - should be stored with mutated context (from create req)
-				Alias:     ptr.String("second-child"),
-				CreatedBy: ptr.String("nature"),
-				TypeRef:   typeRef("cap.type.child:0.2.0"),
-				Value: map[string]interface{}{
-					"name": "Leia Organa",
-				},
-				Backend: &gqllocalapi.TypeInstanceBackendInput{
-					ID: dotenvHubStorage.ID,
-					Context: map[string]interface{}{
-						"provider": "mock-me", // this will inform external backend to return mutated context
-					},
-				},
+			value: map[string]interface{}{
+				"name": "Luke Skywalker",
 			},
-			{
-				// This TypeInstance:
-				// - is stored in external backend
-				// - doesn't have additional context
-				// - should be stored without mutated context
-				Alias:     ptr.String("original"),
-				CreatedBy: ptr.String("nature"),
-				TypeRef:   typeRef("cap.type.original:0.2.0"),
-				Value: map[string]interface{}{
-					"name": "Anakin Skywalke",
-				},
-				Backend: &gqllocalapi.TypeInstanceBackendInput{
-					ID: dotenvHubStorage.ID,
-					// no context
-				},
-			},
-			{
-				// This TypeInstance:
-				// - is stored in external backend
-				// - has additional context
-				// - should be stored without mutated context
-				Alias:     ptr.String("parent"),
-				CreatedBy: ptr.String("nature"),
-				TypeRef:   typeRef("cap.type.parent:0.1.0"),
-				Value: map[string]interface{}{
-					"name": "Darth Vader",
-				},
-				Backend: &gqllocalapi.TypeInstanceBackendInput{
-					ID: dotenvHubStorage.ID,
-					Context: map[string]interface{}{
-						"provider": "dotenv",
-					},
-				},
-			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": input value not allowed
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": input value not allowed`),
 		},
-		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
-			{From: "parent", To: "child"},
-			{From: "parent", To: "second-child"},
-			{From: "parent", To: "original"},
+		"Should rejected context": {
+			storageSpec: StorageSpec{
+				URL:         ptr.String("http://localhost:5000/fake"),
+				AcceptValue: ptr.Bool(false),
+			},
+			context: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": input context not allowed
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": input context not allowed`),
 		},
-	})
-	require.NoError(t, err)
-
-	familyDetails, err := cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
-		CreatedBy: ptr.String("nature"),
-	}, WithFields(TypeInstanceAllFields))
-	require.NoError(t, err)
-
-	defer removeAllMembers(t, cli, familyDetails)
-
-	fmt.Print("\n\n======== After create result  ============\n\n")
-	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
-	require.NoError(t, resourcePrinter.Print(familyDetails))
-
-	// SCENARIO - UPDATE
-	// - for cap.type.parent don't update `value` and `context` - use old ones
-	// - for cap.type.original:0.2.0 don't update `value`, and zero the `context`
-	// - for all others, update both `value` and `context`
-	toUpdate := make([]gqllocalapi.UpdateTypeInstancesInput, 0, len(familyDetails))
-	for idx, member := range familyDetails {
-		val := map[string]interface{}{
-			"updated-value": fmt.Sprintf("context %d", idx),
-		}
-		backend := &gqllocalapi.UpdateTypeInstanceBackendInput{
-			Context: map[string]interface{}{
-				"updated": fmt.Sprintf("context %d", idx),
-			},
-		}
-		// For cap.type.original:0.2.0 don't update value, and zero the `context`.
-		if member.TypeRef.Path == "cap.type.original" {
-			val = nil
-			backend.Context = nil
-		}
-
-		// For cap.type.parent don't update value and `context` - use old ones
-		if member.TypeRef.Path == "cap.type.parent" {
-			val = nil
-			backend = nil
-		}
-		toUpdate = append(toUpdate, gqllocalapi.UpdateTypeInstancesInput{
-			ID:        member.ID,
-			CreatedBy: ptr.String("update"),
-			TypeInstance: &gqllocalapi.UpdateTypeInstanceInput{
-				Value:   val,
-				Backend: backend,
-			},
-		})
-	}
-
-	updatedFamily, err := cli.UpdateTypeInstances(ctx, toUpdate)
-	require.NoError(t, err)
-
-	fmt.Print("\n\n======== After update result  ============\n\n")
-	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, updatedFamily))))
-	require.NoError(t, resourcePrinter.Print(updatedFamily))
-
-	// SCENARIO - LOCK
-	var ids []string
-	for _, member := range familyDetails {
-		ids = append(ids, member.ID)
-	}
-	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
-		Ids:     ids,
-		OwnerID: "demo/testing",
-	})
-	require.NoError(t, err)
-	familyDetails, err = cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
-		CreatedBy: ptr.String("nature"),
-	}, WithFields(TypeInstanceAllFields))
-	require.NoError(t, err)
-
-	fmt.Print("\n\n======== After locking result  ============\n\n")
-	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
-	require.NoError(t, resourcePrinter.Print(familyDetails))
-
-	// SCENARIO - UNLOCK
-	err = cli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
-		Ids:     ids,
-		OwnerID: "demo/testing",
-	})
-	require.NoError(t, err)
-	familyDetails, err = cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
-		CreatedBy: ptr.String("nature"),
-	}, WithFields(TypeInstanceAllFields))
-	require.NoError(t, err)
-
-	fmt.Print("\n\n======== After unlocking result  ============\n\n")
-	resourcePrinter = cliprinter.NewForResource(os.Stdout, cliprinter.WithTable(typeInstanceDetailsMapper(family, getDataDirectlyFromStorage(t, srvAddr, familyDetails))))
-	require.NoError(t, resourcePrinter.Print(familyDetails))
-}
-
-// ======= HELPERS =======
-
-func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func()) {
-	t.Helper()
-
-	ti, err := cli.CreateTypeInstances(ctx, fixExternalDotenvStorage(srvAddr))
-	require.NoError(t, err)
-	require.Len(t, ti, 1)
-	dotenvHubStorage := ti[0]
-
-	return dotenvHubStorage, func() {
-		_ = cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
-	}
-}
-
-func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput {
-	return &gqllocalapi.CreateTypeInstancesInput{
-		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
-			{
-				CreatedBy: ptr.String("manually"),
-				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-					Path:     "cap.type.example.filesystem.storage",
-					Revision: "0.1.0",
-				},
-				Value: StorageValue{
-					URL:         ptr.String(addr),
-					AcceptValue: ptr.Bool(true),
-					ContextSchema: ptr.String(heredoc.Doc(`
+		"Should return error that context is not an object": {
+			storageSpec: StorageSpec{
+				URL:         ptr.String("http://localhost:5000/fake"),
+				AcceptValue: ptr.Bool(false),
+				ContextSchema: ptr.String(heredoc.Doc(`
 					   {
 					   	"$id": "#/properties/contextSchema",
 					   	"type": "object",
@@ -259,134 +96,179 @@ func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput
 					   	},
 					   	"additionalProperties": false
 					   }`)),
-				},
 			},
+			context: "Luke Skywalker",
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": invalid input: context must be object
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": invalid input: context must be object`),
 		},
-		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{},
+		"Should return validation error for context": {
+			storageSpec: StorageSpec{
+				URL:         ptr.String("http://localhost:5000/fake"),
+				AcceptValue: ptr.Bool(false),
+				ContextSchema: ptr.String(heredoc.Doc(`
+					   {
+					   	"$id": "#/properties/contextSchema",
+					   	"type": "object",
+					   	"properties": {
+					   		"provider": {
+					   			"$id": "#/properties/contextSchema/properties/name",
+					   			"type": "string"
+					   		}
+					   	},
+					   	"additionalProperties": false
+					   }`)),
+			},
+			context: map[string]interface{}{
+				"provider": true,
+			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": invalid input: context/provider must be string
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": invalid input: context/provider must be string`),
+		},
+		"Should reject value and context": {
+			storageSpec: StorageSpec{
+				URL:         ptr.String("http://localhost:5000/fake"),
+				AcceptValue: ptr.Bool(false),
+			},
+			value: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			context: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			// TODO(review): currently it's a an early return, is it sufficient?
+			// if not, we will need to an support for throwing multierr to print aggregated data in higher layer.
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": input value not allowed
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": input value not allowed`),
+		},
+
+		// Invalid Storage TypeInstance
+		"Should reject usage of backend without URL field": {
+			storageSpec: StorageSpec{
+				AcceptValue: ptr.Bool(false),
+			},
+			value: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url'`),
+		},
+		"Should reject usage of backend without AcceptValue field": {
+			storageSpec: StorageSpec{
+				URL: ptr.String("http://localhost:5000/fake"),
+			},
+			value: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'acceptValue'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'acceptValue'`),
+		},
+		"Should reject usage of backend without URL and AcceptValue fields": {
+			storageSpec: map[string]interface{}{
+				"other-data": true,
+			},
+			value: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url', spec.value must have required property 'acceptValue'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url', spec.value must have required property 'acceptValue'`),
+		},
+		"Should reject usage of backend with wrong context schema": {
+			storageSpec: StorageSpec{
+				URL:         ptr.String("http://localhost:5000/fake"),
+				AcceptValue: ptr.Bool(false),
+				ContextSchema: ptr.String(heredoc.Doc(`
+					   yaml: true`)),
+			},
+			value: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+			expErrMsg: heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to process the TypeInstance's backend "MOCKED_ID": invalid spec.context: Unexpected token y in JSON at position 0
+              	* Error: rollback externally stored values: failed to process the TypeInstance's backend "MOCKED_ID": invalid spec.context: Unexpected token y in JSON at position 0`),
+		},
 	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			externalStorageID, cleanup := registerExternalStorage(ctx, t, cli, tc.storageSpec)
+			defer cleanup()
+
+			// when
+			_, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
+				TypeRef: typeRef(typeInstanceTypeRef),
+				Value:   tc.value,
+				Backend: &gqllocalapi.TypeInstanceBackendInput{
+					ID:      externalStorageID,
+					Context: tc.context,
+				},
+			})
+
+			require.Error(t, err)
+
+			regex := regexp.MustCompile(`\w{8}-\w{4}-\w{4}-\w{4}-\w{12}`)
+			gotErr := regex.ReplaceAllString(err.Error(), "MOCKED_ID")
+
+			// then
+			assert.Equal(t, tc.expErrMsg, gotErr)
+		})
+	}
+
+	// sanity check
+	familyDetails, err := cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
+		TypeRef: &gqllocalapi.TypeRefFilterInput{
+			Path:     typeRef(typeInstanceTypeRef).Path,
+			Revision: ptr.String(typeRef(typeInstanceTypeRef).Revision),
+		},
+	}, WithFields(TypeInstanceRootFields))
+	require.NoError(t, err)
+	assert.Len(t, familyDetails, 0)
 }
 
-type externalData struct {
-	Value    string
-	LockedBy *string
-}
+// ======= HELPERS =======
 
-func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi.TypeInstance) map[string]externalData {
+func registerExternalStorage(ctx context.Context, t *testing.T, cli *Client, value interface{}) (string, func()) {
 	t.Helper()
 
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	externalStorageID, err := cli.CreateTypeInstance(ctx, fixExternalDotenvStorage(value))
 	require.NoError(t, err)
+	require.NotEmpty(t, externalStorageID)
 
-	ctx := context.Background()
-	client := pb.NewStorageBackendClient(conn)
-
-	var out = map[string]externalData{}
-	for _, ti := range details {
-		val, err := client.GetValue(ctx, &pb.GetValueRequest{
-			TypeInstanceId:  ti.ID,
-			ResourceVersion: uint32(ti.LatestResourceVersion.ResourceVersion),
-		})
-		if err != nil {
-			continue
-		}
-
-		locked, err := client.GetLockedBy(ctx, &pb.GetLockedByRequest{
-			TypeInstanceId: ti.ID,
-		})
-		if err != nil {
-			continue
-		}
-
-		out[ti.ID] = externalData{
-			Value:    string(val.Value),
-			LockedBy: locked.LockedBy,
-		}
-	}
-	return out
-}
-
-func typeInstanceDetailsMapper(family []gqllocalapi.CreateTypeInstanceOutput, storage map[string]externalData) func(inRaw interface{}) (cliprinter.TableData, error) {
-	mapping := map[string]string{}
-	for _, member := range family {
-		mapping[member.ID] = member.Alias
-	}
-	labelIfAbstract := func(in bool) string {
-		if in {
-			return " (abstract)"
-		}
-		return ""
-	}
-	return func(inRaw interface{}) (cliprinter.TableData, error) {
-		out := cliprinter.TableData{}
-
-		switch in := inRaw.(type) {
-		case []gqllocalapi.TypeInstance:
-			out.Headers = []string{"TYPE INSTANCE ID", "ALIAS", "TYPE", "BACKEND", "BACKEND CONTEXT", "DATA IN GQL", "DATA IN exBACKEND", "LOCKED", "LOCKED IN exBACKEND"}
-			for _, ti := range in {
-				out.MultipleRows = append(out.MultipleRows, []string{
-					ti.ID,
-					mapping[ti.ID],
-					fmt.Sprintf("%s:%s", ti.TypeRef.Path, ti.TypeRef.Revision),
-					fmt.Sprintf("%s%s", ti.Backend.ID, labelIfAbstract(ti.Backend.Abstract)),
-					mustMarshal(ti.LatestResourceVersion.Spec.Backend.Context),
-					mustMarshal(ti.LatestResourceVersion.Spec.Value),
-					storage[ti.ID].Value,
-					stringDefault(ti.LockedBy, "-"),
-					stringDefault(storage[ti.ID].LockedBy, "-"),
-				})
-			}
-		default:
-			return cliprinter.TableData{}, fmt.Errorf("got unexpected input type, expected []gqllocalapi.TypeInstance, got %T", inRaw)
-		}
-
-		return out, nil
+	return externalStorageID, func() {
+		_ = cli.DeleteTypeInstance(ctx, externalStorageID)
 	}
 }
 
-func mustMarshal(v interface{}) string {
-	out, err := json.Marshal(v)
-	if err != nil {
-		panic(err)
+func fixExternalDotenvStorage(value interface{}) *gqllocalapi.CreateTypeInstanceInput {
+	return &gqllocalapi.CreateTypeInstanceInput{
+		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
+			Path:     "cap.type.example.filesystem.storage",
+			Revision: "0.1.0",
+		},
+		Value: value,
 	}
-	return string(out)
-}
-
-func stringDefault(in *string, def string) string {
-	if in == nil {
-		return def
-	}
-	return *in
 }
 
 func typeRef(in string) *gqllocalapi.TypeInstanceTypeReferenceInput {
 	out := strings.Split(in, ":")
 	return &gqllocalapi.TypeInstanceTypeReferenceInput{Path: out[0], Revision: out[1]}
-}
-
-func removeAllMembers(t *testing.T, cli *Client, familyDetails []gqllocalapi.TypeInstance) {
-	t.Helper()
-
-	ctx := context.Background()
-
-	for _, member := range familyDetails {
-		if member.TypeRef.Path != "cap.type.parent" {
-			defer func(id string) { // delay the child deletions
-				fmt.Println("Delete child", id)
-				err := cli.DeleteTypeInstance(ctx, id)
-				if err != nil {
-					t.Logf("err for %v: %v", id, err)
-				}
-			}(member.ID)
-
-			continue
-		}
-
-		fmt.Println("Delete parent", member.ID)
-
-		// Delete parent first, to unblock deletion of children
-		err := cli.DeleteTypeInstance(ctx, member.ID)
-		if err != nil {
-			t.Logf("err for %v: %v", member.ID, err)
-		}
-	}
 }
