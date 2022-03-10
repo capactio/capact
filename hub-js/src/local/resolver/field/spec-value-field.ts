@@ -87,7 +87,6 @@ async function resolveMutationReturnValue(
     newValue = resp[tiId];
   }
 
-  console.log(context.updateArgs.GetOwnerID(fetchInput.typeInstance.id));
   // 2. Update TypeInstance's value
   const update = {
     backend: fetchInput.backend,

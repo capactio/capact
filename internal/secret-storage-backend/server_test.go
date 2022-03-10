@@ -679,7 +679,7 @@ func TestHandler_GetProviderFromContext(t *testing.T) {
 				"one": &fakeProvider{name: "one"},
 			},
 			InputContextBytes:    []byte(`{foo}`),
-			ExpectedErrorMessage: ptr.String("rpc error: code = Internal desc = while unmarshaling additional parameters: invalid character 'f' looking for beginning of object key string"),
+			ExpectedErrorMessage: ptr.String("rpc error: code = Internal desc = while unmarshaling context: invalid character 'f' looking for beginning of object key string"),
 		},
 		{
 			// this case shouldn't happen as the server validates list of input providers during start
@@ -719,7 +719,7 @@ func TestHandler_GetProviderFromContext(t *testing.T) {
 			handler := secret_storage_backend.NewHandler(logger.Noop(), testCase.InputProviders)
 
 			// when
-			provider, _, err := handler.GetProviderFromContext(testCase.InputContextBytes)
+			provider, err := handler.GetProviderFromContext(testCase.InputContextBytes)
 
 			// then
 			if testCase.ExpectedErrorMessage != nil {
