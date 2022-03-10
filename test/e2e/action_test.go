@@ -32,6 +32,7 @@ const (
 	actionPassingInterfacePath = "cap.interface.capactio.capact.validation.action.passing"
 	uploadTypePath             = "cap.type.capactio.capact.validation.upload"
 	singleKeyTypePath          = "cap.type.capactio.capact.validation.single-key"
+	testStorageBackendPath     = "cap.type.capactio.capact.validation.storage"
 )
 
 func getActionName() string {
@@ -267,6 +268,7 @@ var _ = Describe("Action", func() {
 
 		It("should propagate context provider to storage backend", func() {
 			implIndicatorValue := "Implementation C"
+			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
 
 			// TODO: This can be extracted after switching to ginkgo v2
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
@@ -290,12 +292,7 @@ var _ = Describe("Action", func() {
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
-			By("1.3 Creating TypeInstance that describes Validation storage")
-			validationStorage := fixValidationStorageTypeInstanceCreateInput("secret-storage-backend")
-			validationStorageTI, validationStorageTICleanup := createTypeInstance(ctx, hubClient, validationStorage)
-			defer validationStorageTICleanup()
-
-			By("1.4 Create TypeInstance which is required for Implementation C to be picked based on Policy")
+			By("1.3 Create TypeInstance which is required for Implementation C to be picked based on Policy")
 			typeInstanceValue := getTypeInstanceInputForPolicy()
 			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
 			defer tiCleanupFn()
@@ -314,7 +311,7 @@ var _ = Describe("Action", func() {
 					Description: ptr.String("Test TypeInstance"),
 				},
 				{
-					ID:          validationStorageTI.ID,
+					ID:          testStorageBackendTI.ID,
 					Description: ptr.String("Validation storage backend TypeInstance"),
 				},
 			}
@@ -326,7 +323,7 @@ var _ = Describe("Action", func() {
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
 			By("4.1 Check uploaded TypeInstances")
-			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: validationStorageTI.ID, Abstract: false}
+			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: testStorageBackendTI.ID, Abstract: false}
 			fmt.Println("expUploadTIBackend", expUploadTIBackend.ID)
 			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
 			defer cleanupUploaded()
@@ -339,6 +336,7 @@ var _ = Describe("Action", func() {
 
 		It("should fail due to incorrect storage provider", func() {
 			implIndicatorValue := "Implementation C"
+			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
 
 			// TODO: This can be extracted after switching to ginkgo v2
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
@@ -362,12 +360,7 @@ var _ = Describe("Action", func() {
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
-			By("1.3 Creating TypeInstance that describes Validation storage")
-			validationStorage := fixValidationStorageTypeInstanceCreateInput("secret-storage-backend")
-			validationStorageTI, validationStorageTICleanup := createTypeInstance(ctx, hubClient, validationStorage)
-			defer validationStorageTICleanup()
-
-			By("1.4 Create TypeInstance which is required for Implementation C to be picked based on Policy")
+			By("1.3 Create TypeInstance which is required for Implementation C to be picked based on Policy")
 			typeInstanceValue := getTypeInstanceInputForPolicy()
 			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
 			defer tiCleanupFn()
@@ -386,7 +379,7 @@ var _ = Describe("Action", func() {
 					Description: ptr.String("Test TypeInstance"),
 				},
 				{
-					ID:          validationStorageTI.ID,
+					ID:          testStorageBackendTI.ID,
 					Description: ptr.String("Validation storage backend TypeInstance"),
 				},
 			}
@@ -584,39 +577,6 @@ func getTypeInstanceInputForUpdate() *hublocalgraphql.CreateTypeInstanceInput {
 				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
 			},
-		},
-	}
-}
-
-func fixValidationStorageTypeInstanceCreateInput(deploymentName string) *hublocalgraphql.CreateTypeInstanceInput {
-	return &hublocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.capactio.capact.validation.storage",
-			Revision: "0.1.0",
-		},
-		Attributes: []*hublocalgraphql.AttributeReferenceInput{},
-		Value: map[string]interface{}{
-			"url":         deploymentName + ".capact-system:50051",
-			"acceptValue": true,
-			"contextSchema": heredoc.Doc(`
-				{
-					"$schema": "http://json-schema.org/draft-07/schema",
-					"type": "object",
-					"required": [
-						"provider"
-					],
-					"properties": {
-						"provider": {
-							"$id": "#/properties/contextSchema/properties/name",
-							"type": "string"
-							"enum": [
-								"aws_secretsmanager",
-								"dotenv"
-						  	]
-						}
-					},
-					"additionalProperties": false
-				}`),
 		},
 	}
 }
@@ -825,6 +785,18 @@ func getTypeInstanceByIDAndValue(ctx context.Context, hubClient *hubclient.Clien
 	Expect(err).ToNot(HaveOccurred())
 
 	return updateTI
+}
+
+func getDefaultTestStorageTypeInstance(ctx context.Context, hubClient *hubclient.Client) *hublocalgraphql.TypeInstance {
+	storage, err := hubClient.ListTypeInstances(ctx, &hublocalgraphql.TypeInstanceFilter{
+		TypeRef: &hublocalgraphql.TypeRefFilterInput{
+			Path:     testStorageBackendPath,
+			Revision: ptr.String("0.1.0"),
+		},
+	})
+	Expect(err).ToNot(HaveOccurred())
+	Expect(len(storage)).Should(Equal(1))
+	return &storage[0]
 }
 
 func getUploadedTypeInstanceByValue(ctx context.Context, hubClient *hubclient.Client, expValue string) (*hublocalgraphql.TypeInstance, func()) {
