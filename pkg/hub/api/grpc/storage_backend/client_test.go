@@ -20,6 +20,12 @@ const typeInstanceIDEnv = "TYPEINSTANCE_ID"
 //
 // NOTE: Before running this test, make sure that the server is running under the `srvAddr` address
 //	and the `provider` is enabled on this server.
+//
+// To run this test, execute:
+// GRPC_SECRET_STORAGE_BACKEND_ADDR=":50051" go test ./pkg/hub/api/grpc/storage_backend -run "^TestNewStorageBackendClient$" -v -count 1
+//
+// You can run this test with custom TypeInstance ID, by setting TYPEINSTANCE_ID env variable during test run.
+// This might be helpful while running this test against server with different default provider configured.
 func TestNewStorageBackendClient(t *testing.T) {
 	srvAddr := os.Getenv(secretStorageBackendAddrEnv)
 	if srvAddr == "" {
@@ -27,7 +33,11 @@ func TestNewStorageBackendClient(t *testing.T) {
 	}
 
 	value := []byte(`{"key": true}`)
-	typeInstanceID := "id"
+	typeInstanceID := os.Getenv(typeInstanceIDEnv)
+	if typeInstanceID == "" {
+		// fallback to default
+		typeInstanceID = "id"
+	}
 	provider := "dotenv"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, provider))
 

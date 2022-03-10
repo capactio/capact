@@ -58,7 +58,7 @@ spec:
       restartPolicy: Never
       serviceAccountName: post-install-type-instances-job
       containers:
-        - name: job
+        - name: installation
           image:  "{{ .Values.global.containerRegistry.path }}/{{ .Values.postInstallTypeInstanceJob.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.postInstallTypeInstanceJob.image.pullPolicy }}
           env:
@@ -72,3 +72,15 @@ spec:
               value: "http://capact-hub-local.{{ .Release.Namespace }}/graphql"
           command: ["/bin/sh", "-c"]
           args: {{ .Values.postInstallTypeInstanceJob.args }}
+        {{ if .Values.testStorageBackend.enabled -}}
+        - name: test-storage
+          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.postInstallTypeInstanceJob.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.postInstallTypeInstanceJob.image.pullPolicy }}
+          env:
+            - name: TEST_STORAGE_BACKEND_URL
+              value: "capact-test-storage-backend.{{ .Release.Namespace }}:50051"
+            - name: LOCAL_HUB_ENDPOINT
+              value: "http://capact-hub-local.{{ .Release.Namespace }}/graphql"
+          command: [ "/bin/sh", "-c" ]
+          args: ["/app register test-storage-backend"]
+        {{- end }}

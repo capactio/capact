@@ -22,6 +22,7 @@ func NewRoot(cliName string) *cobra.Command {
 
 	rootCmd.AddCommand(
 		register.NewRegister(cliName),
+		NewDocs(cliName),
 	)
 
 	return rootCmd
