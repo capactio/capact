@@ -28,6 +28,9 @@ integrationTest:
     name: e2e-test
     pullPolicy: IfNotPresent
 
+testStorageBackend:
+  enabled: false
+
 postInstallTypeInstanceJob:
   image:
     name: populator

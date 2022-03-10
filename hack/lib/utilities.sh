@@ -201,7 +201,7 @@ capact::delete_cluster() {
 #  - DOCKER_REPOSITORY
 #  - PRINT_INSECURE_NOTES
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
-#  - USE_TEST_SETUP - if set to true, then a test policy is configured
+#  - USE_TEST_SETUP - if set to true, then a test policy and storage are configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - HUB_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
 #  - HUB_MANIFESTS_SOURCE_REPO_URL - set this to override the Git URL from which the source manifests are populated
@@ -228,7 +228,7 @@ capact::install() {
 
     CAPACT_OVERRIDES+=",global.containerRegistry.overrideTag=${DOCKER_TAG}"
     CAPACT_OVERRIDES+=",hub-public.populator.enabled=${ENABLE_POPULATOR}"
-    CAPACT_OVERRIDES+=",engine.testSetup.enabled=${USE_TEST_SETUP}"
+    CAPACT_OVERRIDES+=",engine.testSetup.enabled=${USE_TEST_SETUP},testStorageBackend.enabled=${USE_TEST_SETUP}"
     CAPACT_OVERRIDES+=",notes.printInsecure=${PRINT_INSECURE_NOTES}"
 
     if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
@@ -257,6 +257,10 @@ capact::install() {
 
     if [[ "${BUILD_IMAGES:-"true"}" == "false" ]]; then
       BUILD_IMAGES_LIST=""
+    fi
+
+    if [[ "${USE_TEST_SETUP}" == "true" ]]; then
+      BUILD_IMAGES_LIST+=",secret-storage-backend"
     fi
 
     if [ -n "${CAPACT_HELM_REPO:-}" ]; then

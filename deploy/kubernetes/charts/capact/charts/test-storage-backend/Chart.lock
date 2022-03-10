@@ -1,0 +1,6 @@
+dependencies:
+- name: secret-storage-backend
+  repository: file://../../../secret-storage-backend
+  version: 0.6.0
+digest: sha256:e4c71dc2ae9e79dc279b9c151426ed7c018a15d698465e603a41b4c6de56a198
+generated: "2022-03-09T13:27:29.340049+01:00"

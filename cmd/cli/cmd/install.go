@@ -55,7 +55,7 @@ func NewInstall() *cobra.Command {
 	flags.StringVar(&opts.Namespace, "namespace", capact.Namespace, "Capact namespace.")
 	flags.StringVar(&opts.Environment, "environment", capact.KindEnv, "Capact environment.")
 	flags.StringSliceVar(&opts.InstallComponents, "install-component", capact.Components.All(), "Components names that should be installed. Takes comma-separated list.")
-	flags.StringSliceVar(&opts.BuildImages, "build-image", capact.Images.All(), "Local images names that should be build when using @local version. Takes comma-separated list.")
+	flags.StringSliceVar(&opts.BuildImages, "build-image", capact.Images.DefaultList(), "Local images names that should be build when using @local version. Takes comma-separated list.")
 	flags.BoolVar(&opts.Parameters.IncreaseResourceLimits, "increase-resource-limits", true, "Enables higher resource requests and limits for components.")
 	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	flags.BoolVar(&opts.UpdateHostsFile, "update-hosts-file", true, "Updates /etc/hosts with entry for Capact GraphQL Gateway.")

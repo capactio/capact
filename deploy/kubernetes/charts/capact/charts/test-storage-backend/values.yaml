@@ -1,0 +1,5 @@
+secret-storage-backend:
+  fullnameOverride: "capact-test-storage-backend"
+  supportedProviders:
+    - "dotenv"
+    - "aws_secretsmanager" # this provider doesn't have AWS credentials configured - but it is on purpose
