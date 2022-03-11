@@ -12,8 +12,9 @@ import { GraphQLSchema } from "graphql";
 import { assertSchemaOnDatabase, getSchemaForMode, HubMode } from "./schema";
 import { config } from "./config";
 import { logger } from "./logger";
-import { ensureCoreStorageTypeInstance } from "./local/mutation/register-built-in-storage";
+import { ensureCoreStorageTypeInstance } from "./local/resolver/mutation/register-built-in-storage";
 import DelegatedStorageService from "./local/storage/service";
+import UpdateArgsContainer from "./local/storage/update-args-container";
 
 async function main() {
   logger.info("Using Neo4j database", { endpoint: config.neo4j.endpoint });
@@ -68,7 +69,13 @@ async function setupHttpServer(
   const delegatedStorage = new DelegatedStorageService(driver);
   const apolloServer = new ApolloServer({
     schema,
-    context: { driver, delegatedStorage },
+    context: () => {
+      return {
+        driver,
+        delegatedStorage,
+        updateArgs: new UpdateArgsContainer(),
+      };
+    },
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({ app });

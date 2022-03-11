@@ -173,7 +173,7 @@ func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.
 
 	key := h.storageKeyForTypeInstanceValue(provider, request.TypeInstanceId, request.NewResourceVersion)
 
-	if err := h.ensureSecretCanBeUpdated(provider, key); err != nil {
+	if err := h.ensureSecretCanBeUpdated(provider, key, request.OwnerId); err != nil {
 		return nil, err
 	}
 
@@ -255,7 +255,7 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 	key := tellercore.KeyPath{
 		Path: h.storagePathForTypeInstance(provider, request.TypeInstanceId),
 	}
-	err = h.ensureSecretCanBeDeleted(provider, key)
+	err = h.ensureSecretCanBeDeleted(provider, key, request.OwnerId)
 	if err != nil {
 		return nil, err
 	}
@@ -270,19 +270,26 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.
 
 func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, error) {
 	if len(contextBytes) == 0 {
-		// try to get the default provider
 		provider, err := h.providers.GetDefault()
 		if err != nil {
 			return nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider based on empty context"))
 		}
-
 		return provider, nil
 	}
 
 	var context Context
 	err := json.Unmarshal(contextBytes, &context)
 	if err != nil {
-		return nil, h.internalError(errors.Wrap(err, "while unmarshaling additional parameters"))
+		return nil, h.internalError(errors.Wrap(err, "while unmarshaling context"))
+	}
+
+	if context.Provider == "" {
+		provider, err := h.providers.GetDefault()
+		if err != nil {
+			return nil, h.failedPreconditionError(errors.Wrap(err, "while getting default provider as not specified in context"))
+		}
+
+		return provider, nil
 	}
 
 	provider, ok := h.providers[context.Provider]
@@ -375,7 +382,7 @@ func (h *Handler) ensureSecretCanBeCreated(provider tellercore.Provider, key tel
 	return nil
 }
 
-func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tellercore.KeyPath) error {
+func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tellercore.KeyPath, ownerID *string) error {
 	entries, err := h.getEntriesForPath(provider, key)
 	if err != nil {
 		return h.internalError(err)
@@ -387,6 +394,9 @@ func (h *Handler) ensureSecretCanBeUpdated(provider tellercore.Provider, key tel
 
 	for _, entry := range entries {
 		if entry.Key == lockedByField {
+			if ownerID != nil && entry.Value == *ownerID {
+				continue
+			}
 			return h.typeInstanceLockedError(key.Path, entry.Value)
 		}
 		if entry.Key == key.Field {
@@ -410,7 +420,7 @@ func (h *Handler) ensureSecretIsNotLocked(provider tellercore.Provider, typeInst
 	return nil
 }
 
-func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tellercore.KeyPath) error {
+func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tellercore.KeyPath, ownerID *string) error {
 	entries, err := h.getEntriesForPath(provider, key)
 	if err != nil {
 		return h.internalError(err)
@@ -422,6 +432,9 @@ func (h *Handler) ensureSecretCanBeDeleted(provider tellercore.Provider, key tel
 
 	for _, entry := range entries {
 		if entry.Key != lockedByField {
+			continue
+		}
+		if ownerID != nil && entry.Value == *ownerID {
 			continue
 		}
 		return h.typeInstanceLockedError(key.Path, entry.Value)

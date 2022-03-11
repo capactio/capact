@@ -1,15 +1,18 @@
 import { Transaction } from "neo4j-driver";
-import { ContextWithDriver } from "./context";
-import { LockingTypeInstanceInput, switchLocking } from "./lock-type-instances";
-import { logger } from "../../logger";
+import { Context } from "./context";
+import {
+  getTypeInstanceStoredExternally,
+  LockingTypeInstanceInput,
+  switchLocking,
+} from "./lock-type-instances";
+import { logger } from "../../../logger";
 
 interface UnLockTypeInstanceInput extends LockingTypeInstanceInput {}
 
 export async function unlockTypeInstances(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: unknown,
   args: UnLockTypeInstanceInput,
-  context: ContextWithDriver
+  context: Context
 ) {
   const neo4jSession = context.driver.session();
   try {
@@ -24,6 +27,13 @@ export async function unlockTypeInstances(
             SET ti.lockedBy = null
             RETURN true as executed`
       );
+      const unlockExternals = await getTypeInstanceStoredExternally(
+        tx,
+        args.in.ids,
+        args.in.ownerID
+      );
+      await context.delegatedStorage.Unlock(...unlockExternals);
+
       return args.in.ids;
     });
   } catch (e) {
