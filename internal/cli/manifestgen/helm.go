@@ -168,6 +168,11 @@ func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyP
 
 		switch value := v.(type) {
 		case map[string]interface{}:
+			if len(value) == 0 {
+				values[key] = fmt.Sprintf(`<@ additionalinput.%s | default({}) | tojson @>`, keyPathString)
+				continue
+			}
+
 			if err := injectJinjaTemplatingToHelmValues(value, keyPath); err != nil {
 				return err
 			}
@@ -182,8 +187,8 @@ func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyP
 		case float64:
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) @>`, keyPathString, value)
 		case []interface{}:
-			if value == nil {
-				values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(None) | tojson @>`, keyPathString)
+			if len(value) == 0 {
+				values[key] = fmt.Sprintf(`<@ additionalinput.%s | default([]) | tojson @>`, keyPathString)
 				break
 			}
 			sliceBytes, err := json.Marshal(value)
@@ -266,6 +271,7 @@ func generateJSONSchemaForValue(value interface{}, parentKeyPath []string) *json
 
 	case map[string]interface{}:
 		schema.Type = "object"
+		schema.AdditionalProperties = []byte("true") // not always all properties are specified inside values.yaml file
 		schema.Properties = orderedmap.New()
 
 		for k, val := range v {
