@@ -133,6 +133,11 @@ jobs:
           reporter: github-pr-review
           level: info
           locale: "US"
+          exclude: |
+            ./hub-js/package-lock.json
+            ./hub-js/package.json
+            ./go.mod
+            ./go.sum
       - name: Check links in *.md files
         if: always() # validate also *.md even if errors found in mdx files.
         uses: gaurav-nelson/github-action-markdown-link-check@v1

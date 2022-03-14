@@ -1,6 +1,8 @@
 import { Transaction } from "neo4j-driver";
-import { ContextWithDriver } from "./context";
-import { logger } from "../../logger";
+import { Context } from "./context";
+import { logger } from "../../../logger";
+import { TypeInstanceBackendDetails } from "../../types/type-instance";
+import { LockInput } from "../../storage/service";
 
 export interface LockingTypeInstanceInput {
   in: {
@@ -21,11 +23,15 @@ interface LockingResult {
   };
 }
 
+interface ExternallyStoredOutput {
+  backend: TypeInstanceBackendDetails;
+  typeInstanceId: string;
+}
+
 export async function lockTypeInstances(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: unknown,
   args: LockingTypeInstanceInput,
-  context: ContextWithDriver
+  context: Context
 ) {
   const neo4jSession = context.driver.session();
   try {
@@ -40,6 +46,13 @@ export async function lockTypeInstances(
             SET ti.lockedBy = $in.ownerID
             RETURN true as executed`
       );
+      const lockExternals = await getTypeInstanceStoredExternally(
+        tx,
+        args.in.ids,
+        args.in.ownerID
+      );
+      await context.delegatedStorage.Lock(...lockExternals);
+
       return args.in.ids;
     });
   } catch (e) {
@@ -140,4 +153,52 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
         );
     }
   }
+}
+
+export async function getTypeInstanceStoredExternally(
+  tx: Transaction,
+  ids: string[],
+  lockedBy: string
+): Promise<LockInput[]> {
+  const result = await tx.run(
+    `
+           UNWIND $ids as id
+           MATCH (ti:TypeInstance {id: id})
+
+           WITH *
+           // Get Latest Revision
+           CALL {
+               WITH ti
+               WITH ti
+               MATCH (ti)-[:CONTAINS]->(tir:TypeInstanceResourceVersion)
+               RETURN tir ORDER BY tir.resourceVersion DESC LIMIT 1
+           }
+
+           MATCH (tir)-[:SPECIFIED_BY]->(spec:TypeInstanceResourceVersionSpec)
+           MATCH (spec)-[:WITH_BACKEND]->(backendCtx)
+           MATCH (ti)-[:STORED_IN]->(backendRef)
+
+           WITH {
+                typeInstanceId: ti.id,
+                backend: { context: backendCtx.context, id: backendRef.id, abstract: backendRef.abstract}
+              } AS value
+           RETURN value
+        `,
+    { ids: ids }
+  );
+
+  const output = result.records.map(
+    (record) => record.get("value") as ExternallyStoredOutput
+  );
+  return output
+    .filter((x) => !x.backend.abstract)
+    .map((x) => {
+      return {
+        backend: x.backend,
+        typeInstance: {
+          id: x.typeInstanceId,
+          lockedBy: lockedBy,
+        },
+      };
+    });
 }

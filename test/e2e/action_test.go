@@ -133,6 +133,11 @@ var _ = Describe("Action", func() {
 
 			By("8.1 Check uploaded TypeInstances")
 			expUploadTIBackend = &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+
+			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
+			// for now, the Local Hub returns backend id under `key` property.
+			implIndicatorValue = expUploadTIBackend.ID
+
 			uploadedTI, cleanupUploaded = getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
 			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
@@ -195,6 +200,11 @@ var _ = Describe("Action", func() {
 
 			By("4.1 Check uploaded TypeInstances")
 			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+
+			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
+			// for now, the Local Hub returns backend id under `key` property.
+			implIndicatorValue = expUploadTIBackend.ID
+
 			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
 			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
@@ -257,6 +267,11 @@ var _ = Describe("Action", func() {
 
 			By("4.1 Check uploaded TypeInstances")
 			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+
+			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
+			// for now, the Local Hub returns backend id under `key` property.
+			implIndicatorValue = expUploadTIBackend.ID
+
 			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
 			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))

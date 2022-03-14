@@ -322,9 +322,20 @@ var _ = Describe("GraphQL API", func() {
 			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
 
 			Expect(err).NotTo(HaveOccurred())
-			for _, ti := range createdTypeInstanceIDs {
-				defer deleteTypeInstance(ctx, cli, ti.ID)
-			}
+			defer func() {
+				var child string
+				for _, ti := range createdTypeInstanceIDs {
+					if ti.Alias == "child" {
+						child = ti.ID
+						continue
+					}
+					// Delete parent first, child TypeInstance is protected as it is used by parent.
+					deleteTypeInstance(ctx, cli, ti.ID)
+				}
+
+				// Delete child TypeInstance as there are no "users".
+				deleteTypeInstance(ctx, cli, child)
+			}()
 
 			parentTiID := findCreatedTypeInstanceID("parent", createdTypeInstanceIDs)
 			Expect(parentTiID).ToNot(BeNil())

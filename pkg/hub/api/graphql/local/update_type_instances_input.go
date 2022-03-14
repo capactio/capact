@@ -21,6 +21,8 @@ type UpdateTypeInstanceInput struct {
 	Attributes []*AttributeReferenceInput `json:"attributes"`
 	// The value property is optional. If not provided, previous value is used.
 	Value interface{} `json:"value,omitempty"`
+	// The backend property is optional. If not provided, previous value is used.
+	Backend *UpdateTypeInstanceBackendInput `json:"backend,omitempty"`
 }
 
 // NativeUpdateTypeInstanceInput declared to shadow custom MarshalJSON declared on UpdateTypeInstanceInput.
@@ -38,8 +40,11 @@ func (u *UpdateTypeInstanceInput) MarshalJSON() ([]byte, error) {
 	a := struct {
 		// The value property is optional. If not provided, previous value is used.
 		Value interface{} `json:"value,omitempty"`
+		// The backend property is optional. If not provided, previous value is used.
+		Backend *UpdateTypeInstanceBackendInput `json:"backend,omitempty"`
 	}{
-		Value: u.Value,
+		Value:   u.Value,
+		Backend: u.Backend,
 	}
 	return json.Marshal(a)
 }

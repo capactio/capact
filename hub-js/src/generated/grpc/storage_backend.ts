@@ -24,6 +24,7 @@ export interface OnUpdateRequest {
   newResourceVersion: number;
   newValue: Uint8Array;
   context?: Uint8Array | undefined;
+  ownerId?: string | undefined;
 }
 
 export interface OnUpdateResponse {
@@ -33,6 +34,7 @@ export interface OnUpdateResponse {
 export interface OnDeleteRequest {
   typeInstanceId: string;
   context?: Uint8Array | undefined;
+  ownerId?: string | undefined;
 }
 
 export interface OnDeleteResponse {}
@@ -293,6 +295,7 @@ function createBaseOnUpdateRequest(): OnUpdateRequest {
     newResourceVersion: 0,
     newValue: new Uint8Array(),
     context: undefined,
+    ownerId: undefined,
   };
 }
 
@@ -312,6 +315,9 @@ export const OnUpdateRequest = {
     }
     if (message.context !== undefined) {
       writer.uint32(34).bytes(message.context);
+    }
+    if (message.ownerId !== undefined) {
+      writer.uint32(42).string(message.ownerId);
     }
     return writer;
   },
@@ -335,6 +341,9 @@ export const OnUpdateRequest = {
         case 4:
           message.context = reader.bytes();
           break;
+        case 5:
+          message.ownerId = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -357,6 +366,7 @@ export const OnUpdateRequest = {
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : undefined,
+      ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
     };
   },
 
@@ -375,6 +385,7 @@ export const OnUpdateRequest = {
         message.context !== undefined
           ? base64FromBytes(message.context)
           : undefined);
+    message.ownerId !== undefined && (obj.ownerId = message.ownerId);
     return obj;
   },
 
@@ -384,6 +395,7 @@ export const OnUpdateRequest = {
     message.newResourceVersion = object.newResourceVersion ?? 0;
     message.newValue = object.newValue ?? new Uint8Array();
     message.context = object.context ?? undefined;
+    message.ownerId = object.ownerId ?? undefined;
     return message;
   },
 };
@@ -447,7 +459,7 @@ export const OnUpdateResponse = {
 };
 
 function createBaseOnDeleteRequest(): OnDeleteRequest {
-  return { typeInstanceId: "", context: undefined };
+  return { typeInstanceId: "", context: undefined, ownerId: undefined };
 }
 
 export const OnDeleteRequest = {
@@ -460,6 +472,9 @@ export const OnDeleteRequest = {
     }
     if (message.context !== undefined) {
       writer.uint32(18).bytes(message.context);
+    }
+    if (message.ownerId !== undefined) {
+      writer.uint32(26).string(message.ownerId);
     }
     return writer;
   },
@@ -477,6 +492,9 @@ export const OnDeleteRequest = {
         case 2:
           message.context = reader.bytes();
           break;
+        case 3:
+          message.ownerId = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -493,6 +511,7 @@ export const OnDeleteRequest = {
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : undefined,
+      ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
     };
   },
 
@@ -505,6 +524,7 @@ export const OnDeleteRequest = {
         message.context !== undefined
           ? base64FromBytes(message.context)
           : undefined);
+    message.ownerId !== undefined && (obj.ownerId = message.ownerId);
     return obj;
   },
 
@@ -512,6 +532,7 @@ export const OnDeleteRequest = {
     const message = createBaseOnDeleteRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
     message.context = object.context ?? undefined;
+    message.ownerId = object.ownerId ?? undefined;
     return message;
   },
 };

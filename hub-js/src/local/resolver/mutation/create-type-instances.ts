@@ -1,5 +1,5 @@
 import { QueryResult, Transaction } from "neo4j-driver";
-import { BUILTIN_STORAGE_BACKEND_ID } from "../../config";
+import { BUILTIN_STORAGE_BACKEND_ID } from "../../../config";
 import { Context } from "./context";
 import {
   uniqueNamesGenerator,
@@ -8,21 +8,26 @@ import {
   colors,
   animals,
 } from "unique-names-generator";
-import { DeleteInput, StoreInput, UpdatedContexts } from "../storage/service";
+import DelegatedStorageService, {
+  DeleteInput,
+  StoreInput,
+  UpdatedContexts,
+} from "../../storage/service";
 import {
   CreateTypeInstanceInput,
   CreateTypeInstancesInput,
   TypeInstanceBackendDetails,
   TypeInstanceBackendInput,
   TypeInstanceUsesRelationInput,
-} from "../types/type-instance";
+} from "../../types/type-instance";
 import {
   CustomCypherErrorCode,
   CustomCypherErrorOutput,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
-import { logger } from "../../logger";
+import { logger } from "../../../logger";
 import { builtinStorageBackendDetails } from "./register-built-in-storage";
+import * as grpc from "@grpc/grpc-js";
 
 const genAdjsColorsAndAnimals: Config = {
   dictionaries: [adjectives, colors, animals],
@@ -43,8 +48,7 @@ export type TypeInstanceInput = Omit<CreateTypeInstanceInput, "backend"> & {
 };
 
 export async function createTypeInstances(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: unknown,
   args: CreateTypeInstancesArgs,
   context: Context
 ) {
@@ -90,14 +94,59 @@ export async function createTypeInstances(
       }));
     });
   } catch (e) {
-    // Ensure that data is deleted in case of not committed transaction
-    await context.delegatedStorage.Delete(...externallyStored);
+    const rollbackErr = await rollbackExternalStoreAction(
+      context.delegatedStorage,
+      externallyStored
+    );
 
     const err = e as Error;
-    throw new Error(`failed to create the TypeInstances: ${err.message}`);
+    const outErr = aggregateError(err, rollbackErr);
+    throw new Error(`failed to create the TypeInstances: ${outErr.message}`);
   } finally {
     await neo4jSession.close();
   }
+}
+
+// Ensure that data is deleted in case of not committed transaction
+async function rollbackExternalStoreAction(
+  delegatedStorage: DelegatedStorageService,
+  externallyStored: DeleteInput[]
+): Promise<Error | undefined> {
+  try {
+    await delegatedStorage.Delete(...externallyStored);
+  } catch (e) {
+    const err = e as grpc.ServiceError;
+    if (err.code != grpc.status.NOT_FOUND) {
+      return new Error(`rollback externally stored values: ${err.message}`);
+    }
+  }
+  return;
+}
+
+// Allows printing multiple errors in readable way. For example:
+//
+//   All attempts fail:
+//   #1: graphql: failed to create the TypeInstances: 2 error occurred:
+//   	  * ClientError: /storage_backend.StorageBackend/OnCreate INVALID_ARGUMENT: Delegated storage doesn't accept value
+//   	  * ClientError: /storage_backend.StorageBackend/OnDelete NOT_FOUND: path "/tmp/capact/85375699-6e4f-4089-b99c-9bece4c17190" in provider "dotenv" not found
+export function aggregateError(
+  ...input: (string | Error | undefined)[]
+): Error {
+  const errors = input.filter((x) => !!x);
+
+  let header = "";
+  switch (errors.length) {
+    case 0:
+      break;
+    case 1:
+      header = "1 error occurred:\n\t* ";
+      break;
+    default:
+      header = `${errors.length} error occurred:\n\t* `;
+  }
+  const items: string = input.filter((x) => !!x).join("\n\t* ");
+
+  return new Error(`${header}${items}`);
 }
 
 function validate(input: TypeInstanceInput[]) {
@@ -182,7 +231,20 @@ async function createTypeInstancesInDB(
            CREATE (ti)-[:CONTAINS]->(tir)
 
            CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
-           CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson(typeInstance.value)})
+           CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
+           WITH *
+           CALL apoc.do.when(
+               typeInstance.backend.abstract,
+               '
+                   SET spec.value = apoc.convert.toJson(typeInstance.value)
+                   RETURN true as executed
+               ',
+               '
+                   RETURN false as executed
+               ',
+               {typeInstance: typeInstance, spec: spec}
+           ) YIELD value
+
            CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(typeInstance.backend.context)})
            CREATE (spec)-[:WITH_BACKEND]->(specBackend)
 
@@ -237,7 +299,7 @@ async function updateTypeInstancesContextInDB(
   updatedContexts: UpdatedContexts
 ) {
   if (Object.keys(updatedContexts).length) {
-    logger.debug("Executing query to update backend contexts");
+    logger.debug("Executing query to update backend contexts", updatedContexts);
   }
 
   await tx.run(

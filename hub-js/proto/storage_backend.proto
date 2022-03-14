@@ -22,6 +22,7 @@ message OnUpdateRequest {
   uint32 new_resource_version = 2;
   bytes new_value = 3;
   optional bytes context = 4;
+  optional string owner_id = 5;
 }
 
 message OnUpdateResponse {
@@ -31,6 +32,7 @@ message OnUpdateResponse {
 message OnDeleteRequest {
   string type_instance_id = 1;
   optional bytes context = 2;
+  optional string owner_id = 3;
 }
 
 message OnDeleteResponse {}

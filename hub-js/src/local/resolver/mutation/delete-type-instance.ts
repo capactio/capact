@@ -1,21 +1,17 @@
 import { Transaction } from "neo4j-driver";
-import { ContextWithDriver } from "./context";
+import { Context } from "./context";
 import {
   CustomCypherErrorCode,
+  CustomCypherErrorOutput,
   tryToExtractCustomCypherError,
 } from "./cypher-errors";
-import { logger } from "../../logger";
-
-export interface UpdateTypeInstanceError {
-  code: CustomCypherErrorCode;
-  ids: string[];
-}
+import { logger } from "../../../logger";
+import { TypeInstanceBackendInput } from "../../types/type-instance";
 
 export async function deleteTypeInstance(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: unknown,
   args: { id: string; ownerID: string },
-  context: ContextWithDriver
+  context: Context
 ) {
   const neo4jSession = context.driver.session();
   try {
@@ -24,7 +20,7 @@ export async function deleteTypeInstance(
         "Executing query to delete TypeInstance from database",
         args
       );
-      await tx.run(
+      const result = await tx.run(
         `
             OPTIONAL MATCH (ti:TypeInstance {id: $id})
 
@@ -45,40 +41,75 @@ export async function deleteTypeInstance(
             CALL {
                 WITH ti
                 WITH ti
-                MATCH (ti)-[:USES]->(others:TypeInstance)
-                WITH count(others) as othersLen
-                RETURN  othersLen > 1 as isUsed
+                MATCH (others:TypeInstance)-[:USES]->(ti)
+                RETURN  collect(others.id) as usedIds
             }
-            CALL apoc.util.validate(isUsed, apoc.convert.toJson({code: 400}), null)
+            CALL apoc.util.validate(size(usedIds) > 0, apoc.convert.toJson({ids: usedIds, code: 400}), null)
 
             WITH ti
             MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
             MATCH (ti)-[:OF_TYPE]->(typeRef: TypeInstanceTypeReference)
+            MATCH (ti)-[:STORED_IN]->(backendRef: TypeInstanceBackendReference)
             MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
             MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
+            MATCH (spec)-[:WITH_BACKEND]->(specBackend: TypeInstanceResourceVersionSpecBackend)
+
             OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
 
-            DETACH DELETE ti, metadata, spec, tirs
+            // NOTE: Need to be preserved with 'WITH' statement, otherwise we won't be able
+            // to access node's properties after 'DETACH DELETE' statement.
+            WITH *, {id: ti.id, backend: { id: backendRef.id, context: specBackend.context, abstract: backendRef.abstract}} as out
+            DETACH DELETE ti, metadata, spec, tirs, specBackend
 
-            WITH typeRef
+            WITH *
             CALL {
               MATCH (typeRef)
               WHERE NOT (typeRef)--()
               DELETE (typeRef)
-              RETURN 'remove typeRef'
+              RETURN count([]) as _tmp0
             }
 
             WITH *
             CALL {
-              MATCH (attrRef)
-              WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
-              DELETE (attrRef)
-              RETURN 'remove attr'
+              MATCH (backendRef)
+              WHERE NOT (backendRef)--()
+              DELETE (backendRef)
+              RETURN count([]) as _tmp1
             }
 
-            RETURN $id`,
+            WITH *
+            CALL {
+              OPTIONAL MATCH (attrRef)
+              WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
+              DELETE (attrRef)
+              RETURN count([]) as _tmp2
+            }
+
+            RETURN out`,
         { id: args.id, ownerID: args.ownerID || null }
       );
+
+      // NOTE: Use map to ensure that external storage is not called multiple time for the same ID
+      const deleteExternally = new Map<string, unknown>();
+      result.records.forEach((record) => {
+        const out = record.get("out");
+
+        if (out.backend.abstract) {
+          return;
+        }
+        deleteExternally.set(out.id, out.backend);
+      });
+
+      for (const [id, backend] of deleteExternally) {
+        await context.delegatedStorage.Delete({
+          typeInstance: {
+            id,
+            ownerID: args.ownerID,
+          },
+          backend: backend as TypeInstanceBackendInput,
+        });
+      }
+
       return args.id;
     });
   } catch (e) {
@@ -92,6 +123,9 @@ export async function deleteTypeInstance(
         case CustomCypherErrorCode.NotFound:
           err = Error(`TypeInstance was not found`);
           break;
+        case CustomCypherErrorCode.BadRequest:
+          err = generateBadRequestError(customErr);
+          break;
         default:
           err = Error(`Unexpected error code ${customErr.code}`);
           break;
@@ -104,4 +138,16 @@ export async function deleteTypeInstance(
   } finally {
     await neo4jSession.close();
   }
+}
+
+function generateBadRequestError(customErr: CustomCypherErrorOutput) {
+  if (!Object.prototype.hasOwnProperty.call(customErr, "ids")) {
+    // it shouldn't happen
+    return Error(`TypeInstance is used by other TypeInstances`);
+  }
+  return Error(
+    `TypeInstance is used by other TypeInstances, you must first remove ${customErr.ids.join(
+      '", "'
+    )}`
+  );
 }

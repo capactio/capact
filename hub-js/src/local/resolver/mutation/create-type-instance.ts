@@ -1,5 +1,5 @@
 import { Context } from "./context";
-import { CreateTypeInstanceInput } from "../types/type-instance";
+import { CreateTypeInstanceInput } from "../../types/type-instance";
 import {
   createTypeInstances,
   CreateTypeInstancesArgs,
@@ -10,8 +10,7 @@ interface CreateTypeInstanceArgs {
 }
 
 export async function createTypeInstance(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _: any,
+  _: unknown,
   args: CreateTypeInstanceArgs,
   context: Context
 ) {
