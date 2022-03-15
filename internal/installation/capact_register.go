@@ -177,13 +177,10 @@ func (i *CapactRegister) produceHelmReleaseTypeInstance(helmRelease *release.Rel
 		return nil, errors.Wrap(err, "while producing Helm release definition")
 	}
 
-	var unmarshalled map[string]interface{}
+	var unmarshalled interface{}
 	err = yaml.Unmarshal(releaseOut, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
-	}
-	if _, ok := unmarshalled["value"]; !ok {
-		return nil, errors.Wrap(err, "while getting value from unmarshalled additional output")
 	}
 
 	return &gqllocalapi.CreateTypeInstanceInput{
@@ -192,7 +189,7 @@ func (i *CapactRegister) produceHelmReleaseTypeInstance(helmRelease *release.Rel
 			Path:     helmReleaseTypeRefPath,
 			Revision: "0.1.0",
 		},
-		Value: unmarshalled["value"],
+		Value: unmarshalled,
 	}, nil
 }
 
@@ -210,14 +207,10 @@ func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease
 		return nil, errors.Wrap(err, "while producing additional info")
 	}
 
-	var unmarshalled map[string]interface{}
+	var unmarshalled interface{}
 	err = yaml.Unmarshal(data, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
-	}
-
-	if _, ok := unmarshalled["value"]; !ok {
-		return nil, errors.Wrap(err, "while getting value from unmarshalled additional output")
 	}
 
 	return &gqllocalapi.CreateTypeInstanceInput{
@@ -226,6 +219,6 @@ func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease
 			Path:     capactTypeRefPath,
 			Revision: "0.1.0",
 		},
-		Value: unmarshalled["value"],
+		Value: unmarshalled,
 	}, nil
 }

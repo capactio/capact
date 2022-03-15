@@ -2,6 +2,7 @@ package argoactions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -30,6 +31,12 @@ type Upload struct {
 	log    *zap.Logger
 	client *hubclient.Client
 	cfg    UploadConfig
+}
+
+//UploadTypeInstanceData represents the TypeInstance data to upload.
+type UploadTypeInstanceData struct {
+	Value   interface{} `json:"value"`
+	Backend *Backend    `json:"backend,omitempty"`
 }
 
 // NewUploadAction returns a new Upload instance.
@@ -119,31 +126,29 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 			return ErrMissingTypeInstanceValue(*typeInstance.Alias)
 		}
 
-		// render value
-		if _, ok = value["value"]; ok {
-			typeInstanceValue, ok := value["value"].(map[string]interface{})
-			if !ok {
-				return ErrTypeConversion("value", "map[string]interface{}", *typeInstance.Alias)
-			}
-			typeInstance.Value = typeInstanceValue
-		} else {
+		if _, ok = value["value"]; !ok {
 			// for backward compatibility, if there is an artifact without value/backend syntax,
 			// treat it as a value for TypeInstance
 			typeInstance.Value = value
 			continue
 		}
 
-		// render backend
-		if _, ok := value["backend"]; ok {
-			typeInstanceBackend, ok := value["backend"].(map[string]interface{})
-			if !ok {
-				return ErrTypeConversion("backend", "map[string]interface{}", *typeInstance.Alias)
+		data, err := json.Marshal(value)
+		if err != nil {
+			return errors.Wrap(err, "while marshaling TypeInstance")
+		}
+
+		unmarshalledTI := UploadTypeInstanceData{}
+		err = json.Unmarshal(data, &unmarshalledTI)
+		if err != nil {
+			return errors.Wrap(err, "while unmarshaling TypeInstance")
+		}
+
+		typeInstance.Value = unmarshalledTI.Value
+		if unmarshalledTI.Backend != nil {
+			typeInstance.Backend = &graphqllocal.TypeInstanceBackendInput{
+				Context: unmarshalledTI.Backend.Context,
 			}
-			backendContext, ok := typeInstanceBackend["context"].(map[string]interface{})
-			if !ok {
-				return ErrTypeConversion("backend.context", "map[string]interface{}", *typeInstance.Alias)
-			}
-			typeInstance.Backend.Context = backendContext
 		}
 	}
 	return nil

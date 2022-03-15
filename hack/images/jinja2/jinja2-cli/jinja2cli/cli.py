@@ -312,16 +312,12 @@ def cli(opts, args, config):  # noqa: C901
 
         out = codecs.getwriter("utf8")(out)
 
-    if config.get("prefix") is not None and len(parsed_data) != 0:
-        parsed_data = {config["prefix"]: parsed_data}
-    if config.get("strip-value") is True and len(parsed_data) != 0 and "value" in parsed_data:
-        parsed_data = parsed_data.get("value", {})
+    parsed_data = preprocessing_data(config, parsed_data)
 
     template_path = os.path.abspath(template_path)
     out.write(render(template_path, parsed_data, extensions, opts.filters, opts.strict))
     out.flush()
     return 0
-
 
 def parse_kv_string(pairs):
     dict_ = {}
@@ -330,6 +326,17 @@ def parse_kv_string(pairs):
         dict_[force_text(k)] = force_text(v)
     return dict_
 
+
+def preprocessing_data(config, data):
+    '''Return preprocessed data based on the applied configuration.'''
+
+    if config.get("unpackValue") is True and len(data) != 0 and "value" in data:
+        data = data.get("value", {})
+
+    if config.get("prefix") is not None and len(data) != 0:
+        data = {config["prefix"]: data}
+
+    return data
 
 class LazyHelpOption(Option):
     "An Option class that resolves help from a callable"

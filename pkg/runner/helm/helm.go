@@ -122,7 +122,11 @@ func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 
 func (r *helmRunner) saveOutput(out Output) error {
 	r.log.Debug("Saving Helm release output", zap.String("path", r.cfg.Output.HelmReleaseFilePath))
-	err := runner.SaveToFile(r.cfg.Output.HelmReleaseFilePath, out.Release)
+	bytesRelease, err := runner.NestingOutputUnderValue(out.Release)
+	if err != nil {
+		return errors.Wrap(err, "while nesting Terrafrom release under value")
+	}
+	err = runner.SaveToFile(r.cfg.Output.HelmReleaseFilePath, bytesRelease)
 	if err != nil {
 		return errors.Wrap(err, "while saving Helm release output")
 	}
@@ -132,7 +136,11 @@ func (r *helmRunner) saveOutput(out Output) error {
 	}
 
 	r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
-	err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
+	bytesAdditional, err := runner.NestingOutputUnderValue(out.Additional)
+	if err != nil {
+		return errors.Wrap(err, "while nesting Terrafrom additional under value")
+	}
+	err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, bytesAdditional)
 	if err != nil {
 		return errors.Wrap(err, "while saving default output")
 	}

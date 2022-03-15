@@ -73,12 +73,12 @@ var _ = Describe("Action", func() {
 			By("1. Preparing input Type Instances")
 
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue})
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, nil)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate()
+			update := getTypeInstanceInputForUpdate(nil)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
@@ -154,12 +154,12 @@ var _ = Describe("Action", func() {
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue})
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, nil)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate()
+			update := getTypeInstanceInputForUpdate(nil)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
@@ -221,12 +221,12 @@ var _ = Describe("Action", func() {
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue})
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, nil)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate()
+			update := getTypeInstanceInputForUpdate(nil)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
@@ -289,21 +289,22 @@ var _ = Describe("Action", func() {
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{
-				"value": map[string]interface{}{
+			backendInput := hublocalgraphql.TypeInstanceBackendInput{
+				ID: testStorageBackendTI.ID,
+				Context: map[string]interface{}{
+					"provider": "dotenv",
+				},
+			}
+			download := getTypeInstanceInputForDownload(
+				map[string]interface{}{
 					"key": implIndicatorValue,
 				},
-				"backend": map[string]interface{}{
-					"context": map[string]interface{}{
-						"provider": "dotenv",
-					},
-				},
-			})
+				&backendInput)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate()
+			update := getTypeInstanceInputForUpdate(&backendInput)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
@@ -339,70 +340,14 @@ var _ = Describe("Action", func() {
 
 			By("4.1 Check uploaded TypeInstances")
 			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: testStorageBackendTI.ID, Abstract: false}
-			fmt.Println("expUploadTIBackend", expUploadTIBackend.ID)
 			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
 			defer cleanupUploaded()
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("4.2 Check Action output TypeInstances")
+			updateTIOutput := mapToOutputTypeInstanceDetails(updateTI, expUploadTIBackend)
 			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
-		})
-
-		It("should fail due to incorrect storage provider", func() {
-			implIndicatorValue := "Implementation C"
-			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
-
-			// TODO: This can be extracted after switching to ginkgo v2
-			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
-			By("1. Preparing input Type Instances")
-			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{
-				"value": map[string]interface{}{
-					"key": implIndicatorValue,
-				},
-				"backend": map[string]interface{}{
-					"context": map[string]interface{}{
-						"provider": "incorrect",
-					},
-				},
-			})
-			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
-			defer downloadTICleanup()
-
-			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate()
-			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
-			defer updateTICleanup()
-
-			By("1.3 Create TypeInstance which is required for Implementation C to be picked based on Policy")
-			typeInstanceValue := getTypeInstanceInputForPolicy()
-			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
-			defer tiCleanupFn()
-
-			inputData := &enginegraphql.ActionInputData{
-				TypeInstances: []*enginegraphql.InputTypeInstanceData{
-					{Name: "testInput", ID: downloadTI.ID},
-					{Name: "testUpdate", ID: updateTI.ID},
-				},
-			}
-
-			By("2. Modifying default Policy to pick Implementation C...")
-			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
-				{
-					ID:          injectTypeInstance.ID,
-					Description: ptr.String("Test TypeInstance"),
-				},
-				{
-					ID:          testStorageBackendTI.ID,
-					Description: ptr.String("Validation storage backend TypeInstance"),
-				},
-			}
-			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
-
-			By("3. Create action and wait for a status phase failed")
-			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
-			runActionAndWaitForStatus(ctx, engineClient, actionName, enginegraphql.ActionStatusPhaseFailed)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(updateTIOutput, uploadedTIOutput), HaveLen(2)))
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -436,7 +381,7 @@ var _ = Describe("Action", func() {
 
 			By("Prepare TypeInstance to update")
 
-			update := getTypeInstanceInputForUpdate()
+			update := getTypeInstanceInputForUpdate(nil)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
@@ -564,13 +509,14 @@ func getTypeInstanceInputForPolicy() *hublocalgraphql.CreateTypeInstanceInput {
 	}
 }
 
-func getTypeInstanceInputForDownload(testValues map[string]interface{}) *hublocalgraphql.CreateTypeInstanceInput {
+func getTypeInstanceInputForDownload(testValues map[string]interface{}, backendInput *hublocalgraphql.TypeInstanceBackendInput) *hublocalgraphql.CreateTypeInstanceInput {
 	return &hublocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.capactio.capact.validation.download",
 			Revision: "0.1.0",
 		},
-		Value: testValues,
+		Value:   testValues,
+		Backend: backendInput,
 		Attributes: []*hublocalgraphql.AttributeReferenceInput{
 			{
 				Path:     "cap.attribute.capactio.capact.attribute1",
@@ -580,13 +526,14 @@ func getTypeInstanceInputForDownload(testValues map[string]interface{}) *hubloca
 	}
 }
 
-func getTypeInstanceInputForUpdate() *hublocalgraphql.CreateTypeInstanceInput {
+func getTypeInstanceInputForUpdate(backendInput *hublocalgraphql.TypeInstanceBackendInput) *hublocalgraphql.CreateTypeInstanceInput {
 	return &hublocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.capactio.capact.validation.update",
 			Revision: "0.1.0",
 		},
-		Value: map[string]interface{}{"key": "random text to update"},
+		Value:   map[string]interface{}{"key": "random text to update"},
+		Backend: backendInput,
 		Attributes: []*hublocalgraphql.AttributeReferenceInput{
 			{
 				Path:     "cap.attribute.capactio.capact.attribute1",

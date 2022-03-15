@@ -3,7 +3,6 @@ package helm
 import (
 	"strings"
 
-	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/chart"
@@ -40,11 +39,7 @@ func (o *Outputter) ProduceHelmRelease(repository string, helmRelease *release.R
 		},
 	}
 
-	nestingValue := map[string]interface{}{
-		"value": releaseData,
-	}
-
-	bytes, err := yaml.Marshal(&nestingValue)
+	bytes, err := yaml.Marshal(&releaseData)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling yaml")
 	}
@@ -63,11 +58,6 @@ func (o *Outputter) ProduceAdditional(args OutputArgs, chrt *chart.Chart, rel *r
 	bytes, err := o.renderer.Do(chrt, rel, []byte(args.GoTemplate))
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering additional output")
-	}
-
-	bytes, err = runner.NestingOutputUnderValue(bytes)
-	if err != nil {
-		return nil, errors.Wrap(err, "while nesting output under a value key")
 	}
 
 	return bytes, nil
