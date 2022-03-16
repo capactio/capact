@@ -2,7 +2,7 @@
 
 ## Overview
 
-Helm Storage Backend is a service which handles Helm-related storage logic. It works in two modes. Each of them exposes the same Storage Backend gRPC server, but with a different set of features.
+Helm Storage Backend is a service which handles Helm-related storage logic. It works in different modes. Each of them exposes the same Storage Backend gRPC server with a different set of features.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ Helm Storage Backend is a service which handles Helm-related storage logic. It w
 
 ## Usage
 
-There are two separate modes of running the Helm storage backend.
+There are different modes of running the Helm storage backend.
 
 ### Helm Release storage backend
 
