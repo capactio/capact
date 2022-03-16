@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-storage-backend.fullname" . }}
+  labels:
+    {{- include "helm-storage-backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "helm-storage-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "helm-storage-backend.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "helm-storage-backend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        {{- if .Values.helmReleaseBackend.enabled }}
+        - name: release
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: release-grpc
+              containerPort: 50051
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: APP_GRPC_ADDR
+              value: ":50051"
+            - name: APP_HEALTHZ_ADDR
+              value: ":8082"
+            - name: APP_LOGGER_DEV_MODE
+              value: "true"
+            - name: APP_MODE
+              value: "release"
+        {{- end }}
+        {{- if .Values.helmTemplateBackend.enabled }}
+        - name: template
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: template-grpc
+              containerPort: 50052
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8083
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8083
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: APP_GRPC_ADDR
+              value: ":50052"
+            - name: APP_HEALTHZ_ADDR
+              value: ":8083"
+            - name: APP_LOGGER_DEV_MODE
+              value: "true"
+            - name: APP_MODE
+              value: "template"
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

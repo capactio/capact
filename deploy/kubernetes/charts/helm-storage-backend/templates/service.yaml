@@ -1,0 +1,35 @@
+{{- if .Values.helmReleaseBackend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm-storage-backend.fullname" . }}-release
+  labels:
+    {{- include "helm-storage-backend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.helmReleaseBackend.service.type }}
+  ports:
+    - port: {{ .Values.helmReleaseBackend.service.port }}
+      targetPort: release-grpc
+      protocol: TCP
+      name: release-grpc
+  selector:
+    {{- include "helm-storage-backend.selectorLabels" . | nindent 4 }}
+{{- end }}
+---
+{{- if .Values.helmTemplateBackend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm-storage-backend.fullname" . }}-template
+  labels:
+    {{- include "helm-storage-backend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.helmTemplateBackend.service.type }}
+  ports:
+    - port: {{ .Values.helmTemplateBackend.service.port }}
+      targetPort: template-grpc
+      protocol: TCP
+      name: template-grpc
+  selector:
+    {{- include "helm-storage-backend.selectorLabels" . | nindent 4 }}
+{{- end }}
