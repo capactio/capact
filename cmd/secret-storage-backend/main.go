@@ -58,7 +58,6 @@ func main() {
 	exitOnError(err, "while loading providers")
 
 	handler := secret_storage_backend.NewHandler(logger, providers)
-	exitOnError(err, "while creating new handler")
 
 	listenCfg := net.ListenConfig{}
 	listener, err := listenCfg.Listen(ctx, "tcp", cfg.GRPCAddr)

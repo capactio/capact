@@ -12,6 +12,7 @@ import (
 // Keychain is a simple adapter to Zalando go-keyring.
 type Keychain struct{}
 
+// Get returns an Item matching the key.
 func (k Keychain) Get(key string) (keyring.Item, error) {
 	data, err := zkeyring.Get(serviceName, key)
 	if err != nil {
@@ -23,6 +24,7 @@ func (k Keychain) Get(key string) (keyring.Item, error) {
 	}, nil
 }
 
+// Set stores an Item on the keyring.
 func (k Keychain) Set(item keyring.Item) error {
 	err := zkeyring.Set(serviceName, item.Key, string(item.Data))
 	if err != nil {
@@ -31,6 +33,7 @@ func (k Keychain) Set(item keyring.Item) error {
 	return nil
 }
 
+// Remove removes the item with matching key.
 func (k Keychain) Remove(key string) error {
 	err := zkeyring.Delete(serviceName, key)
 	if err != nil {
