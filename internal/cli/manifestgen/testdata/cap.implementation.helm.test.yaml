@@ -108,26 +108,26 @@ spec:
                                 logTimezone: <@ additionalinput.audit.logTimezone | default("") | tojson @>
                                 pgAuditLog: <@ additionalinput.audit.pgAuditLog | default("") | tojson @>
                                 pgAuditLogCatalog: <@ additionalinput.audit.pgAuditLogCatalog | default("off") @>
-                              commonAnnotations: {}
+                              commonAnnotations: <@ additionalinput.commonAnnotations | default({}) | tojson @>
                               configurationConfigMap: <@ additionalinput.configurationConfigMap | default("") | tojson @>
                               containerSecurityContext:
                                 enabled: <@ additionalinput.containerSecurityContext.enabled | default(true) | tojson @>
                                 runAsUser: <@ additionalinput.containerSecurityContext.runAsUser | default(1001) @>
-                              customLivenessProbe: {}
-                              customReadinessProbe: {}
-                              customStartupProbe: {}
+                              customLivenessProbe: <@ additionalinput.customLivenessProbe | default({}) | tojson @>
+                              customReadinessProbe: <@ additionalinput.customReadinessProbe | default({}) | tojson @>
+                              customStartupProbe: <@ additionalinput.customStartupProbe | default({}) | tojson @>
                               diagnosticMode:
                                 args: <@ additionalinput.diagnosticMode.args | default(["infinity"]) @>
                                 command: <@ additionalinput.diagnosticMode.command | default(["sleep"]) @>
                                 enabled: <@ additionalinput.diagnosticMode.enabled | default(false) | tojson @>
                               existingSecret: <@ additionalinput.existingSecret | default("") | tojson @>
                               extendedConfConfigMap: <@ additionalinput.extendedConfConfigMap | default("") | tojson @>
-                              extraDeploy: <@ additionalinput.extraDeploy | default(None) | tojson @>
-                              extraEnv: <@ additionalinput.extraEnv | default(None) | tojson @>
+                              extraDeploy: <@ additionalinput.extraDeploy | default([]) | tojson @>
+                              extraEnv: <@ additionalinput.extraEnv | default([]) | tojson @>
                               extraEnvVarsCM: <@ additionalinput.extraEnvVarsCM | default("") | tojson @>
                               fullnameOverride: <@ additionalinput.fullnameOverride | default("") | tojson @>
                               global:
-                                imagePullSecrets: <@ additionalinput.global.imagePullSecrets | default(None) | tojson @>
+                                imagePullSecrets: <@ additionalinput.global.imagePullSecrets | default([]) | tojson @>
                                 imageRegistry: <@ additionalinput.global.imageRegistry | default("") | tojson @>
                                 postgresql:
                                   existingSecret: <@ additionalinput.global.postgresql.existingSecret | default("") | tojson @>
@@ -140,12 +140,12 @@ spec:
                               image:
                                 debug: <@ additionalinput.image.debug | default(false) | tojson @>
                                 pullPolicy: <@ additionalinput.image.pullPolicy | default("IfNotPresent") @>
-                                pullSecrets: <@ additionalinput.image.pullSecrets | default(None) | tojson @>
+                                pullSecrets: <@ additionalinput.image.pullSecrets | default([]) | tojson @>
                                 registry: <@ additionalinput.image.registry | default("docker.io") @>
                                 repository: <@ additionalinput.image.repository | default("bitnami/postgresql") @>
                                 tag: <@ additionalinput.image.tag | default("11.13.0-debian-10-r0") @>
                               initdbPassword: <@ additionalinput.initdbPassword | default("") | tojson @>
-                              initdbScripts: {}
+                              initdbScripts: <@ additionalinput.initdbScripts | default({}) | tojson @>
                               initdbScriptsConfigMap: <@ additionalinput.initdbScriptsConfigMap | default("") | tojson @>
                               initdbScriptsSecret: <@ additionalinput.initdbScriptsSecret | default("") | tojson @>
                               initdbUser: <@ additionalinput.initdbUser | default("") | tojson @>
@@ -163,7 +163,7 @@ spec:
                                 suffix: <@ additionalinput.ldap.suffix | default("") | tojson @>
                                 tls: <@ additionalinput.ldap.tls | default("") | tojson @>
                                 url: <@ additionalinput.ldap.url | default("") | tojson @>
-                              lifecycleHooks: {}
+                              lifecycleHooks: <@ additionalinput.lifecycleHooks | default({}) | tojson @>
                               livenessProbe:
                                 enabled: <@ additionalinput.livenessProbe.enabled | default(true) | tojson @>
                                 failureThreshold: <@ additionalinput.livenessProbe.failureThreshold | default(6) @>
@@ -172,12 +172,12 @@ spec:
                                 successThreshold: <@ additionalinput.livenessProbe.successThreshold | default(1) @>
                                 timeoutSeconds: <@ additionalinput.livenessProbe.timeoutSeconds | default(5) @>
                               metrics:
-                                customMetrics: {}
+                                customMetrics: <@ additionalinput.metrics.customMetrics | default({}) | tojson @>
                                 enabled: <@ additionalinput.metrics.enabled | default(false) | tojson @>
-                                extraEnvVars: <@ additionalinput.metrics.extraEnvVars | default(None) | tojson @>
+                                extraEnvVars: <@ additionalinput.metrics.extraEnvVars | default([]) | tojson @>
                                 image:
                                   pullPolicy: <@ additionalinput.metrics.image.pullPolicy | default("IfNotPresent") @>
-                                  pullSecrets: <@ additionalinput.metrics.image.pullSecrets | default(None) | tojson @>
+                                  pullSecrets: <@ additionalinput.metrics.image.pullSecrets | default([]) | tojson @>
                                   registry: <@ additionalinput.metrics.image.registry | default("docker.io") @>
                                   repository: <@ additionalinput.metrics.image.repository | default("bitnami/postgres-exporter") @>
                                   tag: <@ additionalinput.metrics.image.tag | default("0.10.0-debian-10-r27") @>
@@ -189,10 +189,10 @@ spec:
                                   successThreshold: <@ additionalinput.metrics.livenessProbe.successThreshold | default(1) @>
                                   timeoutSeconds: <@ additionalinput.metrics.livenessProbe.timeoutSeconds | default(5) @>
                                 prometheusRule:
-                                  additionalLabels: {}
+                                  additionalLabels: <@ additionalinput.metrics.prometheusRule.additionalLabels | default({}) | tojson @>
                                   enabled: <@ additionalinput.metrics.prometheusRule.enabled | default(false) | tojson @>
                                   namespace: <@ additionalinput.metrics.prometheusRule.namespace | default("") | tojson @>
-                                  rules: <@ additionalinput.metrics.prometheusRule.rules | default(None) | tojson @>
+                                  rules: <@ additionalinput.metrics.prometheusRule.rules | default([]) | tojson @>
                                 readinessProbe:
                                   enabled: <@ additionalinput.metrics.readinessProbe.enabled | default(true) | tojson @>
                                   failureThreshold: <@ additionalinput.metrics.readinessProbe.failureThreshold | default(6) @>
@@ -200,7 +200,7 @@ spec:
                                   periodSeconds: <@ additionalinput.metrics.readinessProbe.periodSeconds | default(10) @>
                                   successThreshold: <@ additionalinput.metrics.readinessProbe.successThreshold | default(1) @>
                                   timeoutSeconds: <@ additionalinput.metrics.readinessProbe.timeoutSeconds | default(5) @>
-                                resources: {}
+                                resources: <@ additionalinput.metrics.resources | default({}) | tojson @>
                                 securityContext:
                                   enabled: <@ additionalinput.metrics.securityContext.enabled | default(false) | tojson @>
                                   runAsUser: <@ additionalinput.metrics.securityContext.runAsUser | default(1001) @>
@@ -211,34 +211,34 @@ spec:
                                   loadBalancerIP: <@ additionalinput.metrics.service.loadBalancerIP | default("") | tojson @>
                                   type: <@ additionalinput.metrics.service.type | default("ClusterIP") @>
                                 serviceMonitor:
-                                  additionalLabels: {}
+                                  additionalLabels: <@ additionalinput.metrics.serviceMonitor.additionalLabels | default({}) | tojson @>
                                   enabled: <@ additionalinput.metrics.serviceMonitor.enabled | default(false) | tojson @>
                                   interval: <@ additionalinput.metrics.serviceMonitor.interval | default("") | tojson @>
-                                  metricRelabelings: <@ additionalinput.metrics.serviceMonitor.metricRelabelings | default(None) | tojson @>
+                                  metricRelabelings: <@ additionalinput.metrics.serviceMonitor.metricRelabelings | default([]) | tojson @>
                                   namespace: <@ additionalinput.metrics.serviceMonitor.namespace | default("") | tojson @>
-                                  relabelings: <@ additionalinput.metrics.serviceMonitor.relabelings | default(None) | tojson @>
+                                  relabelings: <@ additionalinput.metrics.serviceMonitor.relabelings | default([]) | tojson @>
                                   scrapeTimeout: <@ additionalinput.metrics.serviceMonitor.scrapeTimeout | default("") | tojson @>
                               nameOverride: <@ additionalinput.nameOverride | default("") | tojson @>
                               networkPolicy:
                                 allowExternal: <@ additionalinput.networkPolicy.allowExternal | default(true) | tojson @>
                                 enabled: <@ additionalinput.networkPolicy.enabled | default(false) | tojson @>
-                                explicitNamespacesSelector: {}
+                                explicitNamespacesSelector: <@ additionalinput.networkPolicy.explicitNamespacesSelector | default({}) | tojson @>
                               persistence:
                                 accessModes: <@ additionalinput.persistence.accessModes | default(["ReadWriteOnce"]) @>
-                                annotations: {}
+                                annotations: <@ additionalinput.persistence.annotations | default({}) | tojson @>
                                 enabled: <@ additionalinput.persistence.enabled | default(true) | tojson @>
                                 existingClaim: <@ additionalinput.persistence.existingClaim | default("") | tojson @>
                                 mountPath: <@ additionalinput.persistence.mountPath | default("/bitnami/postgresql") @>
-                                selector: {}
+                                selector: <@ additionalinput.persistence.selector | default({}) | tojson @>
                                 size: <@ additionalinput.persistence.size | default("8Gi") @>
                                 storageClass: <@ additionalinput.persistence.storageClass | default("") | tojson @>
                                 subPath: <@ additionalinput.persistence.subPath | default("") | tojson @>
                               pgHbaConfiguration: <@ additionalinput.pgHbaConfiguration | default("") | tojson @>
-                              postgresqlConfiguration: {}
+                              postgresqlConfiguration: <@ additionalinput.postgresqlConfiguration | default({}) | tojson @>
                               postgresqlDataDir: <@ additionalinput.postgresqlDataDir | default("/bitnami/postgresql/data") @>
                               postgresqlDatabase: <@ additionalinput.postgresqlDatabase | default("") | tojson @>
                               postgresqlDbUserConnectionLimit: <@ additionalinput.postgresqlDbUserConnectionLimit | default("") | tojson @>
-                              postgresqlExtendedConf: {}
+                              postgresqlExtendedConf: <@ additionalinput.postgresqlExtendedConf | default({}) | tojson @>
                               postgresqlInitdbArgs: <@ additionalinput.postgresqlInitdbArgs | default("") | tojson @>
                               postgresqlInitdbWalDir: <@ additionalinput.postgresqlInitdbWalDir | default("") | tojson @>
                               postgresqlMaxConnections: <@ additionalinput.postgresqlMaxConnections | default("") | tojson @>
@@ -253,28 +253,28 @@ spec:
                               postgresqlTcpKeepalivesInterval: <@ additionalinput.postgresqlTcpKeepalivesInterval | default("") | tojson @>
                               postgresqlUsername: <@ additionalinput.postgresqlUsername | default("postgres") @>
                               primary:
-                                affinity: {}
-                                annotations: {}
-                                extraInitContainers: <@ additionalinput.primary.extraInitContainers | default(None) | tojson @>
-                                extraVolumeMounts: <@ additionalinput.primary.extraVolumeMounts | default(None) | tojson @>
-                                extraVolumes: <@ additionalinput.primary.extraVolumes | default(None) | tojson @>
-                                labels: {}
+                                affinity: <@ additionalinput.primary.affinity | default({}) | tojson @>
+                                annotations: <@ additionalinput.primary.annotations | default({}) | tojson @>
+                                extraInitContainers: <@ additionalinput.primary.extraInitContainers | default([]) | tojson @>
+                                extraVolumeMounts: <@ additionalinput.primary.extraVolumeMounts | default([]) | tojson @>
+                                extraVolumes: <@ additionalinput.primary.extraVolumes | default([]) | tojson @>
+                                labels: <@ additionalinput.primary.labels | default({}) | tojson @>
                                 nodeAffinityPreset:
                                   key: <@ additionalinput.primary.nodeAffinityPreset.key | default("") | tojson @>
                                   type: <@ additionalinput.primary.nodeAffinityPreset.type | default("") | tojson @>
-                                  values: <@ additionalinput.primary.nodeAffinityPreset.values | default(None) | tojson @>
-                                nodeSelector: {}
+                                  values: <@ additionalinput.primary.nodeAffinityPreset.values | default([]) | tojson @>
+                                nodeSelector: <@ additionalinput.primary.nodeSelector | default({}) | tojson @>
                                 podAffinityPreset: <@ additionalinput.primary.podAffinityPreset | default("") | tojson @>
-                                podAnnotations: {}
+                                podAnnotations: <@ additionalinput.primary.podAnnotations | default({}) | tojson @>
                                 podAntiAffinityPreset: <@ additionalinput.primary.podAntiAffinityPreset | default("soft") @>
-                                podLabels: {}
+                                podLabels: <@ additionalinput.primary.podLabels | default({}) | tojson @>
                                 priorityClassName: <@ additionalinput.primary.priorityClassName | default("") | tojson @>
                                 service:
                                   clusterIP: <@ additionalinput.primary.service.clusterIP | default("") | tojson @>
                                   nodePort: <@ additionalinput.primary.service.nodePort | default("") | tojson @>
                                   type: <@ additionalinput.primary.service.type | default("") | tojson @>
-                                sidecars: <@ additionalinput.primary.sidecars | default(None) | tojson @>
-                                tolerations: <@ additionalinput.primary.tolerations | default(None) | tojson @>
+                                sidecars: <@ additionalinput.primary.sidecars | default([]) | tojson @>
+                                tolerations: <@ additionalinput.primary.tolerations | default([]) | tojson @>
                               primaryAsStandBy:
                                 enabled: <@ additionalinput.primaryAsStandBy.enabled | default(false) | tojson @>
                                 primaryHost: <@ additionalinput.primaryAsStandBy.primaryHost | default("") | tojson @>
@@ -284,31 +284,31 @@ spec:
                               rbac:
                                 create: <@ additionalinput.rbac.create | default(false) | tojson @>
                               readReplicas:
-                                affinity: {}
-                                annotations: {}
-                                extraInitContainers: <@ additionalinput.readReplicas.extraInitContainers | default(None) | tojson @>
-                                extraVolumeMounts: <@ additionalinput.readReplicas.extraVolumeMounts | default(None) | tojson @>
-                                extraVolumes: <@ additionalinput.readReplicas.extraVolumes | default(None) | tojson @>
-                                labels: {}
+                                affinity: <@ additionalinput.readReplicas.affinity | default({}) | tojson @>
+                                annotations: <@ additionalinput.readReplicas.annotations | default({}) | tojson @>
+                                extraInitContainers: <@ additionalinput.readReplicas.extraInitContainers | default([]) | tojson @>
+                                extraVolumeMounts: <@ additionalinput.readReplicas.extraVolumeMounts | default([]) | tojson @>
+                                extraVolumes: <@ additionalinput.readReplicas.extraVolumes | default([]) | tojson @>
+                                labels: <@ additionalinput.readReplicas.labels | default({}) | tojson @>
                                 nodeAffinityPreset:
                                   key: <@ additionalinput.readReplicas.nodeAffinityPreset.key | default("") | tojson @>
                                   type: <@ additionalinput.readReplicas.nodeAffinityPreset.type | default("") | tojson @>
-                                  values: <@ additionalinput.readReplicas.nodeAffinityPreset.values | default(None) | tojson @>
-                                nodeSelector: {}
+                                  values: <@ additionalinput.readReplicas.nodeAffinityPreset.values | default([]) | tojson @>
+                                nodeSelector: <@ additionalinput.readReplicas.nodeSelector | default({}) | tojson @>
                                 persistence:
                                   enabled: <@ additionalinput.readReplicas.persistence.enabled | default(true) | tojson @>
                                 podAffinityPreset: <@ additionalinput.readReplicas.podAffinityPreset | default("") | tojson @>
-                                podAnnotations: {}
+                                podAnnotations: <@ additionalinput.readReplicas.podAnnotations | default({}) | tojson @>
                                 podAntiAffinityPreset: <@ additionalinput.readReplicas.podAntiAffinityPreset | default("soft") @>
-                                podLabels: {}
+                                podLabels: <@ additionalinput.readReplicas.podLabels | default({}) | tojson @>
                                 priorityClassName: <@ additionalinput.readReplicas.priorityClassName | default("") | tojson @>
-                                resources: {}
+                                resources: <@ additionalinput.readReplicas.resources | default({}) | tojson @>
                                 service:
                                   clusterIP: <@ additionalinput.readReplicas.service.clusterIP | default("") | tojson @>
                                   nodePort: <@ additionalinput.readReplicas.service.nodePort | default("") | tojson @>
                                   type: <@ additionalinput.readReplicas.service.type | default("") | tojson @>
-                                sidecars: <@ additionalinput.readReplicas.sidecars | default(None) | tojson @>
-                                tolerations: <@ additionalinput.readReplicas.tolerations | default(None) | tojson @>
+                                sidecars: <@ additionalinput.readReplicas.sidecars | default([]) | tojson @>
+                                tolerations: <@ additionalinput.readReplicas.tolerations | default([]) | tojson @>
                               readinessProbe:
                                 enabled: <@ additionalinput.readinessProbe.enabled | default(true) | tojson @>
                                 failureThreshold: <@ additionalinput.readinessProbe.failureThreshold | default(6) @>
@@ -335,10 +335,10 @@ spec:
                                 enabled: <@ additionalinput.securityContext.enabled | default(true) | tojson @>
                                 fsGroup: <@ additionalinput.securityContext.fsGroup | default(1001) @>
                               service:
-                                annotations: {}
+                                annotations: <@ additionalinput.service.annotations | default({}) | tojson @>
                                 clusterIP: <@ additionalinput.service.clusterIP | default("") | tojson @>
                                 loadBalancerIP: <@ additionalinput.service.loadBalancerIP | default("") | tojson @>
-                                loadBalancerSourceRanges: <@ additionalinput.service.loadBalancerSourceRanges | default(None) | tojson @>
+                                loadBalancerSourceRanges: <@ additionalinput.service.loadBalancerSourceRanges | default([]) | tojson @>
                                 nodePort: <@ additionalinput.service.nodePort | default("") | tojson @>
                                 port: <@ additionalinput.service.port | default(5432) @>
                                 type: <@ additionalinput.service.type | default("ClusterIP") @>
@@ -375,7 +375,7 @@ spec:
                                 enabled: <@ additionalinput.volumePermissions.enabled | default(false) | tojson @>
                                 image:
                                   pullPolicy: <@ additionalinput.volumePermissions.image.pullPolicy | default("Always") @>
-                                  pullSecrets: <@ additionalinput.volumePermissions.image.pullSecrets | default(None) | tojson @>
+                                  pullSecrets: <@ additionalinput.volumePermissions.image.pullSecrets | default([]) | tojson @>
                                   registry: <@ additionalinput.volumePermissions.image.registry | default("docker.io") @>
                                   repository: <@ additionalinput.volumePermissions.image.repository | default("bitnami/bitnami-shell") @>
                                   tag: <@ additionalinput.volumePermissions.image.tag | default("10-debian-10-r159") @>

@@ -20,6 +20,7 @@ spec:
         "properties": {
           "affinity": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "Affinity",
             "$id": "#/properties/affinity"
@@ -85,6 +86,7 @@ spec:
                         "$id": "#/properties/certificates/properties/customCertificate/properties/chainSecret/properties/name"
                       }
                     },
+                    "additionalProperties": true,
                     "type": "object",
                     "title": "ChainSecret",
                     "$id": "#/properties/certificates/properties/customCertificate/properties/chainSecret"
@@ -96,6 +98,7 @@ spec:
                     "$id": "#/properties/certificates/properties/customCertificate/properties/keyLocation"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "CustomCertificate",
                 "$id": "#/properties/certificates/properties/customCertificate"
@@ -151,11 +154,13 @@ spec:
                     "$id": "#/properties/certificates/properties/image/properties/tag"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Image",
                 "$id": "#/properties/certificates/properties/image"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Certificates",
             "$id": "#/properties/certificates"
@@ -168,12 +173,14 @@ spec:
           },
           "commonAnnotations": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "CommonAnnotations",
             "$id": "#/properties/commonAnnotations"
           },
           "commonLabels": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "CommonLabels",
             "$id": "#/properties/commonLabels"
@@ -193,18 +200,21 @@ spec:
                 "$id": "#/properties/containerSecurityContext/properties/runAsUser"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "ContainerSecurityContext",
             "$id": "#/properties/containerSecurityContext"
           },
           "customLivenessProbe": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "CustomLivenessProbe",
             "$id": "#/properties/customLivenessProbe"
           },
           "customReadinessProbe": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "CustomReadinessProbe",
             "$id": "#/properties/customReadinessProbe"
@@ -308,6 +318,7 @@ spec:
                 "$id": "#/properties/global/properties/storageClass"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Global",
             "$id": "#/properties/global"
@@ -364,6 +375,7 @@ spec:
                 "$id": "#/properties/image/properties/tag"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Image",
             "$id": "#/properties/image"
@@ -372,6 +384,7 @@ spec:
             "properties": {
               "annotations": {
                 "properties": {},
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Annotations",
                 "$id": "#/properties/ingress/properties/annotations"
@@ -443,6 +456,7 @@ spec:
                 "$id": "#/properties/ingress/properties/tls"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Ingress",
             "$id": "#/properties/ingress"
@@ -455,6 +469,7 @@ spec:
           },
           "lifecycleHooks": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "LifecycleHooks",
             "$id": "#/properties/lifecycleHooks"
@@ -498,6 +513,7 @@ spec:
                 "$id": "#/properties/livenessProbe/properties/timeoutSeconds"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "LivenessProbe",
             "$id": "#/properties/livenessProbe"
@@ -543,6 +559,7 @@ spec:
                     "$id": "#/properties/metrics/properties/image/properties/tag"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Image",
                 "$id": "#/properties/metrics/properties/image"
@@ -562,17 +579,20 @@ spec:
                     "$id": "#/properties/metrics/properties/podAnnotations/properties/prometheus.io/scrape"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "PodAnnotations",
                 "$id": "#/properties/metrics/properties/podAnnotations"
               },
               "resources": {
                 "properties": {},
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Resources",
                 "$id": "#/properties/metrics/properties/resources"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Metrics",
             "$id": "#/properties/metrics"
@@ -604,12 +624,14 @@ spec:
                 "$id": "#/properties/nodeAffinityPreset/properties/values"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "NodeAffinityPreset",
             "$id": "#/properties/nodeAffinityPreset"
           },
           "nodeSelector": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "NodeSelector",
             "$id": "#/properties/nodeSelector"
@@ -647,6 +669,7 @@ spec:
                 "$id": "#/properties/persistence/properties/storageClass"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Persistence",
             "$id": "#/properties/persistence"
@@ -659,6 +682,7 @@ spec:
           },
           "podAnnotations": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "PodAnnotations",
             "$id": "#/properties/podAnnotations"
@@ -671,6 +695,7 @@ spec:
           },
           "podLabels": {
             "properties": {},
+            "additionalProperties": true,
             "type": "object",
             "title": "PodLabels",
             "$id": "#/properties/podLabels"
@@ -690,6 +715,7 @@ spec:
                 "$id": "#/properties/podSecurityContext/properties/fsGroup"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "PodSecurityContext",
             "$id": "#/properties/podSecurityContext"
@@ -733,6 +759,7 @@ spec:
                 "$id": "#/properties/readinessProbe/properties/timeoutSeconds"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "ReadinessProbe",
             "$id": "#/properties/readinessProbe"
@@ -754,11 +781,13 @@ spec:
                     "$id": "#/properties/resources/properties/requests/properties/memory"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Requests",
                 "$id": "#/properties/resources/properties/requests"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Resources",
             "$id": "#/properties/resources"
@@ -798,6 +827,7 @@ spec:
                     "$id": "#/properties/service/properties/nodePorts/properties/https"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "NodePorts",
                 "$id": "#/properties/service/properties/nodePorts"
@@ -815,6 +845,7 @@ spec:
                 "$id": "#/properties/service/properties/type"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "Service",
             "$id": "#/properties/service"
@@ -872,6 +903,7 @@ spec:
                     "$id": "#/properties/volumePermissions/properties/image/properties/tag"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Image",
                 "$id": "#/properties/volumePermissions/properties/image"
@@ -880,27 +912,32 @@ spec:
                 "properties": {
                   "limits": {
                     "properties": {},
+                    "additionalProperties": true,
                     "type": "object",
                     "title": "Limits",
                     "$id": "#/properties/volumePermissions/properties/resources/properties/limits"
                   },
                   "requests": {
                     "properties": {},
+                    "additionalProperties": true,
                     "type": "object",
                     "title": "Requests",
                     "$id": "#/properties/volumePermissions/properties/resources/properties/requests"
                   }
                 },
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Resources",
                 "$id": "#/properties/volumePermissions/properties/resources"
               }
             },
+            "additionalProperties": true,
             "type": "object",
             "title": "VolumePermissions",
             "$id": "#/properties/volumePermissions"
           }
         },
+        "additionalProperties": true,
         "type": "object",
         "$id": "#"
       }
