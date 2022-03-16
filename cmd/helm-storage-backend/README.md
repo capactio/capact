@@ -10,7 +10,11 @@ Helm Storage Backend is a service which handles Helm-related storage logic. It w
 
 ## Usage
 
+There are two separate modes of running the Helm storage backend.
+
 ### Helm Release storage backend
+
+This mode exposes functionality which fetches metadata for a given Helm release from a Kubernetes cluster.
 
 To run the server, execute:
 
@@ -21,6 +25,8 @@ To run the server, execute:
 The server listens to gRPC calls according to the [Storage Backend Protocol Buffers schema](../../hub-js/proto/storage_backend.proto). To perform such calls, you can use e.g. [Insomnia](https://insomnia.rest/) tool.
 
 ### Helm Templating storage backend
+
+This mode exposes functionality which renders a given Go template against an installed Helm release.
 
 To run the server, execute:
 
