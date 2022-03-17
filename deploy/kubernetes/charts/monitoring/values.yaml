@@ -9,6 +9,9 @@ kube-prometheus-stack:
     ## Settings affecting prometheusSpec
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
     prometheusSpec:
+      podMetadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
       serviceMonitorSelector:
         matchLabels:
           capact.io/scrape-metrics: "true"
@@ -69,6 +72,9 @@ kube-prometheus-stack:
 
   alertmanager:
     alertmanagerSpec:
+      podMetadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
       resources:
         requests:
           cpu: 5m

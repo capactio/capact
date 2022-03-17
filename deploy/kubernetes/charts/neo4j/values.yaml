@@ -23,3 +23,5 @@ neo4j:
     timeoutSeconds: 3
     periodSeconds: 10
 
+  podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
