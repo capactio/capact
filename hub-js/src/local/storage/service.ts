@@ -41,6 +41,13 @@ interface ValidateBackendSpec {
 
 type ValidateInput = GetInput | UpdateInput | DeleteInput | StoreInput;
 
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 export interface StoreInput {
   backend: TypeInstanceBackendInput;
   typeInstance: {
@@ -498,16 +505,16 @@ export default class DelegatedStorageService {
   private validateInput(
     input: ValidateInput,
     storageSpec: ValidateBackendSpec
-  ): Error | undefined {
+  ): ValidationError | undefined {
     const { value, context } = DelegatedStorageService.normalizeInput(input);
 
     if (!storageSpec.acceptValue && value) {
-      return Error("input value not allowed");
+      return new ValidationError("input value not allowed");
     }
 
     if (context) {
       if (storageSpec.contextSchema === undefined) {
-        return Error("input context not allowed");
+        return new ValidationError("input context not allowed");
       }
 
       const validate = this.ajv.compile(storageSpec.contextSchema);
@@ -515,7 +522,7 @@ export default class DelegatedStorageService {
         const msg = this.ajv.errorsText(validate.errors, {
           dataVar: "context",
         });
-        return Error(`invalid input: ${msg}`);
+        return new ValidationError(`invalid input: ${msg}`);
       }
     }
 
