@@ -11,6 +11,8 @@ kube-prometheus-stack:
     prometheusSpec:
       podMetadata:
         annotations:
+          # `emptyDir` mounted to this Pod may prevent the k8s autoscaler to scale down the cluster
+          # Read more here: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node
           cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
       serviceMonitorSelector:
         matchLabels:
@@ -31,6 +33,8 @@ kube-prometheus-stack:
 
   grafana:
     podAnnotations:
+      # `emptyDir` mounted to this Pod may prevent the k8s autoscaler to scale down the cluster
+      # Read more here: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node
       cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     adminPassword: okon
     sidecar:
@@ -76,6 +80,8 @@ kube-prometheus-stack:
     alertmanagerSpec:
       podMetadata:
         annotations:
+          # `emptyDir` mounted to this Pod may prevent the k8s autoscaler to scale down the cluster
+          # Read more here: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node
           cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
       resources:
         requests:
