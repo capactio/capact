@@ -1,0 +1,58 @@
+version: "3.9"
+services:
+  tests:
+    image: "ghcr.io/capactio/hubtests-test:latest"
+    depends_on:
+      hubjs:
+        condition: service_healthy
+    environment:
+      - HUBJS_ADDR=http://hubjs:8080/graphql
+      - GRPC_SECRET_STORAGE_BACKEND_ADDR=http://backend-storage:50051
+    healthcheck:
+      test: netstat -ltn | grep -c 8080
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 800s
+  hubjs:
+    image: ghcr.io/capactio/pr/hub-js:PR-659
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_NEO4J_ENDPOINT=bolt://neo4j:7687
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - APP_NEO4J_PASSWORD=okon
+      - APP_HUB_MODE=local
+      - APP_GRAPH_QL_ADDR=:8080
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: netstat -ltn | grep -c 8080
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+  neo4j:
+    image: "ghcr.io/capactio/neo4j:4.2.13-apoc"
+    restart: on-failure
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    environment:
+      - NEO4J_AUTH=neo4j/okon
+      - NEO4JLABS_PLUGINS=["apoc"]
+    healthcheck:
+      test: wget http://localhost:7474/browser -O -
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+  backend-storage:
+    image: ghcr.io/capactio/pr/secret-storage-backend:PR-659
+    restart: on-failure
+    environment:
+      - GRPC_SECRET_STORAGE_BACKEND_ADDR=50051
+    ports:
+      - "50051:50051"

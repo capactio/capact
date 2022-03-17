@@ -403,6 +403,22 @@ jobs:
           path: ${{ github.workspace }}/bin/capact_linux_amd64/capact
           retention-days: 1 # Default 90 days
 
+  hubjs-tests:
+    name: Hubjs tests
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [ push-apps, push-tests, build-cli ]
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Creating the stack
+        run: docker-compose -f ./test/hubtests/docker-compose.yml up --exit-code-from tests
+
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
