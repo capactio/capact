@@ -503,7 +503,9 @@ type Mutation {
           RETURN specBackend
         ',
         '
-          CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: apoc.convert.toJson(item.typeInstance.backend.context)})
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          MATCH (latestSpec)-[:WITH_BACKEND]->(oldSpecBackend:TypeInstanceResourceVersionSpecBackend)
+          CREATE (specBackend: TypeInstanceResourceVersionSpecBackend {context: oldSpecBackend.context})
           RETURN specBackend
         ',
       {spec:spec, latestRevision: latestRevision, item: item}) YIELD value as backendRef

@@ -12,6 +12,10 @@ argo-workflows:
       # Overrides the image tag whose default is the chart appVersion.
       tag: "v3.2.2"
   server:
+    podAnnotations:
+      # `emptyDir` mounted to this Pod may prevent the k8s autoscaler to scale down the cluster
+      # Read more here: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     image:
       # Overrides the image tag whose default is the chart appVersion.
       tag: "v3.2.2"
