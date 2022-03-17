@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -17,6 +18,8 @@ import (
 )
 
 var _ pb.StorageBackendServer = &ReleaseHandler{}
+
+const latestRevisionIndicator = 0
 
 type (
 	ReleaseDetails struct {
@@ -52,15 +55,17 @@ type (
 type ReleaseHandler struct {
 	pb.UnimplementedStorageBackendServer
 
-	log          *zap.Logger
-	helmCfgFlags *genericclioptions.ConfigFlags
+	log                         *zap.Logger
+	helmCfgFlags                *genericclioptions.ConfigFlags
+	actionConfigurationProducer actionConfigurationProducerFn
 }
 
 // NewReleaseHandler returns new ReleaseHandler.
 func NewReleaseHandler(log *zap.Logger, helmCfgFlags *genericclioptions.ConfigFlags) (*ReleaseHandler, error) {
 	return &ReleaseHandler{
-		log:          log,
-		helmCfgFlags: helmCfgFlags,
+		log:                         log,
+		helmCfgFlags:                helmCfgFlags,
+		actionConfigurationProducer: ActionConfigurationProducer,
 	}, nil
 }
 
@@ -77,10 +82,14 @@ func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*
 		return nil, err
 	}
 
-	helmGet, err := NewHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
+	helmGet, err := h.newHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
 	if err != nil {
 		return nil, h.internalError(errors.Wrap(err, "while creating Helm get release client"))
 	}
+
+	// NOTE: req.resourceVersion is ignored on purpose.
+	// Based on our contract we always return the latest Helm release revision.
+	helmGet.Version = latestRevisionIndicator
 
 	release, err := helmGet.Run(releaseContext.Name)
 	switch {
@@ -115,7 +124,7 @@ func (h *ReleaseHandler) OnUpdate(_ context.Context, req *pb.OnUpdateRequest) (*
 	return &pb.OnUpdateResponse{}, h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context)
 }
 
-func (h *ReleaseHandler) OnDelete(ctx context.Context, request *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
+func (h *ReleaseHandler) OnDelete(_ context.Context, _ *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
 	// currently, we are not sure whether the release should be deleted or this should be more an information
 	// that someone wants to deregister this TypeInstance. For now, delete is NOP.
 	return &pb.OnDeleteResponse{}, nil
@@ -125,11 +134,11 @@ func (h *ReleaseHandler) GetLockedBy(_ context.Context, _ *pb.GetLockedByRequest
 	return &pb.GetLockedByResponse{}, nil
 }
 
-func (h *ReleaseHandler) OnLock(ctx context.Context, request *pb.OnLockRequest) (*pb.OnLockResponse, error) {
+func (h *ReleaseHandler) OnLock(_ context.Context, _ *pb.OnLockRequest) (*pb.OnLockResponse, error) {
 	return &pb.OnLockResponse{}, nil
 }
 
-func (h *ReleaseHandler) OnUnlock(ctx context.Context, request *pb.OnUnlockRequest) (*pb.OnUnlockResponse, error) {
+func (h *ReleaseHandler) OnUnlock(_ context.Context, _ *pb.OnUnlockRequest) (*pb.OnUnlockResponse, error) {
 	return &pb.OnUnlockResponse{}, nil
 }
 
@@ -157,7 +166,7 @@ func (h *ReleaseHandler) checkIfHelmReleaseExist(ti string, ctx []byte) error {
 		return err
 	}
 
-	helmGet, err := NewHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
+	helmGet, err := h.newHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
 	if err != nil {
 		return h.internalError(errors.Wrap(err, "while creating Helm get release client"))
 	}
@@ -172,6 +181,16 @@ func (h *ReleaseHandler) checkIfHelmReleaseExist(ti string, ctx []byte) error {
 	}
 
 	return nil
+}
+
+// newHelmGet create a new Helm release get client.
+func (h *ReleaseHandler) newHelmGet(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Get, error) {
+	actionConfig, err := h.actionConfigurationProducer(flags, driver, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	return action.NewGet(actionConfig), nil
 }
 
 func (h *ReleaseHandler) internalError(err error) error {

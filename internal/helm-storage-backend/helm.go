@@ -8,8 +8,9 @@ import (
 	"capact.io/capact/internal/ptr"
 )
 
-// NewHelmGet create a new Helm release get client.
-func NewHelmGet(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Get, error) {
+type actionConfigurationProducerFn func(flags *genericclioptions.ConfigFlags, driver string, ns string) (*action.Configuration, error)
+
+func ActionConfigurationProducer(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Configuration, error) {
 	actionConfig := new(action.Configuration)
 	helmCfg := &genericclioptions.ConfigFlags{
 		APIServer:   flags.APIServer,
@@ -28,5 +29,5 @@ func NewHelmGet(flags *genericclioptions.ConfigFlags, driver, ns string) (*actio
 		return nil, errors.Wrap(err, "while initializing Helm configuration")
 	}
 
-	return action.NewGet(actionConfig), nil
+	return actionConfig, nil
 }
