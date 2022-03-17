@@ -67,6 +67,13 @@ var _ = Describe("Action", func() {
 
 		It("should pick Implementation A", func() {
 			implIndicatorValue := "Implementation A"
+			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
+			backendInput := hublocalgraphql.TypeInstanceBackendInput{
+				ID: testStorageBackendTI.ID,
+				Context: map[string]interface{}{
+					"provider": "dotenv",
+				},
+			}
 
 			// TODO: This can be extracted after switching to ginkgo v2
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
@@ -81,11 +88,6 @@ var _ = Describe("Action", func() {
 			update := getTypeInstanceInputForUpdate(nil)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
-
-			By("1.3 Creating TypeInstance that describes Helm storage")
-			helmStorage := fixHelmStorageTypeInstanceCreateInput()
-			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
-			defer helmStorageTICleanup()
 
 			inputData := &enginegraphql.ActionInputData{
 				TypeInstances: []*enginegraphql.InputTypeInstanceData{
@@ -124,51 +126,68 @@ var _ = Describe("Action", func() {
 			waitForActionDeleted(ctx, engineClient, actionName)
 
 			By("6. Modifying Policy to change backend storage for uploaded TypeInstance via TypeRef...")
-			setGlobalTestPolicy(ctx, engineClient, withHelmBackendForUploadTypeRef(helmStorageTI.ID))
+			setGlobalTestPolicy(ctx, engineClient, withTestBackendForUploadTypeRef(testStorageBackendTI.ID))
 
-			By("7. Expecting Implementation A is picked and the Helm storage is used for uploaded TypeInstance...")
+			By("7 Creating TypeInstance which used test storage with dotenv provider")
+
+			By("7.1 Creating TypeInstance which will be downloaded")
+			download2 := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, &backendInput)
+			downloadTI2, downloadTICleanup2 := createTypeInstance(ctx, hubClient, download2)
+			defer downloadTICleanup2()
+
+			By("7.2 Creating TypeInstance which will be downloaded and updated")
+			update2 := getTypeInstanceInputForUpdate(&backendInput)
+			updateTI2, updateTICleanup2 := createTypeInstance(ctx, hubClient, update2)
+			defer updateTICleanup2()
+
+			inputData = &enginegraphql.ActionInputData{
+				TypeInstances: []*enginegraphql.InputTypeInstanceData{
+					{Name: "testInput", ID: downloadTI2.ID},
+					{Name: "testUpdate", ID: updateTI2.ID},
+				},
+			}
+
+			By("8. Expecting Implementation A is picked and the test storage is used for uploaded TypeInstance...")
 			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
-			By("8.1 Check uploaded TypeInstances")
-			expUploadTIBackend = &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
+			By("9.1 Check uploaded TypeInstances")
+			expUploadTIBackend = &hublocalgraphql.TypeInstanceBackendReference{ID: testStorageBackendTI.ID, Abstract: false}
+			uploadedTI2, cleanupUploaded2 := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
+			defer cleanupUploaded2()
+			Expect(uploadedTI2.Backend).Should(Equal(expUploadTIBackend))
 
-			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
-			// for now, the Local Hub returns backend id under `key` property.
-			implIndicatorValue = expUploadTIBackend.ID
-
-			uploadedTI, cleanupUploaded = getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
-			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
-
-			By("8.2 Check Action output TypeInstances")
-			uploadedTIOutput = mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(expUpdatedTIOutput, uploadedTIOutput), HaveLen(2)))
+			By("9.2 Check Action output TypeInstances")
+			updateTIOutput := mapToOutputTypeInstanceDetails(updateTI2, expUploadTIBackend)
+			uploadedTIOutput = mapToOutputTypeInstanceDetails(uploadedTI2, expUploadTIBackend)
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(updateTIOutput, uploadedTIOutput), HaveLen(2)))
 		})
 
 		It("should pick Implementation B based on Policy rule", func() {
 			implIndicatorValue := "Implementation B"
+			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
+			backendInput := hublocalgraphql.TypeInstanceBackendInput{
+				ID: testStorageBackendTI.ID,
+				Context: map[string]interface{}{
+					"provider": "dotenv",
+				},
+			}
 
 			// TODO: This can be extracted after switching to ginkgo v2
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, nil)
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, &backendInput)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate(nil)
+			update := getTypeInstanceInputForUpdate(&backendInput)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
-			By("1.3 Creating TypeInstance that describes Helm storage")
-			helmStorage := fixHelmStorageTypeInstanceCreateInput()
-			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
-			defer helmStorageTICleanup()
-
-			By("1.4 Create TypeInstance which is required for Implementation B to be picked based on Policy")
+			By("1.3 Create TypeInstance which is required for Implementation B to be picked based on Policy")
 			typeInstanceValue := getTypeInstanceInputForPolicy()
 			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
 			defer tiCleanupFn()
@@ -187,26 +206,21 @@ var _ = Describe("Action", func() {
 					Description: ptr.String("Test TypeInstance"),
 				},
 				{
-					ID:          helmStorageTI.ID,
+					ID:          testStorageBackendTI.ID,
 					Description: ptr.String("Helm backend TypeInstance"),
 				},
 			}
 			setGlobalTestPolicy(ctx, engineClient, prependInjectRuleForPassingActionInterface(globalPolicyRequiredTypeInstances))
 
-			By("3. Expecting Implementation B is picked and injected Helm storage is used...")
+			By("3. Expecting Implementation B is picked and injected test storage is used...")
 			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
 			By("4.1 Check uploaded TypeInstances")
-			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
-
-			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
-			// for now, the Local Hub returns backend id under `key` property.
-			implIndicatorValue = expUploadTIBackend.ID
-
+			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: testStorageBackendTI.ID, Abstract: false}
 			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
+			defer cleanupUploaded()
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("4.2 Check Action output TypeInstances")
@@ -216,26 +230,28 @@ var _ = Describe("Action", func() {
 
 		It("should pick Implementation B based on Interface default", func() {
 			implIndicatorValue := "Implementation B"
+			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
+			backendInput := hublocalgraphql.TypeInstanceBackendInput{
+				ID: testStorageBackendTI.ID,
+				Context: map[string]interface{}{
+					"provider": "dotenv",
+				},
+			}
 
 			// TODO: This can be extracted after switching to ginkgo v2
 			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
 			By("1. Preparing input Type Instances")
 			By("1.1 Creating TypeInstance which will be downloaded")
-			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, nil)
+			download := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, &backendInput)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate(nil)
+			update := getTypeInstanceInputForUpdate(&backendInput)
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
-			By("1.3 Creating TypeInstance that describes Helm storage")
-			helmStorage := fixHelmStorageTypeInstanceCreateInput()
-			helmStorageTI, helmStorageTICleanup := createTypeInstance(ctx, hubClient, helmStorage)
-			defer helmStorageTICleanup()
-
-			By("1.4 Create TypeInstance which is required for Implementation B to be picked based on Policy")
+			By("1.3 Create TypeInstance which is required for Implementation B to be picked based on Policy")
 			typeInstanceValue := getTypeInstanceInputForPolicy()
 			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
 			defer tiCleanupFn()
@@ -254,86 +270,13 @@ var _ = Describe("Action", func() {
 					Description: ptr.String("Test TypeInstance"),
 				},
 				{
-					ID:          helmStorageTI.ID,
+					ID:          testStorageBackendTI.ID,
 					Description: ptr.String("Helm backend TypeInstance"),
 				},
 			}
 			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
 
-			By("3. Expecting Implementation B is picked and injected Helm storage is used...")
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
-			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
-			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
-
-			By("4.1 Check uploaded TypeInstances")
-			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: helmStorageTI.ID, Abstract: false}
-
-			// TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend.
-			// for now, the Local Hub returns backend id under `key` property.
-			implIndicatorValue = expUploadTIBackend.ID
-
-			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
-			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
-
-			By("4.2 Check Action output TypeInstances")
-			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
-		})
-
-		It("should propagate context provider to storage backend", func() {
-			implIndicatorValue := "Implementation C"
-			testStorageBackendTI := getDefaultTestStorageTypeInstance(ctx, hubClient)
-
-			// TODO: This can be extracted after switching to ginkgo v2
-			// see: https://github.com/onsi/ginkgo/issues/70#issuecomment-924250145
-			By("1. Preparing input Type Instances")
-			By("1.1 Creating TypeInstance which will be downloaded")
-			backendInput := hublocalgraphql.TypeInstanceBackendInput{
-				ID: testStorageBackendTI.ID,
-				Context: map[string]interface{}{
-					"provider": "dotenv",
-				},
-			}
-			download := getTypeInstanceInputForDownload(
-				map[string]interface{}{
-					"key": implIndicatorValue,
-				},
-				&backendInput)
-			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
-			defer downloadTICleanup()
-
-			By("1.2 Creating TypeInstance which will be downloaded and updated")
-			update := getTypeInstanceInputForUpdate(&backendInput)
-			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
-			defer updateTICleanup()
-
-			By("1.3 Create TypeInstance which is required for Implementation C to be picked based on Policy")
-			typeInstanceValue := getTypeInstanceInputForPolicy()
-			injectTypeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
-			defer tiCleanupFn()
-
-			inputData := &enginegraphql.ActionInputData{
-				TypeInstances: []*enginegraphql.InputTypeInstanceData{
-					{Name: "testInput", ID: downloadTI.ID},
-					{Name: "testUpdate", ID: updateTI.ID},
-				},
-			}
-
-			By("2. Modifying default Policy to pick Implementation C...")
-			globalPolicyRequiredTypeInstances := []*enginegraphql.RequiredTypeInstanceReferenceInput{
-				{
-					ID:          injectTypeInstance.ID,
-					Description: ptr.String("Test TypeInstance"),
-				},
-				{
-					ID:          testStorageBackendTI.ID,
-					Description: ptr.String("Validation storage backend TypeInstance"),
-				},
-			}
-			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
-
-			By("3. Expecting Implementation C is picked and injected Validation storage is used...")
+			By("3. Expecting Implementation B is picked and injected test storage is used...")
 			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPassingInterfacePath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo '%s'", implIndicatorValue)
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
@@ -345,9 +288,8 @@ var _ = Describe("Action", func() {
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("4.2 Check Action output TypeInstances")
-			updateTIOutput := mapToOutputTypeInstanceDetails(updateTI, expUploadTIBackend)
 			uploadedTIOutput := mapToOutputTypeInstanceDetails(uploadedTI, expUploadTIBackend)
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(updateTIOutput, uploadedTIOutput), HaveLen(2)))
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(uploadedTIOutput), HaveLen(1)))
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -651,7 +593,7 @@ func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hu
 
 type policyOption func(*enginegraphql.PolicyInput)
 
-func withHelmBackendForUploadTypeRef(backendID string) policyOption {
+func withTestBackendForUploadTypeRef(backendID string) policyOption {
 	return func(policy *enginegraphql.PolicyInput) {
 		policy.TypeInstance = &enginegraphql.TypeInstancePolicyInput{
 			Rules: []*enginegraphql.RulesForTypeInstanceInput{

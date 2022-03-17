@@ -23,7 +23,7 @@ func SaveToFile(path string, bytes []byte) error {
 // NestingOutputUnderValue write output to "value" key in YAML.
 func NestingOutputUnderValue(output []byte) ([]byte, error) {
 	unmarshalled := map[string]interface{}{}
-	err := yaml.Unmarshal([]byte(output), &unmarshalled)
+	err := yaml.Unmarshal(output, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshalling output to map[string]interface{}")
 	}

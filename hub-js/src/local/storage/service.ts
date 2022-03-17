@@ -12,12 +12,6 @@ import { Driver } from "neo4j-driver";
 import { TypeInstanceBackendInput } from "../types/type-instance";
 import { logger } from "../../logger";
 
-// TODO(https://github.com/capactio/capact/issues/634):
-// Represents the fake storage backend URL that should be ignored
-// as the backend server is not deployed.
-// It should be removed after a real backend is used in `test/e2e/action_test.go` scenarios.
-export const FAKE_TEST_URL = "e2e-test-backend-mock-url:50051";
-
 type StorageClient = Client<typeof StorageBackendDefinition>;
 
 export interface StorageInstanceDetails {
@@ -105,11 +99,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const cli = await this.getClient(input.backend.id);
-      if (!cli) {
-        // TODO: remove after using a real backend in e2e tests.
-        continue;
-      }
-
       const req: OnCreateRequest = {
         typeInstanceId: input.typeInstance.id,
         value: this.encode(input.typeInstance.value),
@@ -147,11 +136,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const cli = await this.getClient(input.backend.id);
-      if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
-
       const req: OnUpdateRequest = {
         typeInstanceId: input.typeInstance.id,
         newResourceVersion: input.typeInstance.newResourceVersion,
@@ -181,17 +165,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const cli = await this.getClient(input.backend.id);
-      if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        result = {
-          ...result,
-          [input.typeInstance.id]: {
-            key: input.backend.id,
-          },
-        };
-        continue;
-      }
-
       const req: GetValueRequest = {
         typeInstanceId: input.typeInstance.id,
         resourceVersion: input.typeInstance.resourceVersion,
@@ -228,11 +201,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const cli = await this.getClient(input.backend.id);
-      if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
-
       const req: OnDeleteRequest = {
         typeInstanceId: input.typeInstance.id,
         context: this.encode(input.backend.context),
@@ -255,11 +223,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const cli = await this.getClient(input.backend.id);
-      if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
-
       const req: OnLockRequest = {
         typeInstanceId: input.typeInstance.id,
         lockedBy: input.typeInstance.lockedBy,
@@ -282,11 +245,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const cli = await this.getClient(input.backend.id);
-      if (!cli) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
-
       const req: OnUnlockRequest = {
         typeInstanceId: input.typeInstance.id,
         context: this.encode(input.backend.context),
@@ -337,17 +295,9 @@ export default class DelegatedStorageService {
     }
   }
 
-  private async getClient(id: string): Promise<StorageClient | undefined> {
+  private async getClient(id: string): Promise<StorageClient> {
     if (!this.registeredClients.has(id)) {
       const { url } = await this.storageInstanceDetailsFetcher(id);
-      if (url === FAKE_TEST_URL) {
-        logger.debug(
-          "Skipping a real call as backend was classified as a fake one"
-        );
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        return undefined;
-      }
-
       logger.debug("Initialize gRPC client", {
         backend: id,
         url,
@@ -360,7 +310,7 @@ export default class DelegatedStorageService {
       this.registeredClients.set(id, client);
     }
 
-    return this.registeredClients.get(id);
+    return this.registeredClients.get(id) as StorageClient;
   }
 
   private static convertToJSONIfObject(val: unknown): string | undefined {

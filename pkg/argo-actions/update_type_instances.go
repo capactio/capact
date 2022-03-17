@@ -117,9 +117,7 @@ func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values 
 			return ErrMissingTypeInstanceValue(typeInstance.ID)
 		}
 
-		if _, ok = value["value"]; !ok {
-			// for backward compatibility, if there is an artifact without value/backend syntax,
-			// treat it as a value for TypeInstance
+		if isTypeInstanceWithLegacySyntax(u.log, value) {
 			typeInstance.TypeInstance.Value = value
 			continue
 		}
