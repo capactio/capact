@@ -74,7 +74,8 @@ func main() {
 	var handler storage_backend.StorageBackendServer
 	switch cfg.Mode {
 	case HelmReleaseMode:
-		handler = helm_storage_backend.NewReleaseHandler(logger, helmCfgFlags)
+		handler, err = helm_storage_backend.NewReleaseHandler(logger, helmCfgFlags)
+		exitOnError(err, "while creating Helm Release backend storage")
 	case HelmTemplateMode:
 		handler = helm_storage_backend.NewTemplateHandler(logger, helmCfgFlags)
 	default:

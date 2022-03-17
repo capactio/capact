@@ -2,32 +2,178 @@ package helmstoragebackend
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
-	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"capact.io/capact/internal/ptr"
+	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
 var _ pb.StorageBackendServer = &ReleaseHandler{}
+
+type (
+	ReleaseDetails struct {
+		// Name specifies installed Helm release name.
+		Name string `json:"name"`
+		// Namespace specifies in which Kubernetes Namespace Helm release was installed.
+		Namespace string `json:"namespace"`
+		// Chart holds Helm Chart details.
+		Chart ChartDetails `json:"chart"`
+	}
+	ChartDetails struct {
+		// Name specifies Helm Chart name.
+		Name string `json:"name"`
+		// Version specifies the exact chart version.
+		Version string `json:"version"`
+		// Repo specifies URL where to locate the requested chart.
+		Repo string `json:"repo"`
+	}
+
+	ReleaseContext struct {
+		// Name specifies Helm release name for a given request.
+		Name string `json:"name"`
+		// Namespace specifies in which Kubernetes Namespace Helm release is located.
+		Namespace string `json:"namespace"`
+		// ChartLocation specifies Helm Chart location.
+		ChartLocation string `json:"chartLocation"`
+		// Driver specifies drivers used for storing the Helm release.
+		Driver *string `json:"driver,omitempty"`
+	}
+)
 
 // ReleaseHandler handles incoming requests to the Helm release storage backend gRPC server.
 type ReleaseHandler struct {
 	pb.UnimplementedStorageBackendServer
 
-	log *zap.Logger
+	log          *zap.Logger
+	helmCfgFlags *genericclioptions.ConfigFlags
 }
 
 // NewReleaseHandler returns new ReleaseHandler.
-func NewReleaseHandler(log *zap.Logger, helmCfgFlags *genericclioptions.ConfigFlags) *ReleaseHandler {
+func NewReleaseHandler(log *zap.Logger, helmCfgFlags *genericclioptions.ConfigFlags) (*ReleaseHandler, error) {
 	return &ReleaseHandler{
-		log: log,
-	}
+		log:          log,
+		helmCfgFlags: helmCfgFlags,
+	}, nil
+}
+
+func (h *ReleaseHandler) OnCreate(_ context.Context, req *pb.OnCreateRequest) (*pb.OnCreateResponse, error) {
+	return &pb.OnCreateResponse{}, h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context)
 }
 
 // GetValue returns a value for a given TypeInstance.
-func (h *ReleaseHandler) GetValue(_ context.Context, _ *pb.GetValueRequest) (*pb.GetValueResponse, error) {
+func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*pb.GetValueResponse, error) {
 	h.log.Info("Getting value")
+
+	releaseContext, err := h.getReleaseContext(req.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	helmGet, err := NewHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
+	if err != nil {
+		return nil, h.internalError(errors.Wrap(err, "while creating Helm get release client"))
+	}
+
+	release, err := helmGet.Run(releaseContext.Name)
+	switch {
+	case err == nil:
+	case errors.Is(err, driver.ErrReleaseNotFound):
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", releaseContext.Namespace, releaseContext.Name, req.TypeInstanceId))
+	default:
+		return nil, h.internalError(errors.Wrap(err, "while getting Helm release"))
+	}
+
+	releaseData := ReleaseDetails{
+		Name:      release.Name,
+		Namespace: release.Namespace,
+		Chart: ChartDetails{
+			Name:    release.Chart.Metadata.Name,
+			Version: release.Chart.Metadata.Version,
+			Repo:    releaseContext.ChartLocation,
+		},
+	}
+
+	value, err := json.Marshal(releaseData)
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling response value")
+	}
+
 	return &pb.GetValueResponse{
-		Value: []byte(`{"handler": "release"}`),
+		Value: value,
 	}, nil
+}
+
+func (h *ReleaseHandler) OnUpdate(_ context.Context, req *pb.OnUpdateRequest) (*pb.OnUpdateResponse, error) {
+	return &pb.OnUpdateResponse{}, h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context)
+}
+
+func (h *ReleaseHandler) OnDelete(ctx context.Context, request *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
+	// currently, we are not sure whether the release should be deleted or this should be more an information
+	// that someone wants to deregister this TypeInstance. For now, delete is NOP.
+	return &pb.OnDeleteResponse{}, nil
+}
+
+func (h *ReleaseHandler) GetLockedBy(_ context.Context, _ *pb.GetLockedByRequest) (*pb.GetLockedByResponse, error) {
+	return &pb.GetLockedByResponse{}, nil
+}
+
+func (h *ReleaseHandler) OnLock(ctx context.Context, request *pb.OnLockRequest) (*pb.OnLockResponse, error) {
+	return &pb.OnLockResponse{}, nil
+}
+
+func (h *ReleaseHandler) OnUnlock(ctx context.Context, request *pb.OnUnlockRequest) (*pb.OnUnlockResponse, error) {
+	return &pb.OnUnlockResponse{}, nil
+}
+
+func (h *ReleaseHandler) getReleaseContext(contextBytes []byte) (*ReleaseContext, error) {
+	if len(contextBytes) == 0 {
+		return nil, nil
+	}
+
+	var ctx ReleaseContext
+	err := json.Unmarshal(contextBytes, &ctx)
+	if err != nil {
+		return nil, h.internalError(errors.Wrap(err, "while unmarshaling context"))
+	}
+
+	if ctx.Driver == nil {
+		ctx.Driver = ptr.String(defaultHelmDriver)
+	}
+
+	return &ctx, nil
+}
+
+func (h *ReleaseHandler) checkIfHelmReleaseExist(ti string, ctx []byte) error {
+	releaseContext, err := h.getReleaseContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	helmGet, err := NewHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
+	if err != nil {
+		return h.internalError(errors.Wrap(err, "while creating Helm get release client"))
+	}
+
+	_, err = helmGet.Run(releaseContext.Name)
+	switch {
+	case err == nil:
+	case errors.Is(err, driver.ErrReleaseNotFound):
+		return status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", releaseContext.Namespace, releaseContext.Name, ti))
+	default:
+		return h.internalError(errors.Wrap(err, "while checking if Helm release exists"))
+	}
+
+	return nil
+}
+
+func (h *ReleaseHandler) internalError(err error) error {
+	return status.Error(codes.Internal, err.Error())
 }
