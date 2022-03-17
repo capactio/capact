@@ -12,6 +12,8 @@ argo-workflows:
       # Overrides the image tag whose default is the chart appVersion.
       tag: "v3.2.2"
   server:
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     image:
       # Overrides the image tag whose default is the chart appVersion.
       tag: "v3.2.2"

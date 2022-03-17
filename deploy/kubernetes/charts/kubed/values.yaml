@@ -12,3 +12,5 @@ kubed:
       limits:
         cpu: 100m
         memory: 100Mi
+  podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"

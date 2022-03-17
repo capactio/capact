@@ -30,6 +30,8 @@ kube-prometheus-stack:
                 storage: 40Gi    
 
   grafana:
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     adminPassword: okon
     sidecar:
       resources:
