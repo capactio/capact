@@ -49,14 +49,3 @@ Selector labels
 app.kubernetes.io/name: {{ include "helm-storage-backend.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "helm-storage-backend.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "helm-storage-backend.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
