@@ -1,0 +1,60 @@
+# Default values for helm-storage-backend.
+global:
+  containerRegistry:
+    path: ghcr.io/capactio
+    # Overrides the image tag for all Capact components and extensions. Default is the appVersion.
+    overrideTag: "latest"
+
+image:
+  name: helm-storage-backend
+  pullPolicy: IfNotPresent
+
+helmReleaseBackend:
+  enabled: true
+  service:
+    port: 50051
+    type: ClusterIP
+
+helmTemplateBackend:
+  enabled: true
+  service:
+    port: 50052
+    type: ClusterIP
+
+replicaCount: 1
+
+imagePullSecrets: []
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 32Mi
+  requests:
+    cpu: 30m
+    memory: 16Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
