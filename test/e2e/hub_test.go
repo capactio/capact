@@ -6,6 +6,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"capact.io/capact/internal/ptr"
@@ -18,6 +19,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	prmt "github.com/gitchander/permutation"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -641,8 +643,193 @@ var _ = Describe("GraphQL API", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		DescribeTable("External Storage Input Validation",
+			func(storageSpec interface{}, instanceValue, instanceBackendCtx interface{}, expErrMsg string) {
+				localCli := getHubGraphQLClient()
+				externalStorageID, cleanup := registerExternalStorage(ctx, localCli, storageSpec)
+				defer cleanup()
+
+				// when
+				_, err := localCli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
+					TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
+						Path:     "cap.type.testing:0.1.0",
+						Revision: "0.1.0",
+					},
+					Value: instanceValue,
+					Backend: &gqllocalapi.TypeInstanceBackendInput{
+						ID:      externalStorageID,
+						Context: instanceBackendCtx,
+					},
+				})
+
+				regex := regexp.MustCompile(`\w{8}-\w{4}-\w{4}-\w{4}-\w{12}`)
+				gotErr := regex.ReplaceAllString(err.Error(), "MOCKED_ID")
+
+				// then
+				Expect(gotErr).To(Equal(expErrMsg))
+			},
+			Entry("Should rejected value",
+				StorageSpec{
+					URL:         ptr.String("http://localhost:5000/fake"),
+					AcceptValue: ptr.Bool(false),
+				},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				nil,
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": input value not allowed
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": input value not allowed`),
+			),
+			Entry("Should rejected context",
+				StorageSpec{
+					URL:         ptr.String("http://localhost:5000/fake"),
+					AcceptValue: ptr.Bool(false),
+				},
+				nil,
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": input context not allowed
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": input context not allowed`),
+			),
+			Entry("Should return error that context is not an object",
+				StorageSpec{
+					URL:         ptr.String("http://localhost:5000/fake"),
+					AcceptValue: ptr.Bool(false),
+					ContextSchema: ptr.String(heredoc.Doc(`
+					   {
+					   	"$id": "#/properties/contextSchema",
+					   	"type": "object",
+					   	"properties": {
+					   		"provider": {
+					   			"$id": "#/properties/contextSchema/properties/name",
+					   			"type": "string"
+					   		}
+					   	},
+					   	"additionalProperties": false
+					   }`)),
+				},
+				nil,
+				"Luke Skywalker",
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": invalid input: context must be object
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": invalid input: context must be object`)),
+			Entry("Should return validation error for context",
+				StorageSpec{
+					URL:         ptr.String("http://localhost:5000/fake"),
+					AcceptValue: ptr.Bool(false),
+					ContextSchema: ptr.String(heredoc.Doc(`
+					   {
+					   	"$id": "#/properties/contextSchema",
+					   	"type": "object",
+					   	"properties": {
+					   		"provider": {
+					   			"$id": "#/properties/contextSchema/properties/name",
+					   			"type": "string"
+					   		}
+					   	},
+					   	"additionalProperties": false
+					   }`)),
+				},
+				nil,
+				map[string]interface{}{
+					"provider": true,
+				},
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": invalid input: context/provider must be string
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": invalid input: context/provider must be string`)),
+			Entry("Should reject value and context",
+				StorageSpec{
+					URL:         ptr.String("http://localhost:5000/fake"),
+					AcceptValue: ptr.Bool(false),
+				},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				// currently, it's an early return
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: External backend "MOCKED_ID": input value not allowed
+              	* Error: rollback externally stored values: External backend "MOCKED_ID": input value not allowed`)),
+			Entry("Should reject usage of backend without URL field",
+				StorageSpec{
+					AcceptValue: ptr.Bool(false),
+				},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				nil,
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url'`)),
+			Entry("Should reject usage of backend without AcceptValue field",
+				StorageSpec{
+					URL: ptr.String("http://localhost:5000/fake"),
+				},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				nil,
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'acceptValue'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'acceptValue'`)),
+			Entry("Should reject usage of backend without URL and AcceptValue fields", map[string]interface{}{
+				"other-data": true,
+			},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				nil,
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url', spec.value must have required property 'acceptValue'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url', spec.value must have required property 'acceptValue'`)),
+			Entry("Should reject usage of backend with wrong context schema",
+				StorageSpec{
+					URL:         ptr.String("http://localhost:5000/fake"),
+					AcceptValue: ptr.Bool(false),
+					ContextSchema: ptr.String(heredoc.Doc(`
+					   yaml: true`)),
+				},
+				map[string]interface{}{
+					"name": "Luke Skywalker",
+				},
+				nil,
+				heredoc.Doc(`
+              while executing mutation to create TypeInstance: All attempts fail:
+              #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
+              	* Error: failed to process the TypeInstance's backend "MOCKED_ID": invalid spec.context: Unexpected token y in JSON at position 0
+              	* Error: rollback externally stored values: failed to process the TypeInstance's backend "MOCKED_ID": invalid spec.context: Unexpected token y in JSON at position 0`)),
+		)
+
 	})
 })
+
+type StorageSpec struct {
+	URL           *string `json:"url,omitempty"`
+	AcceptValue   *bool   `json:"acceptValue,omitempty"`
+	ContextSchema *string `json:"contextSchema,omitempty"`
+}
 
 func includes(ids []string, expID string) bool {
 	for _, i := range ids {
@@ -652,6 +839,24 @@ func includes(ids []string, expID string) bool {
 	}
 
 	return false
+}
+
+func registerExternalStorage(ctx context.Context, cli *hubclient.Client, value interface{}) (string, func()) {
+	storage := &gqllocalapi.CreateTypeInstanceInput{
+		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
+			Path:     "cap.type.example.filesystem.storage",
+			Revision: "0.1.0",
+		},
+		Value: value,
+	}
+
+	externalStorageID, err := cli.CreateTypeInstance(ctx, storage)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(externalStorageID).NotTo(BeEmpty())
+
+	return externalStorageID, func() {
+		_ = cli.DeleteTypeInstance(ctx, externalStorageID)
+	}
 }
 
 func typeInstance(ver string) *gqllocalapi.CreateTypeInstanceInput {
