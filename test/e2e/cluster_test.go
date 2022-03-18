@@ -81,11 +81,39 @@ func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 		return ready
 	default:
 		// Ignore evicted pods which are in Failed state because of graceful node shutdown.
-		// see: https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown
+		if isAffectedByNodeShutdown(pod.Status) {
+			return true
+		}
 		if strings.EqualFold(pod.Status.Reason, "Shutdown") {
 			return true
 		}
 		log("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
 		return false
 	}
+}
+
+// source: https://github.com/kubernetes/kubernetes/blob/v1.21.0/pkg/kubelet/nodeshutdown/nodeshutdown_manager_linux.go#L40-L42
+const legacyNodeShutdownReason = "Shutdown"
+
+// source: https://github.com/kubernetes/kubernetes/blob/v1.22.0/pkg/kubelet/nodeshutdown/nodeshutdown_manager_linux.go#L39-L42
+const nodeShutdownReason = "Terminated"
+const nodeShutdownMessage = "Pod was terminated in response to imminent node shutdown."
+const nodeShutdownNotAdmittedReason = "NodeShutdown"
+
+// see more: https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown
+func isAffectedByNodeShutdown(status v1.PodStatus) bool {
+	// K8s v1.21
+	if strings.EqualFold(status.Reason, legacyNodeShutdownReason) {
+		return true
+	}
+
+	// K8s v1.22 and newer
+	if strings.EqualFold(status.Reason, nodeShutdownReason) && strings.EqualFold(status.Message, nodeShutdownMessage) {
+		return true
+	}
+	if strings.EqualFold(status.Reason, nodeShutdownNotAdmittedReason) {
+		return true
+	}
+
+	return false
 }
