@@ -170,7 +170,7 @@ func isTypeInstanceWithLegacySyntax(logger *zap.Logger, value map[string]interfa
 	if !hasValue && !hasBackend {
 		// for backward compatibility, if there is an artifact without value/backend syntax,
 		// treat it as a value for TypeInstance
-		logger.Info(fmt.Sprintf("Found legacy TypeInstance syntax without '%s' and '%s' syntax", valueKey, backendKey))
+		logger.Info(fmt.Sprintf("Found legacy TypeInstance syntax without '%s' and '%s'", valueKey, backendKey))
 		return true
 	}
 	logger.Info(fmt.Sprintf("Processing TypeInstance '%s' and '%s'", valueKey, backendKey), zap.Bool("hasValue", hasValue), zap.Bool("hasBackend", hasBackend))
