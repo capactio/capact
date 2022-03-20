@@ -10,6 +10,7 @@ import (
 
 type actionConfigurationProducerFn func(flags *genericclioptions.ConfigFlags, driver string, ns string) (*action.Configuration, error)
 
+// ActionConfigurationProducer returns Configuration with a given input settings.
 func ActionConfigurationProducer(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Configuration, error) {
 	actionConfig := new(action.Configuration)
 	helmCfg := &genericclioptions.ConfigFlags{

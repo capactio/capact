@@ -62,7 +62,7 @@ func TestRelease_GetValue_Success(t *testing.T) {
 			t.Parallel()
 			// given
 			const (
-				releaseName      = "test-release"
+				releaseName      = "test-get-release"
 				releaseNamespace = "test-namespace"
 				chartLocation    = "http://example.com/charts"
 			)
@@ -184,6 +184,268 @@ func TestRelease_GetValue_Failures(t *testing.T) {
 			// then
 			assert.EqualError(t, gotErr, test.expErrMsg)
 			assert.Nil(t, outVal)
+		})
+	}
+}
+
+func TestRelease_OnCreate_Success(t *testing.T) {
+	// given
+	const (
+		releaseName      = "test-create-release"
+		releaseNamespace = "test-namespace"
+		releaseDriver    = "configmap"
+		chartLocation    = "http://example.com/charts"
+	)
+	expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+	expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
+	mockConfigurationProducer := mockConfigurationProducer(t, expHelmRelease, expFlags, releaseDriver)
+
+	givenReq := &pb.OnCreateRequest{
+		TypeInstanceId: "42",
+		Context: mustMarshal(t, ReleaseContext{
+			Name:          releaseName,
+			Namespace:     releaseNamespace,
+			ChartLocation: chartLocation,
+			Driver:        ptr.String(releaseDriver),
+		}),
+	}
+
+	svc, err := NewReleaseHandler(logger.Noop(), expFlags)
+	svc.actionConfigurationProducer = mockConfigurationProducer
+	require.NoError(t, err)
+
+	// when
+	gotOut, gotErr := svc.OnCreate(context.Background(), givenReq)
+
+	// then
+	assert.NoError(t, gotErr)
+	assert.Empty(t, gotOut)
+}
+
+func TestRelease_OnCreate_Failures(t *testing.T) {
+	// globally given
+	const (
+		releaseName      = "test-release"
+		releaseNamespace = "test-namespace"
+	)
+	tests := []struct {
+		name string
+
+		request       *pb.OnCreateRequest
+		internalError error
+
+		expErrMsg string
+	}{
+		{
+			name: "should return not found error if release name is wrong",
+			request: &pb.OnCreateRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, ReleaseContext{
+					Name:          "other-release",
+					Namespace:     releaseNamespace,
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' for TypeInstance '123' was not found",
+		},
+		{
+			name: "should return not found error if release namespace is wrong",
+			request: &pb.OnCreateRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, ReleaseContext{
+					Name:          releaseName,
+					Namespace:     "other-ns",
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// given
+			expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+			expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
+
+			mockConfigurationProducer := func(inputFlags *genericclioptions.ConfigFlags, inputDriver, inputNs string) (*action.Configuration, error) {
+				if test.internalError != nil {
+					return nil, test.internalError
+				}
+				producer := mockConfigurationProducer(t, expHelmRelease, expFlags, "secrets")
+				return producer(inputFlags, inputDriver, inputNs)
+			}
+
+			svc, err := NewReleaseHandler(logger.Noop(), expFlags)
+			svc.actionConfigurationProducer = mockConfigurationProducer
+			require.NoError(t, err)
+
+			// when
+			outVal, gotErr := svc.OnCreate(context.Background(), test.request)
+
+			// then
+			assert.EqualError(t, gotErr, test.expErrMsg)
+			assert.Nil(t, outVal)
+		})
+	}
+}
+
+func TestRelease_OnUpdate_Success(t *testing.T) {
+	// given
+	const (
+		releaseName      = "test-update-release"
+		releaseNamespace = "test-namespace"
+		releaseDriver    = "configmap"
+		chartLocation    = "http://example.com/charts"
+	)
+	expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+	expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
+	mockConfigurationProducer := mockConfigurationProducer(t, expHelmRelease, expFlags, releaseDriver)
+
+	givenReq := &pb.OnUpdateRequest{
+		TypeInstanceId: "42",
+		Context: mustMarshal(t, ReleaseContext{
+			Name:          releaseName,
+			Namespace:     releaseNamespace,
+			ChartLocation: chartLocation,
+			Driver:        ptr.String(releaseDriver),
+		}),
+	}
+
+	svc, err := NewReleaseHandler(logger.Noop(), expFlags)
+	svc.actionConfigurationProducer = mockConfigurationProducer
+	require.NoError(t, err)
+
+	// when
+	gotOut, gotErr := svc.OnUpdate(context.Background(), givenReq)
+
+	// then
+	assert.NoError(t, gotErr)
+	assert.Empty(t, gotOut)
+}
+
+func TestRelease_OnUpdate_Failures(t *testing.T) {
+	// globally given
+	const (
+		releaseName      = "test-release"
+		releaseNamespace = "test-namespace"
+	)
+	tests := []struct {
+		name string
+
+		request       *pb.OnUpdateRequest
+		internalError error
+
+		expErrMsg string
+	}{
+		{
+			name: "should return not found error if release name is wrong",
+			request: &pb.OnUpdateRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, ReleaseContext{
+					Name:          "other-release",
+					Namespace:     releaseNamespace,
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' for TypeInstance '123' was not found",
+		},
+		{
+			name: "should return not found error if release namespace is wrong",
+			request: &pb.OnUpdateRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, ReleaseContext{
+					Name:          releaseName,
+					Namespace:     "other-ns",
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// given
+			expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+			expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
+
+			mockConfigurationProducer := func(inputFlags *genericclioptions.ConfigFlags, inputDriver, inputNs string) (*action.Configuration, error) {
+				if test.internalError != nil {
+					return nil, test.internalError
+				}
+				producer := mockConfigurationProducer(t, expHelmRelease, expFlags, "secrets")
+				return producer(inputFlags, inputDriver, inputNs)
+			}
+
+			svc, err := NewReleaseHandler(logger.Noop(), expFlags)
+			svc.actionConfigurationProducer = mockConfigurationProducer
+			require.NoError(t, err)
+
+			// when
+			outVal, gotErr := svc.OnUpdate(context.Background(), test.request)
+
+			// then
+			assert.EqualError(t, gotErr, test.expErrMsg)
+			assert.Nil(t, outVal)
+		})
+	}
+}
+
+func TestRelease_NOP_Methods(t *testing.T) {
+	// globally given
+	tests := []struct {
+		name    string
+		handler func(ctx context.Context, svc *ReleaseHandler) (interface{}, error)
+	}{
+		{
+			name: "no operation for OnDelete",
+			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+				return svc.OnDelete(ctx, nil)
+			},
+		},
+		{
+			name: "no operation for GetLockedBy",
+			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+				return svc.GetLockedBy(ctx, nil)
+			},
+		},
+		{
+			name: "no operation for OnLock",
+			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+				return svc.OnLock(ctx, nil)
+			},
+		},
+		{
+			name: "no operation for OnUnlock",
+			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+				return svc.OnUnlock(ctx, nil)
+			},
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// given
+			producerCalled := false
+			mockConfigurationProducer := func(_ *genericclioptions.ConfigFlags, _, _ string) (*action.Configuration, error) {
+				producerCalled = true
+				return nil, nil
+			}
+			svc, err := NewReleaseHandler(logger.Noop(), nil)
+			svc.actionConfigurationProducer = mockConfigurationProducer
+			require.NoError(t, err)
+
+			// when
+			outVal, gotErr := test.handler(context.Background(), svc)
+
+			// then
+			assert.NoError(t, gotErr)
+			assert.False(t, producerCalled)
+			assert.Empty(t, outVal)
 		})
 	}
 }

@@ -22,6 +22,7 @@ var _ pb.StorageBackendServer = &ReleaseHandler{}
 const latestRevisionIndicator = 0
 
 type (
+	// ReleaseDetails holds Helm release details.
 	ReleaseDetails struct {
 		// Name specifies installed Helm release name.
 		Name string `json:"name"`
@@ -30,6 +31,8 @@ type (
 		// Chart holds Helm Chart details.
 		Chart ChartDetails `json:"chart"`
 	}
+
+	// ChartDetails holds Helm chart details.
 	ChartDetails struct {
 		// Name specifies Helm Chart name.
 		Name string `json:"name"`
@@ -39,6 +42,7 @@ type (
 		Repo string `json:"repo"`
 	}
 
+	// ReleaseContext holds context used by Helm release storage backend.
 	ReleaseContext struct {
 		// Name specifies Helm release name for a given request.
 		Name string `json:"name"`
@@ -69,14 +73,17 @@ func NewReleaseHandler(log *zap.Logger, helmCfgFlags *genericclioptions.ConfigFl
 	}, nil
 }
 
+// OnCreate checks whether a given Helm release is accessible this storage backend.
 func (h *ReleaseHandler) OnCreate(_ context.Context, req *pb.OnCreateRequest) (*pb.OnCreateResponse, error) {
-	return &pb.OnCreateResponse{}, h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context)
+	if err := h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context); err != nil {
+		return nil, err
+	}
+
+	return &pb.OnCreateResponse{}, nil
 }
 
 // GetValue returns a value for a given TypeInstance.
 func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*pb.GetValueResponse, error) {
-	h.log.Info("Getting value")
-
 	releaseContext, err := h.getReleaseContext(req.Context)
 	if err != nil {
 		return nil, err
@@ -120,33 +127,36 @@ func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*
 	}, nil
 }
 
+// OnUpdate checks whether a given Helm release is accessible this storage backend.
 func (h *ReleaseHandler) OnUpdate(_ context.Context, req *pb.OnUpdateRequest) (*pb.OnUpdateResponse, error) {
-	return &pb.OnUpdateResponse{}, h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context)
+	if err := h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context); err != nil {
+		return nil, err
+	}
+	return &pb.OnUpdateResponse{}, nil
 }
 
+// OnDelete is NOP. Currently, we are not sure whether the release should be deleted or this should be more an information
+// that someone wants to deregister this TypeInstance.
 func (h *ReleaseHandler) OnDelete(_ context.Context, _ *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
-	// currently, we are not sure whether the release should be deleted or this should be more an information
-	// that someone wants to deregister this TypeInstance. For now, delete is NOP.
 	return &pb.OnDeleteResponse{}, nil
 }
 
+// GetLockedBy is NOP.
 func (h *ReleaseHandler) GetLockedBy(_ context.Context, _ *pb.GetLockedByRequest) (*pb.GetLockedByResponse, error) {
 	return &pb.GetLockedByResponse{}, nil
 }
 
+// OnLock is NOP.
 func (h *ReleaseHandler) OnLock(_ context.Context, _ *pb.OnLockRequest) (*pb.OnLockResponse, error) {
 	return &pb.OnLockResponse{}, nil
 }
 
+// OnUnlock is NOP.
 func (h *ReleaseHandler) OnUnlock(_ context.Context, _ *pb.OnUnlockRequest) (*pb.OnUnlockResponse, error) {
 	return &pb.OnUnlockResponse{}, nil
 }
 
 func (h *ReleaseHandler) getReleaseContext(contextBytes []byte) (*ReleaseContext, error) {
-	if len(contextBytes) == 0 {
-		return nil, nil
-	}
-
 	var ctx ReleaseContext
 	err := json.Unmarshal(contextBytes, &ctx)
 	if err != nil {
@@ -183,7 +193,6 @@ func (h *ReleaseHandler) checkIfHelmReleaseExist(ti string, ctx []byte) error {
 	return nil
 }
 
-// newHelmGet create a new Helm release get client.
 func (h *ReleaseHandler) newHelmGet(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Get, error) {
 	actionConfig, err := h.actionConfigurationProducer(flags, driver, ns)
 	if err != nil {
