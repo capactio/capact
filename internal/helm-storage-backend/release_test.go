@@ -63,7 +63,7 @@ func TestRelease_GetValue_Success(t *testing.T) {
 			// given
 			const (
 				releaseName      = "test-get-release"
-				releaseNamespace = "test-namespace"
+				releaseNamespace = "test-get-namespace"
 				chartLocation    = "http://example.com/charts"
 			)
 			expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
@@ -192,7 +192,7 @@ func TestRelease_OnCreate_Success(t *testing.T) {
 	// given
 	const (
 		releaseName      = "test-create-release"
-		releaseNamespace = "test-namespace"
+		releaseNamespace = "test-create-namespace"
 		releaseDriver    = "configmap"
 		chartLocation    = "http://example.com/charts"
 	)
@@ -295,7 +295,7 @@ func TestRelease_OnUpdate_Success(t *testing.T) {
 	// given
 	const (
 		releaseName      = "test-update-release"
-		releaseNamespace = "test-namespace"
+		releaseNamespace = "test-update-namespace"
 		releaseDriver    = "configmap"
 		chartLocation    = "http://example.com/charts"
 	)
