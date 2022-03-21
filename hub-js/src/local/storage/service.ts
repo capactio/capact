@@ -125,7 +125,7 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      
+
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
         throw Error(
@@ -205,7 +205,7 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      
+
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
         throw Error(
@@ -249,7 +249,7 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      
+
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
         throw Error(
@@ -278,7 +278,7 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      
+
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
         throw Error(
@@ -308,7 +308,7 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      
+
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
         throw Error(
@@ -371,9 +371,7 @@ export default class DelegatedStorageService {
     }
   }
 
-  private async getBackendContainer(
-    id: string
-  ): Promise<BackendContainer> {
+  private async getBackendContainer(id: string): Promise<BackendContainer> {
     if (!this.registeredClients.has(id)) {
       const spec = await this.storageInstanceDetailsFetcher(id);
       logger.debug("Initialize gRPC BackendContainer", {

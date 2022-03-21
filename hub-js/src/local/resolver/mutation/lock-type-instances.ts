@@ -180,7 +180,7 @@ export async function getTypeInstanceStoredExternally(
 
            WITH {
                 typeInstanceId: ti.id,
-                backend: { context: backendCtx.context, id: backendRef.id, abstract: backendRef.abstract}
+                backend: { context: apoc.convert.fromJsonMap(backendCtx.context), id: backendRef.id, abstract: backendRef.abstract}
               } AS value
            RETURN value
         `,

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/ptr"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	engine "capact.io/capact/pkg/engine/client"
@@ -128,7 +127,7 @@ var _ = Describe("Action", func() {
 			By("6. Modifying Policy to change backend storage for uploaded TypeInstance via TypeRef...")
 			setGlobalTestPolicy(ctx, engineClient, withTestBackendForUploadTypeRef(testStorageBackendTI.ID))
 
-			By("7 Creating TypeInstance which used test storage with dotenv provider")
+			By("7. Creating TypeInstance which will be used by test storage with dotenv provider")
 
 			By("7.1 Creating TypeInstance which will be downloaded")
 			download2 := getTypeInstanceInputForDownload(map[string]interface{}{"key": implIndicatorValue}, &backendInput)
@@ -207,7 +206,7 @@ var _ = Describe("Action", func() {
 				},
 				{
 					ID:          testStorageBackendTI.ID,
-					Description: ptr.String("Helm backend TypeInstance"),
+					Description: ptr.String("Dotenv storage backend TypeInstance"),
 				},
 			}
 			setGlobalTestPolicy(ctx, engineClient, prependInjectRuleForPassingActionInterface(globalPolicyRequiredTypeInstances))
@@ -271,7 +270,7 @@ var _ = Describe("Action", func() {
 				},
 				{
 					ID:          testStorageBackendTI.ID,
-					Description: ptr.String("Helm backend TypeInstance"),
+					Description: ptr.String("Dotenv storage backend TypeInstance"),
 				},
 			}
 			setGlobalTestPolicy(ctx, engineClient, addInterfacePolicyDefaultInjectionForPassingActionInterface(globalPolicyRequiredTypeInstances))
@@ -284,7 +283,7 @@ var _ = Describe("Action", func() {
 			By("4.1 Check uploaded TypeInstances")
 			expUploadTIBackend := &hublocalgraphql.TypeInstanceBackendReference{ID: testStorageBackendTI.ID, Abstract: false}
 			uploadedTI, cleanupUploaded := getUploadedTypeInstanceByValue(ctx, hubClient, implIndicatorValue)
-			defer cleanupUploaded()
+			defer cleanupUploaded() // We need to clean it up as it's not deleted when Action is deleted.
 			Expect(uploadedTI.Backend).Should(Equal(expUploadTIBackend))
 
 			By("4.2 Check Action output TypeInstances")
@@ -481,40 +480,6 @@ func getTypeInstanceInputForUpdate(backendInput *hublocalgraphql.TypeInstanceBac
 				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
 			},
-		},
-	}
-}
-
-func fixHelmStorageTypeInstanceCreateInput() *hublocalgraphql.CreateTypeInstanceInput {
-	return &hublocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.helm.storage",
-			Revision: "0.1.0",
-		},
-		Attributes: []*hublocalgraphql.AttributeReferenceInput{},
-		Value: map[string]interface{}{
-			"url":         "e2e-test-backend-mock-url:50051",
-			"acceptValue": true,
-			"contextSchema": heredoc.Doc(`
-				{
-					"$id": "#/properties/contextSchema",
-					"type": "object",
-					"required": [
-						"name",
-						"namespace"
-					],
-					"properties": {
-						"name": {
-							"$id": "#/properties/contextSchema/properties/name",
-							"type": "string"
-						},
-						"namespace": {
-							"$id": "#/properties/contextSchema/properties/namespace",
-							"type": "string"
-						}
-					},
-					"additionalProperties": false
-				}`),
 		},
 	}
 }

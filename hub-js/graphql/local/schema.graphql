@@ -123,7 +123,7 @@ type TypeInstanceResourceVersionSpec {
                 abstract: backendRef.abstract,
                 fetchInput: {
                    typeInstance: { resourceVersion: rev.resourceVersion, id: ti.id },
-                   backend: { context: backendCtx.context, id: backendRef.id}
+                   backend: { context: apoc.convert.fromJsonMap(backendCtx.context), id: backendRef.id}
                 }
               } AS value
               RETURN value
