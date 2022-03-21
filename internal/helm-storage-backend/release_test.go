@@ -29,31 +29,27 @@ func TestRelease_GetValue_Success(t *testing.T) {
 		name string
 
 		givenDriver          *string
-		givenTypeInstanceID  *string
-		givenResourceVersion int
+		givenTypeInstanceID  string
+		givenResourceVersion uint32
 		expectedDriver       string
 	}{
 		{
 			name:                "should use default driver and return the latest release",
-			givenTypeInstanceID: ptr.String("123"),
+			givenTypeInstanceID: "123",
 			givenDriver:         nil,
 			expectedDriver:      "secrets",
 		},
 		{
 			name:                "should use configmap driver and return the latest release",
-			givenTypeInstanceID: ptr.String("123"),
+			givenTypeInstanceID: "123",
 			givenDriver:         ptr.String("configmaps"),
 			expectedDriver:      "configmaps",
 		},
 		{
 			name:                 "should ignore resourceVersion and return the latest release",
-			givenTypeInstanceID:  ptr.String("123"),
+			givenTypeInstanceID:  "123",
 			givenResourceVersion: 42, // should be ignored
 			expectedDriver:       "secrets",
-		},
-		{
-			name:           "should return the latest release even if TypeInstance's id and revision are not specified",
-			expectedDriver: "secrets",
 		},
 	}
 	for _, test := range tests {
@@ -71,7 +67,8 @@ func TestRelease_GetValue_Success(t *testing.T) {
 			mockConfigurationProducer := mockConfigurationProducer(t, expHelmRelease, expFlags, test.expectedDriver)
 
 			givenReq := &pb.GetValueRequest{
-				TypeInstanceId: ptr.StringPtrToString(test.givenTypeInstanceID),
+				TypeInstanceId:  test.givenTypeInstanceID,
+				ResourceVersion: test.givenResourceVersion,
 				Context: mustMarshal(t, ReleaseContext{
 					Name:          releaseName,
 					Namespace:     releaseNamespace,
@@ -260,6 +257,19 @@ func TestRelease_OnCreate_Failures(t *testing.T) {
 			},
 			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
 		},
+		{
+			name: "should return internal error",
+			request: &pb.OnCreateRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, ReleaseContext{
+					Name:          releaseName,
+					Namespace:     releaseNamespace,
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			internalError: errors.New("internal error"),
+			expErrMsg:     "rpc error: code = Internal desc = while creating Helm get release client: internal error",
+		},
 	}
 	for _, test := range tests {
 		test := test
@@ -362,6 +372,19 @@ func TestRelease_OnUpdate_Failures(t *testing.T) {
 				}),
 			},
 			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
+		},
+		{
+			name: "should return internal error",
+			request: &pb.OnUpdateRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, ReleaseContext{
+					Name:          releaseName,
+					Namespace:     releaseNamespace,
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			internalError: errors.New("internal error"),
+			expErrMsg:     "rpc error: code = Internal desc = while creating Helm get release client: internal error",
 		},
 	}
 	for _, test := range tests {

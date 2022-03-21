@@ -8,6 +8,8 @@ import (
 	"capact.io/capact/internal/ptr"
 )
 
+const defaultHelmDriver = "secrets"
+
 type actionConfigurationProducerFn func(flags *genericclioptions.ConfigFlags, driver string, ns string) (*action.Configuration, error)
 
 // ActionConfigurationProducer returns Configuration with a given input settings.

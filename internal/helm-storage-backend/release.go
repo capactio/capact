@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -75,7 +76,7 @@ func NewReleaseHandler(log *zap.Logger, helmCfgFlags *genericclioptions.ConfigFl
 
 // OnCreate checks whether a given Helm release is accessible this storage backend.
 func (h *ReleaseHandler) OnCreate(_ context.Context, req *pb.OnCreateRequest) (*pb.OnCreateResponse, error) {
-	if err := h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context); err != nil {
+	if _, _, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context); err != nil { // check if accessible
 		return nil, err
 	}
 
@@ -84,36 +85,18 @@ func (h *ReleaseHandler) OnCreate(_ context.Context, req *pb.OnCreateRequest) (*
 
 // GetValue returns a value for a given TypeInstance.
 func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*pb.GetValueResponse, error) {
-	releaseContext, err := h.getReleaseContext(req.Context)
+	rel, relCtx, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	helmGet, err := h.newHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
-	if err != nil {
-		return nil, h.internalError(errors.Wrap(err, "while creating Helm get release client"))
-	}
-
-	// NOTE: req.resourceVersion is ignored on purpose.
-	// Based on our contract we always return the latest Helm release revision.
-	helmGet.Version = latestRevisionIndicator
-
-	release, err := helmGet.Run(releaseContext.Name)
-	switch {
-	case err == nil:
-	case errors.Is(err, driver.ErrReleaseNotFound):
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", releaseContext.Namespace, releaseContext.Name, req.TypeInstanceId))
-	default:
-		return nil, h.internalError(errors.Wrap(err, "while getting Helm release"))
-	}
-
 	releaseData := ReleaseDetails{
-		Name:      release.Name,
-		Namespace: release.Namespace,
+		Name:      rel.Name,
+		Namespace: rel.Namespace,
 		Chart: ChartDetails{
-			Name:    release.Chart.Metadata.Name,
-			Version: release.Chart.Metadata.Version,
-			Repo:    releaseContext.ChartLocation,
+			Name:    rel.Chart.Metadata.Name,
+			Version: rel.Chart.Metadata.Version,
+			Repo:    relCtx.ChartLocation,
 		},
 	}
 
@@ -129,7 +112,7 @@ func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*
 
 // OnUpdate checks whether a given Helm release is accessible this storage backend.
 func (h *ReleaseHandler) OnUpdate(_ context.Context, req *pb.OnUpdateRequest) (*pb.OnUpdateResponse, error) {
-	if err := h.checkIfHelmReleaseExist(req.TypeInstanceId, req.Context); err != nil {
+	if _, _, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context); err != nil { // check if accessible
 		return nil, err
 	}
 	return &pb.OnUpdateResponse{}, nil
@@ -170,27 +153,31 @@ func (h *ReleaseHandler) getReleaseContext(contextBytes []byte) (*ReleaseContext
 	return &ctx, nil
 }
 
-func (h *ReleaseHandler) checkIfHelmReleaseExist(ti string, ctx []byte) error {
-	releaseContext, err := h.getReleaseContext(ctx)
+func (h *ReleaseHandler) fetchHelmRelease(ti string, ctx []byte) (*release.Release, *ReleaseContext, error) {
+	relCtx, err := h.getReleaseContext(ctx)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	helmGet, err := h.newHelmGet(h.helmCfgFlags, *releaseContext.Driver, releaseContext.Namespace)
+	helmGet, err := h.newHelmGet(h.helmCfgFlags, *relCtx.Driver, relCtx.Namespace)
 	if err != nil {
-		return h.internalError(errors.Wrap(err, "while creating Helm get release client"))
+		return nil, nil, h.internalError(errors.Wrap(err, "while creating Helm get release client"))
 	}
 
-	_, err = helmGet.Run(releaseContext.Name)
+	// NOTE: req.resourceVersion is ignored on purpose.
+	// Based on our contract we always return the latest Helm release revision.
+	helmGet.Version = latestRevisionIndicator
+
+	rel, err := helmGet.Run(relCtx.Name)
 	switch {
 	case err == nil:
 	case errors.Is(err, driver.ErrReleaseNotFound):
-		return status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", releaseContext.Namespace, releaseContext.Name, ti))
+		return nil, nil, status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", relCtx.Namespace, relCtx.Name, ti))
 	default:
-		return h.internalError(errors.Wrap(err, "while checking if Helm release exists"))
+		return nil, nil, h.internalError(errors.Wrap(err, "while fetching Helm release"))
 	}
 
-	return nil
+	return rel, relCtx, nil
 }
 
 func (h *ReleaseHandler) newHelmGet(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Get, error) {
