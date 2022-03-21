@@ -4,22 +4,14 @@
 package e2e
 
 import (
-	"context"
-	"fmt"
-	"regexp"
-	"strings"
-
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/internal/regexutil"
-	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/public"
+	"context"
 
-	"github.com/MakeNowJust/heredoc"
-	prmt "github.com/gitchander/permutation"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -246,245 +238,12 @@ var _ = Describe("GraphQL API", func() {
 	})
 })
 
-type StorageSpec struct {
-	URL           *string `json:"url,omitempty"`
-	AcceptValue   *bool   `json:"acceptValue,omitempty"`
-	ContextSchema *string `json:"contextSchema,omitempty"`
-}
-
-func includes(ids []string, expID string) bool {
-	for _, i := range ids {
-		if i == expID {
-			return true
-		}
-	}
-
-	return false
-}
-
-func registerExternalStorage(ctx context.Context, cli *hubclient.Client, value interface{}) (string, func()) {
-	storage := &gqllocalapi.CreateTypeInstanceInput{
-		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.example.filesystem.storage",
-			Revision: "0.1.0",
-		},
-		Value: value,
-	}
-
-	externalStorageID, err := cli.CreateTypeInstance(ctx, storage)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(externalStorageID).NotTo(BeEmpty())
-
-	return externalStorageID, func() {
-		_ = cli.DeleteTypeInstance(ctx, externalStorageID)
-	}
-}
-
-func typeInstance(ver string) *gqllocalapi.CreateTypeInstanceInput {
-	return &gqllocalapi.CreateTypeInstanceInput{
-		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.capactio.capact.validation.single-key",
-			Revision: "0.1.0",
-		},
-		Attributes: []*gqllocalapi.AttributeReferenceInput{
-			{
-				Path:     "cap.type.sample-v" + ver,
-				Revision: "0.1.0",
-			},
-		},
-		Value: map[string]interface{}{
-			"key": "sample-v" + ver,
-		},
-	}
-}
-
-func assertTypeInstance(ctx context.Context, cli *hubclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
-	actual, err := cli.FindTypeInstance(ctx, ID)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(actual).NotTo(BeNil())
-	Expect(expected).NotTo(BeNil())
-	Expect(*actual).To(Equal(*expected))
-}
-
 func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpublicapi.AttributeFilterInput {
 	return gqlpublicapi.AttributeFilterInput{
 		Path:     path,
 		Rule:     &rule,
 		Revision: ptr.String(rev),
 	}
-}
-
-func findCreatedTypeInstanceID(alias string, instances []gqllocalapi.CreateTypeInstanceOutput) *string {
-	for _, el := range instances {
-		if el.Alias != alias {
-			continue
-		}
-		return &el.ID
-	}
-
-	return nil
-}
-
-func deleteTypeInstance(ctx context.Context, cli *hubclient.Client, ID string) {
-	err := cli.DeleteTypeInstance(ctx, ID)
-	Expect(err).ToNot(HaveOccurred())
-}
-
-func createTypeInstancesInput() *gqllocalapi.CreateTypeInstancesInput {
-	return &gqllocalapi.CreateTypeInstancesInput{
-		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
-			{
-				Alias: ptr.String("parent"),
-				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-					Path:     "com.parent",
-					Revision: "0.1.0",
-				},
-				Attributes: []*gqllocalapi.AttributeReferenceInput{
-					{
-						Path:     "com.attr",
-						Revision: "0.1.0",
-					},
-				},
-				Value: map[string]interface{}{
-					"parent": true,
-				},
-			},
-			{
-				Alias: ptr.String("child"),
-				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-					Path:     "com.child",
-					Revision: "0.1.0",
-				},
-				Attributes: []*gqllocalapi.AttributeReferenceInput{
-					{
-						Path:     "com.attr",
-						Revision: "0.1.0",
-					},
-				},
-				Value: map[string]interface{}{
-					"child": true,
-				},
-			},
-		},
-		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
-			{
-				From: "parent",
-				To:   "child",
-			},
-		},
-	}
-}
-
-func expectedChildTypeInstance(tiID, backendID string) *gqllocalapi.TypeInstance {
-	tiRev := &gqllocalapi.TypeInstanceResourceVersion{
-		ResourceVersion: 1,
-		Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
-			Attributes: []*gqllocalapi.AttributeReference{
-				{
-					Path:     "com.attr",
-					Revision: "0.1.0",
-				},
-			},
-		},
-		Spec: &gqllocalapi.TypeInstanceResourceVersionSpec{
-			Value: map[string]interface{}{
-				"child": true,
-			},
-			Backend: &gqllocalapi.TypeInstanceResourceVersionSpecBackend{},
-		},
-	}
-
-	return &gqllocalapi.TypeInstance{
-		ID: tiID,
-		TypeRef: &gqllocalapi.TypeInstanceTypeReference{
-			Path:     "com.child",
-			Revision: "0.1.0",
-		},
-
-		Backend: &gqllocalapi.TypeInstanceBackendReference{
-			ID:       backendID,
-			Abstract: true,
-		},
-		LatestResourceVersion:   tiRev,
-		FirstResourceVersion:    tiRev,
-		PreviousResourceVersion: nil,
-		ResourceVersion:         tiRev,
-		ResourceVersions:        []*gqllocalapi.TypeInstanceResourceVersion{tiRev},
-		UsedBy:                  nil,
-		Uses:                    nil,
-	}
-}
-
-func expectedParentTypeInstance(tiID, backendID string) *gqllocalapi.TypeInstance {
-	tiRev := &gqllocalapi.TypeInstanceResourceVersion{
-		ResourceVersion: 1,
-		Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
-			Attributes: []*gqllocalapi.AttributeReference{
-				{
-					Path:     "com.attr",
-					Revision: "0.1.0",
-				},
-			},
-		},
-		Spec: &gqllocalapi.TypeInstanceResourceVersionSpec{
-			Value: map[string]interface{}{
-				"parent": true,
-			},
-			Backend: &gqllocalapi.TypeInstanceResourceVersionSpecBackend{},
-		},
-	}
-
-	return &gqllocalapi.TypeInstance{
-		ID: tiID,
-		TypeRef: &gqllocalapi.TypeInstanceTypeReference{
-			Path:     "com.parent",
-			Revision: "0.1.0",
-		},
-
-		Backend: &gqllocalapi.TypeInstanceBackendReference{
-			ID:       backendID,
-			Abstract: true,
-		},
-		LatestResourceVersion:   tiRev,
-		FirstResourceVersion:    tiRev,
-		PreviousResourceVersion: nil,
-		ResourceVersion:         tiRev,
-		ResourceVersions:        []*gqllocalapi.TypeInstanceResourceVersion{tiRev},
-		UsedBy:                  nil,
-		Uses:                    nil,
-	}
-}
-
-// We cannot write specs using Context and It which are connected with each other
-// see: https://github.com/onsi/ginkgo/issues/246
-// this functions just adds syntax sugar which can be used when we have just one single `It` block
-// with sequential test-cases
-func scenario(format string, args ...interface{}) {
-	fmt.Fprintf(GinkgoWriter, "[Scenario]: "+format+"\n", args...)
-}
-
-func when(format string, args ...interface{}) {
-	fmt.Fprintf(GinkgoWriter, "\t[when]: "+format+"\n", args...)
-}
-
-func then(format string, args ...interface{}) {
-	fmt.Fprintf(GinkgoWriter, "\t[then]: "+format+"\n", args...)
-}
-
-// allPermutations returns all possible permutations in regex format.
-// For such input
-//	a := []string{"alpha", "beta"}
-// returns
-//	("alpha", "beta"|"beta", "alpha")
-//
-// This function allows you to match list of words in any order using regex.
-func allPermutations(in []string) string {
-	p := prmt.New(prmt.StringSlice(in))
-	var opts []string
-	for p.Next() {
-		opts = append(opts, fmt.Sprintf(`"%s"`, strings.Join(in, `", "`)))
-	}
-	return regexutil.OrStringSlice(opts)
 }
 
 func HasOnlyExpectTypePaths(gotTypes []*gqlpublicapi.Type, expectedPaths []string) {
