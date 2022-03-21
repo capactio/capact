@@ -28,10 +28,10 @@ EOT
 if [ "${GITHUB_EVENT_NAME}" = "pull_request_target" ]
 then
   echo "DOCKER_TAG=PR-${PR_NUMBER}" >> "$GITHUB_ENV"
-  echo "DOCKER_REPOSITORY=ghcr.io/capactio/pr" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=ghcr.io/mkuziemko/pr" >> "$GITHUB_ENV"
 else
   echo "DOCKER_TAG=${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
-  echo "DOCKER_REPOSITORY=ghcr.io/capactio" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=ghcr.io/mkuziemko" >> "$GITHUB_ENV"
 fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure

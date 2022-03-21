@@ -18,7 +18,7 @@ all: generate build-all-images test-unit test-lint ## Default: generate all, bui
 ############
 
 APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions gitlab-api-runner secret-storage-backend helm-storage-backend
-TESTS = e2e
+TESTS = e2e localhub
 INFRA = json-go-gen graphql-schema-linter jinja2 merger
 
 build-all-tools: ## Builds the standalone binaries for all tools
@@ -123,6 +123,10 @@ test-unit: ## Execute unit tests
 test-lint: ## Run linters on the codebase
 	./hack/lint.sh
 .PHONY: test-lint
+
+test-localhub:
+	./hack/test-localhub.sh
+.PHONY: test-integration
 
 test-integration:
 	./hack/test-integration.sh
