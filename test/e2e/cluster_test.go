@@ -84,9 +84,7 @@ func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 		if isAffectedByNodeShutdown(pod.Status) {
 			return true
 		}
-		if strings.EqualFold(pod.Status.Reason, "Shutdown") {
-			return true
-		}
+
 		log("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
 		return false
 	}
