@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"capact.io/capact/pkg/runner"
@@ -174,7 +175,7 @@ func (a *createAction) createAdditionalOutputFile(path string, args *OutputArgs,
 		return errors.Wrap(err, "failed to load template")
 	}
 
-	fd, err := os.Create(path)
+	fd, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return errors.Wrap(err, "cannot open output file to write")
 	}
