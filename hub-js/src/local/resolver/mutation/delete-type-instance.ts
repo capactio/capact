@@ -58,7 +58,7 @@ export async function deleteTypeInstance(
 
             // NOTE: Need to be preserved with 'WITH' statement, otherwise we won't be able
             // to access node's properties after 'DETACH DELETE' statement.
-            WITH *, {id: ti.id, backend: { id: backendRef.id, context: specBackend.context, abstract: backendRef.abstract}} as out
+            WITH *, {id: ti.id, backend: { id: backendRef.id, context: apoc.convert.fromJsonMap(specBackend.context), abstract: backendRef.abstract}} as out
             DETACH DELETE ti, metadata, spec, tirs, specBackend
 
             WITH *
