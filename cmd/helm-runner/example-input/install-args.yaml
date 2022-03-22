@@ -9,10 +9,14 @@ values:
   postgresqlDatabase: postgres
   postgresqlPassword: s3cr3t
 output:
-  goTemplate: |
-    host: '{{ template "postgresql.primary.fullname" . }}'
-    port: '{{ template "postgresql.port" . }}'
-    defaultDBName: '{{ template "postgresql.database" . }}'
-    superuser:
-      username: '{{ template "postgresql.username" . }}'
-      password: '{{ template "postgresql.password" . }}'
+  helmRelease:
+    useHelmReleaseStorage: true
+  additional:
+    useHelmTemplateStorage: true
+    goTemplate: |
+      host: '{{ template "postgresql.primary.fullname" . }}'
+      port: '{{ template "postgresql.port" . }}'
+      defaultDBName: '{{ template "postgresql.database" . }}'
+      superuser:
+        username: '{{ template "postgresql.username" . }}'
+        password: '{{ template "postgresql.password" . }}'
