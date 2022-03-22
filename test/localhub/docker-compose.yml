@@ -6,7 +6,7 @@ services:
       hubjs:
         condition: service_healthy
     environment:
-      - HUBJS_ADDR=http://hubjs:8080/graphql
+      - LOCALHUB_ADDR=http://hubjs:8080/graphql
       - GRPC_SECRET_STORAGE_BACKEND_ADDR=http://backend-storage:50051
   hubjs:
     image: "${DOCKER_REPOSITORY}/hub-js:${DOCKER_TAG}"
@@ -24,10 +24,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: netstat -ltn | grep -c 8080
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 10
-      start_period: 40s
+      start_period: 60s
   neo4j:
     image: "ghcr.io/capactio/neo4j:4.2.13-apoc"
     restart: on-failure
@@ -48,5 +48,6 @@ services:
     restart: on-failure
     environment:
       - GRPC_SECRET_STORAGE_BACKEND_ADDR=50051
+      - APP_SUPPORTED_PROVIDERS=dotenv
     ports:
       - "50051:50051"

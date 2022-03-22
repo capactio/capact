@@ -723,7 +723,7 @@ type TypeInstanceResourceVersionSpec {
                 abstract: backendRef.abstract,
                 fetchInput: {
                    typeInstance: { resourceVersion: rev.resourceVersion, id: ti.id },
-                   backend: { context: backendCtx.context, id: backendRef.id}
+                   backend: { context: apoc.convert.fromJsonMap(backendCtx.context), id: backendRef.id}
                 }
               } AS value
               RETURN value
@@ -3438,7 +3438,7 @@ func (ec *executionContext) _TypeInstanceResourceVersionSpec_value(ctx context.C
 			return obj.Value, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)<-[:SPECIFIED_BY]-(rev:TypeInstanceResourceVersion)<-[:CONTAINS]-(ti:TypeInstance)\nMATCH (this)-[:WITH_BACKEND]->(backendCtx)\nMATCH (ti)-[:STORED_IN]->(backendRef)\nWITH *\nCALL apoc.when(\n    backendRef.abstract,\n    '\n        WITH {\n          abstract: backendRef.abstract,\n          builtinValue: apoc.convert.fromJsonMap(spec.value)\n        } AS value\n        RETURN value\n    ',\n    '\n        WITH {\n          abstract: backendRef.abstract,\n          fetchInput: {\n             typeInstance: { resourceVersion: rev.resourceVersion, id: ti.id },\n             backend: { context: backendCtx.context, id: backendRef.id}\n          }\n        } AS value\n        RETURN value\n    ',\n    {spec: this, rev: rev, ti: ti, backendRef: backendRef, backendCtx: backendCtx}\n) YIELD value as out\n\nRETURN out.value")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)<-[:SPECIFIED_BY]-(rev:TypeInstanceResourceVersion)<-[:CONTAINS]-(ti:TypeInstance)\nMATCH (this)-[:WITH_BACKEND]->(backendCtx)\nMATCH (ti)-[:STORED_IN]->(backendRef)\nWITH *\nCALL apoc.when(\n    backendRef.abstract,\n    '\n        WITH {\n          abstract: backendRef.abstract,\n          builtinValue: apoc.convert.fromJsonMap(spec.value)\n        } AS value\n        RETURN value\n    ',\n    '\n        WITH {\n          abstract: backendRef.abstract,\n          fetchInput: {\n             typeInstance: { resourceVersion: rev.resourceVersion, id: ti.id },\n             backend: { context: apoc.convert.fromJsonMap(backendCtx.context), id: backendRef.id}\n          }\n        } AS value\n        RETURN value\n    ',\n    {spec: this, rev: rev, ti: ti, backendRef: backendRef, backendCtx: backendCtx}\n) YIELD value as out\n\nRETURN out.value")
 			if err != nil {
 				return nil, err
 			}
