@@ -24,7 +24,7 @@ jobs:
         with:
           create_credentials_file: true
           cleanup_credentials: true
-          credentials_json: ${{ secrets.GCS_CREDS }}
+          credentials_json: ${{ secrets.CAPACT_GKE_CREDS }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.6.0
       - name: Get cluster credentials
