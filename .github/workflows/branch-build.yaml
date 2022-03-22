@@ -199,6 +199,24 @@ jobs:
         run: |
           make release-latest-binaries
 
+  localhub-tests:
+    name: Local Hub tests
+    runs-on: ubuntu-latest
+    needs: [ entry-tests, build-app, build-tests ]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Run local Hub tests
+        env:
+          BUILD_IMAGES: "false"
+        run: |
+          make test-localhub
+
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
@@ -286,7 +304,7 @@ jobs:
   slackNotification:
     name: Slack Notification
     runs-on: ubuntu-latest
-    needs: [ update-cluster, integration-tests ]
+    needs: [ update-cluster, localhub-tests, integration-tests ]
     if: failure()
     steps:
       - name: Slack Notification
