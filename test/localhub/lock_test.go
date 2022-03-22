@@ -118,16 +118,6 @@ func TestLockTypeInstances(t *testing.T) {
 	// when Bar tries to locks all of them
 	lockingIDs = createdTIIDs
 	lockingIDs = append(lockingIDs, id4)
-	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
-		Ids:     lockingIDs,
-		OwnerID: barOwnerID,
-	})
-
-	// then should failed with error id1,id2,id3 already locked by Foo
-	require.Error(t, err)
-	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-	#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
-
 	// when Bar tries to locks all of them
 	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     lockingIDs,
