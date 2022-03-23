@@ -96,6 +96,11 @@ type ChartRelease struct {
 	Chart     Chart  `json:"chart"`
 }
 
+// ChartReleaseInputData represents a Helm chart release input data.
+type ChartReleaseInputData struct {
+	Value ChartRelease `json:"value"`
+}
+
 // Input stores the input configuration for the runner.
 type Input struct {
 	Args Arguments
