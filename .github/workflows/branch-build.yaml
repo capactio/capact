@@ -148,7 +148,7 @@ jobs:
         with:
           create_credentials_file: true
           cleanup_credentials: true
-          credentials_json: ${{ secrets.GCS_CREDS }}
+          credentials_json: ${{ secrets.CAPACT_GCS_CREDS }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.6.0
       - name: Release Helm Charts if were changed
@@ -205,7 +205,7 @@ jobs:
         with:
           create_credentials_file: true
           cleanup_credentials: true
-          credentials_json: ${{ secrets.GCS_CREDS }}
+          credentials_json: ${{ secrets.CAPACT_GCS_CREDS }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.6.0
       - name: Release latest CLI
