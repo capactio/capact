@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"capact.io/capact/pkg/hub/client/local"
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/client"
@@ -17,13 +17,12 @@ import (
 	"capact.io/capact/internal/cli/heredoc"
 	cliprinter "capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-
-	"github.com/spf13/cobra"
+	"capact.io/capact/pkg/hub/client/local"
 )
 
 const (
 	yamlFileSeparator   = "---"
-	tableRequiredFields = local.TypeInstanceRootFields | local.TypeInstanceTypeRefFields | local.TypeInstanceUsedByIDField | local.TypeInstanceUsesIDField | local.TypeInstanceLatestResourceVersionField
+	tableRequiredFields = local.TypeInstanceRootFields | local.TypeInstanceTypeRefFields | local.TypeInstanceUsedByIDField | local.TypeInstanceUsesIDField | local.TypeInstanceLatestResourceVersionVersionField
 )
 
 // GetOptions is used to store the configuration flags for the Get command.
@@ -55,8 +54,8 @@ func NewGet() *cobra.Command {
 		Example: heredoc.WithCLIName(`
 			# Display TypeInstances with IDs 'c49b' and '4793'
 			<cli> typeinstance get c49b 4793
-			
-			# Save TypeInstances with IDs 'c49b' and '4793' to file in the update format which later can be submitted for update by: 
+
+			# Save TypeInstances with IDs 'c49b' and '4793' to file in the update format which later can be submitted for update by:
 			# <cli> typeinstance apply --from-file /tmp/typeinstances.yaml
 			<cli> typeinstance get c49b 4793 -oyaml --export > /tmp/typeinstances.yaml
 		`, cli.Name),

@@ -10,15 +10,16 @@ import (
 
 	helm_storage_backend "capact.io/capact/internal/helm-storage-backend"
 
-	"capact.io/capact/internal/healthz"
-	"capact.io/capact/internal/logger"
-	"capact.io/capact/pkg/hub/api/grpc/storage_backend"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+
+	"capact.io/capact/internal/healthz"
+	"capact.io/capact/internal/logger"
+	"capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
 // Mode describes the selected handler for the Helm storage backend gRPC server.
@@ -67,6 +68,8 @@ func main() {
 
 	helmCfgFlags := helmCfgFlagsForK8sCfg(k8sCfg)
 
+	relFetcher := helm_storage_backend.NewHelmReleaseFetcher(helmCfgFlags)
+
 	// setup servers
 	parallelServers := new(errgroup.Group)
 
@@ -74,10 +77,10 @@ func main() {
 	var handler storage_backend.StorageBackendServer
 	switch cfg.Mode {
 	case HelmReleaseMode:
-		handler, err = helm_storage_backend.NewReleaseHandler(logger, helmCfgFlags)
+		handler, err = helm_storage_backend.NewReleaseHandler(logger, relFetcher)
 		exitOnError(err, "while creating Helm Release backend storage")
 	case HelmTemplateMode:
-		handler = helm_storage_backend.NewTemplateHandler(logger, helmCfgFlags)
+		handler = helm_storage_backend.NewTemplateHandler(logger, relFetcher)
 	default:
 		exitOnError(fmt.Errorf("invalid mode %q", cfg.Mode), "while loading storage backend handler")
 	}

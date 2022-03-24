@@ -15,11 +15,29 @@ helmReleaseBackend:
     port: 50051
     type: ClusterIP
 
+  resources:
+    limits:
+      cpu: 100m
+      memory: 32Mi
+    requests:
+      cpu: 30m
+      memory: 16Mi
+
+
 helmTemplateBackend:
   enabled: true
   service:
     port: 50052
     type: ClusterIP
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 512Mi
+    requests:
+      cpu: 30m
+      memory: 16Mi
+
 
 replicaCount: 1
 
@@ -37,15 +55,6 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
-resources:
-  limits:
-    cpu: 100m
-    memory: 32Mi
-  requests:
-    cpu: 30m
-    memory: 16Mi
-
 autoscaling:
   enabled: false
   minReplicas: 1

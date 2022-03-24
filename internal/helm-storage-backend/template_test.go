@@ -2,29 +2,25 @@ package helmstoragebackend
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
-	kubefake "helm.sh/helm/v3/pkg/kube/fake"
+	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage"
-	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/time"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
+	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/internal/ptr"
 	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
-func TestRelease_CreateGetUpdate_Success(t *testing.T) {
+func TestTemplate_CreateGetAndUpdate_Success(t *testing.T) {
 	tests := []struct {
 		name string
 
@@ -60,48 +56,52 @@ func TestRelease_CreateGetUpdate_Success(t *testing.T) {
 			const (
 				releaseName      = "test-get-release"
 				releaseNamespace = "test-get-namespace"
-				chartLocation    = "http://example.com/charts"
 			)
-			expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+
+			schart, err := loader.Load("./testdata/sample-chart")
+			require.NoError(t, err)
+
+			expHelmRelease := fixHelmReleaseWithChart(releaseName, releaseNamespace, schart)
 			expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
 			mockConfigurationProducer := mockConfigurationProducer(t, expHelmRelease, expFlags, test.expectedDriver)
 
 			givenReq := &pb.GetValueRequest{
 				TypeInstanceId:  test.givenTypeInstanceID,
 				ResourceVersion: test.givenResourceVersion,
-				Context: mustMarshal(t, ReleaseContext{
+				Context: mustMarshal(t, TemplateContext{
 					HelmRelease: HelmRelease{
 						Name:      releaseName,
 						Namespace: releaseNamespace,
 						Driver:    test.givenDriver,
 					},
-					ChartLocation: chartLocation,
-				}),
-			}
+					GoTemplate: heredoc.Doc(`
+							host: '{{ include "sample-chart.fullname" . }}'
+							port: '{{ .Values.service.port }}'
+							superuser:
+							  username: 'psql'
+							`),
+				})}
 
 			expResponse := &pb.GetValueResponse{
-				Value: mustMarshal(t, ReleaseDetails{
-					Name:      expHelmRelease.Name,
-					Namespace: expHelmRelease.Namespace,
-					Chart: ChartDetails{
-						Name:    expHelmRelease.Chart.Metadata.Name,
-						Version: expHelmRelease.Chart.Metadata.Version,
-						Repo:    chartLocation,
+				Value: mustMarshal(t, map[string]interface{}{
+					"host": "test-get-release-sample-chart",
+					"port": "80",
+					"superuser": map[string]interface{}{
+						"username": "psql",
 					},
 				}),
 			}
 
 			fetcher := NewHelmReleaseFetcher(expFlags)
 			fetcher.actionConfigurationProducer = mockConfigurationProducer
-			svc, err := NewReleaseHandler(logger.Noop(), fetcher)
-			require.NoError(t, err)
+			svc := NewTemplateHandler(logger.Noop(), fetcher)
 
 			// when
-			getOut, getErr := svc.GetValue(context.Background(), givenReq)
+			outVal, gotErr := svc.GetValue(context.Background(), givenReq)
 
 			// then
-			assert.NoError(t, getErr)
-			assert.Equal(t, getOut, expResponse)
+			assert.NoError(t, gotErr)
+			assert.EqualValues(t, outVal, expResponse)
 
 			// when
 			createOut, createErr := svc.OnCreate(context.Background(), &pb.OnCreateRequest{
@@ -126,7 +126,7 @@ func TestRelease_CreateGetUpdate_Success(t *testing.T) {
 	}
 }
 
-func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
+func TestTemplate_CreateGetAndUpdate_Failures(t *testing.T) {
 	// globally given
 	const (
 		releaseName      = "test-release"
@@ -144,12 +144,11 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 			name: "should return not found error if release name is wrong",
 			request: &pb.GetValueRequest{
 				TypeInstanceId: "123",
-				Context: mustMarshal(t, ReleaseContext{
+				Context: mustMarshal(t, TemplateContext{
 					HelmRelease: HelmRelease{
 						Name:      "other-release",
 						Namespace: releaseNamespace,
 					},
-					ChartLocation: "http://example.com/charts",
 				}),
 			},
 			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' for TypeInstance '123' was not found",
@@ -158,26 +157,38 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 			name: "should return not found error if release namespace is wrong",
 			request: &pb.GetValueRequest{
 				TypeInstanceId: "123",
-				Context: mustMarshal(t, ReleaseContext{
+				Context: mustMarshal(t, TemplateContext{
 					HelmRelease: HelmRelease{
 						Name:      releaseName,
 						Namespace: "other-ns",
 					},
-					ChartLocation: "http://example.com/charts",
 				}),
 			},
 			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
 		},
 		{
+			name: "should return error indicating invalid goTemplate",
+			request: &pb.GetValueRequest{
+				TypeInstanceId: "123",
+				Context: mustMarshal(t, TemplateContext{
+					HelmRelease: HelmRelease{
+						Name:      releaseName,
+						Namespace: releaseNamespace,
+					},
+					GoTemplate: `host: '{{ .Missing.property }}'`,
+				}),
+			},
+			expErrMsg: "rpc error: code = Internal desc = while rendering output value: while rendering additional output: while rendering chart: template: test-release-chart/additionalOutputTemplate:1:18: executing \"test-release-chart/additionalOutputTemplate\" at <.Missing.property>: nil pointer evaluating interface {}.property",
+		},
+		{
 			name: "should return internal error",
 			request: &pb.GetValueRequest{
 				TypeInstanceId: "123",
-				Context: mustMarshal(t, ReleaseContext{
+				Context: mustMarshal(t, TemplateContext{
 					HelmRelease: HelmRelease{
 						Name:      releaseName,
 						Namespace: "other-ns",
 					},
-					ChartLocation: "http://example.com/charts",
 				}),
 			},
 			internalError: errors.New("internal error"),
@@ -202,15 +213,14 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 			fetcher := NewHelmReleaseFetcher(expFlags)
 			fetcher.actionConfigurationProducer = mockConfigurationProducer
 
-			svc, err := NewReleaseHandler(logger.Noop(), fetcher)
-			require.NoError(t, err)
+			svc := NewTemplateHandler(logger.Noop(), fetcher)
 
 			// when
-			getOut, getErr := svc.GetValue(context.Background(), test.request)
+			outVal, gotErr := svc.GetValue(context.Background(), test.request)
 
 			// then
-			assert.EqualError(t, getErr, test.expErrMsg)
-			assert.Nil(t, getOut)
+			assert.EqualError(t, gotErr, test.expErrMsg)
+			assert.Nil(t, outVal)
 
 			// when
 			createOut, createErr := svc.OnCreate(context.Background(), &pb.OnCreateRequest{
@@ -220,7 +230,7 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 
 			// then
 			assert.EqualError(t, createErr, test.expErrMsg)
-			assert.Nil(t, createOut)
+			assert.Empty(t, createOut)
 
 			// when
 			updateOut, updateErr := svc.OnUpdate(context.Background(), &pb.OnUpdateRequest{
@@ -230,38 +240,38 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 
 			// then
 			assert.EqualError(t, updateErr, test.expErrMsg)
-			assert.Nil(t, updateOut)
+			assert.Empty(t, updateOut)
 		})
 	}
 }
 
-func TestRelease_NOP_Methods(t *testing.T) {
+func TestTemplate_NOP_Methods(t *testing.T) {
 	// globally given
 	tests := []struct {
 		name    string
-		handler func(ctx context.Context, svc *ReleaseHandler) (interface{}, error)
+		handler func(ctx context.Context, svc *TemplateHandler) (interface{}, error)
 	}{
 		{
 			name: "no operation for OnDelete",
-			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+			handler: func(ctx context.Context, svc *TemplateHandler) (interface{}, error) {
 				return svc.OnDelete(ctx, nil)
 			},
 		},
 		{
 			name: "no operation for GetLockedBy",
-			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+			handler: func(ctx context.Context, svc *TemplateHandler) (interface{}, error) {
 				return svc.GetLockedBy(ctx, nil)
 			},
 		},
 		{
 			name: "no operation for OnLock",
-			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+			handler: func(ctx context.Context, svc *TemplateHandler) (interface{}, error) {
 				return svc.OnLock(ctx, nil)
 			},
 		},
 		{
 			name: "no operation for OnUnlock",
-			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+			handler: func(ctx context.Context, svc *TemplateHandler) (interface{}, error) {
 				return svc.OnUnlock(ctx, nil)
 			},
 		},
@@ -278,8 +288,7 @@ func TestRelease_NOP_Methods(t *testing.T) {
 			}
 			fetcher := NewHelmReleaseFetcher(nil)
 			fetcher.actionConfigurationProducer = mockConfigurationProducer
-			svc, err := NewReleaseHandler(logger.Noop(), fetcher)
-			require.NoError(t, err)
+			svc := NewTemplateHandler(logger.Noop(), fetcher)
 
 			// when
 			outVal, gotErr := test.handler(context.Background(), svc)
@@ -292,34 +301,7 @@ func TestRelease_NOP_Methods(t *testing.T) {
 	}
 }
 
-func mockConfigurationProducer(t *testing.T, expHelmRelease *release.Release, expFlags *genericclioptions.ConfigFlags, expDriver string) actionConfigurationProducerFn {
-	t.Helper()
-	inMemoryDriver := driver.NewMemory()
-	err := inMemoryDriver.Create("1", expHelmRelease)
-	require.NoError(t, err)
-
-	return func(inputFlags *genericclioptions.ConfigFlags, inputDriver, inputNs string) (*action.Configuration, error) {
-		assert.Equal(t, expFlags, inputFlags)
-		assert.Equal(t, expDriver, inputDriver)
-
-		inMemoryDriver.SetNamespace(inputNs)
-		return &action.Configuration{
-			Releases:   storage.Init(inMemoryDriver),
-			KubeClient: &kubefake.FailingKubeClient{PrintingKubeClient: kubefake.PrintingKubeClient{Out: ioutil.Discard}},
-		}, nil
-	}
-}
-
-func mustMarshal(t *testing.T, v interface{}) []byte {
-	t.Helper()
-	out, err := json.Marshal(v)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return out
-}
-
-func fixHelmRelease(name, ns string) *release.Release {
+func fixHelmReleaseWithChart(name, ns string, chrt *chart.Chart) *release.Release {
 	now := time.Now()
 	return &release.Release{
 		Name:      name,
@@ -329,11 +311,6 @@ func fixHelmRelease(name, ns string) *release.Release {
 			LastDeployed:  now,
 			Description:   "Named Release Stub",
 		},
-		Chart: &chart.Chart{
-			Metadata: &chart.Metadata{
-				Name:    fmt.Sprintf("%s-chart", name),
-				Version: "0.1.0",
-			},
-		},
+		Chart: chrt,
 	}
 }

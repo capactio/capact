@@ -3,16 +3,10 @@ package helmstoragebackend
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"capact.io/capact/internal/ptr"
 	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
@@ -45,14 +39,9 @@ type (
 
 	// ReleaseContext holds context used by Helm release storage backend.
 	ReleaseContext struct {
-		// Name specifies Helm release name for a given request.
-		Name string `json:"name"`
-		// Namespace specifies in which Kubernetes Namespace Helm release is located.
-		Namespace string `json:"namespace"`
+		HelmRelease
 		// ChartLocation specifies Helm Chart location.
 		ChartLocation string `json:"chartLocation"`
-		// Driver specifies drivers used for storing the Helm release.
-		Driver *string `json:"driver,omitempty"`
 	}
 )
 
@@ -60,17 +49,15 @@ type (
 type ReleaseHandler struct {
 	pb.UnimplementedStorageBackendServer
 
-	log                         *zap.Logger
-	helmCfgFlags                *genericclioptions.ConfigFlags
-	actionConfigurationProducer actionConfigurationProducerFn
+	log     *zap.Logger
+	fetcher *HelmReleaseFetcher
 }
 
 // NewReleaseHandler returns new ReleaseHandler.
-func NewReleaseHandler(log *zap.Logger, helmCfgFlags *genericclioptions.ConfigFlags) (*ReleaseHandler, error) {
+func NewReleaseHandler(log *zap.Logger, helmRelFetcher *HelmReleaseFetcher) (*ReleaseHandler, error) {
 	return &ReleaseHandler{
-		log:                         log,
-		helmCfgFlags:                helmCfgFlags,
-		actionConfigurationProducer: ActionConfigurationProducer,
+		log:     log,
+		fetcher: helmRelFetcher,
 	}, nil
 }
 
@@ -79,7 +66,6 @@ func (h *ReleaseHandler) OnCreate(_ context.Context, req *pb.OnCreateRequest) (*
 	if _, _, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context); err != nil { // check if accessible
 		return nil, err
 	}
-
 	return &pb.OnCreateResponse{}, nil
 }
 
@@ -143,7 +129,7 @@ func (h *ReleaseHandler) getReleaseContext(contextBytes []byte) (*ReleaseContext
 	var ctx ReleaseContext
 	err := json.Unmarshal(contextBytes, &ctx)
 	if err != nil {
-		return nil, h.internalError(errors.Wrap(err, "while unmarshaling context"))
+		return nil, errors.Wrap(err, "while unmarshaling context")
 	}
 
 	if ctx.Driver == nil {
@@ -156,39 +142,13 @@ func (h *ReleaseHandler) getReleaseContext(contextBytes []byte) (*ReleaseContext
 func (h *ReleaseHandler) fetchHelmRelease(ti string, ctx []byte) (*release.Release, *ReleaseContext, error) {
 	relCtx, err := h.getReleaseContext(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, gRPCInternalError(err)
 	}
 
-	helmGet, err := h.newHelmGet(h.helmCfgFlags, *relCtx.Driver, relCtx.Namespace)
+	rel, err := h.fetcher.FetchHelmRelease(ti, relCtx.HelmRelease)
 	if err != nil {
-		return nil, nil, h.internalError(errors.Wrap(err, "while creating Helm get release client"))
-	}
-
-	// NOTE: req.resourceVersion is ignored on purpose.
-	// Based on our contract we always return the latest Helm release revision.
-	helmGet.Version = latestRevisionIndicator
-
-	rel, err := helmGet.Run(relCtx.Name)
-	switch {
-	case err == nil:
-	case errors.Is(err, driver.ErrReleaseNotFound):
-		return nil, nil, status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", relCtx.Namespace, relCtx.Name, ti))
-	default:
-		return nil, nil, h.internalError(errors.Wrap(err, "while fetching Helm release"))
+		return nil, nil, err // it already handles grpc errors properly
 	}
 
 	return rel, relCtx, nil
-}
-
-func (h *ReleaseHandler) newHelmGet(flags *genericclioptions.ConfigFlags, driver, ns string) (*action.Get, error) {
-	actionConfig, err := h.actionConfigurationProducer(flags, driver, ns)
-	if err != nil {
-		return nil, err
-	}
-
-	return action.NewGet(actionConfig), nil
-}
-
-func (h *ReleaseHandler) internalError(err error) error {
-	return status.Error(codes.Internal, err.Error())
 }
