@@ -47,7 +47,7 @@ spec:
               path: /healthz
               port: 8082
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.helmReleaseBackend.resources | nindent 12 }}
           env:
             - name: APP_GRPC_ADDR
               value: ":50051"
@@ -76,8 +76,11 @@ spec:
             httpGet:
               path: /healthz
               port: 8083
+          volumeMounts:
+            - mountPath: /tmp
+              name: cache-volume
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.helmTemplateBackend.resources | nindent 12 }}
           env:
             - name: APP_GRPC_ADDR
               value: ":50052"
@@ -88,6 +91,9 @@ spec:
             - name: APP_MODE
               value: "template"
         {{- end }}
+      volumes:
+        - name: cache-volume
+          emptyDir: { }
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
