@@ -110,11 +110,11 @@ func (i *upgrader) loadHelmReleaseData(path string) (ChartRelease, error) {
 		return ChartRelease{}, errors.Wrapf(err, "while reading values from file %q", path)
 	}
 
-	var chartRelease ChartRelease
-	if err := yaml.Unmarshal(bytes, &chartRelease); err != nil {
+	var chartReleaseIn ChartReleaseInputData
+	if err := yaml.Unmarshal(bytes, &chartReleaseIn); err != nil {
 		return ChartRelease{}, errors.Wrapf(err, "while parsing %q", path)
 	}
-	return chartRelease, nil
+	return chartReleaseIn.Value, nil
 }
 
 func (i *upgrader) mergeHelmChartData(helmRelease ChartRelease, in Input) ChartRelease {

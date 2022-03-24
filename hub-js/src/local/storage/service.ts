@@ -20,12 +20,6 @@ import {
 import { JSONSchemaType } from "ajv/lib/types/json-schema";
 import { TextEncoder } from "util";
 
-// TODO(https://github.com/capactio/capact/issues/634):
-// Represents the fake storage backend URL that should be ignored
-// as the backend server is not deployed.
-// It should be removed after a real backend is used in `test/e2e/action_test.go` scenarios.
-export const FAKE_TEST_URL = "e2e-test-backend-mock-url:50051";
-
 type StorageClient = Client<typeof StorageBackendDefinition>;
 
 interface BackendContainer {
@@ -131,10 +125,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      if (!backend?.client) {
-        // TODO: remove after using a real backend in e2e tests.
-        continue;
-      }
 
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
@@ -179,11 +169,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      if (!backend?.client) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
-
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
         throw Error(
@@ -220,16 +205,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      if (!backend?.client) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        result = {
-          ...result,
-          [input.typeInstance.id]: {
-            key: input.backend.id,
-          },
-        };
-        continue;
-      }
 
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
@@ -274,10 +249,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      if (!backend?.client) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
 
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
@@ -307,10 +278,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      if (!backend?.client) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
 
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
@@ -341,10 +308,6 @@ export default class DelegatedStorageService {
         backendId: input.backend.id,
       });
       const backend = await this.getBackendContainer(input.backend.id);
-      if (!backend?.client) {
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        continue;
-      }
 
       const validateErr = this.validateInput(input, backend.validateSpec);
       if (validateErr) {
@@ -408,19 +371,9 @@ export default class DelegatedStorageService {
     }
   }
 
-  private async getBackendContainer(
-    id: string
-  ): Promise<BackendContainer | undefined> {
+  private async getBackendContainer(id: string): Promise<BackendContainer> {
     if (!this.registeredClients.has(id)) {
       const spec = await this.storageInstanceDetailsFetcher(id);
-      if (spec.url === FAKE_TEST_URL) {
-        logger.debug(
-          "Skipping a real call as backend was classified as a fake one"
-        );
-        // TODO(https://github.com/capactio/capact/issues/634): remove after using a real backend in e2e tests.
-        return undefined;
-      }
-
       logger.debug("Initialize gRPC BackendContainer", {
         backend: id,
         url: spec.url,
@@ -451,7 +404,7 @@ export default class DelegatedStorageService {
       this.registeredClients.set(id, { client, validateSpec: storageSpec });
     }
 
-    return this.registeredClients.get(id);
+    return this.registeredClients.get(id) as BackendContainer;
   }
 
   private static convertToJSONIfObject(val: unknown): string | undefined {

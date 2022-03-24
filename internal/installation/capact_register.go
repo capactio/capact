@@ -212,6 +212,7 @@ func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
 	}
+
 	return &gqllocalapi.CreateTypeInstanceInput{
 		Alias: ptr.String(ownerName),
 		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{

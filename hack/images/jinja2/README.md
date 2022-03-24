@@ -59,6 +59,14 @@ postgres
 Prefix for db was removed. This is Jinja limitation. It shouldn't be a big problem as long
 as there is no need to render the template twice with the same prefix.
 
+### Configuration
+
+There is a possibility of pre-processing data by setting options in the configuration file.
+List of supported operations:
+| Name                      | Default      | Description                                                                                        |
+| ------------------------- | ------------ | ---------------------------------------------------------------------------------------------------|
+| prefix                    | ""           | Adds a prefix to inputted data. The data will be accessible using the set prefix.                  |
+| unpackValue               | False        | If the `value` prefix is set in the inputted data then the data will be unpacked from that prefix. |
 
 ## Prerequisites
 
