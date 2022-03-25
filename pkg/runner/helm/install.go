@@ -17,13 +17,15 @@ type installer struct {
 	log                 *zap.Logger
 	out                 outputter
 	repositoryCachePath string
+	helmDriver          string
 }
 
-func newInstaller(log *zap.Logger, repositoryCachePath string, actionCfgProducer actionConfigProducer, outputter outputter) *installer {
+func newInstaller(log *zap.Logger, cfg Config, actionCfgProducer actionConfigProducer, outputter outputter) *installer {
 	return &installer{
 		log:                 log,
 		actionCfgProducer:   actionCfgProducer,
-		repositoryCachePath: repositoryCachePath,
+		repositoryCachePath: cfg.RepositoryCachePath,
+		helmDriver:          cfg.HelmDriver,
 		out:                 outputter,
 	}
 }
@@ -68,12 +70,12 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "Helm release is nil")
 	}
 
-	releaseOut, err := i.out.ProduceHelmRelease(in.Args.Chart.Repo, helmRelease)
+	releaseOut, err := i.out.ProduceHelmRelease(in.Args.Output.HelmRelease, in.Args.Chart.Repo, i.helmDriver, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
 
-	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, helmRelease)
+	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, i.helmDriver, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while rendering and saving additional output")
 	}

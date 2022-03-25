@@ -20,15 +20,17 @@ type upgrader struct {
 	out                 outputter
 	repositoryCachePath string
 	helmReleasePath     string
+	helmDriver          string
 }
 
-func newUpgrader(log *zap.Logger, repositoryCachePath string, helmReleasePath string, actionCfgProducer actionConfigProducer, outputter outputter) helmCommand {
+func newUpgrader(log *zap.Logger, cfg Config, actionCfgProducer actionConfigProducer, outputter outputter) helmCommand {
 	return &upgrader{
 		log:                 log,
 		actionCfgProducer:   actionCfgProducer,
 		out:                 outputter,
-		repositoryCachePath: repositoryCachePath,
-		helmReleasePath:     helmReleasePath,
+		repositoryCachePath: cfg.RepositoryCachePath,
+		helmReleasePath:     cfg.HelmReleasePath,
+		helmDriver:          cfg.HelmDriver,
 	}
 }
 
@@ -82,12 +84,12 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "Helm release is nil")
 	}
 
-	releaseOut, err := i.out.ProduceHelmRelease(helmChartRel.Chart.Repo, helmRelease)
+	releaseOut, err := i.out.ProduceHelmRelease(in.Args.Output.HelmRelease, helmChartRel.Chart.Repo, i.helmDriver, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
 
-	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, helmRelease)
+	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, i.helmDriver, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while rendering and saving additional output")
 	}
@@ -110,11 +112,11 @@ func (i *upgrader) loadHelmReleaseData(path string) (ChartRelease, error) {
 		return ChartRelease{}, errors.Wrapf(err, "while reading values from file %q", path)
 	}
 
-	var chartRelease ChartRelease
-	if err := yaml.Unmarshal(bytes, &chartRelease); err != nil {
+	var chartReleaseIn ChartReleaseInputData
+	if err := yaml.Unmarshal(bytes, &chartReleaseIn); err != nil {
 		return ChartRelease{}, errors.Wrapf(err, "while parsing %q", path)
 	}
-	return chartRelease, nil
+	return chartReleaseIn.Value, nil
 }
 
 func (i *upgrader) mergeHelmChartData(helmRelease ChartRelease, in Input) ChartRelease {

@@ -2,6 +2,7 @@ package argoactions
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"path"
 	"path/filepath"
@@ -116,7 +117,26 @@ func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values 
 			return ErrMissingTypeInstanceValue(typeInstance.ID)
 		}
 
-		typeInstance.TypeInstance.Value = value
+		if isTypeInstanceWithLegacySyntax(u.log, value) {
+			typeInstance.TypeInstance.Value = value
+			continue
+		}
+
+		data, err := json.Marshal(value)
+		if err != nil {
+			return errors.Wrap(err, "while marshaling TypeInstance")
+		}
+
+		unmarshalledTI := graphqllocal.UpdateTypeInstanceInput{}
+		err = json.Unmarshal(data, &unmarshalledTI)
+		if err != nil {
+			return errors.Wrap(err, "while unmarshaling TypeInstance")
+		}
+
+		typeInstance.TypeInstance.Value = unmarshalledTI.Value
+		if unmarshalledTI.Backend != nil {
+			typeInstance.TypeInstance.Backend = unmarshalledTI.Backend
+		}
 	}
 	return nil
 }

@@ -26,6 +26,7 @@ const (
 	actionNameFormat       = "%s-config"
 	helmReleaseTypeRefPath = "cap.type.helm.chart.release"
 	capactTypeRefPath      = "cap.type.capactio.capact.config"
+	helmDriver             = "secrets"
 )
 
 var capactAdditionalOutput = heredoc.Doc(`
@@ -43,6 +44,7 @@ type CapactRegister struct {
 	localHubCli   *local.Client
 	cfg           TypeInstancesConfig
 	helmOutputter *helm.Outputter
+	helmDriver    string
 }
 
 // NewCapactRegister returns a new CapactRegister instance.
@@ -70,6 +72,7 @@ func NewCapactRegister() (*CapactRegister, error) {
 		logger:        logger,
 		localHubCli:   client,
 		cfg:           cfg,
+		helmDriver:    helmDriver,
 		helmOutputter: helm.NewOutputter(logger, helm.NewRenderer()),
 	}, nil
 }
@@ -155,7 +158,7 @@ func (i *CapactRegister) newHelmListAction() (*action.List, error) {
 		i.logger.Debug(fmt.Sprintf(format, v...), zap.String("source", "Helm"))
 	}
 
-	err := actionConfig.Init(helmCfg, "", "secrets", debugLog)
+	err := actionConfig.Init(helmCfg, "", i.helmDriver, debugLog)
 	if err != nil {
 		return nil, err
 	}
@@ -171,13 +174,17 @@ func (i *CapactRegister) newHelmListAction() (*action.List, error) {
 	return actList, nil
 }
 
+// TODO: Support registering TypeInstances using Helm storage (release + template) backends
 func (i *CapactRegister) produceHelmReleaseTypeInstance(helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
-	releaseOut, err := i.helmOutputter.ProduceHelmRelease(i.cfg.HelmRepositoryPath, helmRelease)
+	args := helm.ReleaseOutputArgs{
+		UseHelmReleaseStorage: false,
+	}
+	releaseOut, err := i.helmOutputter.ProduceHelmRelease(args, i.cfg.HelmRepositoryPath, i.helmDriver, helmRelease)
 	if err != nil {
 		return nil, errors.Wrap(err, "while producing Helm release definition")
 	}
 
-	var unmarshalled interface{}
+	var unmarshalled helm.OutputFile
 	err = yaml.Unmarshal(releaseOut, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
@@ -189,7 +196,7 @@ func (i *CapactRegister) produceHelmReleaseTypeInstance(helmRelease *release.Rel
 			Path:     helmReleaseTypeRefPath,
 			Revision: "0.1.0",
 		},
-		Value: unmarshalled,
+		Value: unmarshalled.Value,
 	}, nil
 }
 
@@ -200,24 +207,28 @@ func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease
 	}
 
 	args := helm.OutputArgs{
-		GoTemplate: string(tpl),
+		Additional: helm.AdditionalOutputArgs{
+			GoTemplate:             string(tpl),
+			UseHelmTemplateStorage: false,
+		},
 	}
-	data, err := i.helmOutputter.ProduceAdditional(args, helmRelease.Chart, helmRelease)
+	data, err := i.helmOutputter.ProduceAdditional(args, helmRelease.Chart, i.helmDriver, helmRelease)
 	if err != nil {
 		return nil, errors.Wrap(err, "while producing additional info")
 	}
 
-	var unmarshalled interface{}
+	var unmarshalled helm.OutputFile
 	err = yaml.Unmarshal(data, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
 	}
+
 	return &gqllocalapi.CreateTypeInstanceInput{
 		Alias: ptr.String(ownerName),
 		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 			Path:     capactTypeRefPath,
 			Revision: "0.1.0",
 		},
-		Value: unmarshalled,
+		Value: unmarshalled.Value,
 	}, nil
 }

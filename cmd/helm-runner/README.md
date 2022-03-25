@@ -34,6 +34,8 @@ To check if the PostgreSQL Helm release was created, run:
 helm list 
 ```
 
+To see the output TypeInstances, open `/tmp/helm-release.yaml` and `/tmp/additional.yaml` files.
+
 ### Upgrade
 
 Follow the instructions from the [Installation](#installation) section first.
@@ -57,6 +59,8 @@ Observe the incremented value in "Revision" column. Verify `upgraded: "true"` an
 ```bash
 kubectl get svc postgresql-server -o jsonpath='{.metadata.annotations}'
 ```
+
+To see the output TypeInstances, open `/tmp/helm-release.yaml` and `/tmp/additional.yaml` files.
 
 ## Configuration
 

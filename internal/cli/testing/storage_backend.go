@@ -2,7 +2,6 @@ package testing
 
 import (
 	"context"
-	"encoding/json"
 
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/internal/ptr"
@@ -44,9 +43,9 @@ const testStorageTypeContextSchema = `
 `
 
 type typeInstanceValue struct {
-	URL           string      `json:"url"`
-	AcceptValue   bool        `json:"acceptValue"`
-	ContextSchema interface{} `json:"contextSchema"`
+	URL           string `json:"url"`
+	AcceptValue   bool   `json:"acceptValue"`
+	ContextSchema string `json:"contextSchema"`
 }
 
 // StorageBackendRegister provides functionality to produce and upload test storage backend TypeInstance.
@@ -80,12 +79,6 @@ func NewStorageBackendRegister() (*StorageBackendRegister, error) {
 
 // RegisterTypeInstances produces and uploads TypeInstances which describe Test storage backend.
 func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) error {
-	var contextSchema interface{}
-	err := json.Unmarshal([]byte(testStorageTypeContextSchema), &contextSchema)
-	if err != nil {
-		return errors.Wrap(err, "while unmarshaling contextSchema")
-	}
-
 	in := &hublocalgraphql.CreateTypeInstanceInput{
 		CreatedBy: ptr.String("populator/test-storage-backend-registration"),
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
@@ -95,7 +88,7 @@ func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) erro
 		Value: typeInstanceValue{
 			URL:           i.cfg.TestStorageBackendURL,
 			AcceptValue:   true,
-			ContextSchema: contextSchema,
+			ContextSchema: testStorageTypeContextSchema,
 		},
 	}
 

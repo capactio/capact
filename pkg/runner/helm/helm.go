@@ -44,9 +44,9 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 	var helmCmd helmCommand
 	switch r.cfg.Command {
 	case InstallCommandType:
-		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionCfgProducer, outputter)
+		helmCmd = newInstaller(r.log, r.cfg, actionCfgProducer, outputter)
 	case UpgradeCommandType:
-		helmCmd = newUpgrader(r.log, r.cfg.RepositoryCachePath, r.cfg.HelmReleasePath, actionCfgProducer, outputter)
+		helmCmd = newUpgrader(r.log, r.cfg, actionCfgProducer, outputter)
 	default:
 		return nil, errors.New("Unsupported command")
 	}

@@ -1,6 +1,7 @@
-name: example-release
-namespace: default
-chart:
-  name: postgresql
-  repo: https://charts.bitnami.com/bitnami
-  version: 10.2.5
+value:
+  name: example-release
+  namespace: default
+  chart:
+    name: postgresql
+    repo: https://charts.bitnami.com/bitnami
+    version: 10.2.5

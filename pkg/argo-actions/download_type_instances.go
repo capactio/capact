@@ -28,6 +28,17 @@ type Download struct {
 	client *hubclient.Client
 }
 
+// DownloadTypeInstanceData represents the TypeInstance data to download.
+type DownloadTypeInstanceData struct {
+	Value   interface{} `json:"value"`
+	Backend *Backend    `json:"backend,omitempty"`
+}
+
+// Backend represents the TypeInstance Backend.
+type Backend struct {
+	Context interface{} `json:"context,omitempty"`
+}
+
 // NewDownloadAction returns a new Download instance.
 func NewDownloadAction(log *zap.Logger, client *hubclient.Client, cfg []DownloadConfig) Action {
 	return &Download{
@@ -49,7 +60,18 @@ func (d *Download) Do(ctx context.Context) error {
 			return fmt.Errorf("failed to find TypeInstance with ID %q", config.ID)
 		}
 
-		data, err := yaml.Marshal(typeInstance.LatestResourceVersion.Spec.Value)
+		typeInstanceData := DownloadTypeInstanceData{
+			Value: typeInstance.LatestResourceVersion.Spec.Value,
+		}
+
+		if typeInstance.LatestResourceVersion.Spec.Backend != nil &&
+			typeInstance.LatestResourceVersion.Spec.Backend.Context != nil {
+			typeInstanceData.Backend = &Backend{
+				Context: typeInstance.LatestResourceVersion.Spec.Backend.Context,
+			}
+		}
+
+		data, err := yaml.Marshal(typeInstanceData)
 		if err != nil {
 			return errors.Wrap(err, "while marshaling TypeInstance to YAML")
 		}

@@ -223,7 +223,12 @@ func (r *terraformRunner) mergeInputVariables(variables string) error {
 func (r *terraformRunner) saveOutput(out Output) error {
 	if out.Release != nil {
 		r.log.Debug("Saving terraform release output", zap.String("path", r.cfg.Output.TerraformReleaseFilePath))
-		err := runner.SaveToFile(r.cfg.Output.TerraformReleaseFilePath, out.Release)
+		bytesRelease, err := runner.NestingOutputUnderValue(out.Release)
+		if err != nil {
+			return errors.Wrap(err, "while nesting Terrafrom release under value")
+		}
+
+		err = runner.SaveToFile(r.cfg.Output.TerraformReleaseFilePath, bytesRelease)
 		if err != nil {
 			return errors.Wrap(err, "while saving terraform release output")
 		}
@@ -231,7 +236,12 @@ func (r *terraformRunner) saveOutput(out Output) error {
 
 	if out.Additional != nil {
 		r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
-		err := runner.SaveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
+		bytesAdditional, err := runner.NestingOutputUnderValue(out.Additional)
+		if err != nil {
+			return errors.Wrap(err, "while nesting Terrafrom additional under value")
+		}
+
+		err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, bytesAdditional)
 		if err != nil {
 			return errors.Wrap(err, "while saving default output")
 		}
@@ -243,7 +253,12 @@ func (r *terraformRunner) saveOutput(out Output) error {
 		return errors.Wrap(err, "while marshaling state")
 	}
 
-	err = runner.SaveToFile(r.cfg.Output.TfstateFilePath, stateData)
+	nestingStateData, err := runner.NestingOutputUnderValue(stateData)
+	if err != nil {
+		return errors.Wrap(err, "while nesting Terrafrom state data under value")
+	}
+
+	err = runner.SaveToFile(r.cfg.Output.TfstateFilePath, nestingStateData)
 	if err != nil {
 		return errors.Wrap(err, "while saving tfstate output")
 	}

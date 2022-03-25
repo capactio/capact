@@ -5,15 +5,16 @@ import (
 )
 
 var typeInstancesFieldsRegistry = map[TypeInstancesQueryFields]string{
-	TypeInstanceRootFields:                 rootFields,
-	TypeInstanceTypeRefFields:              typeRefFields,
-	TypeInstanceBackendFields:              backendFields,
-	TypeInstanceUsesIDField:                usesIDField,
-	TypeInstanceUsedByIDField:              usedByIDField,
-	TypeInstanceLatestResourceVersionField: latestResourceVersionField,
-	TypeInstanceAllFields:                  typeInstanceAllFields,
-	TypeInstanceUsesAllFields:              typeInstanceUsesAllFields,
-	TypeInstanceUsedByAllFields:            typeInstanceUsedByAllFields,
+	TypeInstanceRootFields:                        rootFields,
+	TypeInstanceTypeRefFields:                     typeRefFields,
+	TypeInstanceBackendFields:                     backendFields,
+	TypeInstanceUsesIDField:                       usesIDField,
+	TypeInstanceUsedByIDField:                     usedByIDField,
+	TypeInstanceLatestResourceVersionVersionField: latestResourceVersionField,
+	TypeInstanceLatestResourceVersionFields:       latestResourceVersionFields,
+	TypeInstanceAllFields:                         typeInstanceAllFields,
+	TypeInstanceUsesAllFields:                     typeInstanceUsesAllFields,
+	TypeInstanceUsedByAllFields:                   typeInstanceUsedByAllFields,
 	// grow the extracted fields if needed
 }
 
@@ -48,6 +49,11 @@ var (
 			latestResourceVersion {
 				resourceVersion
 			}`
+
+	latestResourceVersionFields = fmt.Sprintf(`
+			latestResourceVersion {
+				%s
+			}`, typeInstanceResourceVersion)
 
 	typeInstanceUsesAllFields = fmt.Sprintf(`
 		uses {

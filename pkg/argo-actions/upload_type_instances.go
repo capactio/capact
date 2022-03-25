@@ -2,6 +2,7 @@ package argoactions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -15,8 +16,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// UploadAction represents the upload TypeInstances action.
-const UploadAction = "UploadAction"
+const (
+	// UploadAction represents the upload TypeInstances action.
+	UploadAction = "UploadAction"
+	valueKey     = "value"
+	backendKey   = "backend"
+)
 
 // UploadConfig stores the configuration parameters for the upload TypeInstances action.
 type UploadConfig struct {
@@ -30,6 +35,12 @@ type Upload struct {
 	log    *zap.Logger
 	client *hubclient.Client
 	cfg    UploadConfig
+}
+
+//UploadTypeInstanceData represents the TypeInstance data to upload.
+type UploadTypeInstanceData struct {
+	Value   interface{} `json:"value"`
+	Backend *Backend    `json:"backend,omitempty"`
 }
 
 // NewUploadAction returns a new Upload instance.
@@ -119,11 +130,49 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 			return ErrMissingTypeInstanceValue(*typeInstance.Alias)
 		}
 
-		typeInstance.Value = value
+		if isTypeInstanceWithLegacySyntax(u.log, value) {
+			typeInstance.Value = value
+			continue
+		}
+
+		data, err := json.Marshal(value)
+		if err != nil {
+			return errors.Wrap(err, "while marshaling TypeInstance")
+		}
+
+		unmarshalledTI := UploadTypeInstanceData{}
+		err = json.Unmarshal(data, &unmarshalledTI)
+		if err != nil {
+			return errors.Wrap(err, "while unmarshaling TypeInstance")
+		}
+
+		typeInstance.Value = unmarshalledTI.Value
+		if unmarshalledTI.Backend != nil {
+			if typeInstance.Backend != nil {
+				typeInstance.Backend.Context = unmarshalledTI.Backend.Context
+			} else {
+				typeInstance.Backend = &graphqllocal.TypeInstanceBackendInput{
+					Context: unmarshalledTI.Backend.Context,
+				}
+			}
+		}
 	}
 	return nil
 }
 
 func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) ([]graphqllocal.CreateTypeInstanceOutput, error) {
 	return u.client.Local.CreateTypeInstances(ctx, in)
+}
+
+func isTypeInstanceWithLegacySyntax(logger *zap.Logger, value map[string]interface{}) bool {
+	_, hasValue := value[valueKey]
+	_, hasBackend := value[backendKey]
+	if !hasValue && !hasBackend {
+		// for backward compatibility, if there is an artifact without value/backend syntax,
+		// treat it as a value for TypeInstance
+		logger.Info(fmt.Sprintf("Found legacy TypeInstance syntax without '%s' and '%s'", valueKey, backendKey))
+		return true
+	}
+	logger.Info(fmt.Sprintf("Processing TypeInstance '%s' and '%s'", valueKey, backendKey), zap.Bool("hasValue", hasValue), zap.Bool("hasBackend", hasBackend))
+	return false
 }

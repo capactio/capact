@@ -72,16 +72,16 @@ jobs:
         run: |
           echo "Preventing pushing to the origin..."
           git remote set-url --push origin no_push
-          
+
           GCP_CREDS_FILENAME=$(basename $GCP_CREDS_FILEPATH)
           echo "Adding ${GCP_CREDS_FILENAME} to local .gitignore..."
           echo "${GCP_CREDS_FILENAME}" >> .gitignore
-          
+
           echo "Committing the change..."
           git add .gitignore
           git commit -m "Ignore credentials"
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0.4.0
+        uses: google-github-actions/setup-gcloud@v0.6.0
       - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

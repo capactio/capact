@@ -7,8 +7,8 @@ import (
 )
 
 type outputter interface {
-	ProduceHelmRelease(repository string, helmRelease *release.Release) ([]byte, error)
-	ProduceAdditional(args OutputArgs, chrt *chart.Chart, rel *release.Release) ([]byte, error)
+	ProduceHelmRelease(args ReleaseOutputArgs, repository, driver string, helmRelease *release.Release) ([]byte, error)
+	ProduceAdditional(args OutputArgs, chrt *chart.Chart, driver string, rel *release.Release) ([]byte, error)
 }
 
 // Config holds Runner related configuration.
@@ -20,8 +20,7 @@ type Config struct {
 	RepositoryCachePath  string `envconfig:"default=/tmp/helm"`
 	Output               struct {
 		HelmReleaseFilePath string `envconfig:"default=/tmp/helm-release.yaml"`
-		// Extracting resource metadata from Kubernetes as outputs
-		AdditionalFilePath string `envconfig:"default=/tmp/additional.yaml"`
+		AdditionalFilePath  string `envconfig:"default=/tmp/additional.yaml"`
 	}
 }
 
@@ -77,9 +76,25 @@ type UpgradeArgs struct {
 	MaxHistory  int  `json:"maxHistory"`
 }
 
-// OutputArgs stores input arguments for generating the output artifacts.
+// OutputArgs stores input arguments for generating the output files.
 type OutputArgs struct {
-	GoTemplate string `json:"goTemplate"`
+	HelmRelease ReleaseOutputArgs    `json:"helmRelease"`
+	Additional  AdditionalOutputArgs `json:"additional"`
+
+	// LegacyGoTemplate holds Go template for additional output.
+	// Deprecated: Use AdditionalOutputArgs.GoTemplate instead.
+	LegacyGoTemplate string `json:"goTemplate"`
+}
+
+// ReleaseOutputArgs stores arguments for Helm Release output file.
+type ReleaseOutputArgs struct {
+	UseHelmReleaseStorage bool `json:"useHelmReleaseStorage"`
+}
+
+// AdditionalOutputArgs stores arguments for Additional output file.
+type AdditionalOutputArgs struct {
+	UseHelmTemplateStorage bool   `json:"useHelmTemplateStorage"`
+	GoTemplate             string `json:"goTemplate"`
 }
 
 // Chart represents a Helm chart.
@@ -96,6 +111,11 @@ type ChartRelease struct {
 	Chart     Chart  `json:"chart"`
 }
 
+// ChartReleaseInputData represents a Helm chart release input data.
+type ChartReleaseInputData struct {
+	Value ChartRelease `json:"value"`
+}
+
 // Input stores the input configuration for the runner.
 type Input struct {
 	Args Arguments
@@ -108,7 +128,7 @@ type Status struct {
 	Message   string
 }
 
-// Output stores the produces output artifacts.
+// Output stores the produces output files.
 type Output struct {
 	Release    []byte
 	Additional []byte
