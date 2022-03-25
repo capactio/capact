@@ -1,13 +1,13 @@
 version: "3.9"
 services:
   tests:
-    image: "${DOCKER_REPOSITORY}/localhub-test:${DOCKER_TAG}"
+    image: "${DOCKER_REPOSITORY}/local-hub-test:${DOCKER_TAG}"
     depends_on:
       hubjs:
         condition: service_healthy
     environment:
       - LOCALHUB_ADDR=http://hubjs:8080/graphql
-      - GRPC_SECRET_STORAGE_BACKEND_ADDR=http://backend-storage:50051
+      - GRPC_SECRET_STORAGE_BACKEND_ADDR=test-storage-backend:50051
   hubjs:
     image: "${DOCKER_REPOSITORY}/hub-js:${DOCKER_TAG}"
     restart: on-failure
@@ -23,11 +23,11 @@ services:
       neo4j:
         condition: service_healthy
     healthcheck:
-      test: netstat -ltn | grep -c 8080
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
+      test: wget http://localhost:8080/healthz -O -
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
   neo4j:
     image: "ghcr.io/capactio/neo4j:4.2.13-apoc"
     restart: on-failure
@@ -38,12 +38,12 @@ services:
       - NEO4J_AUTH=neo4j/okon
       - NEO4JLABS_PLUGINS=["apoc"]
     healthcheck:
-      test: wget http://localhost:7474/browser -O -
+      test: bash -c 'echo -n > /dev/tcp/127.0.0.1/7687'
       interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 40s
-  backend-storage:
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+  test-storage-backend:
     image: "${DOCKER_REPOSITORY}/secret-storage-backend:${DOCKER_TAG}"
     restart: on-failure
     environment:

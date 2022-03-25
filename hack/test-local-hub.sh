@@ -21,7 +21,7 @@ build_images() {
   export DOCKER_TAG=$RANDOM
   export DOCKER_REPOSITORY="local"
 
-  local make_targets=("build-test-image-localhub" "build-app-image-hub-js" "build-app-image-secret-storage-backend")
+  local make_targets=("build-test-image-local-hub" "build-app-image-hub-js" "build-app-image-secret-storage-backend")
   for make_target in "${make_targets[@]}"
   do
     cd "${REPO_ROOT_DIR}" && make "${make_target}"
@@ -33,7 +33,13 @@ main() {
     build_images
   fi
     
-  docker-compose -f "${REPO_ROOT_DIR}/test/localhub/docker-compose.yml" up --exit-code-from tests --force-recreate
+  docker-compose -f "${REPO_ROOT_DIR}/test/local-hub/docker-compose.yml" up --exit-code-from tests --force-recreate
 }
+
+cleanup() {
+  docker-compose -f "${REPO_ROOT_DIR}/test/local-hub/docker-compose.yml" down
+}
+
+trap cleanup EXIT
 
 main

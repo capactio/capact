@@ -133,7 +133,7 @@ func TestUpdateTypeInstances(t *testing.T) {
 
 	var createdTIIDs []string
 
-	// given id1 and id2 are not locked
+	t.Log("given id1 and id2 are not locked")
 	for _, ver := range []string{"id1", "id2"} {
 		outID, err := cli.CreateTypeInstance(ctx, typeInstance(ver))
 		require.NoError(t, err)
@@ -151,7 +151,7 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	}
 
-	// when try to update them
+	t.Log("when try to update them")
 	updatedTI, err := cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
 		{
 			ID:           createdTIIDs[0],
@@ -163,28 +163,28 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	})
 
-	// then should success
+	t.Log("then should success")
 	require.NoError(t, err)
 	for _, instance := range updatedTI {
 		assert.Equal(t, len(instance.LatestResourceVersion.Metadata.Attributes), 1)
 		assert.EqualValues(t, instance.LatestResourceVersion.Metadata.Attributes[0], expUpdateTI.Attributes[0])
 	}
 
-	// when id1 and id2 are locked by Foo
+	t.Log("when id1 and id2 are locked by Foo")
 	expUpdateTI = &gqllocalapi.UpdateTypeInstanceInput{
 		Attributes: []*gqllocalapi.AttributeReferenceInput{
 			{Path: "cap.update.locked.by.foo", Revision: "0.0.1"},
 		},
 	}
 
-	// then should success
+	t.Log("then should success")
 	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     createdTIIDs,
 		OwnerID: fooOwnerID,
 	})
 	require.NoError(t, err)
 
-	// when update them as Foo owner
+	t.Log("when update them as Foo owner")
 	updatedTI, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
 		{
 			ID:           createdTIIDs[0],
@@ -198,14 +198,14 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	})
 
-	// then should success
+	t.Log("then should success")
 	require.NoError(t, err)
 	for _, instance := range updatedTI {
 		assert.Equal(t, len(instance.LatestResourceVersion.Metadata.Attributes), 1)
 		assert.EqualValues(t, instance.LatestResourceVersion.Metadata.Attributes[0], expUpdateTI.Attributes[0])
 	}
 
-	// when update them as Bar owner
+	t.Log("when update them as Bar owner")
 	_, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
 		{
 			ID:           createdTIIDs[0],
@@ -219,12 +219,12 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	})
 
-	// then should failed with error id1,id2 already locked by different owner
+	t.Log("then should failed with error id1,id2 already locked by different owner")
 	require.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
 	#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
 
-	// when update them without owner
+	t.Log("when update them without owner")
 	_, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
 		{
 			ID:           createdTIIDs[0],
@@ -236,12 +236,12 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	})
 
-	// then should failed with error id1,id2 already locked by different owner
+	t.Log("then should failed with error id1,id2 already locked by different owner")
 	require.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
 	#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
 
-	// when update one property with Foo owner, and second without owner
+	t.Log("when update one property with Foo owner, and second without owner")
 	_, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
 		{
 			ID:           createdTIIDs[0],
@@ -254,13 +254,13 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	})
 
-	// then should failed with error id2 already locked by different owner
+	t.Log("then should failed with error id2 already locked by different owner")
 	require.Error(t, err)
 	require.Equal(t, err.Error(), heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
 	     				#1: graphql: failed to update TypeInstances: TypeInstances with IDs "%s" are locked by different owner`, createdTIIDs[1]))
 
-	// given id3 does not exist
-	// when try to update it
+	t.Log("given id3 does not exist")
+	t.Log("when try to update it")
 	_, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
 		{
 			ID:           "id3",
@@ -268,12 +268,12 @@ func TestUpdateTypeInstances(t *testing.T) {
 		},
 	})
 
-	// then should failed with error id3 not found
+	t.Log("then should failed with error id3 not found")
 	require.Error(t, err)
 	require.Equal(t, err.Error(), heredoc.Doc(`while executing mutation to update TypeInstances: All attempts fail:
 	     			#1: graphql: failed to update TypeInstances: TypeInstances with IDs "id3" were not found`))
 
-	// then should unlock id1,id2,id3"
+	t.Log("then should unlock id1,id2,id3")
 	err = cli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
 		Ids:     createdTIIDs,
 		OwnerID: fooOwnerID,

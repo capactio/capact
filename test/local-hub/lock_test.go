@@ -37,17 +37,17 @@ func TestLockTypeInstances(t *testing.T) {
 		}
 	}()
 
-	// given id1 and id2 are not locked
+	t.Log("given id1 and id2 are not locked")
 	firstTwoInstances := createdTIIDs[:2]
 	lastInstances := createdTIIDs[2:]
 
-	// when Foo tries to locks them
+	t.Log("when Foo tries to locks them")
 	err := cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     firstTwoInstances,
 		OwnerID: fooOwnerID,
 	})
 
-	// then should success
+	t.Log("then should success")
 	require.NoError(t, err)
 
 	got, err := cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{})
@@ -62,14 +62,14 @@ func TestLockTypeInstances(t *testing.T) {
 		}
 	}
 
-	// when Foo tries to locks them
+	t.Log("when Foo tries to locks them")
 	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     createdTIIDs, // lock all 3 instances, when the first two are already locked
 		OwnerID: fooOwnerID,
 	})
 	require.NoError(t, err)
 
-	// then should success
+	t.Log("then should success")
 	got, err = cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{})
 	require.NoError(t, err)
 
@@ -81,33 +81,33 @@ func TestLockTypeInstances(t *testing.T) {
 		assert.Equal(t, *instance.LockedBy, fooOwnerID)
 	}
 
-	// given id1, id2, id3 are locked by Foo, id4: not found
+	t.Log("given id1, id2, id3 are locked by Foo, id4: not found")
 	lockingIDs := createdTIIDs
 	lockingIDs = append(lockingIDs, "123-not-found")
 
-	// when Foo tries to locks id1,id2,id3,id4
+	t.Log("when Foo tries to locks id1,id2,id3,id4")
 	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     lockingIDs,
 		OwnerID: fooOwnerID,
 	})
 
-	// then should failed with id4 not found error
+	t.Log("then should failed with id4 not found error")
 	require.Error(t, err)
 	require.Equal(t, err.Error(), heredoc.Doc(`while executing mutation to lock TypeInstances: All attempts fail:
 	#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "123-not-found" were not found`))
 
-	// when Bar tries to locks id1,id2,id3,id4
+	t.Log("when Bar tries to locks id1,id2,id3,id4")
 	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     lockingIDs,
 		OwnerID: barOwnerID,
 	})
 
-	// then should failed with id4 not found and already locked error for id1,id2,id3
+	t.Log("then should failed with id4 not found and already locked error for id1,id2,id3")
 	require.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
 	#1: graphql: failed to lock TypeInstances: 2 errors occurred: \[TypeInstances with IDs "123-not-found" were not found, TypeInstances with IDs %s are locked by different owner\]`, allPermutations(createdTIIDs))), err.Error())
 
-	// given id1, id2, id3 are locked by Foo, id4: not locked
+	t.Log("given id1, id2, id3 are locked by Foo, id4: not locked")
 	id4, err := cli.CreateTypeInstance(ctx, typeInstance("id4"))
 	require.NoError(t, err)
 
@@ -115,21 +115,20 @@ func TestLockTypeInstances(t *testing.T) {
 		_ = cli.DeleteTypeInstance(ctx, id4)
 	}()
 
-	// when Bar tries to locks all of them
+	t.Log("when Bar tries to locks all of them")
 	lockingIDs = createdTIIDs
 	lockingIDs = append(lockingIDs, id4)
-	// when Bar tries to locks all of them
 	err = cli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		Ids:     lockingIDs,
 		OwnerID: barOwnerID,
 	})
 
-	// then should failed with error id1,id2,id3 already locked by Foo
+	t.Log("then should failed with error id1,id2,id3 already locked by Foo")
 	require.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
 	#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
 
-	// then should unlock id1,id2,id3
+	t.Log("should unlock id1,id2,id3")
 	err = cli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
 		Ids:     createdTIIDs,
 		OwnerID: fooOwnerID,

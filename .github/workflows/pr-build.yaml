@@ -403,8 +403,8 @@ jobs:
           path: ${{ github.workspace }}/bin/capact_linux_amd64/capact
           retention-days: 1 # Default 90 days
 
-  localhub-tests:
-    name: Local Hub tests
+  local-hub-tests:
+    name: Local Hub integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     needs: [ push-apps, push-tests, build-cli ]
@@ -421,11 +421,11 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Run local Hub tests
+      - name: Run local Hub integration tests
         env:
           BUILD_IMAGES: "false"
         run: |
-          make test-localhub
+          make test-local-hub
 
   integration-tests:
     name: Integration tests

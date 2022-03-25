@@ -18,7 +18,7 @@ all: generate build-all-images test-unit test-lint ## Default: generate all, bui
 ############
 
 APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions gitlab-api-runner secret-storage-backend helm-storage-backend
-TESTS = e2e localhub
+TESTS = e2e local-hub
 INFRA = json-go-gen graphql-schema-linter jinja2 merger
 
 build-all-tools: ## Builds the standalone binaries for all tools
@@ -85,7 +85,7 @@ build-test-image-e2e:
 build-test-image-%:
 	$(eval APP := $*)
 	# localhub tests needs to be run sequentially
-	$(eval BUILD_CMD=$(if $(APP) localhub,"go test -v -c -p 1","go test -v -c"))
+	$(eval BUILD_CMD=$(if $(APP) local-hub,"go test -v -c -p 1","go test -v -c"))
 	docker build --build-arg COMPONENT=$(APP) \
 		--build-arg BUILD_CMD=$(BUILD_CMD) \
 		--build-arg SOURCE_PATH="./test/$(APP)/*_test.go" \
@@ -126,9 +126,9 @@ test-lint: ## Run linters on the codebase
 	./hack/lint.sh
 .PHONY: test-lint
 
-test-localhub:
-	./hack/test-localhub.sh
-.PHONY: test-integration
+test-local-hub:
+	./hack/test-local-hub.sh
+.PHONY: test-local-hub
 
 test-integration:
 	./hack/test-integration.sh
