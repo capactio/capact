@@ -18,31 +18,25 @@ type ChartRenderer interface {
 	Do(chartData *chart.Chart, release *release.Release, additionalOutputTemplate []byte) ([]byte, error)
 }
 
-// TODO: Use common types from https://github.com/capactio/capact/pull/685/files
-
 // OutputFile defines the shape of the output file.
 type OutputFile struct {
 	Value   interface{}        `json:"value"`
 	Backend *OutputFileBackend `json:"backend"`
 }
 
-// OutputFileBackend defines shape of the Backend property in output file.
-type OutputFileBackend struct {
-	Context interface{} `json:"context"`
-}
-
-// OutputFileHelmReleaseContext contains context data form Helm Release storage.
+// OutputFileHelmReleaseContext contains context data for the Helm Release storage backend.
 type OutputFileHelmReleaseContext struct {
 	Release
+
 	// ChartLocation specifies Helm Chart location.
 	ChartLocation string `json:"chartLocation"`
 }
 
-// OutputFileAdditionalContext holds context used by Helm template storage backend.
+// OutputFileAdditionalContext contains context for the Helm template storage backend.
 type OutputFileAdditionalContext struct {
 	// GoTemplate specifies Go template which is used to render returned value.
 	GoTemplate string `json:"goTemplate"`
-	// HelmRelease specifies Helm release details against which the render logic should be executed.
+	// HelmRelease specifies Helm release details against which the rendering logic should be executed.
 	HelmRelease Release `json:"release"`
 }
 
@@ -54,6 +48,11 @@ type Release struct {
 	Namespace string `json:"namespace"`
 	// Driver specifies drivers used for storing the Helm release.
 	Driver *string `json:"driver,omitempty"`
+}
+
+// OutputFileBackend defines shape of the Backend property in output file.
+type OutputFileBackend struct {
+	Context interface{} `json:"context"`
 }
 
 // Outputter handles producing the runner output artifacts.
@@ -71,17 +70,7 @@ func NewOutputter(log *zap.Logger, renderer ChartRenderer) *Outputter {
 func (o *Outputter) ProduceHelmRelease(args ReleaseOutputArgs, repository, driver string, helmRelease *release.Release) ([]byte, error) {
 	outputData := OutputFile{}
 
-	if !args.UseHelmReleaseStorage {
-		outputData.Value = ChartRelease{
-			Name:      helmRelease.Name,
-			Namespace: helmRelease.Namespace,
-			Chart: Chart{
-				Name:    helmRelease.Chart.Metadata.Name,
-				Version: helmRelease.Chart.Metadata.Version,
-				Repo:    repository,
-			},
-		}
-	} else {
+	if args.UseHelmReleaseStorage {
 		outputData.Backend = &OutputFileBackend{
 			Context: OutputFileHelmReleaseContext{
 				Release: Release{
@@ -90,6 +79,16 @@ func (o *Outputter) ProduceHelmRelease(args ReleaseOutputArgs, repository, drive
 					Driver:    ptr.String(driver),
 				},
 				ChartLocation: repository,
+			},
+		}
+	} else {
+		outputData.Value = ChartRelease{
+			Name:      helmRelease.Name,
+			Namespace: helmRelease.Namespace,
+			Chart: Chart{
+				Name:    helmRelease.Chart.Metadata.Name,
+				Version: helmRelease.Chart.Metadata.Version,
+				Repo:    repository,
 			},
 		}
 	}
@@ -118,7 +117,19 @@ func (o *Outputter) ProduceAdditional(args OutputArgs, chrt *chart.Chart, driver
 	}
 
 	outputData := OutputFile{}
-	if !args.Additional.UseHelmTemplateStorage {
+
+	if args.Additional.UseHelmTemplateStorage {
+		outputData.Backend = &OutputFileBackend{
+			Context: OutputFileAdditionalContext{
+				HelmRelease: Release{
+					Name:      rel.Name,
+					Namespace: rel.Namespace,
+					Driver:    ptr.String(driver),
+				},
+				GoTemplate: goTemplate,
+			},
+		}
+	} else {
 		bytes, err := o.renderer.Do(chrt, rel, []byte(goTemplate))
 		if err != nil {
 			return nil, errors.Wrap(err, "while rendering additional output")
@@ -131,24 +142,6 @@ func (o *Outputter) ProduceAdditional(args OutputArgs, chrt *chart.Chart, driver
 		}
 
 		outputData.Value = unmarshalled
-
-		bytes, err = yaml.Marshal(&outputData)
-		if err != nil {
-			return nil, errors.Wrap(err, "while marshaling yaml")
-		}
-
-		return bytes, nil
-	}
-
-	outputData.Backend = &OutputFileBackend{
-		Context: OutputFileAdditionalContext{
-			HelmRelease: Release{
-				Name:      rel.Name,
-				Namespace: rel.Namespace,
-				Driver:    ptr.String(driver),
-			},
-			GoTemplate: goTemplate,
-		},
 	}
 
 	bytes, err := yaml.Marshal(&outputData)

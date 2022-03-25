@@ -60,17 +60,13 @@ func (h *TemplateHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (
 		return nil, err
 	}
 
-	value, err := h.renderOutputValue(relCtx.GoTemplate, rel)
+	value, err := h.renderOutputValue(relCtx, rel)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := yaml.YAMLToJSON(value)
-	if err != nil {
-		return nil, gRPCInternalError(errors.Wrap(err, "while converting output from YAML to JSON"))
-	}
 	return &pb.GetValueResponse{
-		Value: out,
+		Value: value,
 	}, nil
 }
 
@@ -153,12 +149,15 @@ func (h *TemplateHandler) fetchHelmRelease(ti string, ctx []byte) (*release.Rele
 	return rel, relCtx, nil
 }
 
-func (h *TemplateHandler) renderOutputValue(template string, helmRelease *release.Release) ([]byte, error) {
+func (h *TemplateHandler) renderOutputValue(relCtx *TemplateContext, helmRelease *release.Release) ([]byte, error) {
 	if helmRelease.Chart == nil {
 		return nil, gRPCInternalError(errors.New("Helm release doesn't have associated Helm chart"))
 	}
 	args := helm.OutputArgs{
-		GoTemplate: template,
+		Additional: helm.AdditionalOutputArgs{
+			UseHelmTemplateStorage: false,
+			GoTemplate:             relCtx.GoTemplate,
+		},
 	}
 
 	// It is important to load the chart dependencies as by default they are not
@@ -173,12 +172,23 @@ func (h *TemplateHandler) renderOutputValue(template string, helmRelease *releas
 		return nil, gRPCInternalError(errors.Wrap(err, "while processing dependency charts"))
 	}
 
-	data, err := h.helmOutputter.ProduceAdditional(args, helmRelease.Chart, helmRelease)
+	data, err := h.helmOutputter.ProduceAdditional(args, helmRelease.Chart, ptr.StringPtrToString(relCtx.HelmRelease.Driver), helmRelease)
 	if err != nil {
 		return nil, gRPCInternalError(errors.Wrap(err, "while rendering output value"))
 	}
 
-	return data, nil
+	var outputFile helm.OutputFile
+	err = yaml.Unmarshal(data, &outputFile)
+	if err != nil {
+		return nil, gRPCInternalError(errors.Wrap(err, "while unmarshaling output bytes"))
+	}
+
+	valueBytes, err := json.Marshal(outputFile.Value)
+	if err != nil {
+		return nil, gRPCInternalError(errors.Wrap(err, "while marshaling output value to JSON"))
+	}
+
+	return valueBytes, nil
 }
 
 func (h *TemplateHandler) loadHelmChartDependencies(chrt *chart.Chart) ([]*chart.Chart, error) {

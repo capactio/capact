@@ -81,7 +81,8 @@ type OutputArgs struct {
 	HelmRelease ReleaseOutputArgs    `json:"helmRelease"`
 	Additional  AdditionalOutputArgs `json:"additional"`
 
-	// LegacyGoTemplate is a deprecated field. Use AdditionalOutputArgs.GoTemplate instead.
+	// LegacyGoTemplate holds Go template for additional output.
+	// Deprecated: Use AdditionalOutputArgs.GoTemplate instead.
 	LegacyGoTemplate string `json:"goTemplate"`
 }
 
