@@ -44,9 +44,9 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 	var helmCmd helmCommand
 	switch r.cfg.Command {
 	case InstallCommandType:
-		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionCfgProducer, outputter)
+		helmCmd = newInstaller(r.log, r.cfg, actionCfgProducer, outputter)
 	case UpgradeCommandType:
-		helmCmd = newUpgrader(r.log, r.cfg.RepositoryCachePath, r.cfg.HelmReleasePath, actionCfgProducer, outputter)
+		helmCmd = newUpgrader(r.log, r.cfg, actionCfgProducer, outputter)
 	default:
 		return nil, errors.New("Unsupported command")
 	}
@@ -122,11 +122,7 @@ func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 
 func (r *helmRunner) saveOutput(out Output) error {
 	r.log.Debug("Saving Helm release output", zap.String("path", r.cfg.Output.HelmReleaseFilePath))
-	bytesRelease, err := runner.NestingOutputUnderValue(out.Release)
-	if err != nil {
-		return errors.Wrap(err, "while nesting Terrafrom release under value")
-	}
-	err = runner.SaveToFile(r.cfg.Output.HelmReleaseFilePath, bytesRelease)
+	err := runner.SaveToFile(r.cfg.Output.HelmReleaseFilePath, out.Release)
 	if err != nil {
 		return errors.Wrap(err, "while saving Helm release output")
 	}
@@ -136,11 +132,7 @@ func (r *helmRunner) saveOutput(out Output) error {
 	}
 
 	r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
-	bytesAdditional, err := runner.NestingOutputUnderValue(out.Additional)
-	if err != nil {
-		return errors.Wrap(err, "while nesting Terrafrom additional under value")
-	}
-	err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, bytesAdditional)
+	err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
 	if err != nil {
 		return errors.Wrap(err, "while saving default output")
 	}

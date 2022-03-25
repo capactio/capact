@@ -22,6 +22,8 @@ type TypeInstanceEssentialData struct {
 	ID      *string
 }
 
+const builtinStorageBackendID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+
 func (ti *TypeInstanceEssentialData) String() string {
 	emptyMetadataMsg := "empty metadata"
 	if ti == nil || (ti.ID == nil && ti.Alias == nil) {
@@ -52,6 +54,12 @@ func ValidateTypeInstancesToCreate(ctx context.Context, client TypeInstanceValid
 		if ti == nil || ti.TypeRef == nil {
 			continue
 		}
+
+		if ti.Value == nil && ti.Backend != nil && ti.Backend.ID != builtinStorageBackendID {
+			// ignore such TypeInstance - it will be validated server-side
+			continue
+		}
+
 		manifestRef := types.ManifestRef{
 			Path:     ti.TypeRef.Path,
 			Revision: ti.TypeRef.Revision,
@@ -74,9 +82,19 @@ func ValidateTypeInstancesToCreate(ctx context.Context, client TypeInstanceValid
 }
 
 // ValidateTypeInstanceToUpdate is responsible for validating TypeInstance which exists and will be updated.
-func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValidationHubClient, typeInstanceToUpdate []graphqllocal.UpdateTypeInstancesInput) (Result, error) {
-	var typeInstanceIds []string
-	for _, ti := range typeInstanceToUpdate {
+func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValidationHubClient, typeInstancesToUpdate []graphqllocal.UpdateTypeInstancesInput) (Result, error) {
+	var (
+		typeInstancesToValidate []graphqllocal.UpdateTypeInstancesInput
+		typeInstanceIds         []string
+	)
+	for _, ti := range typeInstancesToUpdate {
+		if ti.TypeInstance != nil && ti.TypeInstance.Value == nil &&
+			ti.TypeInstance.Backend != nil && ti.TypeInstance.Backend.Context != nil {
+			// ignore such TypeInstance - it will be validated server-side
+			continue
+		}
+
+		typeInstancesToValidate = append(typeInstancesToValidate, ti)
 		typeInstanceIds = append(typeInstanceIds, ti.ID)
 	}
 
@@ -97,7 +115,7 @@ func ValidateTypeInstanceToUpdate(ctx context.Context, client TypeInstanceValida
 	}
 
 	var typeInstanceCollection []*TypeInstanceEssentialData
-	for _, ti := range typeInstanceToUpdate {
+	for _, ti := range typeInstancesToValidate {
 		if ti.TypeInstance == nil {
 			continue
 		}
@@ -125,9 +143,6 @@ func ValidateTypeInstances(schemaCollection SchemaCollection, typeInstanceCollec
 	resultBldr := NewResultBuilder("TypeInstance with")
 
 	for _, ti := range typeInstanceCollection {
-		if _, ok := ti.Value.(map[string]interface{}); !ok {
-			return Result{}, errors.New("could not create map from TypeInstance Value")
-		}
 		valuesJSON, err := json.Marshal(ti.Value)
 		if err != nil {
 			return Result{}, errors.Wrap(err, "while converting TypeInstance value to JSON bytes")
