@@ -528,8 +528,8 @@ func assertTypeInstancesDetail(t *testing.T, typeInstances interface{}, family [
 	}
 }
 
-func findExpectedTypeInstance(inputTypeInstances []*expectedTypeInstanceData, alias string) (*expectedTypeInstanceData, error) {
-	for _, ti := range inputTypeInstances {
+func findExpectedTypeInstance(typeInstances []*expectedTypeInstanceData, alias string) (*expectedTypeInstanceData, error) {
+	for _, ti := range typeInstances {
 		if *ti.alias == alias {
 			return ti, nil
 		}
