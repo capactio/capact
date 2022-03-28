@@ -84,10 +84,8 @@ build-test-image-e2e:
 
 build-test-image-%:
 	$(eval APP := $*)
-	# localhub tests needs to be run sequentially
-	$(eval BUILD_CMD=$(if $(APP) local-hub,"go test -v -c -p 1","go test -v -c"))
 	docker build --build-arg COMPONENT=$(APP) \
-		--build-arg BUILD_CMD=$(BUILD_CMD) \
+		--build-arg BUILD_CMD="go test -v -c" \
 		--build-arg SOURCE_PATH="./test/$(APP)/*_test.go" \
 		-t $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG) .
 

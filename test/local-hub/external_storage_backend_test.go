@@ -1,3 +1,6 @@
+//go:build localhub
+// +build localhub
+
 package localhub
 
 import (
@@ -47,7 +50,7 @@ func TestExternalStorage(t *testing.T) {
 	ctx := context.Background()
 	cli := getLocalClient(t)
 	dotenvHubStorage, cleanup := registerExternalDotenvStorage(ctx, t, cli, srvAddr)
-	defer cleanup()
+	defer cleanup(t)
 
 	t.Log("Create TypeInstances")
 	inputTypeInstances := []*gqllocalapi.CreateTypeInstanceInput{
@@ -66,7 +69,6 @@ func TestExternalStorage(t *testing.T) {
 			// This TypeInstance:
 			// - is stored in external backend
 			// - has additional context
-			// - should be stored with mutated context (from create req)
 			Alias:     ptr.String("second-child"),
 			CreatedBy: ptr.String("nature"),
 			TypeRef:   typeRef("cap.type.child:0.2.0"),
@@ -84,7 +86,6 @@ func TestExternalStorage(t *testing.T) {
 			// This TypeInstance:
 			// - is stored in external backend
 			// - doesn't have additional context
-			// - should be stored without mutated context
 			Alias:     ptr.String("original"),
 			CreatedBy: ptr.String("nature"),
 			TypeRef:   typeRef("cap.type.original:0.2.0"),
@@ -100,7 +101,6 @@ func TestExternalStorage(t *testing.T) {
 			// This TypeInstance:
 			// - is stored in external backend
 			// - has additional context
-			// - should be stored without mutated context
 			Alias:     ptr.String("parent"),
 			CreatedBy: ptr.String("nature"),
 			TypeRef:   typeRef("cap.type.parent:0.1.0"),
@@ -413,7 +413,7 @@ func TestExternalStorage(t *testing.T) {
 	})
 }
 
-func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local.Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func()) {
+func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local.Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func(t *testing.T)) {
 	t.Helper()
 
 	ti, err := cli.CreateTypeInstances(ctx, fixExternalDotenvStorage(srvAddr))
@@ -421,8 +421,9 @@ func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local
 	require.Len(t, ti, 1)
 	dotenvHubStorage := ti[0]
 
-	return dotenvHubStorage, func() {
-		_ = cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
+	return dotenvHubStorage, func(t *testing.T) {
+		err = cli.DeleteTypeInstance(ctx, dotenvHubStorage.ID)
+		require.NoError(t, err)
 	}
 }
 
@@ -483,7 +484,7 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 			ResourceVersion: uint32(ti.LatestResourceVersion.ResourceVersion),
 		})
 		if err != nil {
-			fmt.Println("err", err)
+			t.Logf("error while getting value from storage for TypeInstance %s", ti.ID)
 			continue
 		}
 
@@ -491,7 +492,7 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 			TypeInstanceId: ti.ID,
 		})
 		if err != nil {
-			fmt.Println("err", err)
+			t.Logf("error while getting value of locked by from storage for TypeInstance %s", ti.ID)
 			continue
 		}
 

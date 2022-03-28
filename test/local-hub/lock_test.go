@@ -1,3 +1,6 @@
+//go:build localhub
+// +build localhub
+
 package localhub
 
 import (
@@ -31,11 +34,12 @@ func TestLockTypeInstances(t *testing.T) {
 		require.NoError(t, err)
 		createdTIIDs = append(createdTIIDs, outID)
 	}
-	defer func() {
+	defer func(t *testing.T) {
 		for _, id := range createdTIIDs {
-			_ = cli.DeleteTypeInstance(ctx, id)
+			err := cli.DeleteTypeInstance(ctx, id)
+			require.NoError(t, err)
 		}
-	}()
+	}(t)
 
 	t.Log("given id1 and id2 are not locked")
 	firstTwoInstances := createdTIIDs[:2]
@@ -111,9 +115,10 @@ func TestLockTypeInstances(t *testing.T) {
 	id4, err := cli.CreateTypeInstance(ctx, typeInstance("id4"))
 	require.NoError(t, err)
 
-	defer func() {
-		_ = cli.DeleteTypeInstance(ctx, id4)
-	}()
+	defer func(t *testing.T) {
+		err = cli.DeleteTypeInstance(ctx, id4)
+		require.NoError(t, err)
+	}(t)
 
 	t.Log("when Bar tries to locks all of them")
 	lockingIDs = createdTIIDs

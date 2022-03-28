@@ -1,3 +1,6 @@
+//go:build localhub
+// +build localhub
+
 package localhub
 
 import (
