@@ -7,6 +7,8 @@ export NAME="stage"
 # Remember when changing LOAD_BALANCER_EXTERNAL_IP to update record A in the Cloud DNS for gateway
 cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.16.3
+GOLANGCI_LINT_VERSION=v1.41.1
+GOLANGCI_LINT_TIMEOUT=10m
 SKIP_DEPS_INSTALLATION=false
 PROJECT_ID=capact
 RECREATE_CLUSTER_GCS_BUCKET=capact-stage-cluster-recreate
