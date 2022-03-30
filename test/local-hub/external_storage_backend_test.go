@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"capact.io/capact/internal/cli/heredoc"
@@ -469,9 +468,7 @@ type externalData struct {
 
 func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi.TypeInstance) map[string]externalData {
 	t.Helper()
-	url := strings.Split(addr, ":")
-	assert.Equal(t, len(url), 2)
-	conn, err := grpc.Dial(fmt.Sprintf("[%s]:%s", url[0], url[1]), grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -492,8 +489,7 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 			TypeInstanceId: ti.ID,
 		})
 		if err != nil {
-			t.Logf("error while getting value of locked by from storage for TypeInstance %s", ti.ID)
-			continue
+			require.NoError(t, err)
 		}
 
 		out[ti.ID] = externalData{
@@ -515,14 +511,14 @@ func assertTypeInstancesDetail(t *testing.T, typeInstances interface{}, family [
 		for _, ti := range in {
 			expectedTI, err := findExpectedTypeInstance(expectedData, mapping[ti.ID])
 			require.NoError(t, err)
-			dataInExternalBackend := mustMarshal(expectedTI.dataInExternalBackend)
+			dataInExternalBackend := mustMarshal(t, expectedTI.dataInExternalBackend)
 			if dataInExternalBackend == "null" {
 				assert.Equal(t, storage[ti.ID].Value, "")
 			} else {
 				assert.Equal(t, storage[ti.ID].Value, dataInExternalBackend)
 			}
-			assert.Equal(t, mustMarshal(ti.LatestResourceVersion.Spec.Backend.Context), mustMarshal(expectedTI.backendContext))
-			assert.Equal(t, mustMarshal(ti.LatestResourceVersion.Spec.Value), mustMarshal(expectedTI.dataInGQL))
+			assert.Equal(t, mustMarshal(t, ti.LatestResourceVersion.Spec.Backend.Context), mustMarshal(t, expectedTI.backendContext))
+			assert.Equal(t, mustMarshal(t, ti.LatestResourceVersion.Spec.Value), mustMarshal(t, expectedTI.dataInGQL))
 			assert.Equal(t, stringDefault(ti.LockedBy, ""), expectedTI.locked)
 			assert.Equal(t, stringDefault(storage[ti.ID].LockedBy, ""), expectedTI.lockedInExternalBackend)
 		}
@@ -538,10 +534,10 @@ func findExpectedTypeInstance(typeInstances []*expectedTypeInstanceData, alias s
 	return nil, fmt.Errorf("cannot find TypeInstance with alias %s", alias)
 }
 
-func mustMarshal(v interface{}) string {
+func mustMarshal(t *testing.T, v interface{}) string {
 	out, err := json.Marshal(v)
 	if err != nil {
-		panic(err)
+		require.NoError(t, err)
 	}
 	return string(out)
 }
@@ -560,22 +556,22 @@ func removeAllMembers(t *testing.T, cli *local.Client, familyDetails []gqllocala
 	for _, member := range familyDetails {
 		if member.TypeRef.Path != "cap.type.parent" {
 			defer func(id string) { // delay the child deletions
-				fmt.Println("Delete child", id)
+				t.Logf("Delete child %s", id)
 				err := cli.DeleteTypeInstance(ctx, id)
 				if err != nil {
-					t.Logf("err for %v: %v", id, err)
+					require.NoError(t, err)
 				}
 			}(member.ID)
 
 			continue
 		}
 
-		fmt.Println("Delete parent", member.ID)
+		t.Logf("Delete parent %v", member.ID)
 
 		// Delete parent first, to unblock deletion of children
 		err := cli.DeleteTypeInstance(ctx, member.ID)
 		if err != nil {
-			t.Logf("err for %v: %v", member.ID, err)
+			require.NoError(t, err)
 		}
 	}
 }
