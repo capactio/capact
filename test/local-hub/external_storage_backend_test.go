@@ -488,9 +488,7 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 		locked, err := client.GetLockedBy(ctx, &pb.GetLockedByRequest{
 			TypeInstanceId: ti.ID,
 		})
-		if err != nil {
-			require.NoError(t, err)
-		}
+		require.NoError(t, err)
 
 		out[ti.ID] = externalData{
 			Value:    string(val.Value),
@@ -536,9 +534,7 @@ func findExpectedTypeInstance(typeInstances []*expectedTypeInstanceData, alias s
 
 func mustMarshal(t *testing.T, v interface{}) string {
 	out, err := json.Marshal(v)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	return string(out)
 }
 
@@ -558,9 +554,7 @@ func removeAllMembers(t *testing.T, cli *local.Client, familyDetails []gqllocala
 			defer func(id string) { // delay the child deletions
 				t.Logf("Delete child %s", id)
 				err := cli.DeleteTypeInstance(ctx, id)
-				if err != nil {
-					require.NoError(t, err)
-				}
+				require.NoError(t, err)
 			}(member.ID)
 
 			continue
@@ -570,8 +564,6 @@ func removeAllMembers(t *testing.T, cli *local.Client, familyDetails []gqllocala
 
 		// Delete parent first, to unblock deletion of children
 		err := cli.DeleteTypeInstance(ctx, member.ID)
-		if err != nil {
-			require.NoError(t, err)
-		}
+		require.NoError(t, err)
 	}
 }
