@@ -1,0 +1,16 @@
+domain: capact.io
+layout:
+- go.kubebuilder.io/v3
+projectName: composer
+repo: capact.io/composer
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: capact.io
+  group: core
+  kind: Composer
+  path: capact.io/composer/api/v1
+  version: v1
+version: "3"

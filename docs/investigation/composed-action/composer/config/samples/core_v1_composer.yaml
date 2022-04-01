@@ -1,0 +1,6 @@
+apiVersion: core.capact.io/v1
+kind: Composer
+metadata:
+  name: composer-sample
+spec:
+  # TODO(user): Add fields here
