@@ -22,9 +22,9 @@ const (
 )
 
 type storageSpec struct {
-	URL           *string `json:"url,omitempty"`
-	AcceptValue   *bool   `json:"acceptValue,omitempty"`
-	ContextSchema *string `json:"contextSchema,omitempty"`
+	URL           *string     `json:"url,omitempty"`
+	AcceptValue   *bool       `json:"acceptValue,omitempty"`
+	ContextSchema interface{} `json:"contextSchema,omitempty"`
 }
 
 func TestExternalStorageInputValidation(t *testing.T) {
@@ -72,7 +72,7 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			storageSpec: storageSpec{
 				URL:         ptr.String("http://localhost:5000/fake"),
 				AcceptValue: ptr.Bool(false),
-				ContextSchema: ptr.String(heredoc.Doc(`
+				ContextSchema: unmarshalContextSchema(t, heredoc.Doc(`
 					   {
 					   	"$id": "#/properties/contextSchema",
 					   	"type": "object",
@@ -96,7 +96,7 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			storageSpec: storageSpec{
 				URL:         ptr.String("http://localhost:5000/fake"),
 				AcceptValue: ptr.Bool(false),
-				ContextSchema: ptr.String(heredoc.Doc(`
+				ContextSchema: unmarshalContextSchema(t, heredoc.Doc(`
 					   {
 					   	"$id": "#/properties/contextSchema",
 					   	"type": "object",
@@ -180,7 +180,7 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			storageSpec: storageSpec{
 				URL:         ptr.String("http://localhost:5000/fake"),
 				AcceptValue: ptr.Bool(false),
-				ContextSchema: ptr.String(heredoc.Doc(`
+				ContextSchema: []byte(heredoc.Doc(`
 					   yaml: true`)),
 			},
 			value: map[string]interface{}{
@@ -189,8 +189,8 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			expErrMsg: heredoc.Doc(`
               while executing mutation to create TypeInstance: All attempts fail:
               #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
-              	* Error: failed to process the TypeInstance's backend "MOCKED_ID": invalid spec.context: Unexpected token y in JSON at position 0
-              	* Error: rollback externally stored values: failed to process the TypeInstance's backend "MOCKED_ID": invalid spec.context: Unexpected token y in JSON at position 0`),
+                * Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value/contextSchema must be object
+                * Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value/contextSchema must be object`),
 		},
 	}
 	for tn, tc := range tests {

@@ -379,22 +379,16 @@ export default class DelegatedStorageService {
         url: spec.url,
       });
 
-      let contextSchema;
-      if (spec.contextSchema) {
-        const out = DelegatedStorageService.parseToObject(spec.contextSchema);
-        if (out.error) {
-          throw Error(
-            `failed to process the TypeInstance's backend "${id}": invalid spec.context: ${out.error.message}`
-          );
-        }
-        contextSchema = out.parsed as JSONSchemaType<unknown>;
-      }
       const channel = createChannel(spec.url);
       const client: StorageClient = createClient(
         StorageBackendDefinition,
         channel
       );
 
+      let contextSchema;
+      if (spec.contextSchema) {
+        contextSchema = spec.contextSchema as JSONSchemaType<unknown>;
+      }
       const storageSpec = {
         backendId: id,
         contextSchema,
