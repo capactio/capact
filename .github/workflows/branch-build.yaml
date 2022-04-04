@@ -48,7 +48,7 @@ jobs:
           make test-generated
 
   golangci-lint:
-    name: Lint go code
+    name: Lint Go code
     runs-on: ubuntu-latest
     permissions:
       contents: read

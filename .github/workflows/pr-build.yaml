@@ -69,7 +69,7 @@ jobs:
           make test-generated
 
   golangci-lint:
-    name: Lint go code
+    name: Lint Go code
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     permissions:
