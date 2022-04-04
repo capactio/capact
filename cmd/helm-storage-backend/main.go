@@ -74,7 +74,7 @@ func main() {
 	parallelServers := new(errgroup.Group)
 
 	// create handler
-	var handler storage_backend.StorageBackendServer
+	var handler storage_backend.ContextOnlyStorageBackendServer
 	switch cfg.Mode {
 	case HelmReleaseMode:
 		handler, err = helm_storage_backend.NewReleaseHandler(logger, relFetcher)
@@ -94,7 +94,7 @@ func main() {
 	exitOnError(err, "while listening")
 
 	srv := grpc.NewServer()
-	storage_backend.RegisterStorageBackendServer(srv, handler)
+	storage_backend.RegisterContextOnlyStorageBackendServer(srv, handler)
 
 	go func() {
 		<-ctx.Done()

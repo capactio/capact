@@ -76,12 +76,12 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	client := pb.NewStorageBackendClient(conn)
+	client := pb.NewValueAndContextStorageBackendClient(conn)
 
 	// create
 	t.Logf("Creating TI %q...\n", typeInstanceID)
 
-	_, err = client.OnCreate(ctx, &pb.OnCreateRequest{
+	_, err = client.OnCreate(ctx, &pb.OnCreateValueAndContextRequest{
 		TypeInstanceId: typeInstanceID,
 		Value:          value,
 		Context:        reqContext,
@@ -105,7 +105,7 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 	t.Logf("Updating TI %q...\n", typeInstanceID)
 
 	newValueBytes := []byte(`{"key": "updated"}`)
-	_, err = client.OnUpdate(ctx, &pb.OnUpdateRequest{
+	_, err = client.OnUpdate(ctx, &pb.OnUpdateValueAndContextRequest{
 		TypeInstanceId:     typeInstanceID,
 		NewResourceVersion: 2,
 		NewValue:           newValueBytes,
@@ -207,7 +207,7 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 	// delete
 	t.Logf("Deleting TI %q...\n", typeInstanceID)
 
-	_, err = client.OnDelete(ctx, &pb.OnDeleteRequest{
+	_, err = client.OnDelete(ctx, &pb.OnDeleteValueAndContextRequest{
 		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 	})

@@ -46,11 +46,11 @@ func (p Providers) GetDefault() (tellercore.Provider, error) {
 	return nil, invalidCountErr
 }
 
-var _ pb.StorageBackendServer = &Handler{}
+var _ pb.ValueAndContextStorageBackendServer = &Handler{}
 
 // Handler handles incoming requests to the Secret storage backend gRPC server.
 type Handler struct {
-	pb.UnimplementedStorageBackendServer
+	pb.UnimplementedValueAndContextStorageBackendServer
 
 	log *zap.Logger
 
@@ -137,7 +137,7 @@ func (h *Handler) GetLockedBy(_ context.Context, request *pb.GetLockedByRequest)
 }
 
 // OnCreate handles TypeInstance creation by creating secret in a given provider.
-func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.OnCreateResponse, error) {
+func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateValueAndContextRequest) (*pb.OnCreateResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
 	}
@@ -161,7 +161,7 @@ func (h *Handler) OnCreate(_ context.Context, request *pb.OnCreateRequest) (*pb.
 }
 
 // OnUpdate handles TypeInstance update by updating secret in a given provider.
-func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateRequest) (*pb.OnUpdateResponse, error) {
+func (h *Handler) OnUpdate(_ context.Context, request *pb.OnUpdateValueAndContextRequest) (*pb.OnUpdateResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
 	}
@@ -242,7 +242,7 @@ func (h *Handler) OnUnlock(_ context.Context, request *pb.OnUnlockRequest) (*pb.
 
 // OnDelete handles TypeInstance deletion by removing a secret in a given provider.
 // It checks whether a given TypeInstance is locked before doing such operation.
-func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteRequest) (*pb.OnDeleteResponse, error) {
+func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteValueAndContextRequest) (*pb.OnDeleteResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
 	}

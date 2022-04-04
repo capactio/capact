@@ -4,7 +4,20 @@ import _m0 from "protobufjs/minimal";
 
 export const protobufPackage = "storage_backend";
 
+export interface GetPreCreateValueRequest {
+  context: Uint8Array;
+}
+
+export interface GetPreCreateValueResponse {
+  value?: Uint8Array | undefined;
+}
+
 export interface OnCreateRequest {
+  typeInstanceId: string;
+  context: Uint8Array;
+}
+
+export interface OnCreateValueAndContextRequest {
   typeInstanceId: string;
   value: Uint8Array;
   context?: Uint8Array | undefined;
@@ -19,7 +32,7 @@ export interface TypeInstanceResourceVersion {
   value: Uint8Array;
 }
 
-export interface OnUpdateRequest {
+export interface OnUpdateValueAndContextRequest {
   typeInstanceId: string;
   newResourceVersion: number;
   newValue: Uint8Array;
@@ -27,13 +40,26 @@ export interface OnUpdateRequest {
   ownerId?: string | undefined;
 }
 
+export interface OnUpdateRequest {
+  typeInstanceId: string;
+  newResourceVersion: number;
+  context: Uint8Array;
+  ownerId?: string | undefined;
+}
+
 export interface OnUpdateResponse {
   context?: Uint8Array | undefined;
 }
 
-export interface OnDeleteRequest {
+export interface OnDeleteValueAndContextRequest {
   typeInstanceId: string;
   context?: Uint8Array | undefined;
+  ownerId?: string | undefined;
+}
+
+export interface OnDeleteRequest {
+  typeInstanceId: string;
+  context: Uint8Array;
   ownerId?: string | undefined;
 }
 
@@ -73,13 +99,205 @@ export interface OnUnlockRequest {
 
 export interface OnUnlockResponse {}
 
+function createBaseGetPreCreateValueRequest(): GetPreCreateValueRequest {
+  return { context: new Uint8Array() };
+}
+
+export const GetPreCreateValueRequest = {
+  encode(
+    message: GetPreCreateValueRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.context.length !== 0) {
+      writer.uint32(10).bytes(message.context);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): GetPreCreateValueRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetPreCreateValueRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.context = reader.bytes();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetPreCreateValueRequest {
+    return {
+      context: isSet(object.context)
+        ? bytesFromBase64(object.context)
+        : new Uint8Array(),
+    };
+  },
+
+  toJSON(message: GetPreCreateValueRequest): unknown {
+    const obj: any = {};
+    message.context !== undefined &&
+      (obj.context = base64FromBytes(
+        message.context !== undefined ? message.context : new Uint8Array()
+      ));
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<GetPreCreateValueRequest>
+  ): GetPreCreateValueRequest {
+    const message = createBaseGetPreCreateValueRequest();
+    message.context = object.context ?? new Uint8Array();
+    return message;
+  },
+};
+
+function createBaseGetPreCreateValueResponse(): GetPreCreateValueResponse {
+  return { value: undefined };
+}
+
+export const GetPreCreateValueResponse = {
+  encode(
+    message: GetPreCreateValueResponse,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.value !== undefined) {
+      writer.uint32(10).bytes(message.value);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): GetPreCreateValueResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetPreCreateValueResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.value = reader.bytes();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetPreCreateValueResponse {
+    return {
+      value: isSet(object.value) ? bytesFromBase64(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: GetPreCreateValueResponse): unknown {
+    const obj: any = {};
+    message.value !== undefined &&
+      (obj.value =
+        message.value !== undefined
+          ? base64FromBytes(message.value)
+          : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<GetPreCreateValueResponse>
+  ): GetPreCreateValueResponse {
+    const message = createBaseGetPreCreateValueResponse();
+    message.value = object.value ?? undefined;
+    return message;
+  },
+};
+
 function createBaseOnCreateRequest(): OnCreateRequest {
-  return { typeInstanceId: "", value: new Uint8Array(), context: undefined };
+  return { typeInstanceId: "", context: new Uint8Array() };
 }
 
 export const OnCreateRequest = {
   encode(
     message: OnCreateRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.typeInstanceId !== "") {
+      writer.uint32(10).string(message.typeInstanceId);
+    }
+    if (message.context.length !== 0) {
+      writer.uint32(18).bytes(message.context);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OnCreateRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOnCreateRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.typeInstanceId = reader.string();
+          break;
+        case 2:
+          message.context = reader.bytes();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): OnCreateRequest {
+    return {
+      typeInstanceId: isSet(object.typeInstanceId)
+        ? String(object.typeInstanceId)
+        : "",
+      context: isSet(object.context)
+        ? bytesFromBase64(object.context)
+        : new Uint8Array(),
+    };
+  },
+
+  toJSON(message: OnCreateRequest): unknown {
+    const obj: any = {};
+    message.typeInstanceId !== undefined &&
+      (obj.typeInstanceId = message.typeInstanceId);
+    message.context !== undefined &&
+      (obj.context = base64FromBytes(
+        message.context !== undefined ? message.context : new Uint8Array()
+      ));
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<OnCreateRequest>): OnCreateRequest {
+    const message = createBaseOnCreateRequest();
+    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.context = object.context ?? new Uint8Array();
+    return message;
+  },
+};
+
+function createBaseOnCreateValueAndContextRequest(): OnCreateValueAndContextRequest {
+  return { typeInstanceId: "", value: new Uint8Array(), context: undefined };
+}
+
+export const OnCreateValueAndContextRequest = {
+  encode(
+    message: OnCreateValueAndContextRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     if (message.typeInstanceId !== "") {
@@ -94,10 +312,13 @@ export const OnCreateRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): OnCreateRequest {
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): OnCreateValueAndContextRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseOnCreateRequest();
+    const message = createBaseOnCreateValueAndContextRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -118,7 +339,7 @@ export const OnCreateRequest = {
     return message;
   },
 
-  fromJSON(object: any): OnCreateRequest {
+  fromJSON(object: any): OnCreateValueAndContextRequest {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
@@ -132,7 +353,7 @@ export const OnCreateRequest = {
     };
   },
 
-  toJSON(message: OnCreateRequest): unknown {
+  toJSON(message: OnCreateValueAndContextRequest): unknown {
     const obj: any = {};
     message.typeInstanceId !== undefined &&
       (obj.typeInstanceId = message.typeInstanceId);
@@ -148,8 +369,10 @@ export const OnCreateRequest = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<OnCreateRequest>): OnCreateRequest {
-    const message = createBaseOnCreateRequest();
+  fromPartial(
+    object: DeepPartial<OnCreateValueAndContextRequest>
+  ): OnCreateValueAndContextRequest {
+    const message = createBaseOnCreateValueAndContextRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
     message.value = object.value ?? new Uint8Array();
     message.context = object.context ?? undefined;
@@ -289,7 +512,7 @@ export const TypeInstanceResourceVersion = {
   },
 };
 
-function createBaseOnUpdateRequest(): OnUpdateRequest {
+function createBaseOnUpdateValueAndContextRequest(): OnUpdateValueAndContextRequest {
   return {
     typeInstanceId: "",
     newResourceVersion: 0,
@@ -299,9 +522,9 @@ function createBaseOnUpdateRequest(): OnUpdateRequest {
   };
 }
 
-export const OnUpdateRequest = {
+export const OnUpdateValueAndContextRequest = {
   encode(
-    message: OnUpdateRequest,
+    message: OnUpdateValueAndContextRequest,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     if (message.typeInstanceId !== "") {
@@ -322,10 +545,13 @@ export const OnUpdateRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): OnUpdateRequest {
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): OnUpdateValueAndContextRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseOnUpdateRequest();
+    const message = createBaseOnUpdateValueAndContextRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -352,7 +578,7 @@ export const OnUpdateRequest = {
     return message;
   },
 
-  fromJSON(object: any): OnUpdateRequest {
+  fromJSON(object: any): OnUpdateValueAndContextRequest {
     return {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
@@ -370,7 +596,7 @@ export const OnUpdateRequest = {
     };
   },
 
-  toJSON(message: OnUpdateRequest): unknown {
+  toJSON(message: OnUpdateValueAndContextRequest): unknown {
     const obj: any = {};
     message.typeInstanceId !== undefined &&
       (obj.typeInstanceId = message.typeInstanceId);
@@ -389,12 +615,109 @@ export const OnUpdateRequest = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<OnUpdateRequest>): OnUpdateRequest {
-    const message = createBaseOnUpdateRequest();
+  fromPartial(
+    object: DeepPartial<OnUpdateValueAndContextRequest>
+  ): OnUpdateValueAndContextRequest {
+    const message = createBaseOnUpdateValueAndContextRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
     message.newResourceVersion = object.newResourceVersion ?? 0;
     message.newValue = object.newValue ?? new Uint8Array();
     message.context = object.context ?? undefined;
+    message.ownerId = object.ownerId ?? undefined;
+    return message;
+  },
+};
+
+function createBaseOnUpdateRequest(): OnUpdateRequest {
+  return {
+    typeInstanceId: "",
+    newResourceVersion: 0,
+    context: new Uint8Array(),
+    ownerId: undefined,
+  };
+}
+
+export const OnUpdateRequest = {
+  encode(
+    message: OnUpdateRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.typeInstanceId !== "") {
+      writer.uint32(10).string(message.typeInstanceId);
+    }
+    if (message.newResourceVersion !== 0) {
+      writer.uint32(16).uint32(message.newResourceVersion);
+    }
+    if (message.context.length !== 0) {
+      writer.uint32(26).bytes(message.context);
+    }
+    if (message.ownerId !== undefined) {
+      writer.uint32(34).string(message.ownerId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OnUpdateRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOnUpdateRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.typeInstanceId = reader.string();
+          break;
+        case 2:
+          message.newResourceVersion = reader.uint32();
+          break;
+        case 3:
+          message.context = reader.bytes();
+          break;
+        case 4:
+          message.ownerId = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): OnUpdateRequest {
+    return {
+      typeInstanceId: isSet(object.typeInstanceId)
+        ? String(object.typeInstanceId)
+        : "",
+      newResourceVersion: isSet(object.newResourceVersion)
+        ? Number(object.newResourceVersion)
+        : 0,
+      context: isSet(object.context)
+        ? bytesFromBase64(object.context)
+        : new Uint8Array(),
+      ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
+    };
+  },
+
+  toJSON(message: OnUpdateRequest): unknown {
+    const obj: any = {};
+    message.typeInstanceId !== undefined &&
+      (obj.typeInstanceId = message.typeInstanceId);
+    message.newResourceVersion !== undefined &&
+      (obj.newResourceVersion = Math.round(message.newResourceVersion));
+    message.context !== undefined &&
+      (obj.context = base64FromBytes(
+        message.context !== undefined ? message.context : new Uint8Array()
+      ));
+    message.ownerId !== undefined && (obj.ownerId = message.ownerId);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<OnUpdateRequest>): OnUpdateRequest {
+    const message = createBaseOnUpdateRequest();
+    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.newResourceVersion = object.newResourceVersion ?? 0;
+    message.context = object.context ?? new Uint8Array();
     message.ownerId = object.ownerId ?? undefined;
     return message;
   },
@@ -458,8 +781,92 @@ export const OnUpdateResponse = {
   },
 };
 
-function createBaseOnDeleteRequest(): OnDeleteRequest {
+function createBaseOnDeleteValueAndContextRequest(): OnDeleteValueAndContextRequest {
   return { typeInstanceId: "", context: undefined, ownerId: undefined };
+}
+
+export const OnDeleteValueAndContextRequest = {
+  encode(
+    message: OnDeleteValueAndContextRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.typeInstanceId !== "") {
+      writer.uint32(10).string(message.typeInstanceId);
+    }
+    if (message.context !== undefined) {
+      writer.uint32(18).bytes(message.context);
+    }
+    if (message.ownerId !== undefined) {
+      writer.uint32(26).string(message.ownerId);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): OnDeleteValueAndContextRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOnDeleteValueAndContextRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.typeInstanceId = reader.string();
+          break;
+        case 2:
+          message.context = reader.bytes();
+          break;
+        case 3:
+          message.ownerId = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): OnDeleteValueAndContextRequest {
+    return {
+      typeInstanceId: isSet(object.typeInstanceId)
+        ? String(object.typeInstanceId)
+        : "",
+      context: isSet(object.context)
+        ? bytesFromBase64(object.context)
+        : undefined,
+      ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
+    };
+  },
+
+  toJSON(message: OnDeleteValueAndContextRequest): unknown {
+    const obj: any = {};
+    message.typeInstanceId !== undefined &&
+      (obj.typeInstanceId = message.typeInstanceId);
+    message.context !== undefined &&
+      (obj.context =
+        message.context !== undefined
+          ? base64FromBytes(message.context)
+          : undefined);
+    message.ownerId !== undefined && (obj.ownerId = message.ownerId);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<OnDeleteValueAndContextRequest>
+  ): OnDeleteValueAndContextRequest {
+    const message = createBaseOnDeleteValueAndContextRequest();
+    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.context = object.context ?? undefined;
+    message.ownerId = object.ownerId ?? undefined;
+    return message;
+  },
+};
+
+function createBaseOnDeleteRequest(): OnDeleteRequest {
+  return { typeInstanceId: "", context: new Uint8Array(), ownerId: undefined };
 }
 
 export const OnDeleteRequest = {
@@ -470,7 +877,7 @@ export const OnDeleteRequest = {
     if (message.typeInstanceId !== "") {
       writer.uint32(10).string(message.typeInstanceId);
     }
-    if (message.context !== undefined) {
+    if (message.context.length !== 0) {
       writer.uint32(18).bytes(message.context);
     }
     if (message.ownerId !== undefined) {
@@ -510,7 +917,7 @@ export const OnDeleteRequest = {
         : "",
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
-        : undefined,
+        : new Uint8Array(),
       ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
     };
   },
@@ -520,10 +927,9 @@ export const OnDeleteRequest = {
     message.typeInstanceId !== undefined &&
       (obj.typeInstanceId = message.typeInstanceId);
     message.context !== undefined &&
-      (obj.context =
-        message.context !== undefined
-          ? base64FromBytes(message.context)
-          : undefined);
+      (obj.context = base64FromBytes(
+        message.context !== undefined ? message.context : new Uint8Array()
+      ));
     message.ownerId !== undefined && (obj.ownerId = message.ownerId);
     return obj;
   },
@@ -531,7 +937,7 @@ export const OnDeleteRequest = {
   fromPartial(object: DeepPartial<OnDeleteRequest>): OnDeleteRequest {
     const message = createBaseOnDeleteRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
-    message.context = object.context ?? undefined;
+    message.context = object.context ?? new Uint8Array();
     message.ownerId = object.ownerId ?? undefined;
     return message;
   },
@@ -1068,11 +1474,89 @@ export const OnUnlockResponse = {
   },
 };
 
-export const StorageBackendDefinition = {
-  name: "StorageBackend",
-  fullName: "storage_backend.StorageBackend",
+/**
+ * ValueAndContextStorageBackend handles the full lifecycle of the TypeInstance.
+ * TypeInstance value is always provided as a part of request. Context may be provided but it is not required.
+ */
+export const ValueAndContextStorageBackendDefinition = {
+  name: "ValueAndContextStorageBackend",
+  fullName: "storage_backend.ValueAndContextStorageBackend",
   methods: {
     /** value */
+    getValue: {
+      name: "GetValue",
+      requestType: GetValueRequest,
+      requestStream: false,
+      responseType: GetValueResponse,
+      responseStream: false,
+      options: {},
+    },
+    onCreate: {
+      name: "OnCreate",
+      requestType: OnCreateValueAndContextRequest,
+      requestStream: false,
+      responseType: OnCreateResponse,
+      responseStream: false,
+      options: {},
+    },
+    onUpdate: {
+      name: "OnUpdate",
+      requestType: OnUpdateValueAndContextRequest,
+      requestStream: false,
+      responseType: OnUpdateResponse,
+      responseStream: false,
+      options: {},
+    },
+    onDelete: {
+      name: "OnDelete",
+      requestType: OnDeleteValueAndContextRequest,
+      requestStream: false,
+      responseType: OnDeleteResponse,
+      responseStream: false,
+      options: {},
+    },
+    /** lock */
+    getLockedBy: {
+      name: "GetLockedBy",
+      requestType: GetLockedByRequest,
+      requestStream: false,
+      responseType: GetLockedByResponse,
+      responseStream: false,
+      options: {},
+    },
+    onLock: {
+      name: "OnLock",
+      requestType: OnLockRequest,
+      requestStream: false,
+      responseType: OnLockResponse,
+      responseStream: false,
+      options: {},
+    },
+    onUnlock: {
+      name: "OnUnlock",
+      requestType: OnUnlockRequest,
+      requestStream: false,
+      responseType: OnUnlockResponse,
+      responseStream: false,
+      options: {},
+    },
+  },
+} as const;
+
+/** ContextOnlyStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments. */
+export const ContextOnlyStorageBackendDefinition = {
+  name: "ContextOnlyStorageBackend",
+  fullName: "storage_backend.ContextOnlyStorageBackend",
+  methods: {
+    /** value */
+    getPreCreateValue: {
+      name: "GetPreCreateValue",
+      requestType: GetPreCreateValueRequest,
+      requestStream: false,
+      responseType: GetPreCreateValueResponse,
+      responseStream: false,
+      options: {},
+    },
     getValue: {
       name: "GetValue",
       requestType: GetValueRequest,

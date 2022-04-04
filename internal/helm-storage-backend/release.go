@@ -12,7 +12,7 @@ import (
 	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
-var _ pb.StorageBackendServer = &ReleaseHandler{}
+var _ pb.ContextOnlyStorageBackendServer = &ReleaseHandler{}
 
 const latestRevisionIndicator = 0
 
@@ -47,7 +47,7 @@ type (
 
 // ReleaseHandler handles incoming requests to the Helm release storage backend gRPC server.
 type ReleaseHandler struct {
-	pb.UnimplementedStorageBackendServer
+	pb.UnimplementedContextOnlyStorageBackendServer
 
 	log     *zap.Logger
 	fetcher *HelmReleaseFetcher

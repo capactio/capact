@@ -18,11 +18,319 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// StorageBackendClient is the client API for StorageBackend service.
+// ValueAndContextStorageBackendClient is the client API for ValueAndContextStorageBackend service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type StorageBackendClient interface {
+type ValueAndContextStorageBackendClient interface {
 	// value
+	GetValue(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error)
+	OnCreate(ctx context.Context, in *OnCreateValueAndContextRequest, opts ...grpc.CallOption) (*OnCreateResponse, error)
+	OnUpdate(ctx context.Context, in *OnUpdateValueAndContextRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error)
+	OnDelete(ctx context.Context, in *OnDeleteValueAndContextRequest, opts ...grpc.CallOption) (*OnDeleteResponse, error)
+	// lock
+	GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error)
+	OnLock(ctx context.Context, in *OnLockRequest, opts ...grpc.CallOption) (*OnLockResponse, error)
+	OnUnlock(ctx context.Context, in *OnUnlockRequest, opts ...grpc.CallOption) (*OnUnlockResponse, error)
+}
+
+type valueAndContextStorageBackendClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewValueAndContextStorageBackendClient(cc grpc.ClientConnInterface) ValueAndContextStorageBackendClient {
+	return &valueAndContextStorageBackendClient{cc}
+}
+
+func (c *valueAndContextStorageBackendClient) GetValue(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error) {
+	out := new(GetValueResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/GetValue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *valueAndContextStorageBackendClient) OnCreate(ctx context.Context, in *OnCreateValueAndContextRequest, opts ...grpc.CallOption) (*OnCreateResponse, error) {
+	out := new(OnCreateResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/OnCreate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *valueAndContextStorageBackendClient) OnUpdate(ctx context.Context, in *OnUpdateValueAndContextRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error) {
+	out := new(OnUpdateResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/OnUpdate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *valueAndContextStorageBackendClient) OnDelete(ctx context.Context, in *OnDeleteValueAndContextRequest, opts ...grpc.CallOption) (*OnDeleteResponse, error) {
+	out := new(OnDeleteResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/OnDelete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *valueAndContextStorageBackendClient) GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error) {
+	out := new(GetLockedByResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/GetLockedBy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *valueAndContextStorageBackendClient) OnLock(ctx context.Context, in *OnLockRequest, opts ...grpc.CallOption) (*OnLockResponse, error) {
+	out := new(OnLockResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/OnLock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *valueAndContextStorageBackendClient) OnUnlock(ctx context.Context, in *OnUnlockRequest, opts ...grpc.CallOption) (*OnUnlockResponse, error) {
+	out := new(OnUnlockResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/OnUnlock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ValueAndContextStorageBackendServer is the server API for ValueAndContextStorageBackend service.
+// All implementations must embed UnimplementedValueAndContextStorageBackendServer
+// for forward compatibility
+type ValueAndContextStorageBackendServer interface {
+	// value
+	GetValue(context.Context, *GetValueRequest) (*GetValueResponse, error)
+	OnCreate(context.Context, *OnCreateValueAndContextRequest) (*OnCreateResponse, error)
+	OnUpdate(context.Context, *OnUpdateValueAndContextRequest) (*OnUpdateResponse, error)
+	OnDelete(context.Context, *OnDeleteValueAndContextRequest) (*OnDeleteResponse, error)
+	// lock
+	GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error)
+	OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error)
+	OnUnlock(context.Context, *OnUnlockRequest) (*OnUnlockResponse, error)
+	mustEmbedUnimplementedValueAndContextStorageBackendServer()
+}
+
+// UnimplementedValueAndContextStorageBackendServer must be embedded to have forward compatible implementations.
+type UnimplementedValueAndContextStorageBackendServer struct {
+}
+
+func (UnimplementedValueAndContextStorageBackendServer) GetValue(context.Context, *GetValueRequest) (*GetValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetValue not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) OnCreate(context.Context, *OnCreateValueAndContextRequest) (*OnCreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnCreate not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) OnUpdate(context.Context, *OnUpdateValueAndContextRequest) (*OnUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnUpdate not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) OnDelete(context.Context, *OnDeleteValueAndContextRequest) (*OnDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnDelete not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLockedBy not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnLock not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) OnUnlock(context.Context, *OnUnlockRequest) (*OnUnlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnUnlock not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) mustEmbedUnimplementedValueAndContextStorageBackendServer() {
+}
+
+// UnsafeValueAndContextStorageBackendServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ValueAndContextStorageBackendServer will
+// result in compilation errors.
+type UnsafeValueAndContextStorageBackendServer interface {
+	mustEmbedUnimplementedValueAndContextStorageBackendServer()
+}
+
+func RegisterValueAndContextStorageBackendServer(s grpc.ServiceRegistrar, srv ValueAndContextStorageBackendServer) {
+	s.RegisterService(&ValueAndContextStorageBackend_ServiceDesc, srv)
+}
+
+func _ValueAndContextStorageBackend_GetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).GetValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/GetValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).GetValue(ctx, req.(*GetValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ValueAndContextStorageBackend_OnCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnCreateValueAndContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).OnCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/OnCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).OnCreate(ctx, req.(*OnCreateValueAndContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ValueAndContextStorageBackend_OnUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnUpdateValueAndContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).OnUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/OnUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).OnUpdate(ctx, req.(*OnUpdateValueAndContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ValueAndContextStorageBackend_OnDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnDeleteValueAndContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).OnDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/OnDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).OnDelete(ctx, req.(*OnDeleteValueAndContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ValueAndContextStorageBackend_GetLockedBy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLockedByRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).GetLockedBy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/GetLockedBy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).GetLockedBy(ctx, req.(*GetLockedByRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ValueAndContextStorageBackend_OnLock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnLockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).OnLock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/OnLock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).OnLock(ctx, req.(*OnLockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ValueAndContextStorageBackend_OnUnlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnUnlockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).OnUnlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/OnUnlock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).OnUnlock(ctx, req.(*OnUnlockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ValueAndContextStorageBackend_ServiceDesc is the grpc.ServiceDesc for ValueAndContextStorageBackend service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ValueAndContextStorageBackend_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "storage_backend.ValueAndContextStorageBackend",
+	HandlerType: (*ValueAndContextStorageBackendServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetValue",
+			Handler:    _ValueAndContextStorageBackend_GetValue_Handler,
+		},
+		{
+			MethodName: "OnCreate",
+			Handler:    _ValueAndContextStorageBackend_OnCreate_Handler,
+		},
+		{
+			MethodName: "OnUpdate",
+			Handler:    _ValueAndContextStorageBackend_OnUpdate_Handler,
+		},
+		{
+			MethodName: "OnDelete",
+			Handler:    _ValueAndContextStorageBackend_OnDelete_Handler,
+		},
+		{
+			MethodName: "GetLockedBy",
+			Handler:    _ValueAndContextStorageBackend_GetLockedBy_Handler,
+		},
+		{
+			MethodName: "OnLock",
+			Handler:    _ValueAndContextStorageBackend_OnLock_Handler,
+		},
+		{
+			MethodName: "OnUnlock",
+			Handler:    _ValueAndContextStorageBackend_OnUnlock_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "storage_backend.proto",
+}
+
+// ContextOnlyStorageBackendClient is the client API for ContextOnlyStorageBackend service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ContextOnlyStorageBackendClient interface {
+	//value
+	GetPreCreateValue(ctx context.Context, in *GetPreCreateValueRequest, opts ...grpc.CallOption) (*GetPreCreateValueResponse, error)
 	GetValue(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error)
 	OnCreate(ctx context.Context, in *OnCreateRequest, opts ...grpc.CallOption) (*OnCreateResponse, error)
 	OnUpdate(ctx context.Context, in *OnUpdateRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error)
@@ -33,82 +341,92 @@ type StorageBackendClient interface {
 	OnUnlock(ctx context.Context, in *OnUnlockRequest, opts ...grpc.CallOption) (*OnUnlockResponse, error)
 }
 
-type storageBackendClient struct {
+type contextOnlyStorageBackendClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewStorageBackendClient(cc grpc.ClientConnInterface) StorageBackendClient {
-	return &storageBackendClient{cc}
+func NewContextOnlyStorageBackendClient(cc grpc.ClientConnInterface) ContextOnlyStorageBackendClient {
+	return &contextOnlyStorageBackendClient{cc}
 }
 
-func (c *storageBackendClient) GetValue(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error) {
+func (c *contextOnlyStorageBackendClient) GetPreCreateValue(ctx context.Context, in *GetPreCreateValueRequest, opts ...grpc.CallOption) (*GetPreCreateValueResponse, error) {
+	out := new(GetPreCreateValueResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/GetPreCreateValue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contextOnlyStorageBackendClient) GetValue(ctx context.Context, in *GetValueRequest, opts ...grpc.CallOption) (*GetValueResponse, error) {
 	out := new(GetValueResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/GetValue", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/GetValue", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageBackendClient) OnCreate(ctx context.Context, in *OnCreateRequest, opts ...grpc.CallOption) (*OnCreateResponse, error) {
+func (c *contextOnlyStorageBackendClient) OnCreate(ctx context.Context, in *OnCreateRequest, opts ...grpc.CallOption) (*OnCreateResponse, error) {
 	out := new(OnCreateResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/OnCreate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/OnCreate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageBackendClient) OnUpdate(ctx context.Context, in *OnUpdateRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error) {
+func (c *contextOnlyStorageBackendClient) OnUpdate(ctx context.Context, in *OnUpdateRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error) {
 	out := new(OnUpdateResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/OnUpdate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/OnUpdate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageBackendClient) OnDelete(ctx context.Context, in *OnDeleteRequest, opts ...grpc.CallOption) (*OnDeleteResponse, error) {
+func (c *contextOnlyStorageBackendClient) OnDelete(ctx context.Context, in *OnDeleteRequest, opts ...grpc.CallOption) (*OnDeleteResponse, error) {
 	out := new(OnDeleteResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/OnDelete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/OnDelete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageBackendClient) GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error) {
+func (c *contextOnlyStorageBackendClient) GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error) {
 	out := new(GetLockedByResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/GetLockedBy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/GetLockedBy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageBackendClient) OnLock(ctx context.Context, in *OnLockRequest, opts ...grpc.CallOption) (*OnLockResponse, error) {
+func (c *contextOnlyStorageBackendClient) OnLock(ctx context.Context, in *OnLockRequest, opts ...grpc.CallOption) (*OnLockResponse, error) {
 	out := new(OnLockResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/OnLock", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/OnLock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storageBackendClient) OnUnlock(ctx context.Context, in *OnUnlockRequest, opts ...grpc.CallOption) (*OnUnlockResponse, error) {
+func (c *contextOnlyStorageBackendClient) OnUnlock(ctx context.Context, in *OnUnlockRequest, opts ...grpc.CallOption) (*OnUnlockResponse, error) {
 	out := new(OnUnlockResponse)
-	err := c.cc.Invoke(ctx, "/storage_backend.StorageBackend/OnUnlock", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextOnlyStorageBackend/OnUnlock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// StorageBackendServer is the server API for StorageBackend service.
-// All implementations must embed UnimplementedStorageBackendServer
+// ContextOnlyStorageBackendServer is the server API for ContextOnlyStorageBackend service.
+// All implementations must embed UnimplementedContextOnlyStorageBackendServer
 // for forward compatibility
-type StorageBackendServer interface {
-	// value
+type ContextOnlyStorageBackendServer interface {
+	//value
+	GetPreCreateValue(context.Context, *GetPreCreateValueRequest) (*GetPreCreateValueResponse, error)
 	GetValue(context.Context, *GetValueRequest) (*GetValueResponse, error)
 	OnCreate(context.Context, *OnCreateRequest) (*OnCreateResponse, error)
 	OnUpdate(context.Context, *OnUpdateRequest) (*OnUpdateResponse, error)
@@ -117,207 +435,233 @@ type StorageBackendServer interface {
 	GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error)
 	OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error)
 	OnUnlock(context.Context, *OnUnlockRequest) (*OnUnlockResponse, error)
-	mustEmbedUnimplementedStorageBackendServer()
+	mustEmbedUnimplementedContextOnlyStorageBackendServer()
 }
 
-// UnimplementedStorageBackendServer must be embedded to have forward compatible implementations.
-type UnimplementedStorageBackendServer struct {
+// UnimplementedContextOnlyStorageBackendServer must be embedded to have forward compatible implementations.
+type UnimplementedContextOnlyStorageBackendServer struct {
 }
 
-func (UnimplementedStorageBackendServer) GetValue(context.Context, *GetValueRequest) (*GetValueResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) GetPreCreateValue(context.Context, *GetPreCreateValueRequest) (*GetPreCreateValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPreCreateValue not implemented")
+}
+func (UnimplementedContextOnlyStorageBackendServer) GetValue(context.Context, *GetValueRequest) (*GetValueResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValue not implemented")
 }
-func (UnimplementedStorageBackendServer) OnCreate(context.Context, *OnCreateRequest) (*OnCreateResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) OnCreate(context.Context, *OnCreateRequest) (*OnCreateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnCreate not implemented")
 }
-func (UnimplementedStorageBackendServer) OnUpdate(context.Context, *OnUpdateRequest) (*OnUpdateResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) OnUpdate(context.Context, *OnUpdateRequest) (*OnUpdateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnUpdate not implemented")
 }
-func (UnimplementedStorageBackendServer) OnDelete(context.Context, *OnDeleteRequest) (*OnDeleteResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) OnDelete(context.Context, *OnDeleteRequest) (*OnDeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnDelete not implemented")
 }
-func (UnimplementedStorageBackendServer) GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLockedBy not implemented")
 }
-func (UnimplementedStorageBackendServer) OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnLock not implemented")
 }
-func (UnimplementedStorageBackendServer) OnUnlock(context.Context, *OnUnlockRequest) (*OnUnlockResponse, error) {
+func (UnimplementedContextOnlyStorageBackendServer) OnUnlock(context.Context, *OnUnlockRequest) (*OnUnlockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnUnlock not implemented")
 }
-func (UnimplementedStorageBackendServer) mustEmbedUnimplementedStorageBackendServer() {}
+func (UnimplementedContextOnlyStorageBackendServer) mustEmbedUnimplementedContextOnlyStorageBackendServer() {
+}
 
-// UnsafeStorageBackendServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to StorageBackendServer will
+// UnsafeContextOnlyStorageBackendServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ContextOnlyStorageBackendServer will
 // result in compilation errors.
-type UnsafeStorageBackendServer interface {
-	mustEmbedUnimplementedStorageBackendServer()
+type UnsafeContextOnlyStorageBackendServer interface {
+	mustEmbedUnimplementedContextOnlyStorageBackendServer()
 }
 
-func RegisterStorageBackendServer(s grpc.ServiceRegistrar, srv StorageBackendServer) {
-	s.RegisterService(&StorageBackend_ServiceDesc, srv)
+func RegisterContextOnlyStorageBackendServer(s grpc.ServiceRegistrar, srv ContextOnlyStorageBackendServer) {
+	s.RegisterService(&ContextOnlyStorageBackend_ServiceDesc, srv)
 }
 
-func _StorageBackend_GetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_GetPreCreateValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPreCreateValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextOnlyStorageBackendServer).GetPreCreateValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/GetPreCreateValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextOnlyStorageBackendServer).GetPreCreateValue(ctx, req.(*GetPreCreateValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContextOnlyStorageBackend_GetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetValueRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).GetValue(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).GetValue(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/GetValue",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/GetValue",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).GetValue(ctx, req.(*GetValueRequest))
+		return srv.(ContextOnlyStorageBackendServer).GetValue(ctx, req.(*GetValueRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StorageBackend_OnCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_OnCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OnCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).OnCreate(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).OnCreate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/OnCreate",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/OnCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).OnCreate(ctx, req.(*OnCreateRequest))
+		return srv.(ContextOnlyStorageBackendServer).OnCreate(ctx, req.(*OnCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StorageBackend_OnUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_OnUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OnUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).OnUpdate(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).OnUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/OnUpdate",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/OnUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).OnUpdate(ctx, req.(*OnUpdateRequest))
+		return srv.(ContextOnlyStorageBackendServer).OnUpdate(ctx, req.(*OnUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StorageBackend_OnDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_OnDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OnDeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).OnDelete(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).OnDelete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/OnDelete",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/OnDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).OnDelete(ctx, req.(*OnDeleteRequest))
+		return srv.(ContextOnlyStorageBackendServer).OnDelete(ctx, req.(*OnDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StorageBackend_GetLockedBy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_GetLockedBy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetLockedByRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).GetLockedBy(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).GetLockedBy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/GetLockedBy",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/GetLockedBy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).GetLockedBy(ctx, req.(*GetLockedByRequest))
+		return srv.(ContextOnlyStorageBackendServer).GetLockedBy(ctx, req.(*GetLockedByRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StorageBackend_OnLock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_OnLock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OnLockRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).OnLock(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).OnLock(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/OnLock",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/OnLock",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).OnLock(ctx, req.(*OnLockRequest))
+		return srv.(ContextOnlyStorageBackendServer).OnLock(ctx, req.(*OnLockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StorageBackend_OnUnlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContextOnlyStorageBackend_OnUnlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OnUnlockRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StorageBackendServer).OnUnlock(ctx, in)
+		return srv.(ContextOnlyStorageBackendServer).OnUnlock(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/storage_backend.StorageBackend/OnUnlock",
+		FullMethod: "/storage_backend.ContextOnlyStorageBackend/OnUnlock",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageBackendServer).OnUnlock(ctx, req.(*OnUnlockRequest))
+		return srv.(ContextOnlyStorageBackendServer).OnUnlock(ctx, req.(*OnUnlockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// StorageBackend_ServiceDesc is the grpc.ServiceDesc for StorageBackend service.
+// ContextOnlyStorageBackend_ServiceDesc is the grpc.ServiceDesc for ContextOnlyStorageBackend service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var StorageBackend_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "storage_backend.StorageBackend",
-	HandlerType: (*StorageBackendServer)(nil),
+var ContextOnlyStorageBackend_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "storage_backend.ContextOnlyStorageBackend",
+	HandlerType: (*ContextOnlyStorageBackendServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "GetPreCreateValue",
+			Handler:    _ContextOnlyStorageBackend_GetPreCreateValue_Handler,
+		},
+		{
 			MethodName: "GetValue",
-			Handler:    _StorageBackend_GetValue_Handler,
+			Handler:    _ContextOnlyStorageBackend_GetValue_Handler,
 		},
 		{
 			MethodName: "OnCreate",
-			Handler:    _StorageBackend_OnCreate_Handler,
+			Handler:    _ContextOnlyStorageBackend_OnCreate_Handler,
 		},
 		{
 			MethodName: "OnUpdate",
-			Handler:    _StorageBackend_OnUpdate_Handler,
+			Handler:    _ContextOnlyStorageBackend_OnUpdate_Handler,
 		},
 		{
 			MethodName: "OnDelete",
-			Handler:    _StorageBackend_OnDelete_Handler,
+			Handler:    _ContextOnlyStorageBackend_OnDelete_Handler,
 		},
 		{
 			MethodName: "GetLockedBy",
-			Handler:    _StorageBackend_GetLockedBy_Handler,
+			Handler:    _ContextOnlyStorageBackend_GetLockedBy_Handler,
 		},
 		{
 			MethodName: "OnLock",
-			Handler:    _StorageBackend_OnLock_Handler,
+			Handler:    _ContextOnlyStorageBackend_OnLock_Handler,
 		},
 		{
 			MethodName: "OnUnlock",
-			Handler:    _StorageBackend_OnUnlock_Handler,
+			Handler:    _ContextOnlyStorageBackend_OnUnlock_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

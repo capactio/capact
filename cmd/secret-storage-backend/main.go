@@ -64,7 +64,7 @@ func main() {
 	exitOnError(err, "while listening")
 
 	srv := grpc.NewServer()
-	storage_backend.RegisterStorageBackendServer(srv, handler)
+	storage_backend.RegisterValueAndContextStorageBackendServer(srv, handler)
 
 	go func() {
 		<-ctx.Done()
