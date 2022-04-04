@@ -168,7 +168,7 @@ Also, the additional, nice-to-have goals are:
               "$id": "#/properties/acceptValue",
               "type": "boolean",
               "const": false # in this case - no
-            },
+            } 
           },
           "additionalProperties": false
         }
@@ -296,6 +296,21 @@ Also, the additional, nice-to-have goals are:
 
         However, the `context` are backend-specific properties, which means Content Developer need to explicitly specify the backend as described later.
 
+        Some further workflow steps might need actual values. To allow that, a dedicated workflow step can be used:
+
+        ```yaml
+        - - name: resolve-dynamic-ti
+            template: resolve-dynamic-ti
+            arguments:
+              - name: input-artifact
+                from: "{{steps.resolve-dynamic-ti.outputs.artifacts.postgresql}}"
+              - name: backend
+                # Backend is already injected into workflow based on the `alias` from `spec.requires` property:
+                from: "{{workflow.outputs.artifacts.helm-template-storage}}"
+        ```
+
+        That container fills the `value` property based on a given storage backend. However, the storage backend would need to support fetching value based purely on context, without TypeInstance ID, that is the `PreCreateValue` method. For more information, see the [Storage backend service implementation](#storage-backend-service-implementation).
+
     1. To save a specific value with additional parameters:
     
         For example, for an implementation of Kubernetes secrets storage backend, which actually creates and updates these secrets during TypeInstance creation:
@@ -415,13 +430,8 @@ Also, the additional, nice-to-have goals are:
     1. Hub calls the registered storage backend service `onCreate` hook:
 
         ```proto
-        message TypeInstanceData {
-          string id = 1;
-          bytes value = 2;
-        }
-
         message OnCreateRequest {
-          TypeInstanceData typeinstance = 1;
+          string type_instance_id = 1;
           bytes context = 2;
         }
 
@@ -429,7 +439,7 @@ Also, the additional, nice-to-have goals are:
           optional bytes context = 1;
         }
 
-        service SearchService {
+        service ContextOnlyStorageBackend {
           rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
         }
         ```
@@ -480,10 +490,23 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     option go_package = "./storage_backend";
     package storage_backend;
     
+    message GetPreCreateValueRequest {
+      bytes context = 1;
+    }
+    
+    message GetPreCreateValueResponse {
+      optional bytes value = 1;
+    }
+    
     message OnCreateRequest {
-      string typeinstance_id = 1;
+      string type_instance_id = 1;
+      bytes context = 2;
+    }
+    
+    message OnCreateValueAndContextRequest {
+      string type_instance_id = 1;
       bytes value = 2;
-      bytes context = 3;
+      optional bytes context = 3;
     }
     
     message OnCreateResponse {
@@ -495,26 +518,41 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
       bytes value = 2;
     }
     
-    message OnUpdateRequest {
-      string typeinstance_id = 1;
+    message OnUpdateValueAndContextRequest {
+      string type_instance_id = 1;
       uint32 new_resource_version = 2;
       bytes new_value = 3;
       optional bytes context = 4;
+      optional string owner_id = 5;
+    }
+    
+    message OnUpdateRequest {
+      string type_instance_id = 1;
+      uint32 new_resource_version = 2;
+      bytes context = 3;
+      optional string owner_id = 4;
     }
     
     message OnUpdateResponse {
       optional bytes context = 1;
     }
     
+    message OnDeleteValueAndContextRequest {
+      string type_instance_id = 1;
+      optional bytes context = 2;
+      optional string owner_id = 3;
+    }
+    
     message OnDeleteRequest {
-      string typeinstance_id = 1;
+      string type_instance_id = 1;
       bytes context = 2;
+      optional string owner_id = 3;
     }
     
     message OnDeleteResponse {}
     
     message GetValueRequest {
-      string typeinstance_id = 1;
+      string type_instance_id = 1;
       uint32 resource_version = 2;
       bytes context = 3;
     }
@@ -527,7 +565,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     // lock messages
     
     message GetLockedByRequest {
-      string typeinstance_id = 1;
+      string type_instance_id = 1;
       bytes context = 2;
     }
     
@@ -536,7 +574,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     }
     
     message OnLockRequest {
-      string typeinstance_id = 1;
+      string type_instance_id = 1;
       bytes context = 2;
       string locked_by = 3;
     }
@@ -544,7 +582,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     message OnLockResponse {}
     
     message OnUnlockRequest {
-      string typeinstance_id = 1;
+      string type_instance_id = 1;
       bytes context = 2;
     }
     
@@ -552,8 +590,25 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     
     // services
     
-    service StorageBackend {
+    // ValueAndContextStorageBackend handles the full lifecycle of the TypeInstance.
+    // TypeInstance value is always provided as a part of request. Context may be provided but it is not required.
+    service ValueAndContextStorageBackend {
       // value
+      rpc GetValue(GetValueRequest) returns (GetValueResponse);
+      rpc OnCreate(OnCreateValueAndContextRequest) returns (OnCreateResponse);
+      rpc OnUpdate(OnUpdateValueAndContextRequest) returns (OnUpdateResponse);
+      rpc OnDelete(OnDeleteValueAndContextRequest) returns (OnDeleteResponse);
+    
+      // lock
+      rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
+      rpc OnLock(OnLockRequest) returns (OnLockResponse);
+      rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
+    }
+    
+    // ContextOnlyStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments.
+    service ContextOnlyStorageBackend {
+      //value
+      rpc GetPreCreateValue(GetPreCreateValueRequest) returns (GetPreCreateValueResponse);
       rpc GetValue(GetValueRequest) returns (GetValueResponse);
       rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
       rpc OnUpdate(OnUpdateRequest) returns (OnUpdateResponse);
@@ -561,17 +616,17 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     
       // lock
       rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
-      rpc OnLock(OnLockRequest) returns (OnLockRequest);
-      rpc OnUnlock(OnUnlockRequest) returns (OnUnlockRequest);
+      rpc OnLock(OnLockRequest) returns (OnLockResponse);
+      rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
     }
     ```
 
     </details>
 
-    An implementation of such service may vary between two use cases:
+    The service may implement a different API, depending on a given use case:
 
-    1. CRUD operations on output TypeInstance actually manages external resource (e.g. Vault) -> onCreate, onUpdate, and onDelete actually creates, updates and deletes a given resource.
-    1. output TypeInstance represents external resources managed in different way (e.g. via Capact actions - like Helm Runner). IMO we shouldn't move actual Helm release installation to TypeInstance "constructor").
+    1. `ValueAndContextStorageBackend`: CRUD operations on output TypeInstance actually manages external resource (e.g. Vault) -> onCreate, onUpdate, and onDelete actually creates, updates and deletes a given resource.
+    3. `ContextOnlyStorageBackend`: Output TypeInstance represents external resources managed in different way (e.g. via Capact actions - like Helm Runner). IMO we shouldn't move actual Helm release installation to TypeInstance "constructor").
 
         - The service can also implement watch for external resources (e.g. Kubernetes secrets) and call `createTypeInstances` and `deleteTypeInstances` Hub mutations. We may provide Go framework to speed up such development, similarly as we have with Runner concept.
 
@@ -933,11 +988,11 @@ To avoid implementing a special storage backend service every time we have such 
                 }        
               }
             },
-            "acceptValue": { # specifies if a given storage backend (app) accepts TypeInstance value while creating/updating TypeInstance, or just context.
+            "acceptValue": { # specifies if a given storage backend (app) accepts TypeInstance value while creating/updating TypeInstance, or just context
               "$id": "#/properties/acceptValue",
               "type": "boolean",
               "const": false # in this case - no
-            },
+            }
           },
           "additionalProperties": false
         }
@@ -1228,6 +1283,7 @@ Once approved, we need to address the following list of items:
     - Extend `capact-outputTypeInstances` syntax
     - Set proper `uses` relations between storage backend TypeInstance and other TypeInstances
     - Modify TypeInstance create/update/delete images (named as "Argo actions") to take new input
+    - ignore TypeInstance value if a given Storage Backend is dynamic
 1. Update Policy
     - Add new properties
     - Handle common TypeInstance injections
@@ -1238,3 +1294,6 @@ Once approved, we need to address the following list of items:
 1. Runners
     - Remove `output.goTemplate`
     - Stop supporting usage of funcs from `_helpers.tpl` in case of Helm runner
+1. Support unpacking value by Jinja2 and Artifact Merger
+1. Add generic container to enrich TypeInstance (run `GetPreCreateValue`) at the end of a given workflow
+  - Manually added by Content Developer 
