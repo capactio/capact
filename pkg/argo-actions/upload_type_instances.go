@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	storage_backend "capact.io/capact/pkg/hub/storage-backend"
+
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/validation"
@@ -92,7 +94,12 @@ func (u *Upload) Do(ctx context.Context) error {
 		typeInstanceValues[f.Name()] = values
 	}
 
-	if err := u.render(payload, typeInstanceValues); err != nil {
+	backends, err := u.resolveBackendsValues(ctx, payload.TypeInstances)
+	if err != nil {
+		return errors.Wrap(err, "while resolving storage backends values")
+	}
+
+	if err := u.render(payload, typeInstanceValues, u.shouldIncludeTIValueFn(backends)); err != nil {
 		return errors.Wrap(err, "while rendering CreateTypeInstancesInput")
 	}
 
@@ -121,7 +128,21 @@ func (u *Upload) Do(ctx context.Context) error {
 	return nil
 }
 
-func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values map[string]map[string]interface{}) error {
+func (u *Upload) resolveBackendsValues(ctx context.Context, typeInstances []*graphqllocal.CreateTypeInstanceInput) (map[string]storage_backend.TypeValue, error) {
+	// get IDs
+	var ids []string
+	for _, ti := range typeInstances {
+		if ti.Backend == nil {
+			continue
+		}
+
+		ids = append(ids, ti.Backend.ID)
+	}
+
+	return resolveBackendsValues(ctx, u.client, ids)
+}
+
+func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values map[string]map[string]interface{}, shouldIncludeValue func(tiToUpload graphqllocal.CreateTypeInstanceInput) (bool, error)) error {
 	for i := range payload.TypeInstances {
 		typeInstance := payload.TypeInstances[i]
 
@@ -140,28 +161,53 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 			return errors.Wrap(err, "while marshaling TypeInstance")
 		}
 
-		unmarshalledTI := UploadTypeInstanceData{}
-		err = json.Unmarshal(data, &unmarshalledTI)
+		unmarshalledTIValue := UploadTypeInstanceData{}
+		err = json.Unmarshal(data, &unmarshalledTIValue)
 		if err != nil {
 			return errors.Wrap(err, "while unmarshaling TypeInstance")
 		}
 
-		typeInstance.Value = unmarshalledTI.Value
-		if unmarshalledTI.Backend != nil {
-			if typeInstance.Backend != nil {
-				typeInstance.Backend.Context = unmarshalledTI.Backend.Context
-			} else {
-				typeInstance.Backend = &graphqllocal.TypeInstanceBackendInput{
-					Context: unmarshalledTI.Backend.Context,
-				}
+		// check
+		if unmarshalledTIValue.Backend != nil {
+			if typeInstance.Backend == nil {
+				typeInstance.Backend = &graphqllocal.TypeInstanceBackendInput{}
 			}
+
+			typeInstance.Backend.Context = unmarshalledTIValue.Backend.Context
 		}
+
+		includeValue, err := shouldIncludeValue(*typeInstance)
+		if err != nil {
+			return err
+		}
+
+		if !includeValue {
+			u.log.Info("Skipping sending TypeInstance value", zap.Stringp("Alias", typeInstance.Alias), zap.String("Backend ID", typeInstance.Backend.ID))
+			continue
+		}
+
+		typeInstance.Value = unmarshalledTIValue.Value
 	}
 	return nil
 }
 
 func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) ([]graphqllocal.CreateTypeInstanceOutput, error) {
 	return u.client.Local.CreateTypeInstances(ctx, in)
+}
+
+func (u *Upload) shouldIncludeTIValueFn(backends map[string]storage_backend.TypeValue) func(tiToCreate graphqllocal.CreateTypeInstanceInput) (bool, error) {
+	return func(tiToCreate graphqllocal.CreateTypeInstanceInput) (bool, error) {
+		if tiToCreate.Backend == nil || tiToCreate.Backend.ID == "" {
+			return true, nil
+		}
+
+		backend, exists := backends[tiToCreate.Backend.ID]
+		if !exists {
+			return false, fmt.Errorf("cannot retrieve value for the storage backend TypeInstance with ID %q", tiToCreate.Backend.ID)
+		}
+
+		return backend.AcceptValue, nil
+	}
 }
 
 func isTypeInstanceWithLegacySyntax(logger *zap.Logger, value map[string]interface{}) bool {

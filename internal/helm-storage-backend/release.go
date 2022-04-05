@@ -3,6 +3,7 @@ package helmstoragebackend
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -63,32 +64,39 @@ func NewReleaseHandler(log *zap.Logger, helmRelFetcher *HelmReleaseFetcher) (*Re
 
 // OnCreate checks whether a given Helm release is accessible this storage backend.
 func (h *ReleaseHandler) OnCreate(_ context.Context, req *pb.OnCreateRequest) (*pb.OnCreateResponse, error) {
-	if _, _, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context); err != nil { // check if accessible
+	if _, _, err := h.fetchHelmReleaseForTI(req.TypeInstanceId, req.Context); err != nil { // check if accessible
 		return nil, err
 	}
 	return &pb.OnCreateResponse{}, nil
 }
 
-// GetValue returns a value for a given TypeInstance.
-func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*pb.GetValueResponse, error) {
-	rel, relCtx, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context)
+// GetPreCreateValue returns a value for a given context without TypeInstance details.
+func (h *ReleaseHandler) GetPreCreateValue(ctx context.Context, req *pb.GetPreCreateValueRequest) (*pb.GetPreCreateValueResponse, error) {
+	rel, relCtx, err := h.fetchHelmReleaseForPrecreate(req.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	releaseData := ReleaseDetails{
-		Name:      rel.Name,
-		Namespace: rel.Namespace,
-		Chart: ChartDetails{
-			Name:    rel.Chart.Metadata.Name,
-			Version: rel.Chart.Metadata.Version,
-			Repo:    relCtx.ChartLocation,
-		},
+	value, err := h.marshalReleaseDetails(rel, relCtx)
+	if err != nil {
+		return nil, err
 	}
 
-	value, err := json.Marshal(releaseData)
+	return &pb.GetPreCreateValueResponse{
+		Value: value,
+	}, nil
+}
+
+// GetValue returns a value for a given TypeInstance.
+func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*pb.GetValueResponse, error) {
+	rel, relCtx, err := h.fetchHelmReleaseForTI(req.TypeInstanceId, req.Context)
 	if err != nil {
-		return nil, errors.Wrap(err, "while marshaling response value")
+		return nil, err
+	}
+
+	value, err := h.marshalReleaseDetails(rel, relCtx)
+	if err != nil {
+		return nil, err
 	}
 
 	return &pb.GetValueResponse{
@@ -98,7 +106,7 @@ func (h *ReleaseHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*
 
 // OnUpdate checks whether a given Helm release is accessible this storage backend.
 func (h *ReleaseHandler) OnUpdate(_ context.Context, req *pb.OnUpdateRequest) (*pb.OnUpdateResponse, error) {
-	if _, _, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context); err != nil { // check if accessible
+	if _, _, err := h.fetchHelmReleaseForTI(req.TypeInstanceId, req.Context); err != nil { // check if accessible
 		return nil, err
 	}
 	return &pb.OnUpdateResponse{}, nil
@@ -144,16 +152,45 @@ func (*ReleaseHandler) OnDeleteRevision(context.Context, *pb.OnDeleteRevisionReq
 	return &pb.OnDeleteRevisionResponse{}, nil
 }
 
-func (h *ReleaseHandler) fetchHelmRelease(ti string, ctx []byte) (*release.Release, *ReleaseContext, error) {
-	relCtx, err := h.getReleaseContext(ctx)
+func (h *ReleaseHandler) marshalReleaseDetails(rel *release.Release, relCtx *ReleaseContext) ([]byte, error) {
+	releaseData := ReleaseDetails{
+		Name:      rel.Name,
+		Namespace: rel.Namespace,
+		Chart: ChartDetails{
+			Name:    rel.Chart.Metadata.Name,
+			Version: rel.Chart.Metadata.Version,
+			Repo:    relCtx.ChartLocation,
+		},
+	}
+
+	value, err := json.Marshal(releaseData)
+	if err != nil {
+		return nil, gRPCInternalError(errors.Wrap(err, "while marshaling response value"))
+	}
+
+	return value, nil
+}
+
+func (h *ReleaseHandler) fetchHelmReleaseForPrecreate(relCtx []byte) (*release.Release, *ReleaseContext, error) {
+	additionalCtxMsg := "TypeInstance ID: not yet known"
+	return h.fetchHelmRelease(relCtx, additionalCtxMsg)
+}
+
+func (h *ReleaseHandler) fetchHelmReleaseForTI(ti string, relCtx []byte) (*release.Release, *ReleaseContext, error) {
+	additionalCtxMsg := fmt.Sprintf("TypeInstance ID: '%s'", ti)
+	return h.fetchHelmRelease(relCtx, additionalCtxMsg)
+}
+
+func (h *ReleaseHandler) fetchHelmRelease(relCtx []byte, additionalCtxMsg string) (*release.Release, *ReleaseContext, error) {
+	resolvedRelCtx, err := h.getReleaseContext(relCtx)
 	if err != nil {
 		return nil, nil, gRPCInternalError(err)
 	}
 
-	rel, err := h.fetcher.FetchHelmRelease(ti, relCtx.HelmRelease)
+	rel, err := h.fetcher.FetchHelmRelease(resolvedRelCtx.HelmRelease, ptr.String(additionalCtxMsg))
 	if err != nil {
 		return nil, nil, err // it already handles grpc errors properly
 	}
 
-	return rel, relCtx, nil
+	return rel, resolvedRelCtx, nil
 }

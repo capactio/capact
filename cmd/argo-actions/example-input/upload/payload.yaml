@@ -1,0 +1,21 @@
+typeInstances:
+  - alias: postgresql-helm-release
+    attributes: []
+    backend:
+      context: null
+      id: "{backend ID}"
+    createdBy: default/example
+    typeRef:
+      path: cap.type.helm.chart.release
+      revision: 0.1.0
+    value: null
+  - alias: sample
+    attributes: []
+    createdBy: default/example
+    typeRef:
+      path: cap.type.capactio.capact.validation.single-key
+      revision: 0.1.0
+    value: null
+usesRelations:
+  - from: postgresql-helm-release
+    to: sample
