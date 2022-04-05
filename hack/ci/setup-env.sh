@@ -6,7 +6,7 @@ export NAME="stage"
 # LOAD_BALANCER_EXTERNAL_IP is a reserved IP in "External IP addresses" on GCP. It needs to be in the same region.
 # Remember when changing LOAD_BALANCER_EXTERNAL_IP to update record A in the Cloud DNS for gateway
 cat <<EOT >> "$GITHUB_ENV"
-GO_VERSION=^1.16.3
+GO_VERSION=1.17.x
 GOLANGCI_LINT_VERSION=v1.41.1
 GOLANGCI_LINT_TIMEOUT=10m
 SKIP_DEPS_INSTALLATION=false
