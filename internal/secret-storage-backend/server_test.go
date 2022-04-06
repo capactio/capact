@@ -6,15 +6,16 @@ import (
 	"net"
 	"testing"
 
-	"capact.io/capact/internal/logger"
-	"capact.io/capact/internal/ptr"
-	secret_storage_backend "capact.io/capact/internal/secret-storage-backend"
-	"capact.io/capact/pkg/hub/api/grpc/storage_backend"
 	tellercore "github.com/spectralops/teller/pkg/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
+
+	"capact.io/capact/internal/logger"
+	"capact.io/capact/internal/ptr"
+	secret_storage_backend "capact.io/capact/internal/secret-storage-backend"
+	"capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
 func TestHandler_GetValue(t *testing.T) {
@@ -638,6 +639,146 @@ func TestHandler_OnDelete(t *testing.T) {
 
 			// when
 			res, err := client.OnDelete(ctx, req)
+
+			// no modification of additional params, asserting nil
+			assert.Equal(t, testCase.ExpectedProviderState, testCase.InputProvider.secrets)
+
+			// then
+			if testCase.ExpectedErrorMessage != nil {
+				assert.Nil(t, res)
+				require.Error(t, err)
+				assert.EqualError(t, err, *testCase.ExpectedErrorMessage)
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, res)
+		})
+	}
+}
+
+func TestHandler_OnDeleteRevision(t *testing.T) {
+	// given
+	providerName := "fake"
+	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
+	req := &storage_backend.OnDeleteRevisionRequest{
+		TypeInstanceId:  "uuid",
+		Context:         reqContext,
+		ResourceVersion: uint32(2),
+		OwnerId:         ptr.String("owner-name"),
+	}
+
+	path := fmt.Sprintf("/capact/%s", req.TypeInstanceId)
+
+	testCases := []struct {
+		Name                  string
+		InputProvider         *fakeProvider
+		ExpectedProviderState map[string]map[string]string
+		ExpectedErrorMessage  *string
+	}{
+		{
+			Name:                  "Should return not found error for empty database",
+			InputProvider:         newFakeProvider(nil),
+			ExpectedProviderState: nil,
+			ExpectedErrorMessage:  ptr.String(`rpc error: code = NotFound desc = TypeInstance "uuid" in revision 2 was not found`),
+		},
+		{
+			Name: "Should return not found if revision doesn't exist",
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1": "key-one-value",
+				}}),
+			ExpectedProviderState: map[string]map[string]string{
+				path: {
+					"1": "key-one-value",
+				}},
+			ExpectedErrorMessage: ptr.String(`rpc error: code = NotFound desc = TypeInstance "uuid" in revision 2 was not found`),
+		},
+		{
+			Name: "Should remove revision",
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1": "key-one-value",
+					"2": "key-two-value",
+				},
+				"cant-touch-this": {
+					"Music":        "hits me so hard",
+					"Makes me say": "Oh, my Lord",
+				},
+			}),
+			ExpectedProviderState: map[string]map[string]string{
+				path: {
+					"1": "key-one-value",
+				},
+				"cant-touch-this": {
+					"Music":        "hits me so hard",
+					"Makes me say": "Oh, my Lord",
+				},
+			},
+		},
+		{
+			Name: "Should return locked error if owner doesn't match",
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1":         "key-one-value",
+					"2":         "key-two-value",
+					"locked_by": "foo/bar",
+				},
+			}),
+			ExpectedProviderState: map[string]map[string]string{
+				path: {
+					"1":         "key-one-value",
+					"2":         "key-two-value",
+					"locked_by": "foo/bar",
+				},
+			},
+			ExpectedErrorMessage: ptr.String(`rpc error: code = FailedPrecondition desc = typeInstance locked: path "/capact/uuid" contains "locked_by" property with value "foo/bar"`),
+		},
+		{
+			Name: "Should remove locked TypeInstance if owner matches",
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"1":         "key-one-value",
+					"2":         "key-two-value",
+					"locked_by": ptr.StringPtrToString(req.OwnerId),
+				},
+			}),
+			ExpectedProviderState: map[string]map[string]string{
+				path: {
+					"1":         "key-one-value",
+					"locked_by": ptr.StringPtrToString(req.OwnerId),
+				},
+			},
+		},
+		{
+			Name: "Should remove TypeInstance if the last revision was removed",
+			InputProvider: newFakeProvider(map[string]map[string]string{
+				path: {
+					"2": "key-one-value",
+				},
+			}),
+			ExpectedProviderState: map[string]map[string]string{
+				// empty
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			srv, listener := setupServerAndListener(t, map[string]tellercore.Provider{
+				providerName: testCase.InputProvider,
+			})
+			defer srv.Stop()
+
+			ctx := context.Background()
+			conn, err := grpc.DialContext(ctx, "", dialOpts(listener)...)
+			require.NoError(t, err)
+			defer conn.Close()
+
+			client := storage_backend.NewStorageBackendClient(conn)
+
+			// when
+			res, err := client.OnDeleteRevision(ctx, req)
 
 			// no modification of additional params, asserting nil
 			assert.Equal(t, testCase.ExpectedProviderState, testCase.InputProvider.secrets)

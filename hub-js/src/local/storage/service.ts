@@ -2,6 +2,7 @@ import {
   GetValueRequest,
   OnCreateRequest,
   OnDeleteRequest,
+  OnDeleteRevisionRequest,
   OnLockRequest,
   OnUnlockRequest,
   OnUpdateRequest,
@@ -80,6 +81,15 @@ export interface DeleteInput {
   typeInstance: {
     id: string;
     ownerID?: string;
+  };
+}
+
+export interface DeleteRevisionInput {
+  backend: TypeInstanceBackendInput;
+  typeInstance: {
+    id: string;
+    ownerID?: string;
+    resourceVersion: number;
   };
 }
 
@@ -269,6 +279,37 @@ export default class DelegatedStorageService {
         ownerId: input.typeInstance.ownerID,
       };
       await backend.client.onDelete(req);
+    }
+  }
+
+  /**
+   * Deletes a given TypeInstance's revision
+   *
+   * @param inputs - Describes what should be deleted.
+   *
+   */
+  async DeleteRevision(...inputs: DeleteRevisionInput[]) {
+    for (const input of inputs) {
+      logger.debug("Deleting TypeInstance's revision from external backend", {
+        typeInstanceId: input.typeInstance.id,
+        revision: input.typeInstance.resourceVersion,
+        backendId: input.backend.id,
+      });
+      const backend = await this.getBackendContainer(input.backend.id);
+
+      const validateErr = this.validateInput(input, backend.validateSpec);
+      if (validateErr) {
+        throw Error(
+          `External backend "${input.backend.id}": ${validateErr.message}`
+        );
+      }
+      const req: OnDeleteRevisionRequest = {
+        typeInstanceId: input.typeInstance.id,
+        resourceVersion: input.typeInstance.resourceVersion,
+        context: DelegatedStorageService.encode(input.backend.context),
+        ownerId: input.typeInstance.ownerID,
+      };
+      await backend.client.onDeleteRevision(req);
     }
   }
 

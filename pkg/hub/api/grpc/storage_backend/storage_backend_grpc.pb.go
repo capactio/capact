@@ -335,6 +335,7 @@ type ContextStorageBackendClient interface {
 	OnCreate(ctx context.Context, in *OnCreateRequest, opts ...grpc.CallOption) (*OnCreateResponse, error)
 	OnUpdate(ctx context.Context, in *OnUpdateRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error)
 	OnDelete(ctx context.Context, in *OnDeleteRequest, opts ...grpc.CallOption) (*OnDeleteResponse, error)
+	OnDeleteRevision(ctx context.Context, in *OnDeleteRevisionRequest, opts ...grpc.CallOption) (*OnDeleteRevisionResponse, error)
 	// lock
 	GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error)
 	OnLock(ctx context.Context, in *OnLockRequest, opts ...grpc.CallOption) (*OnLockResponse, error)
@@ -394,6 +395,15 @@ func (c *contextStorageBackendClient) OnDelete(ctx context.Context, in *OnDelete
 	return out, nil
 }
 
+func (c *contextStorageBackendClient) OnDeleteRevision(ctx context.Context, in *OnDeleteRevisionRequest, opts ...grpc.CallOption) (*OnDeleteRevisionResponse, error) {
+	out := new(OnDeleteRevisionResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ContextStorageBackend/OnDeleteRevision", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *contextStorageBackendClient) GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error) {
 	out := new(GetLockedByResponse)
 	err := c.cc.Invoke(ctx, "/storage_backend.ContextStorageBackend/GetLockedBy", in, out, opts...)
@@ -431,6 +441,7 @@ type ContextStorageBackendServer interface {
 	OnCreate(context.Context, *OnCreateRequest) (*OnCreateResponse, error)
 	OnUpdate(context.Context, *OnUpdateRequest) (*OnUpdateResponse, error)
 	OnDelete(context.Context, *OnDeleteRequest) (*OnDeleteResponse, error)
+	OnDeleteRevision(context.Context, *OnDeleteRevisionRequest) (*OnDeleteRevisionResponse, error)
 	// lock
 	GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error)
 	OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error)
@@ -456,6 +467,9 @@ func (UnimplementedContextStorageBackendServer) OnUpdate(context.Context, *OnUpd
 }
 func (UnimplementedContextStorageBackendServer) OnDelete(context.Context, *OnDeleteRequest) (*OnDeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnDelete not implemented")
+}
+func (UnimplementedContextStorageBackendServer) OnDeleteRevision(context.Context, *OnDeleteRevisionRequest) (*OnDeleteRevisionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnDeleteRevision not implemented")
 }
 func (UnimplementedContextStorageBackendServer) GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLockedBy not implemented")
@@ -569,6 +583,24 @@ func _ContextStorageBackend_OnDelete_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContextStorageBackend_OnDeleteRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnDeleteRevisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContextStorageBackendServer).OnDeleteRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ContextStorageBackend/OnDeleteRevision",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContextStorageBackendServer).OnDeleteRevision(ctx, req.(*OnDeleteRevisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ContextStorageBackend_GetLockedBy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetLockedByRequest)
 	if err := dec(in); err != nil {
@@ -649,6 +681,10 @@ var ContextStorageBackend_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OnDelete",
 			Handler:    _ContextStorageBackend_OnDelete_Handler,
+		},
+		{
+			MethodName: "OnDeleteRevision",
+			Handler:    _ContextStorageBackend_OnDeleteRevision_Handler,
 		},
 		{
 			MethodName: "GetLockedBy",

@@ -5,7 +5,7 @@ services:
       hubjs:
         condition: service_healthy
     environment:
-      - LOCALHUB_ADDR=http://hubjs:8080/graphql
+      - LOCAL_HUB_ADDR=http://hubjs:8080/graphql
       - GRPC_SECRET_STORAGE_BACKEND_ADDR=test-storage-backend:50051
   hubjs:
     image: "${DOCKER_REPOSITORY}/hub-js:${DOCKER_TAG}"

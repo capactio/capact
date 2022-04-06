@@ -265,6 +265,12 @@ func TestRelease_NOP_Methods(t *testing.T) {
 				return svc.OnUnlock(ctx, nil)
 			},
 		},
+		{
+			name: "no operation for OnDeleteRevision",
+			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+				return svc.OnDeleteRevision(ctx, nil)
+			},
+		},
 	}
 	for _, test := range tests {
 		test := test

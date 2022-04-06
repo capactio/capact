@@ -65,6 +65,15 @@ export interface OnDeleteRequest {
 
 export interface OnDeleteResponse {}
 
+export interface OnDeleteRevisionRequest {
+  typeInstanceId: string;
+  context?: Uint8Array | undefined;
+  ownerId?: string | undefined;
+  resourceVersion: number;
+}
+
+export interface OnDeleteRevisionResponse {}
+
 export interface GetValueRequest {
   typeInstanceId: string;
   resourceVersion: number;
@@ -985,6 +994,154 @@ export const OnDeleteResponse = {
   },
 };
 
+function createBaseOnDeleteRevisionRequest(): OnDeleteRevisionRequest {
+  return {
+    typeInstanceId: "",
+    context: undefined,
+    ownerId: undefined,
+    resourceVersion: 0,
+  };
+}
+
+export const OnDeleteRevisionRequest = {
+  encode(
+    message: OnDeleteRevisionRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.typeInstanceId !== "") {
+      writer.uint32(10).string(message.typeInstanceId);
+    }
+    if (message.context !== undefined) {
+      writer.uint32(18).bytes(message.context);
+    }
+    if (message.ownerId !== undefined) {
+      writer.uint32(26).string(message.ownerId);
+    }
+    if (message.resourceVersion !== 0) {
+      writer.uint32(32).uint32(message.resourceVersion);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): OnDeleteRevisionRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOnDeleteRevisionRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.typeInstanceId = reader.string();
+          break;
+        case 2:
+          message.context = reader.bytes();
+          break;
+        case 3:
+          message.ownerId = reader.string();
+          break;
+        case 4:
+          message.resourceVersion = reader.uint32();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): OnDeleteRevisionRequest {
+    return {
+      typeInstanceId: isSet(object.typeInstanceId)
+        ? String(object.typeInstanceId)
+        : "",
+      context: isSet(object.context)
+        ? bytesFromBase64(object.context)
+        : undefined,
+      ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
+      resourceVersion: isSet(object.resourceVersion)
+        ? Number(object.resourceVersion)
+        : 0,
+    };
+  },
+
+  toJSON(message: OnDeleteRevisionRequest): unknown {
+    const obj: any = {};
+    message.typeInstanceId !== undefined &&
+      (obj.typeInstanceId = message.typeInstanceId);
+    message.context !== undefined &&
+      (obj.context =
+        message.context !== undefined
+          ? base64FromBytes(message.context)
+          : undefined);
+    message.ownerId !== undefined && (obj.ownerId = message.ownerId);
+    message.resourceVersion !== undefined &&
+      (obj.resourceVersion = Math.round(message.resourceVersion));
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<OnDeleteRevisionRequest>
+  ): OnDeleteRevisionRequest {
+    const message = createBaseOnDeleteRevisionRequest();
+    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.context = object.context ?? undefined;
+    message.ownerId = object.ownerId ?? undefined;
+    message.resourceVersion = object.resourceVersion ?? 0;
+    return message;
+  },
+};
+
+function createBaseOnDeleteRevisionResponse(): OnDeleteRevisionResponse {
+  return {};
+}
+
+export const OnDeleteRevisionResponse = {
+  encode(
+    _: OnDeleteRevisionResponse,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): OnDeleteRevisionResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOnDeleteRevisionResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): OnDeleteRevisionResponse {
+    return {};
+  },
+
+  toJSON(_: OnDeleteRevisionResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<OnDeleteRevisionResponse>
+  ): OnDeleteRevisionResponse {
+    const message = createBaseOnDeleteRevisionResponse();
+    return message;
+  },
+};
+
 function createBaseGetValueRequest(): GetValueRequest {
   return { typeInstanceId: "", resourceVersion: 0, context: new Uint8Array() };
 }
@@ -1586,6 +1743,14 @@ export const ContextStorageBackendDefinition = {
       requestType: OnDeleteRequest,
       requestStream: false,
       responseType: OnDeleteResponse,
+      responseStream: false,
+      options: {},
+    },
+    onDeleteRevision: {
+      name: "OnDeleteRevision",
+      requestType: OnDeleteRevisionRequest,
+      requestStream: false,
+      responseType: OnDeleteRevisionResponse,
       responseStream: false,
       options: {},
     },

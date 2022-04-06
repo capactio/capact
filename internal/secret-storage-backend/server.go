@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"capact.io/capact/internal/ptr"
-	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 	"github.com/pkg/errors"
 	tellercore "github.com/spectralops/teller/pkg/core"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"capact.io/capact/internal/ptr"
+	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
 // Context holds Secret storage backend specific parameters.
@@ -266,6 +267,40 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteValueAndContex
 	}
 
 	return &pb.OnDeleteResponse{}, nil
+}
+
+// OnDeleteRevision handles TypeInstance's revision deletion by removing a secret entry in a given provider.
+// It checks whether a given TypeInstance is locked before doing such operation.
+func (h *Handler) OnDeleteRevision(ctx context.Context, request *pb.OnDeleteRevisionRequest) (*pb.OnDeleteRevisionResponse, error) {
+	if request == nil {
+		return nil, NilRequestInputError
+	}
+
+	provider, err := h.getProviderFromContext(request.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	key := h.storageKeyForTypeInstanceValue(provider, request.TypeInstanceId, request.ResourceVersion)
+
+	entry, err := h.getEntry(provider, key)
+	if err != nil {
+		return nil, err
+	}
+	if !entry.IsFound {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("TypeInstance %q in revision %d was not found", request.TypeInstanceId, request.ResourceVersion))
+	}
+
+	if err := h.ensureSecretCanBeDeleted(provider, key, request.OwnerId); err != nil {
+		return nil, err
+	}
+
+	err = h.deleteEntry(provider, key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.OnDeleteRevisionResponse{}, nil
 }
 
 func (h *Handler) getProviderFromContext(contextBytes []byte) (tellercore.Provider, error) {
