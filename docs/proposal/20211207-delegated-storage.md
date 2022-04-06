@@ -439,7 +439,7 @@ Also, the additional, nice-to-have goals are:
           optional bytes context = 1;
         }
 
-        service ContextOnlyStorageBackend {
+        service ContextStorageBackend {
           rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
         }
         ```
@@ -605,8 +605,8 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
       rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
     }
     
-    // ContextOnlyStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments.
-    service ContextOnlyStorageBackend {
+    // ContextStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments.
+    service ContextStorageBackend {
       //value
       rpc GetPreCreateValue(GetPreCreateValueRequest) returns (GetPreCreateValueResponse);
       rpc GetValue(GetValueRequest) returns (GetValueResponse);
@@ -626,7 +626,7 @@ Capact Local Hub calls proper storage backend service while accessing the TypeIn
     The service may implement a different API, depending on a given use case:
 
     1. `ValueAndContextStorageBackend`: CRUD operations on output TypeInstance actually manages external resource (e.g. Vault) -> onCreate, onUpdate, and onDelete actually creates, updates and deletes a given resource.
-    3. `ContextOnlyStorageBackend`: Output TypeInstance represents external resources managed in different way (e.g. via Capact actions - like Helm Runner). IMO we shouldn't move actual Helm release installation to TypeInstance "constructor").
+    3. `ContextStorageBackend`: Output TypeInstance represents external resources managed in different way (e.g. via Capact actions - like Helm Runner). IMO we shouldn't move actual Helm release installation to TypeInstance "constructor").
 
         - The service can also implement watch for external resources (e.g. Kubernetes secrets) and call `createTypeInstances` and `deleteTypeInstances` Hub mutations. We may provide Go framework to speed up such development, similarly as we have with Runner concept.
 

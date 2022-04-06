@@ -5,7 +5,7 @@ import {
   OnLockRequest,
   OnUnlockRequest,
   OnUpdateRequest,
-  ContextOnlyStorageBackendDefinition,
+  ContextStorageBackendDefinition,
   ValueAndContextStorageBackendDefinition,
   OnUpdateValueAndContextRequest,
   OnCreateValueAndContextRequest,
@@ -25,7 +25,7 @@ import { JSONSchemaType } from "ajv/lib/types/json-schema";
 import { TextEncoder } from "util";
 
 type StorageClient = Client<
-  | typeof ContextOnlyStorageBackendDefinition
+  | typeof ContextStorageBackendDefinition
   | typeof ValueAndContextStorageBackendDefinition
 >;
 
@@ -400,7 +400,7 @@ export default class DelegatedStorageService {
 
       const clientDef = spec.acceptValue
         ? ValueAndContextStorageBackendDefinition
-        : ContextOnlyStorageBackendDefinition;
+        : ContextStorageBackendDefinition;
       const client: StorageClient = createClient(clientDef, channel);
 
       const storageSpec = {

@@ -22,7 +22,7 @@ import (
 // repositoryCache Helm cache for repositories
 const repositoryCache = "/tmp/helm"
 
-var _ pb.ContextOnlyStorageBackendServer = &TemplateHandler{}
+var _ pb.ContextStorageBackendServer = &TemplateHandler{}
 
 type (
 	// TemplateContext holds context used by Helm template storage backend.
@@ -36,7 +36,7 @@ type (
 
 // TemplateHandler handles incoming requests to the Helm template storage backend gRPC server.
 type TemplateHandler struct {
-	pb.UnimplementedContextOnlyStorageBackendServer
+	pb.UnimplementedContextStorageBackendServer
 
 	log           *zap.Logger
 	fetcher       *HelmReleaseFetcher

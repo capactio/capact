@@ -117,8 +117,8 @@ service ValueAndContextStorageBackend {
   rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
 }
 
-// ContextOnlyStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments.
-service ContextOnlyStorageBackend {
+// ContextStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments.
+service ContextStorageBackend {
   //value
   rpc GetPreCreateValue(GetPreCreateValueRequest) returns (GetPreCreateValueResponse);
   rpc GetValue(GetValueRequest) returns (GetValueResponse);

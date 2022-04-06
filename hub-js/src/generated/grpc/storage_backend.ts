@@ -1543,10 +1543,10 @@ export const ValueAndContextStorageBackendDefinition = {
   },
 } as const;
 
-/** ContextOnlyStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments. */
-export const ContextOnlyStorageBackendDefinition = {
-  name: "ContextOnlyStorageBackend",
-  fullName: "storage_backend.ContextOnlyStorageBackend",
+/** ContextStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments. */
+export const ContextStorageBackendDefinition = {
+  name: "ContextStorageBackend",
+  fullName: "storage_backend.ContextStorageBackend",
   methods: {
     /** value */
     getPreCreateValue: {
