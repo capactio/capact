@@ -19,6 +19,7 @@ readonly GOLANGCI_LINT_VERSION="v1.41.1"
 
 LINT_TIMEOUT=${LINT_TIMEOUT:-10m}
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
+SKIP_GOLANGCI_LINT=${SKIP_GOLANGCI_LINT:-false}
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
@@ -38,7 +39,7 @@ host::install::golangci() {
     export PATH="${TMP_DIR}/bin:${PATH}"
 
     shout "Install the golangci-lint ${GOLANGCI_LINT_VERSION} locally to a tempdir..."
-    curl -sfSL -o "${TMP_DIR}/golangci-lint.sh" https://install.goreleaser.com/github.com/golangci/golangci-lint.sh
+    curl -sfSL -o "${TMP_DIR}/golangci-lint.sh" https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
     chmod 700 "${TMP_DIR}/golangci-lint.sh"
 
     "${TMP_DIR}/golangci-lint.sh" -b "${TMP_DIR}/bin" ${GOLANGCI_LINT_VERSION}
@@ -121,7 +122,11 @@ main() {
       echo "Skipping golangci-lint installation cause SKIP_DEPS_INSTALLATION is set to true."
   fi
 
-  golangci::run_checks
+  if [[ "${SKIP_GOLANGCI_LINT}" == "false" ]]; then
+      golangci::run_checks
+  else
+      echo "Skipping golangci-lint testing cause SKIP_GOLANGCI_LINT is set to true."
+  fi
 
   dockerfile::run_checks
 
