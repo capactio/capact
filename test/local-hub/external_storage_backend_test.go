@@ -472,7 +472,7 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	client := pb.NewStorageBackendClient(conn)
+	client := pb.NewValueAndContextStorageBackendClient(conn)
 
 	var out = map[string]externalData{}
 	for _, ti := range details {
