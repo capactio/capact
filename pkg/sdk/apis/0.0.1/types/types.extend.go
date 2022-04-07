@@ -13,6 +13,8 @@ const (
 	HubBackendParentNodeName = "cap.core.type.hub.storage"
 	// BuiltinHubStorageTypePath defines Type path for built-in Hub storage.
 	BuiltinHubStorageTypePath = "cap.core.type.hub.storage.neo4j"
+	// GenericBackendStorageSchemaTypePath defines Type path for generic backend storage schema.
+	GenericBackendStorageSchemaTypePath = "cap.core.type.hub.storage.generic"
 )
 
 // InterfaceRef holds the full path and revision to the Interface
@@ -107,4 +109,14 @@ func TrimLastNodeFromOCFPath(in string) string {
 	}
 
 	return in[:idx]
+}
+
+// IsExtendingHubStorage returns true if the Type extends Hub storage.
+func (in *Type) IsExtendingHubStorage() bool {
+	for _, ref := range in.Spec.AdditionalRefs {
+		if ref == HubBackendParentNodeName {
+			return true
+		}
+	}
+	return false
 }
