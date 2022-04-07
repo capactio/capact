@@ -147,8 +147,8 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			expErrMsg: heredoc.Doc(`
               while executing mutation to create TypeInstance: All attempts fail:
               #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
-              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url'
-              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url'`),
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value must have required property 'url'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value must have required property 'url'`),
 		},
 		"Should reject usage of backend without AcceptValue field": {
 			storageSpec: storageSpec{
@@ -160,8 +160,8 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			expErrMsg: heredoc.Doc(`
               while executing mutation to create TypeInstance: All attempts fail:
               #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
-              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'acceptValue'
-              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'acceptValue'`),
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value must have required property 'acceptValue'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value must have required property 'acceptValue'`),
 		},
 		"Should reject usage of backend without URL and AcceptValue fields": {
 			storageSpec: map[string]interface{}{
@@ -173,8 +173,8 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			expErrMsg: heredoc.Doc(`
               while executing mutation to create TypeInstance: All attempts fail:
               #1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
-              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url', spec.value must have required property 'acceptValue'
-              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value must have required property 'url', spec.value must have required property 'acceptValue'`),
+              	* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value must have required property 'url', spec/value must have required property 'acceptValue'
+              	* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value must have required property 'url', spec/value must have required property 'acceptValue'`),
 		},
 		"Should reject usage of backend with wrong context schema": {
 			storageSpec: storageSpec{
@@ -189,8 +189,8 @@ func TestExternalStorageInputValidation(t *testing.T) {
 			expErrMsg: heredoc.Doc(`
 			while executing mutation to create TypeInstance: All attempts fail:
 			#1: graphql: failed to create TypeInstance: failed to create the TypeInstances: 2 error occurred:
-				* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value/contextSchema must be object
-				* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec.value/contextSchema must be object`),
+				* Error: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value/contextSchema must be object
+				* Error: rollback externally stored values: failed to resolve the TypeInstance's backend "MOCKED_ID": spec/value/contextSchema must be object`),
 		},
 	}
 	for tn, tc := range tests {

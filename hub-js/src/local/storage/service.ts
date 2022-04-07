@@ -422,7 +422,7 @@ export default class DelegatedStorageService {
     }
 
     throw new Error(
-      this.ajv.errorsText(validate.errors, { dataVar: "spec.value" })
+      this.ajv.errorsText(validate.errors, { dataVar: "spec/value" })
     );
   }
 
