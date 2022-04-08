@@ -415,7 +415,7 @@ func TestExternalStorage(t *testing.T) {
 func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local.Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func(t *testing.T)) {
 	t.Helper()
 
-	ti, err := cli.CreateTypeInstances(ctx, fixExternalDotenvStorage(srvAddr))
+	ti, err := cli.CreateTypeInstances(ctx, fixExternalDotenvStorage(t, srvAddr))
 	require.NoError(t, err)
 	require.Len(t, ti, 1)
 	dotenvHubStorage := ti[0]
@@ -426,7 +426,14 @@ func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local
 	}
 }
 
-func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput {
+func unmarshalContextSchema(t *testing.T, schema string) interface{} {
+	var contextSchema interface{}
+	err := json.Unmarshal([]byte(schema), &contextSchema)
+	require.NoError(t, err)
+	return contextSchema
+}
+
+func fixExternalDotenvStorage(t *testing.T, addr string) *gqllocalapi.CreateTypeInstancesInput {
 	return &gqllocalapi.CreateTypeInstancesInput{
 		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
 			{
@@ -438,7 +445,7 @@ func fixExternalDotenvStorage(addr string) *gqllocalapi.CreateTypeInstancesInput
 				Value: storageSpec{
 					URL:         ptr.String(addr),
 					AcceptValue: ptr.Bool(true),
-					ContextSchema: ptr.String(heredoc.Doc(`
+					ContextSchema: unmarshalContextSchema(t, heredoc.Doc(`
 				      {
 				      	"$id": "#/properties/contextSchema",
 				      	"type": "object",
