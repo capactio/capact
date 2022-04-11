@@ -72,7 +72,7 @@ func TestHandler_GetValue(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.GetValue(ctx, req)
@@ -145,7 +145,7 @@ func TestHandler_GetLockedBy(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.GetLockedBy(ctx, req)
@@ -170,7 +170,7 @@ func TestHandler_OnCreate(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	valueBytes := []byte(`{"key": true}`)
-	req := &storage_backend.OnCreateRequest{
+	req := &storage_backend.OnCreateValueAndContextRequest{
 		TypeInstanceId: "uuid",
 		Value:          valueBytes,
 		Context:        reqContext,
@@ -231,7 +231,7 @@ func TestHandler_OnCreate(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.OnCreate(ctx, req)
@@ -259,7 +259,7 @@ func TestHandler_OnUpdate(t *testing.T) {
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
 	valueBytes := []byte(`{"key": true}`)
-	req := &storage_backend.OnUpdateRequest{
+	req := &storage_backend.OnUpdateValueAndContextRequest{
 		TypeInstanceId:     "uuid",
 		NewResourceVersion: 3,
 		NewValue:           valueBytes,
@@ -328,7 +328,7 @@ func TestHandler_OnUpdate(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.OnUpdate(ctx, req)
@@ -433,7 +433,7 @@ func TestHandler_OnLock(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.OnLock(ctx, req)
@@ -533,7 +533,7 @@ func TestHandler_OnUnlock(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.OnUnlock(ctx, req)
@@ -559,7 +559,7 @@ func TestHandler_OnDelete(t *testing.T) {
 	// given
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
-	req := &storage_backend.OnDeleteRequest{
+	req := &storage_backend.OnDeleteValueAndContextRequest{
 		TypeInstanceId: "uuid",
 		Context:        reqContext,
 	}
@@ -634,7 +634,7 @@ func TestHandler_OnDelete(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.OnDelete(ctx, req)
@@ -743,7 +743,7 @@ func setupServerAndListener(t *testing.T, providersMap map[string]tellercore.Pro
 
 	listener := bufconn.Listen(bufSize)
 	srv := grpc.NewServer()
-	storage_backend.RegisterStorageBackendServer(srv, handler)
+	storage_backend.RegisterValueAndContextStorageBackendServer(srv, handler)
 
 	go func() {
 		err := srv.Serve(listener)

@@ -5,7 +5,11 @@ import {
   OnLockRequest,
   OnUnlockRequest,
   OnUpdateRequest,
-  StorageBackendDefinition,
+  ContextStorageBackendDefinition,
+  ValueAndContextStorageBackendDefinition,
+  OnUpdateValueAndContextRequest,
+  OnCreateValueAndContextRequest,
+  OnDeleteValueAndContextRequest,
 } from "../../generated/grpc/storage_backend";
 import { Client, createChannel, createClient } from "nice-grpc";
 import { Driver } from "neo4j-driver";
@@ -20,7 +24,10 @@ import {
 import { JSONSchemaType } from "ajv/lib/types/json-schema";
 import { TextEncoder } from "util";
 
-type StorageClient = Client<typeof StorageBackendDefinition>;
+type StorageClient = Client<
+  | typeof ContextStorageBackendDefinition
+  | typeof ValueAndContextStorageBackendDefinition
+>;
 
 interface BackendContainer {
   client: StorageClient;
@@ -133,7 +140,7 @@ export default class DelegatedStorageService {
         );
       }
 
-      const req: OnCreateRequest = {
+      const req: OnCreateRequest | OnCreateValueAndContextRequest = {
         typeInstanceId: input.typeInstance.id,
         value: DelegatedStorageService.encode(input.typeInstance.value),
         context: DelegatedStorageService.encode(input.backend.context),
@@ -176,7 +183,7 @@ export default class DelegatedStorageService {
         );
       }
 
-      const req: OnUpdateRequest = {
+      const req: OnUpdateRequest | OnUpdateValueAndContextRequest = {
         typeInstanceId: input.typeInstance.id,
         newResourceVersion: input.typeInstance.newResourceVersion,
         newValue: DelegatedStorageService.encode(input.typeInstance.newValue),
@@ -256,7 +263,7 @@ export default class DelegatedStorageService {
           `External backend "${input.backend.id}": ${validateErr.message}`
         );
       }
-      const req: OnDeleteRequest = {
+      const req: OnDeleteRequest | OnDeleteValueAndContextRequest = {
         typeInstanceId: input.typeInstance.id,
         context: DelegatedStorageService.encode(input.backend.context),
         ownerId: input.typeInstance.ownerID,
@@ -379,22 +386,17 @@ export default class DelegatedStorageService {
         url: spec.url,
       });
 
+      const channel = createChannel(spec.url);
+
+      const clientDef = spec.acceptValue
+        ? ValueAndContextStorageBackendDefinition
+        : ContextStorageBackendDefinition;
+      const client: StorageClient = createClient(clientDef, channel);
+
       let contextSchema;
       if (spec.contextSchema) {
-        const out = DelegatedStorageService.parseToObject(spec.contextSchema);
-        if (out.error) {
-          throw Error(
-            `failed to process the TypeInstance's backend "${id}": invalid spec.context: ${out.error.message}`
-          );
-        }
-        contextSchema = out.parsed as JSONSchemaType<unknown>;
+        contextSchema = spec.contextSchema as JSONSchemaType<unknown>;
       }
-      const channel = createChannel(spec.url);
-      const client: StorageClient = createClient(
-        StorageBackendDefinition,
-        channel
-      );
-
       const storageSpec = {
         backendId: id,
         contextSchema,
@@ -414,12 +416,6 @@ export default class DelegatedStorageService {
     return val as string;
   }
 
-  private encode(val: unknown) {
-    return new TextEncoder().encode(
-      DelegatedStorageService.convertToJSONIfObject(val)
-    );
-  }
-
   private validateStorageSpecValue(storageSpec: StorageTypeInstanceSpec) {
     const validate = this.ajv.compile(StorageTypeInstanceSpecSchema);
 
@@ -428,7 +424,7 @@ export default class DelegatedStorageService {
     }
 
     throw new Error(
-      this.ajv.errorsText(validate.errors, { dataVar: "spec.value" })
+      this.ajv.errorsText(validate.errors, { dataVar: "spec/value" })
     );
   }
 

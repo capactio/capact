@@ -2,6 +2,7 @@ package testing
 
 import (
 	"context"
+	"encoding/json"
 
 	"capact.io/capact/internal/cli/typeinstance"
 	"capact.io/capact/internal/logger"
@@ -74,6 +75,11 @@ func NewStorageBackendRegister() (*StorageBackendRegister, error) {
 
 // RegisterTypeInstances produces and uploads TypeInstances which describe Test storage backend.
 func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) error {
+	var contextSchema interface{}
+	err := json.Unmarshal([]byte(testStorageTypeContextSchema), &contextSchema)
+	if err != nil {
+		return errors.Wrap(err, "while unmarshaling contextSchema")
+	}
 	in := &hublocalgraphql.CreateTypeInstanceInput{
 		CreatedBy: ptr.String("populator/test-storage-backend-registration"),
 		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
@@ -83,7 +89,7 @@ func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) erro
 		Value: typeinstance.StorageBackendData{
 			URL:           i.cfg.TestStorageBackendURL,
 			AcceptValue:   true,
-			ContextSchema: testStorageTypeContextSchema,
+			ContextSchema: contextSchema,
 		},
 	}
 
