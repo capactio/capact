@@ -121,6 +121,11 @@ func (*TemplateHandler) OnUnlock(context.Context, *pb.OnUnlockRequest) (*pb.OnUn
 	return &pb.OnUnlockResponse{}, nil
 }
 
+// OnDeleteRevision is NOP.
+func (*TemplateHandler) OnDeleteRevision(context.Context, *pb.OnDeleteRevisionRequest) (*pb.OnDeleteRevisionResponse, error) {
+	return &pb.OnDeleteRevisionResponse{}, nil
+}
+
 func (h *TemplateHandler) getReleaseContext(contextBytes []byte) (*TemplateContext, error) {
 	var ctx TemplateContext
 	err := json.Unmarshal(contextBytes, &ctx)

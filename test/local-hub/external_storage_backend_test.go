@@ -10,12 +10,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/ptr"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 	"capact.io/capact/pkg/hub/client/local"
-	"gotest.tools/assert"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -412,6 +415,119 @@ func TestExternalStorage(t *testing.T) {
 	})
 }
 
+// TestDeleteTypeInstanceRevision can be run in parallel with other tests but
+// the subtests cannot be executed parallel.
+//
+// GRPC_SECRET_STORAGE_BACKEND_ADDR=50051 go test --tags=localhub -run=TestDeleteTypeInstanceRevision ./test/local-hub/...
+func TestDeleteTypeInstanceRevision(t *testing.T) {
+	// globally given
+	srvAddr := os.Getenv(storageBackendAddr)
+	if srvAddr == "" {
+		t.Skipf("skipping running test as the env %s is not provided", storageBackendAddr)
+	}
+
+	ctx := context.Background()
+	cli := getLocalClient(t)
+	dotenvHubStorage, cleanup := registerExternalDotenvStorage(ctx, t, cli, srvAddr)
+	defer cleanup(t)
+
+	t.Log("Create TypeInstances")
+	inputTypeInstances := []*gqllocalapi.CreateTypeInstanceInput{
+		{
+			// This TypeInstance:
+			// - is stored in built-in backend
+			Alias:     ptr.String("child"),
+			CreatedBy: ptr.String(t.Name()),
+			TypeRef:   typeRef("cap.type.child:0.1.0"),
+			Value: map[string]interface{}{
+				"name": "Luke Skywalker",
+			},
+		},
+		{
+			// This TypeInstance:
+			// - is stored in external backend
+			Alias:     ptr.String("parent"),
+			CreatedBy: ptr.String(t.Name()),
+			TypeRef:   typeRef("cap.type.parent:0.1.0"),
+			Value: map[string]interface{}{
+				"name": "Darth Vader",
+			},
+			Backend: &gqllocalapi.TypeInstanceBackendInput{
+				ID: dotenvHubStorage.ID,
+				Context: map[string]interface{}{
+					"provider": "dotenv",
+				},
+			},
+		},
+	}
+	_, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
+		TypeInstances: inputTypeInstances,
+		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
+			{From: "parent", To: "child"},
+		},
+	})
+	require.NoError(t, err)
+	familyDetails, err := cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
+		CreatedBy: ptr.String(t.Name()),
+	}, local.WithFields(local.TypeInstanceAllFields))
+	require.NoError(t, err)
+
+	defer removeAllMembers(t, cli, familyDetails)
+
+	t.Log("should not persist data in external backend on error")
+	// given
+	// prepend TypeInstance that doesn't exist, it will cause error on update mutation
+	toUpdate := []gqllocalapi.UpdateTypeInstancesInput{
+		{
+			ID: "not-existing-id",
+			TypeInstance: &gqllocalapi.UpdateTypeInstanceInput{
+				Value: map[string]interface{}{
+					"updated-value": "42",
+				},
+			},
+		},
+	}
+	// populate valid TypeInstances
+	for idx, member := range familyDetails {
+		toUpdate = append(toUpdate, gqllocalapi.UpdateTypeInstancesInput{
+			ID: member.ID,
+			TypeInstance: &gqllocalapi.UpdateTypeInstanceInput{
+				Value: map[string]interface{}{
+					"updated-value": fmt.Sprintf("%d", idx),
+				},
+			},
+		})
+	}
+
+	expDoesntExist := []typeInstanceRef{
+		{
+			ID:              familyDetails[0].ID,
+			ResourceVersion: 2,
+		},
+		{
+			ID:              familyDetails[1].ID,
+			ResourceVersion: 2,
+		},
+	}
+
+	// when
+	_, err = cli.UpdateTypeInstances(ctx, toUpdate)
+
+	// then on error, second revision was rolled back
+	assert.Error(t, err)
+	assertDataInExternalStorageDoesntExist(t, srvAddr, expDoesntExist)
+
+	// when
+	t.Log("should created a second revision when input is valid even though the previously ended with error")
+
+	toUpdate = toUpdate[1:] // remove first, non-existing TypeInstance from update input
+	_, err = cli.UpdateTypeInstances(ctx, toUpdate)
+
+	// then on error, second revision was rolled back
+	// then the second revision created even though previously ended with error
+	require.NoError(t, err)
+}
+
 func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local.Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func(t *testing.T)) {
 	t.Helper()
 
@@ -488,7 +604,7 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 			ResourceVersion: uint32(ti.LatestResourceVersion.ResourceVersion),
 		})
 		if err != nil {
-			t.Logf("error while getting value from storage for TypeInstance %s", ti.ID)
+			t.Logf("error while getting value from storage for TypeInstance %s: %v", ti.ID, err)
 			continue
 		}
 
@@ -503,6 +619,31 @@ func getDataDirectlyFromStorage(t *testing.T, addr string, details []gqllocalapi
 		}
 	}
 	return out
+}
+
+type typeInstanceRef struct {
+	ID              string
+	ResourceVersion int
+}
+
+func assertDataInExternalStorageDoesntExist(t *testing.T, addr string, refs []typeInstanceRef) {
+	t.Helper()
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	client := pb.NewValueAndContextStorageBackendClient(conn)
+
+	for _, ti := range refs {
+		_, err = client.GetValue(ctx, &pb.GetValueRequest{
+			TypeInstanceId:  ti.ID,
+			ResourceVersion: uint32(ti.ResourceVersion),
+		})
+
+		require.Error(t, err, "unexpected value for rev %d in external storage", ti.ResourceVersion)
+		grpcErr := status.Convert(err)
+		assert.Equal(t, codes.NotFound, grpcErr.Code())
+	}
 }
 
 func assertTypeInstancesDetail(t *testing.T, typeInstances interface{}, family []gqllocalapi.CreateTypeInstanceOutput, storage map[string]externalData, expectedData []*expectedTypeInstanceData) {
