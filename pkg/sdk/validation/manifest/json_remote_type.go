@@ -136,7 +136,7 @@ func (v *RemoteTypeValidator) validateBackendStorageSchema(ctx context.Context, 
 
 	result, err := gojsonschema.Validate(schemaLoader, dataLoader)
 	if err != nil {
-		return res, errors.Wrap(err, "while validating JSON schema against the generic storage backend schema")
+		return res, errors.Wrap(err, "while validating JSON Schema against the generic storage backend schema")
 	}
 
 	for _, err := range result.Errors() {
