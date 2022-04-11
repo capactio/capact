@@ -109,7 +109,7 @@ func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]
 	setTypeInstanceDataForMarshaling(backendData, &updateTI)
 	rawInput, err := yaml.Marshal(updateTI)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "while marshaling updated TypeInstance")
 	}
 
 	prompt := &survey.Editor{

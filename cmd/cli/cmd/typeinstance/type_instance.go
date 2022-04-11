@@ -58,20 +58,20 @@ func mapTypeInstanceToUpdateType(in *gqllocalapi.TypeInstance) gqllocalapi.Updat
 		return in.LatestResourceVersion.Spec.Value
 	}
 
-	mapBackendContext := func() interface{} {
+	mapBackend := func() *gqllocalapi.UpdateTypeInstanceBackendInput {
 		if in.LatestResourceVersion.Spec.Backend == nil {
 			return nil
 		}
-		return in.LatestResourceVersion.Spec.Backend.Context
+		return &gqllocalapi.UpdateTypeInstanceBackendInput{
+			Context: in.LatestResourceVersion.Spec.Backend.Context,
+		}
 	}
 
 	if in.LatestResourceVersion != nil {
 		out.TypeInstance = &gqllocalapi.UpdateTypeInstanceInput{
 			Attributes: mapAttrs(),
 			Value:      mapSpecValue(),
-			Backend: &gqllocalapi.UpdateTypeInstanceBackendInput{
-				Context: mapBackendContext(),
-			},
+			Backend:    mapBackend(),
 		}
 	}
 
