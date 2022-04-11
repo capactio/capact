@@ -128,7 +128,7 @@ func (u *Upload) Do(ctx context.Context) error {
 	return nil
 }
 
-func (u *Upload) resolveBackendsValues(ctx context.Context, typeInstances []*graphqllocal.CreateTypeInstanceInput) (map[string]storage_backend.TypeValue, error) {
+func (u *Upload) resolveBackendsValues(ctx context.Context, typeInstances []*graphqllocal.CreateTypeInstanceInput) (map[string]storage_backend.TypeInstanceValue, error) {
 	// get IDs
 	var ids []string
 	for _, ti := range typeInstances {
@@ -195,7 +195,7 @@ func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.Creat
 	return u.client.Local.CreateTypeInstances(ctx, in)
 }
 
-func (u *Upload) shouldIncludeTIValueFn(backends map[string]storage_backend.TypeValue) func(tiToCreate graphqllocal.CreateTypeInstanceInput) (bool, error) {
+func (u *Upload) shouldIncludeTIValueFn(backends map[string]storage_backend.TypeInstanceValue) func(tiToCreate graphqllocal.CreateTypeInstanceInput) (bool, error) {
 	return func(tiToCreate graphqllocal.CreateTypeInstanceInput) (bool, error) {
 		if tiToCreate.Backend == nil || tiToCreate.Backend.ID == "" {
 			return true, nil

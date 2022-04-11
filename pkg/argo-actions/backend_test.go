@@ -28,12 +28,12 @@ func TestResolveBackendsValues(t *testing.T) {
 			"$schema": "http://json-schema.org/draft-07/schema#",
 		},
 	}
-	expectedFooBackendValue := storagebackend.TypeValue{
+	expectedFooBackendValue := storagebackend.TypeInstanceValue{
 		URL:           "foo.baz",
 		AcceptValue:   true,
 		ContextSchema: nil,
 	}
-	expectedBarBackendValue := storagebackend.TypeValue{
+	expectedBarBackendValue := storagebackend.TypeInstanceValue{
 		URL:         "bar.baz",
 		AcceptValue: false,
 		ContextSchema: map[string]interface{}{
@@ -45,7 +45,7 @@ func TestResolveBackendsValues(t *testing.T) {
 		Name               string
 		Client             findTIClient
 		ExpectedErrMessage *string
-		ExpectedResult     map[string]storagebackend.TypeValue
+		ExpectedResult     map[string]storagebackend.TypeInstanceValue
 	}{
 		{
 			Name: "Success",
@@ -55,7 +55,7 @@ func TestResolveBackendsValues(t *testing.T) {
 					"bar": fixTI(barVal),
 				},
 			},
-			ExpectedResult: map[string]storagebackend.TypeValue{
+			ExpectedResult: map[string]storagebackend.TypeInstanceValue{
 				"foo": expectedFooBackendValue,
 				"bar": expectedBarBackendValue,
 			},

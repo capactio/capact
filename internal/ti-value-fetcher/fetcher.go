@@ -42,7 +42,7 @@ func New(log *zap.Logger) *TIValueFetcher {
 }
 
 // Do resolves TypeInstance value based on the artifact and backend data. It calls external storage backend.
-func (r *TIValueFetcher) Do(ctx context.Context, typeInstanceData TypeInstanceData, storageBackendValue storagebackend.TypeValue, dialOpts ...grpc.DialOption) (TypeInstanceData, error) {
+func (r *TIValueFetcher) Do(ctx context.Context, typeInstanceData TypeInstanceData, storageBackendValue storagebackend.TypeInstanceValue, dialOpts ...grpc.DialOption) (TypeInstanceData, error) {
 	if typeInstanceData.Value != nil {
 		// nothing to do here - save input as output
 		r.log.Info("Value already provided. Skipping...")
@@ -74,19 +74,19 @@ func (r *TIValueFetcher) Do(ctx context.Context, typeInstanceData TypeInstanceDa
 }
 
 // LoadFromFile loads input for TIValueFetcher.Do from files.
-func (r *TIValueFetcher) LoadFromFile(tiArtifactFilePath, storageBackendFilePath string) (TypeInstanceData, storagebackend.TypeValue, error) {
+func (r *TIValueFetcher) LoadFromFile(tiArtifactFilePath, storageBackendFilePath string) (TypeInstanceData, storagebackend.TypeInstanceValue, error) {
 	var tiArtifact TypeInstanceData
 	err := r.unmarshalFromFile(tiArtifactFilePath, &tiArtifact)
 	if err != nil {
-		return TypeInstanceData{}, storagebackend.TypeValue{}, err
+		return TypeInstanceData{}, storagebackend.TypeInstanceValue{}, err
 	}
 
 	var storageBackend struct {
-		Value storagebackend.TypeValue `json:"value"`
+		Value storagebackend.TypeInstanceValue `json:"value"`
 	}
 	err = r.unmarshalFromFile(storageBackendFilePath, &storageBackend)
 	if err != nil {
-		return TypeInstanceData{}, storagebackend.TypeValue{}, err
+		return TypeInstanceData{}, storagebackend.TypeInstanceValue{}, err
 	}
 
 	return tiArtifact, storageBackend.Value, nil

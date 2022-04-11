@@ -16,7 +16,7 @@ type findTIClient interface {
 	FindTypeInstances(ctx context.Context, ids []string, opts ...local.TypeInstancesOption) (map[string]hublocalgraphql.TypeInstance, error)
 }
 
-func resolveBackendsValues(ctx context.Context, client findTIClient, ids []string) (map[string]storagebackend.TypeValue, error) {
+func resolveBackendsValues(ctx context.Context, client findTIClient, ids []string) (map[string]storagebackend.TypeInstanceValue, error) {
 	// get values
 	tiMap, err := client.FindTypeInstances(ctx, ids, local.WithFields(local.TypeInstanceRootFields|local.TypeInstanceLatestResourceVersionValueField))
 	if err != nil {
@@ -24,7 +24,7 @@ func resolveBackendsValues(ctx context.Context, client findTIClient, ids []strin
 	}
 
 	// create result
-	result := make(map[string]storagebackend.TypeValue)
+	result := make(map[string]storagebackend.TypeInstanceValue)
 	for id, ti := range tiMap {
 		if ti.LatestResourceVersion == nil || ti.LatestResourceVersion.Spec == nil {
 			continue
@@ -35,7 +35,7 @@ func resolveBackendsValues(ctx context.Context, client findTIClient, ids []strin
 			return nil, errors.Wrapf(err, "while marshaling TypeInstance value for ID %q", id)
 		}
 
-		var value storagebackend.TypeValue
+		var value storagebackend.TypeInstanceValue
 		err = json.Unmarshal(data, &value)
 		if err != nil {
 			return nil, errors.Wrapf(err, "while unmarshaling TypeInstance value for ID %q", id)

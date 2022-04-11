@@ -126,7 +126,7 @@ type (
 	backendTIID  string
 )
 
-func (u *Update) resolveBackendsValues(ctx context.Context, typeInstances []graphqllocal.UpdateTypeInstancesInput) (map[string]storage_backend.TypeValue, map[tiToUpdateID]backendTIID, error) {
+func (u *Update) resolveBackendsValues(ctx context.Context, typeInstances []graphqllocal.UpdateTypeInstancesInput) (map[string]storage_backend.TypeInstanceValue, map[tiToUpdateID]backendTIID, error) {
 	// get IDs of TypeInstances to update
 	var tiToUpdateIDs []string
 	for _, ti := range typeInstances {
@@ -201,7 +201,7 @@ func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values 
 	return nil
 }
 
-func (u *Update) shouldIncludeTIValueFn(backends map[string]storage_backend.TypeValue, mapping map[tiToUpdateID]backendTIID) func(tiToUpdate graphqllocal.UpdateTypeInstancesInput) (bool, error) {
+func (u *Update) shouldIncludeTIValueFn(backends map[string]storage_backend.TypeInstanceValue, mapping map[tiToUpdateID]backendTIID) func(tiToUpdate graphqllocal.UpdateTypeInstancesInput) (bool, error) {
 	return func(tiToUpdate graphqllocal.UpdateTypeInstancesInput) (bool, error) {
 		if tiToUpdate.TypeInstance == nil {
 			return false, errors.New("typeInstance cannot be nil")

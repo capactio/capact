@@ -29,7 +29,7 @@ func TestTIValueFetcher_LoadFromFile_HappyPath(t *testing.T) {
 			Context: []byte(`{"chartLocation":"https://charts.bitnami.com/bitnami","driver":"secrets","name":"example-release","namespace":"default"}`),
 		},
 	}
-	expectedStorageBackendData := storagebackend.TypeValue{
+	expectedStorageBackendData := storagebackend.TypeInstanceValue{
 		URL:         "localhost:50051",
 		AcceptValue: false,
 		ContextSchema: map[string]interface{}{
@@ -87,7 +87,7 @@ func TestTIValueFetcher_Do(t *testing.T) {
 	for _, testCase := range []struct {
 		Name                     string
 		InputTypeInstanceData    tivaluefetcher.TypeInstanceData
-		InputStorageBackendValue storagebackend.TypeValue
+		InputStorageBackendValue storagebackend.TypeInstanceValue
 		BackendServerHandlerFn   func(t *testing.T) storage_backend.ContextStorageBackendServer
 		ExpectedResult           tivaluefetcher.TypeInstanceData
 		ExpectedErrorMessage     *string
@@ -115,7 +115,7 @@ func TestTIValueFetcher_Do(t *testing.T) {
 					Context: []byte(`sample: context`),
 				},
 			},
-			InputStorageBackendValue: storagebackend.TypeValue{
+			InputStorageBackendValue: storagebackend.TypeInstanceValue{
 				URL:           "foo.bar",
 				AcceptValue:   true,
 				ContextSchema: map[string]interface{}{},
@@ -135,7 +135,7 @@ func TestTIValueFetcher_Do(t *testing.T) {
 					Context: []byte(`sample: context`),
 				},
 			},
-			InputStorageBackendValue: storagebackend.TypeValue{
+			InputStorageBackendValue: storagebackend.TypeInstanceValue{
 				URL:           "foo.bar",
 				AcceptValue:   false,
 				ContextSchema: map[string]interface{}{},
@@ -162,7 +162,7 @@ func TestTIValueFetcher_Do(t *testing.T) {
 					Context: []byte(`sample: context`),
 				},
 			},
-			InputStorageBackendValue: storagebackend.TypeValue{
+			InputStorageBackendValue: storagebackend.TypeInstanceValue{
 				URL:           "foo.bar",
 				AcceptValue:   false,
 				ContextSchema: map[string]interface{}{},

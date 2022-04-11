@@ -87,7 +87,7 @@ func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) erro
 			Path:     testStorageTypePath,
 			Revision: testStorageTypeRevision,
 		},
-		Value: storagebackend.TypeValue{
+		Value: storagebackend.TypeInstanceValue{
 			URL:           i.cfg.TestStorageBackendURL,
 			AcceptValue:   true,
 			ContextSchema: contextSchema,
