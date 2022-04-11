@@ -65,6 +65,12 @@ message OnDeleteResponse {}
 
 message OnDeleteRevisionRequest {
 	string type_instance_id = 1;
+	optional string owner_id = 3;
+	uint32 resource_version = 4;
+}
+
+message OnDeleteRevisionValueAndContextRequest {
+	string type_instance_id = 1;
 	optional bytes context = 2;
 	optional string owner_id = 3;
 	uint32 resource_version = 4;
@@ -119,6 +125,7 @@ service ValueAndContextStorageBackend {
   rpc OnCreate(OnCreateValueAndContextRequest) returns (OnCreateResponse);
   rpc OnUpdate(OnUpdateValueAndContextRequest) returns (OnUpdateResponse);
   rpc OnDelete(OnDeleteValueAndContextRequest) returns (OnDeleteResponse);
+	rpc OnDeleteRevision(OnDeleteRevisionValueAndContextRequest) returns (OnDeleteRevisionResponse);
 
   // lock
   rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);

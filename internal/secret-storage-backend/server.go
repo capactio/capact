@@ -271,7 +271,7 @@ func (h *Handler) OnDelete(_ context.Context, request *pb.OnDeleteValueAndContex
 
 // OnDeleteRevision handles TypeInstance's revision deletion by removing a secret entry in a given provider.
 // It checks whether a given TypeInstance is locked before doing such operation.
-func (h *Handler) OnDeleteRevision(ctx context.Context, request *pb.OnDeleteRevisionRequest) (*pb.OnDeleteRevisionResponse, error) {
+func (h *Handler) OnDeleteRevision(ctx context.Context, request *pb.OnDeleteRevisionValueAndContextRequest) (*pb.OnDeleteRevisionResponse, error) {
 	if request == nil {
 		return nil, NilRequestInputError
 	}

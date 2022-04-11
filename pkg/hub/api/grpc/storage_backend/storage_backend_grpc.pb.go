@@ -27,6 +27,7 @@ type ValueAndContextStorageBackendClient interface {
 	OnCreate(ctx context.Context, in *OnCreateValueAndContextRequest, opts ...grpc.CallOption) (*OnCreateResponse, error)
 	OnUpdate(ctx context.Context, in *OnUpdateValueAndContextRequest, opts ...grpc.CallOption) (*OnUpdateResponse, error)
 	OnDelete(ctx context.Context, in *OnDeleteValueAndContextRequest, opts ...grpc.CallOption) (*OnDeleteResponse, error)
+	OnDeleteRevision(ctx context.Context, in *OnDeleteRevisionValueAndContextRequest, opts ...grpc.CallOption) (*OnDeleteRevisionResponse, error)
 	// lock
 	GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error)
 	OnLock(ctx context.Context, in *OnLockRequest, opts ...grpc.CallOption) (*OnLockResponse, error)
@@ -77,6 +78,15 @@ func (c *valueAndContextStorageBackendClient) OnDelete(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *valueAndContextStorageBackendClient) OnDeleteRevision(ctx context.Context, in *OnDeleteRevisionValueAndContextRequest, opts ...grpc.CallOption) (*OnDeleteRevisionResponse, error) {
+	out := new(OnDeleteRevisionResponse)
+	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/OnDeleteRevision", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *valueAndContextStorageBackendClient) GetLockedBy(ctx context.Context, in *GetLockedByRequest, opts ...grpc.CallOption) (*GetLockedByResponse, error) {
 	out := new(GetLockedByResponse)
 	err := c.cc.Invoke(ctx, "/storage_backend.ValueAndContextStorageBackend/GetLockedBy", in, out, opts...)
@@ -113,6 +123,7 @@ type ValueAndContextStorageBackendServer interface {
 	OnCreate(context.Context, *OnCreateValueAndContextRequest) (*OnCreateResponse, error)
 	OnUpdate(context.Context, *OnUpdateValueAndContextRequest) (*OnUpdateResponse, error)
 	OnDelete(context.Context, *OnDeleteValueAndContextRequest) (*OnDeleteResponse, error)
+	OnDeleteRevision(context.Context, *OnDeleteRevisionValueAndContextRequest) (*OnDeleteRevisionResponse, error)
 	// lock
 	GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error)
 	OnLock(context.Context, *OnLockRequest) (*OnLockResponse, error)
@@ -135,6 +146,9 @@ func (UnimplementedValueAndContextStorageBackendServer) OnUpdate(context.Context
 }
 func (UnimplementedValueAndContextStorageBackendServer) OnDelete(context.Context, *OnDeleteValueAndContextRequest) (*OnDeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnDelete not implemented")
+}
+func (UnimplementedValueAndContextStorageBackendServer) OnDeleteRevision(context.Context, *OnDeleteRevisionValueAndContextRequest) (*OnDeleteRevisionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OnDeleteRevision not implemented")
 }
 func (UnimplementedValueAndContextStorageBackendServer) GetLockedBy(context.Context, *GetLockedByRequest) (*GetLockedByResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLockedBy not implemented")
@@ -231,6 +245,24 @@ func _ValueAndContextStorageBackend_OnDelete_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ValueAndContextStorageBackend_OnDeleteRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OnDeleteRevisionValueAndContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValueAndContextStorageBackendServer).OnDeleteRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage_backend.ValueAndContextStorageBackend/OnDeleteRevision",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValueAndContextStorageBackendServer).OnDeleteRevision(ctx, req.(*OnDeleteRevisionValueAndContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ValueAndContextStorageBackend_GetLockedBy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetLockedByRequest)
 	if err := dec(in); err != nil {
@@ -307,6 +339,10 @@ var ValueAndContextStorageBackend_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OnDelete",
 			Handler:    _ValueAndContextStorageBackend_OnDelete_Handler,
+		},
+		{
+			MethodName: "OnDeleteRevision",
+			Handler:    _ValueAndContextStorageBackend_OnDeleteRevision_Handler,
 		},
 		{
 			MethodName: "GetLockedBy",

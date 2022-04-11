@@ -661,7 +661,7 @@ func TestHandler_OnDeleteRevision(t *testing.T) {
 	// given
 	providerName := "fake"
 	reqContext := []byte(fmt.Sprintf(`{"provider":"%s"}`, providerName))
-	req := &storage_backend.OnDeleteRevisionRequest{
+	req := &storage_backend.OnDeleteRevisionValueAndContextRequest{
 		TypeInstanceId:  "uuid",
 		Context:         reqContext,
 		ResourceVersion: uint32(2),
@@ -775,7 +775,7 @@ func TestHandler_OnDeleteRevision(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := storage_backend.NewStorageBackendClient(conn)
+			client := storage_backend.NewValueAndContextStorageBackendClient(conn)
 
 			// when
 			res, err := client.OnDeleteRevision(ctx, req)

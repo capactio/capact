@@ -207,7 +207,7 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 
 	// delete second revision
 	t.Logf("Deleting TI %q revision %d...\n", typeInstanceID, resourceVersion)
-	_, err = client.OnDeleteRevision(ctx, &pb.OnDeleteRevisionRequest{
+	_, err = client.OnDeleteRevision(ctx, &pb.OnDeleteRevisionValueAndContextRequest{
 		TypeInstanceId:  typeInstanceID,
 		Context:         reqContext,
 		ResourceVersion: resourceVersion,

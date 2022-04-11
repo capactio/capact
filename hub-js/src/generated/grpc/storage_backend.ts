@@ -67,6 +67,12 @@ export interface OnDeleteResponse {}
 
 export interface OnDeleteRevisionRequest {
   typeInstanceId: string;
+  ownerId?: string | undefined;
+  resourceVersion: number;
+}
+
+export interface OnDeleteRevisionValueAndContextRequest {
+  typeInstanceId: string;
   context?: Uint8Array | undefined;
   ownerId?: string | undefined;
   resourceVersion: number;
@@ -995,12 +1001,7 @@ export const OnDeleteResponse = {
 };
 
 function createBaseOnDeleteRevisionRequest(): OnDeleteRevisionRequest {
-  return {
-    typeInstanceId: "",
-    context: undefined,
-    ownerId: undefined,
-    resourceVersion: 0,
-  };
+  return { typeInstanceId: "", ownerId: undefined, resourceVersion: 0 };
 }
 
 export const OnDeleteRevisionRequest = {
@@ -1010,9 +1011,6 @@ export const OnDeleteRevisionRequest = {
   ): _m0.Writer {
     if (message.typeInstanceId !== "") {
       writer.uint32(10).string(message.typeInstanceId);
-    }
-    if (message.context !== undefined) {
-      writer.uint32(18).bytes(message.context);
     }
     if (message.ownerId !== undefined) {
       writer.uint32(26).string(message.ownerId);
@@ -1036,9 +1034,6 @@ export const OnDeleteRevisionRequest = {
         case 1:
           message.typeInstanceId = reader.string();
           break;
-        case 2:
-          message.context = reader.bytes();
-          break;
         case 3:
           message.ownerId = reader.string();
           break;
@@ -1058,6 +1053,98 @@ export const OnDeleteRevisionRequest = {
       typeInstanceId: isSet(object.typeInstanceId)
         ? String(object.typeInstanceId)
         : "",
+      ownerId: isSet(object.ownerId) ? String(object.ownerId) : undefined,
+      resourceVersion: isSet(object.resourceVersion)
+        ? Number(object.resourceVersion)
+        : 0,
+    };
+  },
+
+  toJSON(message: OnDeleteRevisionRequest): unknown {
+    const obj: any = {};
+    message.typeInstanceId !== undefined &&
+      (obj.typeInstanceId = message.typeInstanceId);
+    message.ownerId !== undefined && (obj.ownerId = message.ownerId);
+    message.resourceVersion !== undefined &&
+      (obj.resourceVersion = Math.round(message.resourceVersion));
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<OnDeleteRevisionRequest>
+  ): OnDeleteRevisionRequest {
+    const message = createBaseOnDeleteRevisionRequest();
+    message.typeInstanceId = object.typeInstanceId ?? "";
+    message.ownerId = object.ownerId ?? undefined;
+    message.resourceVersion = object.resourceVersion ?? 0;
+    return message;
+  },
+};
+
+function createBaseOnDeleteRevisionValueAndContextRequest(): OnDeleteRevisionValueAndContextRequest {
+  return {
+    typeInstanceId: "",
+    context: undefined,
+    ownerId: undefined,
+    resourceVersion: 0,
+  };
+}
+
+export const OnDeleteRevisionValueAndContextRequest = {
+  encode(
+    message: OnDeleteRevisionValueAndContextRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.typeInstanceId !== "") {
+      writer.uint32(10).string(message.typeInstanceId);
+    }
+    if (message.context !== undefined) {
+      writer.uint32(18).bytes(message.context);
+    }
+    if (message.ownerId !== undefined) {
+      writer.uint32(26).string(message.ownerId);
+    }
+    if (message.resourceVersion !== 0) {
+      writer.uint32(32).uint32(message.resourceVersion);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): OnDeleteRevisionValueAndContextRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOnDeleteRevisionValueAndContextRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.typeInstanceId = reader.string();
+          break;
+        case 2:
+          message.context = reader.bytes();
+          break;
+        case 3:
+          message.ownerId = reader.string();
+          break;
+        case 4:
+          message.resourceVersion = reader.uint32();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): OnDeleteRevisionValueAndContextRequest {
+    return {
+      typeInstanceId: isSet(object.typeInstanceId)
+        ? String(object.typeInstanceId)
+        : "",
       context: isSet(object.context)
         ? bytesFromBase64(object.context)
         : undefined,
@@ -1068,7 +1155,7 @@ export const OnDeleteRevisionRequest = {
     };
   },
 
-  toJSON(message: OnDeleteRevisionRequest): unknown {
+  toJSON(message: OnDeleteRevisionValueAndContextRequest): unknown {
     const obj: any = {};
     message.typeInstanceId !== undefined &&
       (obj.typeInstanceId = message.typeInstanceId);
@@ -1084,9 +1171,9 @@ export const OnDeleteRevisionRequest = {
   },
 
   fromPartial(
-    object: DeepPartial<OnDeleteRevisionRequest>
-  ): OnDeleteRevisionRequest {
-    const message = createBaseOnDeleteRevisionRequest();
+    object: DeepPartial<OnDeleteRevisionValueAndContextRequest>
+  ): OnDeleteRevisionValueAndContextRequest {
+    const message = createBaseOnDeleteRevisionValueAndContextRequest();
     message.typeInstanceId = object.typeInstanceId ?? "";
     message.context = object.context ?? undefined;
     message.ownerId = object.ownerId ?? undefined;
@@ -1669,6 +1756,14 @@ export const ValueAndContextStorageBackendDefinition = {
       requestType: OnDeleteValueAndContextRequest,
       requestStream: false,
       responseType: OnDeleteResponse,
+      responseStream: false,
+      options: {},
+    },
+    onDeleteRevision: {
+      name: "OnDeleteRevision",
+      requestType: OnDeleteRevisionValueAndContextRequest,
+      requestStream: false,
+      responseType: OnDeleteRevisionResponse,
       responseStream: false,
       options: {},
     },

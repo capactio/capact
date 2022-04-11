@@ -11,6 +11,7 @@ import {
   OnUpdateValueAndContextRequest,
   OnCreateValueAndContextRequest,
   OnDeleteValueAndContextRequest,
+  OnDeleteRevisionValueAndContextRequest,
 } from "../../generated/grpc/storage_backend";
 import { Client, createChannel, createClient } from "nice-grpc";
 import { Driver } from "neo4j-driver";
@@ -303,7 +304,9 @@ export default class DelegatedStorageService {
           `External backend "${input.backend.id}": ${validateErr.message}`
         );
       }
-      const req: OnDeleteRevisionRequest = {
+      const req:
+        | OnDeleteRevisionRequest
+        | OnDeleteRevisionValueAndContextRequest = {
         typeInstanceId: input.typeInstance.id,
         resourceVersion: input.typeInstance.resourceVersion,
         context: DelegatedStorageService.encode(input.backend.context),

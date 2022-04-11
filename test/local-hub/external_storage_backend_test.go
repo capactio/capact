@@ -526,7 +526,6 @@ func TestDeleteTypeInstanceRevision(t *testing.T) {
 	// then on error, second revision was rolled back
 	// then the second revision created even though previously ended with error
 	require.NoError(t, err)
-
 }
 
 func registerExternalDotenvStorage(ctx context.Context, t *testing.T, cli *local.Client, srvAddr string) (gqllocalapi.CreateTypeInstanceOutput, func(t *testing.T)) {
@@ -633,7 +632,7 @@ func assertDataInExternalStorageDoesntExist(t *testing.T, addr string, refs []ty
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	client := pb.NewStorageBackendClient(conn)
+	client := pb.NewValueAndContextStorageBackendClient(conn)
 
 	for _, ti := range refs {
 		_, err = client.GetValue(ctx, &pb.GetValueRequest{
