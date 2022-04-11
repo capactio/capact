@@ -139,6 +139,11 @@ func (h *ReleaseHandler) getReleaseContext(contextBytes []byte) (*ReleaseContext
 	return &ctx, nil
 }
 
+// OnDeleteRevision is NOP.
+func (*ReleaseHandler) OnDeleteRevision(context.Context, *pb.OnDeleteRevisionRequest) (*pb.OnDeleteRevisionResponse, error) {
+	return &pb.OnDeleteRevisionResponse{}, nil
+}
+
 func (h *ReleaseHandler) fetchHelmRelease(ti string, ctx []byte) (*release.Release, *ReleaseContext, error) {
 	relCtx, err := h.getReleaseContext(ctx)
 	if err != nil {
