@@ -1,4 +1,4 @@
-\# Generators from JSON Schema to Go structs
+# Generators from JSON Schema to Go structs
 
 This document describes the available open-source libraries that are able to generate the Go structs from the [JSON Schema draft-07](https://json-schema.org/draft-07/json-schema-release-notes.html).
 
