@@ -13,7 +13,7 @@ argo-actions is intended to be run as an Argo Workflow step which downloads, upl
 ## Prerequisites
 
 - [Go](https://golang.org)
-- [Local Capact installation](https://capact.io/docs/installation/local)
+- [Local Capact development cluster](https://capact.io/community/development/development-guide#development-cluster) created with the `USE_TEST_SETUP=true make dev-cluster` command
 
 ## Usage
 
@@ -36,7 +36,10 @@ APP_ACTION=DownloadAction APP_DOWNLOAD_CONFIG="{2282814e-7571-4708-9279-717aea3c
 To upload example TypeInstances:
 
 1. Install [Helm Storage Backends](https://capact.io/docs/feature/storage-backends/helm) and use them in Policy
-3. In [`postgresql-helm-release`](./example-input/upload/typeinstances/postgresql-helm-release) replace `{backend ID`} with ID of the Helm Release backend 
+2. Install PostgreSQL according to the [Helm Runner installation](../helm-runner/README.md#installation) section.
+3. In the [`payload.yaml`](./example-input/upload/payload.yaml) file:
+   - replace `{helm release storage backend ID}` with the ID of the installed Helm Release backend 
+   - replace `{test storage backend ID}` with the ID of the installed Helm Release backend 
 4. Run:
 
     ```bash

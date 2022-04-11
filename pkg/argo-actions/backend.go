@@ -4,14 +4,19 @@ import (
 	"context"
 	"encoding/json"
 
+	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
+
 	storagebackend "capact.io/capact/pkg/hub/storage-backend"
 
-	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/local"
 	"github.com/pkg/errors"
 )
 
-func resolveBackendsValues(ctx context.Context, client *hubclient.Client, ids []string) (map[string]storagebackend.TypeValue, error) {
+type findTIClient interface {
+	FindTypeInstances(ctx context.Context, ids []string, opts ...local.TypeInstancesOption) (map[string]hublocalgraphql.TypeInstance, error)
+}
+
+func resolveBackendsValues(ctx context.Context, client findTIClient, ids []string) (map[string]storagebackend.TypeValue, error) {
 	// get values
 	tiMap, err := client.FindTypeInstances(ctx, ids, local.WithFields(local.TypeInstanceRootFields|local.TypeInstanceLatestResourceVersionValueField))
 	if err != nil {
