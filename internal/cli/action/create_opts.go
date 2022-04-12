@@ -83,7 +83,7 @@ func (c *CreateOptions) validate(ctx context.Context) error {
 // If possible starts interactive mode.
 func (c *CreateOptions) resolve(ctx context.Context) error {
 	if err := c.resolveFromFiles(); err != nil {
-		return err
+		return errors.Wrap(err, "while resolving properties")
 	}
 
 	if c.Interactive {
@@ -110,13 +110,13 @@ func (c *CreateOptions) resolveWithSurvey() error {
 	}
 
 	if err := survey.Ask(qs, c); err != nil {
-		return err
+		return errors.Wrap(err, "while asking for Action name and namespace")
 	}
 
 	if c.ParametersFilePath == "" && c.areInputParamsRequired {
 		gqlJSON, err := c.askForInputParameters()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while asking for input parameters")
 		}
 		c.parameters = gqlJSON
 	}
@@ -124,7 +124,7 @@ func (c *CreateOptions) resolveWithSurvey() error {
 	if c.TypeInstancesFilePath == "" && c.areInputTypeInstancesRequired {
 		ti, err := c.askForInputTypeInstances()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while asking for input TypeInstances")
 		}
 		c.typeInstances = ti
 	}
@@ -132,7 +132,7 @@ func (c *CreateOptions) resolveWithSurvey() error {
 	if c.ActionPolicyFilePath == "" {
 		policy, err := askForActionPolicy(c.InterfacePath)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while asking for Action policy")
 		}
 		c.policy = policy
 	}
@@ -143,34 +143,35 @@ func (c *CreateOptions) resolveFromFiles() error {
 	if c.ParametersFilePath != "" {
 		yamlInputParameters, err := ioutil.ReadFile(c.ParametersFilePath)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while reading Action input parameters")
 		}
 
 		c.parameters, err = yaml.YAMLToJSON(yamlInputParameters)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while converting YAML Action input parameters to JSON")
 		}
+		fmt.Println("parameters", string(c.parameters))
 	}
 
 	if c.TypeInstancesFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.TypeInstancesFilePath)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while reading Action input TypeInstances file")
 		}
 		c.typeInstances, err = toTypeInstance(rawInput)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while unmarshaling Action input TypeInstances file")
 		}
 	}
 
 	if c.ActionPolicyFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.ActionPolicyFilePath)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while reading Action policy file")
 		}
 		c.policy, err = toActionPolicy(rawInput)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "while unmarshaling Action policy file")
 		}
 	}
 
