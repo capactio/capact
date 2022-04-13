@@ -228,7 +228,10 @@ async function storeValueExternally(
   }
   // 1. Based on our contract, if user didn't provide value, we need to fetch the old one and put it
   // to the new revision.
-  if (!args.value) {
+  const requiresInputValue = await delegatedStorage.IsValueAllowedByBackend(
+    fetchInput.backend.id
+  );
+  if (!args.value && requiresInputValue) {
     logger.debug("Fetching previous value from external storage", fetchInput);
     const resp = await delegatedStorage.Get(fetchInput);
     args.value = resp[id];
