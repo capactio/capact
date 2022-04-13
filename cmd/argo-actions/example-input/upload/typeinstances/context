@@ -1,0 +1,13 @@
+backend:
+  context:
+    chartLocation: https://charts.bitnami.com/bitnami
+    driver: secrets
+    name: example-release
+    namespace: default
+value:
+  chart:
+    name: postgresql
+    repo: https://charts.bitnami.com/bitnami
+    version: 10.2.5
+  name: example-release
+  namespace: default
