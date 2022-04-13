@@ -53,7 +53,9 @@ spec:
                 username: superuser
               defaultDBName: postgres
     create-user:
+    	# Alternative name: dependencies, depends-on or dependsOn or needs
       depends: ["psql"] # this can be removed, we can create own DAG based on the inputs.
+
       interface:
         path: "cap.interface.database.postgresql.create-user"
       input:
@@ -65,7 +67,9 @@ spec:
              name: mattermost
 
     create-db:
+      # Alternative name: dependencies, depends-on or dependsOn or needs
       depends: ["create-user"]
+
       interface:
         path: "cap.interface.database.postgresql.create-user"
       input:
@@ -77,7 +81,9 @@ spec:
               name: mattermost
               owner: mattermost
     install:
+      # Alternative name: dependencies, depends-on or dependsOn or needs
       depends: ["create-db"]
+
       interface:
         path: "cap.interface.productivity.mattermost.install"
       input:
@@ -94,7 +100,7 @@ spec:
   cancel: false
 ```
 
-In the future, we can also add a native support for direct Implementation references in steps. When user compose an Action, they already know what they want to achieve. Instead of creating a complex Action Policy, specific Implementations can be selected with an implementation-specific input attached to them. In this way, the Interfaces would be a nice grouping feature used on UI and later user by browsing a catalog of available service, can compose a given Action. Such Action will be easier to rationalize and requires less cognitive overhead as it describes in a declarative way want will be done.
+In the future, we can also add a native support for direct Implementation references in steps. When users compose an Action, they already know what they want to achieve. Instead of creating a complex Action Policy, specific Implementations can be selected with an implementation-specific input attached to them. In this way, the Interfaces would be a nice grouping feature used on UI and later user by browsing a catalog of available service, can compose a given Action. Such Action will be easier to rationalize and requires less cognitive overhead as it describes in a declarative way want will be done.
 
 Still, the Global Policy can be used in this approach. When user browse a catalog of available service, only those which conforms with a global policy are displayed.
 
@@ -158,6 +164,6 @@ The implementation of the Composed Action can be split into two stages.
 - Add support to create ComposedAction via Dashboard:
   - Later a dedicated block builder can be added.
 
-### Summary
+### Decision
 
-During the investigation, I didn't spot any issue with the ComposeAction implementation. It looks to be straight forward, however there are multiple areas that need to be covered even in the minimal scope.
+During the investigation, I didn't spot any issue with the ComposeAction implementation. It looks to be straight forward, however there are multiple areas that need to be covered even in the minimal scope. However, the main inspire for implementing this feature was the [Support dynamic TypeInstances in umbrella workflow](https://github.com/capactio/capact/issues/695) issue. Fortunately, we found out an easier way to overcome it. For now, we decided to postpone it as the minimal implementation would take about 8MD where the proposed alternative needs only 3MD. This feature is likely to be implemented in the future, as it also solve a few more issues.
