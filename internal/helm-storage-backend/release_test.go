@@ -97,6 +97,15 @@ func TestRelease_CreateGetUpdate_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
+			preCreateVal, getErr := svc.GetPreCreateValue(context.Background(), &pb.GetPreCreateValueRequest{
+				Context: givenReq.Context,
+			})
+
+			// then
+			assert.NoError(t, getErr)
+			assert.EqualValues(t, preCreateVal, expResponse)
+
+			// when
 			getOut, getErr := svc.GetValue(context.Background(), givenReq)
 
 			// then
@@ -152,7 +161,7 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 					ChartLocation: "http://example.com/charts",
 				}),
 			},
-			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' for TypeInstance '123' was not found",
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' (TypeInstance ID: '123') was not found",
 		},
 		{
 			name: "should return not found error if release namespace is wrong",
@@ -166,7 +175,7 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 					ChartLocation: "http://example.com/charts",
 				}),
 			},
-			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' (TypeInstance ID: '123') was not found",
 		},
 		{
 			name: "should return internal error",
@@ -235,6 +244,92 @@ func TestRelease_CreateGetUpdate_Failures(t *testing.T) {
 	}
 }
 
+func TestRelease_GetPreCreateValue_Failures(t *testing.T) {
+	// globally given
+	const (
+		releaseName      = "test-release"
+		releaseNamespace = "test-namespace"
+	)
+	tests := []struct {
+		name string
+
+		request       *pb.GetPreCreateValueRequest
+		internalError error
+
+		expErrMsg string
+	}{
+		{
+			name: "should return not found error if release name is wrong",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, ReleaseContext{
+					HelmRelease: HelmRelease{
+						Name:      "other-release",
+						Namespace: releaseNamespace,
+					},
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' (TypeInstance ID: not yet known) was not found",
+		},
+		{
+			name: "should return not found error if release namespace is wrong",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, ReleaseContext{
+					HelmRelease: HelmRelease{
+						Name:      releaseName,
+						Namespace: "other-ns",
+					},
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' (TypeInstance ID: not yet known) was not found",
+		},
+		{
+			name: "should return internal error",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, ReleaseContext{
+					HelmRelease: HelmRelease{
+						Name:      releaseName,
+						Namespace: "other-ns",
+					},
+					ChartLocation: "http://example.com/charts",
+				}),
+			},
+			internalError: errors.New("internal error"),
+			expErrMsg:     "rpc error: code = Internal desc = while creating Helm get release client: internal error",
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// given
+			expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+			expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
+
+			mockConfigurationProducer := func(inputFlags *genericclioptions.ConfigFlags, inputDriver, inputNs string) (*action.Configuration, error) {
+				if test.internalError != nil {
+					return nil, test.internalError
+				}
+				producer := mockConfigurationProducer(t, expHelmRelease, expFlags, "secrets")
+				return producer(inputFlags, inputDriver, inputNs)
+			}
+			fetcher := NewHelmReleaseFetcher(expFlags)
+			fetcher.actionConfigurationProducer = mockConfigurationProducer
+
+			svc, err := NewReleaseHandler(logger.Noop(), fetcher)
+			require.NoError(t, err)
+
+			// when
+			getOut, getErr := svc.GetPreCreateValue(context.Background(), test.request)
+
+			// then
+			assert.EqualError(t, getErr, test.expErrMsg)
+			assert.Nil(t, getOut)
+		})
+	}
+}
+
 func TestRelease_NOP_Methods(t *testing.T) {
 	// globally given
 	tests := []struct {
@@ -263,6 +358,12 @@ func TestRelease_NOP_Methods(t *testing.T) {
 			name: "no operation for OnUnlock",
 			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
 				return svc.OnUnlock(ctx, nil)
+			},
+		},
+		{
+			name: "no operation for OnDeleteRevision",
+			handler: func(ctx context.Context, svc *ReleaseHandler) (interface{}, error) {
+				return svc.OnDeleteRevision(ctx, nil)
 			},
 		},
 	}

@@ -6,10 +6,11 @@ import (
 	"os"
 	"testing"
 
-	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+
+	pb "capact.io/capact/pkg/hub/api/grpc/storage_backend"
 )
 
 // #nosec G101
@@ -76,12 +77,12 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	client := pb.NewStorageBackendClient(conn)
+	client := pb.NewValueAndContextStorageBackendClient(conn)
 
 	// create
 	t.Logf("Creating TI %q...\n", typeInstanceID)
 
-	_, err = client.OnCreate(ctx, &pb.OnCreateRequest{
+	_, err = client.OnCreate(ctx, &pb.OnCreateValueAndContextRequest{
 		TypeInstanceId: typeInstanceID,
 		Value:          value,
 		Context:        reqContext,
@@ -105,7 +106,7 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 	t.Logf("Updating TI %q...\n", typeInstanceID)
 
 	newValueBytes := []byte(`{"key": "updated"}`)
-	_, err = client.OnUpdate(ctx, &pb.OnUpdateRequest{
+	_, err = client.OnUpdate(ctx, &pb.OnUpdateValueAndContextRequest{
 		TypeInstanceId:     typeInstanceID,
 		NewResourceVersion: 2,
 		NewValue:           newValueBytes,
@@ -204,10 +205,29 @@ func executeSecretStorageBackendTestScenario(t *testing.T, srvAddr, typeInstance
 	t.Logf("Getting TI %q: resource version %d: %s\n", typeInstanceID, resourceVersion, string(res.Value))
 	assert.Equal(t, newValueBytes, res.Value)
 
-	// delete
-	t.Logf("Deleting TI %q...\n", typeInstanceID)
+	// delete second revision
+	t.Logf("Deleting TI %q revision %d...\n", typeInstanceID, resourceVersion)
+	_, err = client.OnDeleteRevision(ctx, &pb.OnDeleteRevisionValueAndContextRequest{
+		TypeInstanceId:  typeInstanceID,
+		Context:         reqContext,
+		ResourceVersion: resourceVersion,
+	})
+	require.NoError(t, err)
 
-	_, err = client.OnDelete(ctx, &pb.OnDeleteRequest{
+	_, err = client.GetValue(ctx, &pb.GetValueRequest{
+		TypeInstanceId:  typeInstanceID,
+		ResourceVersion: resourceVersion,
+		Context:         reqContext,
+	})
+	require.Error(t, err)
+	assert.EqualError(t, err, fmt.Sprintf(`rpc error: code = NotFound desc = TypeInstance "%s" in revision 2 was not found`, typeInstanceID))
+
+	t.Logf("Getting TI %q: resource version %d: error: %v\n", typeInstanceID, resourceVersion, err)
+
+	// delete
+	t.Logf("Deleting the whole TI %q...\n", typeInstanceID)
+
+	_, err = client.OnDelete(ctx, &pb.OnDeleteValueAndContextRequest{
 		TypeInstanceId: typeInstanceID,
 		Context:        reqContext,
 	})

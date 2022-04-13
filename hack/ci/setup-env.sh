@@ -37,7 +37,7 @@ fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure
 cat <<EOT >>"$GITHUB_ENV"
-APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"hub-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"},{"APP":"gitlab-api-runner"},{"APP":"secret-storage-backend"},{"APP":"helm-storage-backend"}]}
+APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"hub-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"},{"APP":"gitlab-api-runner"},{"APP":"secret-storage-backend"},{"APP":"helm-storage-backend"},{"APP":"ti-value-fetcher"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}, {"TEST":"local-hub"}]}
 INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"},{"INFRA":"jinja2"},{"INFRA":"merger"}]}
 EOT

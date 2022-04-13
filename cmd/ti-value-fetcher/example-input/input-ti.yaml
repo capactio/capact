@@ -1,0 +1,7 @@
+backend:
+  context:
+    chartLocation: https://charts.bitnami.com/bitnami
+    driver: secrets
+    name: example-release
+    namespace: default
+value: null

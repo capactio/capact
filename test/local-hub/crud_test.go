@@ -5,7 +5,6 @@ package localhub
 
 import (
 	"context"
-	"os"
 	"regexp"
 	"testing"
 
@@ -224,8 +223,11 @@ func TestUpdateTypeInstances(t *testing.T) {
 
 	t.Log("then should failed with error id1,id2 already locked by different owner")
 	require.Error(t, err)
-	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
-	#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
+	assert.Regexp(t, regexp.MustCompile(
+		heredoc.Docf(`
+      while executing mutation to update TypeInstances: All attempts fail:
+      #1: graphql: failed to update TypeInstances: 1 error occurred:
+      	\* Error: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
 
 	t.Log("when update them without owner")
 	_, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
@@ -241,8 +243,11 @@ func TestUpdateTypeInstances(t *testing.T) {
 
 	t.Log("then should failed with error id1,id2 already locked by different owner")
 	require.Error(t, err)
-	assert.Regexp(t, regexp.MustCompile(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
-	#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
+	assert.Regexp(t, regexp.MustCompile(
+		heredoc.Docf(`
+      while executing mutation to update TypeInstances: All attempts fail:
+      #1: graphql: failed to update TypeInstances: 1 error occurred:
+      	\* Error: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))), err.Error())
 
 	t.Log("when update one property with Foo owner, and second without owner")
 	_, err = cli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
@@ -259,8 +264,10 @@ func TestUpdateTypeInstances(t *testing.T) {
 
 	t.Log("then should failed with error id2 already locked by different owner")
 	require.Error(t, err)
-	require.Equal(t, err.Error(), heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
-	     				#1: graphql: failed to update TypeInstances: TypeInstances with IDs "%s" are locked by different owner`, createdTIIDs[1]))
+	require.Equal(t, heredoc.Docf(`
+      while executing mutation to update TypeInstances: All attempts fail:
+      #1: graphql: failed to update TypeInstances: 1 error occurred:
+      	* Error: TypeInstances with IDs %q are locked by different owner`, createdTIIDs[1]), err.Error())
 
 	t.Log("given id3 does not exist")
 	t.Log("when try to update it")
@@ -273,8 +280,10 @@ func TestUpdateTypeInstances(t *testing.T) {
 
 	t.Log("then should failed with error id3 not found")
 	require.Error(t, err)
-	require.Equal(t, err.Error(), heredoc.Doc(`while executing mutation to update TypeInstances: All attempts fail:
-	     			#1: graphql: failed to update TypeInstances: TypeInstances with IDs "id3" were not found`))
+	require.Equal(t, heredoc.Doc(`
+      while executing mutation to update TypeInstances: All attempts fail:
+      #1: graphql: failed to update TypeInstances: 1 error occurred:
+      	* Error: TypeInstances with IDs "id3" were not found`), err.Error())
 
 	t.Log("then should unlock id1,id2,id3")
 	err = cli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
@@ -282,15 +291,6 @@ func TestUpdateTypeInstances(t *testing.T) {
 		OwnerID: fooOwnerID,
 	})
 	require.NoError(t, err)
-}
-
-func getLocalClient(t *testing.T) *local.Client {
-	localhubAddrEnv := "LOCALHUB_ADDR"
-	localhubAddr := os.Getenv(localhubAddrEnv)
-	if localhubAddr == "" {
-		t.Skipf("skipping running example test as the env %s is not provided", localhubAddrEnv)
-	}
-	return local.NewDefaultClient(localhubAddr)
 }
 
 func getBuiltinStorageTypeInstance(ctx context.Context, t *testing.T, cli *local.Client) gqllocalapi.TypeInstance {

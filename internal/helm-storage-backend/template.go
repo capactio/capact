@@ -3,6 +3,7 @@ package helmstoragebackend
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -22,7 +23,7 @@ import (
 // repositoryCache Helm cache for repositories
 const repositoryCache = "/tmp/helm"
 
-var _ pb.StorageBackendServer = &TemplateHandler{}
+var _ pb.ContextStorageBackendServer = &TemplateHandler{}
 
 type (
 	// TemplateContext holds context used by Helm template storage backend.
@@ -36,7 +37,7 @@ type (
 
 // TemplateHandler handles incoming requests to the Helm template storage backend gRPC server.
 type TemplateHandler struct {
-	pb.UnimplementedStorageBackendServer
+	pb.UnimplementedContextStorageBackendServer
 
 	log           *zap.Logger
 	fetcher       *HelmReleaseFetcher
@@ -52,10 +53,28 @@ func NewTemplateHandler(log *zap.Logger, helmRelFetcher *HelmReleaseFetcher) *Te
 	}
 }
 
+// GetPreCreateValue returns a value for a given context without TypeInstance details.
+func (h *TemplateHandler) GetPreCreateValue(ctx context.Context, req *pb.GetPreCreateValueRequest) (*pb.GetPreCreateValueResponse, error) {
+	h.log.Info("getting precreate entry")
+	rel, relCtx, err := h.fetchHelmReleaseForPrecreate(req.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	value, err := h.renderOutputValue(relCtx, rel)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetPreCreateValueResponse{
+		Value: value,
+	}, nil
+}
+
 // GetValue returns a value for a given TypeInstance.
 func (h *TemplateHandler) GetValue(_ context.Context, req *pb.GetValueRequest) (*pb.GetValueResponse, error) {
 	h.log.Info("getting entry", zap.String("id", req.TypeInstanceId))
-	rel, relCtx, err := h.fetchHelmRelease(req.TypeInstanceId, req.Context)
+	rel, relCtx, err := h.fetchHelmReleaseForTI(req.TypeInstanceId, req.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +140,11 @@ func (*TemplateHandler) OnUnlock(context.Context, *pb.OnUnlockRequest) (*pb.OnUn
 	return &pb.OnUnlockResponse{}, nil
 }
 
+// OnDeleteRevision is NOP.
+func (*TemplateHandler) OnDeleteRevision(context.Context, *pb.OnDeleteRevisionRequest) (*pb.OnDeleteRevisionResponse, error) {
+	return &pb.OnDeleteRevisionResponse{}, nil
+}
+
 func (h *TemplateHandler) getReleaseContext(contextBytes []byte) (*TemplateContext, error) {
 	var ctx TemplateContext
 	err := json.Unmarshal(contextBytes, &ctx)
@@ -135,18 +159,28 @@ func (h *TemplateHandler) getReleaseContext(contextBytes []byte) (*TemplateConte
 	return &ctx, nil
 }
 
-func (h *TemplateHandler) fetchHelmRelease(ti string, ctx []byte) (*release.Release, *TemplateContext, error) {
-	relCtx, err := h.getReleaseContext(ctx)
+func (h *TemplateHandler) fetchHelmReleaseForPrecreate(relCtx []byte) (*release.Release, *TemplateContext, error) {
+	additionalCtxMsg := "TypeInstance ID: not yet known"
+	return h.fetchHelmRelease(relCtx, additionalCtxMsg)
+}
+
+func (h *TemplateHandler) fetchHelmReleaseForTI(ti string, relCtx []byte) (*release.Release, *TemplateContext, error) {
+	additionalCtxMsg := fmt.Sprintf("TypeInstance ID: '%s'", ti)
+	return h.fetchHelmRelease(relCtx, additionalCtxMsg)
+}
+
+func (h *TemplateHandler) fetchHelmRelease(relCtx []byte, additionalCtxMsg string) (*release.Release, *TemplateContext, error) {
+	resolvedRelCtx, err := h.getReleaseContext(relCtx)
 	if err != nil {
 		return nil, nil, gRPCInternalError(err)
 	}
 
-	rel, err := h.fetcher.FetchHelmRelease(ti, relCtx.HelmRelease)
+	rel, err := h.fetcher.FetchHelmRelease(resolvedRelCtx.HelmRelease, ptr.String(additionalCtxMsg))
 	if err != nil {
 		return nil, nil, err // it already handles grpc errors properly
 	}
 
-	return rel, relCtx, nil
+	return rel, resolvedRelCtx, nil
 }
 
 func (h *TemplateHandler) renderOutputValue(relCtx *TemplateContext, helmRelease *release.Release) ([]byte, error) {

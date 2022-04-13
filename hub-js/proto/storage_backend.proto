@@ -2,7 +2,20 @@ syntax = "proto3";
 option go_package = "./storage_backend";
 package storage_backend;
 
+message GetPreCreateValueRequest {
+  bytes context = 1;
+}
+
+message GetPreCreateValueResponse {
+  optional bytes value = 1;
+}
+
 message OnCreateRequest {
+  string type_instance_id = 1;
+  bytes context = 2;
+}
+
+message OnCreateValueAndContextRequest {
   string type_instance_id = 1;
   bytes value = 2;
   optional bytes context = 3;
@@ -17,7 +30,7 @@ message TypeInstanceResourceVersion {
   bytes value = 2;
 }
 
-message OnUpdateRequest {
+message OnUpdateValueAndContextRequest {
   string type_instance_id = 1;
   uint32 new_resource_version = 2;
   bytes new_value = 3;
@@ -25,17 +38,45 @@ message OnUpdateRequest {
   optional string owner_id = 5;
 }
 
+message OnUpdateRequest {
+  string type_instance_id = 1;
+  uint32 new_resource_version = 2;
+  bytes context = 3;
+  optional string owner_id = 4;
+}
+
 message OnUpdateResponse {
   optional bytes context = 1;
 }
 
-message OnDeleteRequest {
+message OnDeleteValueAndContextRequest {
   string type_instance_id = 1;
   optional bytes context = 2;
   optional string owner_id = 3;
 }
 
+message OnDeleteRequest {
+  string type_instance_id = 1;
+  bytes context = 2;
+  optional string owner_id = 3;
+}
+
 message OnDeleteResponse {}
+
+message OnDeleteRevisionRequest {
+	string type_instance_id = 1;
+	optional string owner_id = 3;
+	uint32 resource_version = 4;
+}
+
+message OnDeleteRevisionValueAndContextRequest {
+	string type_instance_id = 1;
+	optional bytes context = 2;
+	optional string owner_id = 3;
+	uint32 resource_version = 4;
+}
+
+message OnDeleteRevisionResponse {}
 
 message GetValueRequest {
   string type_instance_id = 1;
@@ -76,15 +117,35 @@ message OnUnlockResponse {}
 
 // services
 
-service StorageBackend {
+// ValueAndContextStorageBackend handles the full lifecycle of the TypeInstance.
+// TypeInstance value is always provided as a part of request. Context may be provided but it is not required.
+service ValueAndContextStorageBackend {
   // value
   rpc GetValue(GetValueRequest) returns (GetValueResponse);
-  rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
-  rpc OnUpdate(OnUpdateRequest) returns (OnUpdateResponse);
-  rpc OnDelete(OnDeleteRequest) returns (OnDeleteResponse);
+  rpc OnCreate(OnCreateValueAndContextRequest) returns (OnCreateResponse);
+  rpc OnUpdate(OnUpdateValueAndContextRequest) returns (OnUpdateResponse);
+  rpc OnDelete(OnDeleteValueAndContextRequest) returns (OnDeleteResponse);
+	rpc OnDeleteRevision(OnDeleteRevisionValueAndContextRequest) returns (OnDeleteRevisionResponse);
 
   // lock
   rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
   rpc OnLock(OnLockRequest) returns (OnLockResponse);
   rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
+}
+
+// ContextStorageBackend handles TypeInstance lifecycle based on the context, which is required. TypeInstance value is never passed in input arguments.
+service ContextStorageBackend {
+  //value
+  rpc GetPreCreateValue(GetPreCreateValueRequest) returns (GetPreCreateValueResponse);
+  rpc GetValue(GetValueRequest) returns (GetValueResponse);
+  rpc OnCreate(OnCreateRequest) returns (OnCreateResponse);
+  rpc OnUpdate(OnUpdateRequest) returns (OnUpdateResponse);
+  rpc OnDelete(OnDeleteRequest) returns (OnDeleteResponse);
+	rpc OnDeleteRevision(OnDeleteRevisionRequest) returns (OnDeleteRevisionResponse);
+
+  // lock
+  rpc GetLockedBy(GetLockedByRequest) returns (GetLockedByResponse);
+  rpc OnLock(OnLockRequest) returns (OnLockResponse);
+  rpc OnUnlock(OnUnlockRequest) returns (OnUnlockResponse);
+
 }

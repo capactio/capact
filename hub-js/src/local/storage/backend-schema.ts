@@ -3,7 +3,7 @@ import { JSONSchemaType } from "ajv";
 export interface StorageTypeInstanceSpec {
   url: string;
   acceptValue: boolean;
-  contextSchema: string | null;
+  contextSchema: object | null;
 }
 
 export const StorageTypeInstanceSpecSchema: JSONSchemaType<StorageTypeInstanceSpec> =
@@ -18,7 +18,7 @@ export const StorageTypeInstanceSpecSchema: JSONSchemaType<StorageTypeInstanceSp
         format: "uri",
       },
       acceptValue: { type: "boolean" },
-      contextSchema: { type: "string", nullable: true },
+      contextSchema: { type: "object", nullable: true },
     },
     required: ["url", "acceptValue"],
     additionalProperties: true,

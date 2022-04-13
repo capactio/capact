@@ -139,7 +139,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string, opts ...TypeIn
 	return resp.TypeInstance, nil
 }
 
-// FindTypeInstancesTypeRef finds a TypeInstance's TypeRef.
+// FindTypeInstancesTypeRef finds TypeRef for all specified TypeInstance IDs.
 // If no TypeInstances are found, it returns nil.
 func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error) {
 	if len(ids) == 0 {
@@ -176,6 +176,47 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 			continue
 		}
 		out[ti.ID] = *ti.TypeRef
+	}
+
+	return out, nil
+}
+
+// FindTypeInstances finds TypeInstance based on IDs.
+// If no TypeInstances are found, it returns nil.
+func (c *Client) FindTypeInstances(ctx context.Context, ids []string, opts ...TypeInstancesOption) (map[string]hublocalgraphql.TypeInstance, error) {
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithRelations)
+	tiOpts.Apply(opts...)
+
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	body := bytes.Buffer{}
+	for idx, id := range ids {
+		body.WriteString(fmt.Sprintf(`
+		id_%d:typeInstance(id: %q) {
+			%s
+		}`, idx, id, tiOpts.fields))
+	}
+
+	req := graphql.NewRequest(fmt.Sprintf(`query FindTypeInstances {
+		%s
+	}`, body.String()))
+
+	var resp map[string]*hublocalgraphql.TypeInstance
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to get TypeInstances based on IDs")
+	}
+
+	out := map[string]hublocalgraphql.TypeInstance{}
+	for _, ti := range resp {
+		if ti == nil {
+			continue
+		}
+		out[ti.ID] = *ti
 	}
 
 	return out, nil
