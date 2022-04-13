@@ -67,6 +67,40 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
+// FindType finds a Type for a given path.
+// It will return nil, if the Type is not found.
+func (c *Client) FindType(ctx context.Context, path string, opts ...TypeOption) (*gqlpublicapi.Type, error) {
+	typeOpts := &TypeOptions{}
+	typeOpts.Apply(opts...)
+
+	queryFields := fmt.Sprintf(`
+			path
+			name
+			prefix
+			%s`, typeOpts.additionalFields)
+
+	req := graphql.NewRequest(fmt.Sprintf(`query FindType($path: NodePath!)  {
+		  type(path: $path) {
+			  %s
+		  }
+		}`, queryFields))
+
+	req.Var("path", path)
+
+	var resp struct {
+		Type *gqlpublicapi.Type `json:"type"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to find Type")
+	}
+
+	return resp.Type, nil
+}
+
 // ListTypes returns all requested Types. By default, only root fields are populated.
 // Use options to add latestRevision fields or apply additional filtering.
 func (c *Client) ListTypes(ctx context.Context, opts ...TypeOption) ([]*gqlpublicapi.Type, error) {

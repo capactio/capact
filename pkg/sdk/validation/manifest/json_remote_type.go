@@ -105,22 +105,19 @@ func (v *RemoteTypeValidator) validateBackendStorageSchema(ctx context.Context, 
 	}
 
 	opts := []public.TypeOption{
-		public.WithTypeFilter(gqlpublicapi.TypeFilter{
-			PathPattern: ptr.String(types.GenericBackendStorageSchemaTypePath),
-		}),
 		public.WithTypeLatestRevision(public.TypeRevisionSpecFields),
 	}
 
-	gotTypes, err := v.hub.ListTypes(ctx, opts...)
+	gotType, err := v.hub.FindType(ctx, types.GenericBackendStorageSchemaTypePath, opts...)
 	if err != nil {
-		return res, errors.Wrap(err, "while fetching Types")
+		return res, errors.Wrap(err, "while get Type")
 	}
 
-	if len(gotTypes) == 0 || gotTypes[0].LatestRevision == nil || gotTypes[0].LatestRevision.Spec == nil {
+	if gotType == nil || gotType.LatestRevision == nil || gotType.LatestRevision.Spec == nil {
 		return res, fmt.Errorf("cannot find generic backend storage schema")
 	}
 
-	storageBytes, err := json.Marshal(gotTypes[0].LatestRevision.Spec.JSONSchema)
+	storageBytes, err := json.Marshal(gotType.LatestRevision.Spec.JSONSchema)
 	if err != nil {
 		return res, errors.Wrap(err, "while marshaling generic backend storage schema to bytes")
 	}
@@ -140,7 +137,7 @@ func (v *RemoteTypeValidator) validateBackendStorageSchema(ctx context.Context, 
 	}
 
 	for _, err := range result.Errors() {
-		res.Errors = append(res.Errors, fmt.Errorf("while validating JSON Schema against the generic storage backend schema (`%s`):: %s", types.GenericBackendStorageSchemaTypePath, err.String()))
+		res.Errors = append(res.Errors, fmt.Errorf("while validating JSON Schema against the generic storage backend schema (%q):: %s", types.GenericBackendStorageSchemaTypePath, err.String()))
 	}
 
 	return res, nil

@@ -15,95 +15,100 @@ import (
 var (
 	genericStorageSchema = heredoc.Doc(`
 	{
-        "$schema":"http://json-schema.org/draft-07/schema",
-        "type":"object",
-        "title":"The generic storage backend schema",
-        "required":[
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The generic storage backend schema",
+        "required": [
           "required",
-          "properties"
+          "properties",
+          "additionalProperties"
         ],
-        "properties":{
-          "required":{
-            "$id":"#/properties/required",
-            "type":"array",
-            "minItems":3,
-            "allOf":[
+        "properties": {
+          "required": {
+            "$id": "#/properties/required",
+            "type": "array",
+            "maxItems": 3,
+            "allOf": [
               {
-                "contains":{
-                  "const":"url"
+                "contains": {
+                  "const": "url"
                 }
               },
               {
-                "contains":{
-                  "const":"acceptValue"
+                "contains": {
+                  "const": "acceptValue"
                 }
               },
               {
-                "contains":{
-                  "const":"contextSchema"
+                "contains": {
+                  "const": "contextSchema"
                 }
               }
             ]
           },
-          "properties":{
-            "$id":"#/properties/properties",
-            "type":"object",
-            "minProperties":3,
-            "maxProperties":3,
-            "properties":{
-              "url":{
-                "type":"object",
-                "properties":{
-                  "type":{
-                    "const":"string"
+          "properties": {
+            "$id": "#/properties/properties",
+            "type": "object",
+            "required": [
+              "contextSchema",
+              "url",
+              "acceptValue"
+            ],
+            "properties": {
+              "url": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "string"
                   }
                 },
-				"required":[
-				  "type"
-				]
+                "required": [
+                  "type"
+                ]
               },
-              "contextSchema":{
-                "type":"object",
-                "oneOf":[
+              "contextSchema": {
+                "type": "object",
+                "oneOf": [
                   {
-                    "properties":{
-                      "const":{
-                        "type":"object"
+                    "properties": {
+                      "const": {
+                        "type": "object"
                       }
                     },
-                    "required":[
+                    "required": [
                       "const"
                     ]
                   },
                   {
-                    "properties":{
-                      "type":{
-                        "const":"null"
+                    "properties": {
+                      "type": {
+                        "const": "null"
                       }
                     },
-                    "required":[
+                    "required": [
                       "type",
                       "const"
                     ]
                   }
                 ]
               },
-              "acceptValue":{
-                "type":"object",
-                "properties":{
-                  "type":{
-                    "const":"boolean"
+              "acceptValue": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "boolean"
                   }
                 },
-                "required":[
+                "required": [
                   "type",
                   "const"
                 ]
               }
-            }
+            },
+            "additionalProperties": false
           },
-          "additionalProperties":{
-            "const":false
+          "additionalProperties": {
+            "const": false
           }
         }
       }`)
@@ -177,10 +182,9 @@ func TestValidateBackendStorageSchema(t *testing.T) {
 				}`)),
 			errorMsg: "",
 			validationErrors: []error{
-				fmt.Errorf("%s (`%s`):: required: At least one of the items must match", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
-				fmt.Errorf("%s (`%s`):: required.0: required.0 does not match: \"contextSchema\"", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
-				fmt.Errorf("%s (`%s`):: required: Must validate all the schemas (allOf)", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
-				fmt.Errorf("%s (`%s`):: required: Array must have at least 3 items", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: required: At least one of the items must match", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: required.0: required.0 does not match: \"contextSchema\"", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: required: Must validate all the schemas (allOf)", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
 			},
 		},
 		"when there is schema that has invalid url property": {
@@ -211,7 +215,7 @@ func TestValidateBackendStorageSchema(t *testing.T) {
 				}`)),
 			errorMsg: "",
 			validationErrors: []error{
-				fmt.Errorf("%s (`%s`):: properties.url.type: properties.url.type does not match: \"string\"", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: properties.url.type: properties.url.type does not match: \"string\"", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
 			},
 		},
 		"when there is schema that has invalid contextSchema property": {
@@ -242,8 +246,8 @@ func TestValidateBackendStorageSchema(t *testing.T) {
 				}`)),
 			errorMsg: "",
 			validationErrors: []error{
-				fmt.Errorf("%s (`%s`):: properties.contextSchema: Must validate one and only one schema (oneOf)", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
-				fmt.Errorf("%s (`%s`):: properties.contextSchema.type: properties.contextSchema.type does not match: \"null\"", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: properties.contextSchema: Must validate one and only one schema (oneOf)", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: properties.contextSchema.type: properties.contextSchema.type does not match: \"null\"", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
 			},
 		},
 		"when there is schema that has invalid acceptValue property": {
@@ -273,7 +277,7 @@ func TestValidateBackendStorageSchema(t *testing.T) {
 				}`)),
 			errorMsg: "",
 			validationErrors: []error{
-				fmt.Errorf("%s (`%s`):: properties.acceptValue: const is required", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: properties.acceptValue: const is required", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
 			},
 		},
 		"when there is schema that has invalid additionalProperties property": {
@@ -304,7 +308,39 @@ func TestValidateBackendStorageSchema(t *testing.T) {
 				}`)),
 			errorMsg: "",
 			validationErrors: []error{
-				fmt.Errorf("%s (`%s`):: additionalProperties: additionalProperties does not match: false", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+				fmt.Errorf("%s (%q):: additionalProperties: additionalProperties does not match: false", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
+			},
+		},
+		"when there is schema that has more properties than required": {
+			typeInput: fixType(
+				"cap.core.type.hub.storage",
+				heredoc.Doc(`
+				{
+					"required": [
+					  "acceptValue",
+					  "contextSchema",
+					  "url"
+					],
+					"properties": {
+					  "url": {
+						  "type": "string",
+						  "format": "uri"
+					  },
+					  "contextSchema": {
+						"type": "null",
+						"const": null
+					  },
+					  "acceptValue": {
+						"type": "boolean",
+						"const": false
+					  },
+					  "foo": "test"
+					},
+					"additionalProperties": false
+				}`)),
+			errorMsg: "",
+			validationErrors: []error{
+				fmt.Errorf("%s (%q):: properties: Additional property foo is not allowed", errorMsgPrefix, types.GenericBackendStorageSchemaTypePath),
 			},
 		},
 		"when there is invalid JSON schema": {
@@ -320,12 +356,10 @@ func TestValidateBackendStorageSchema(t *testing.T) {
 			// given
 			ctx := context.Background()
 			hubCli := fakeHub{
-				knownTypes: []*gqlpublicapi.Type{
-					fixGQLTypeSchema(
-						types.GenericBackendStorageSchemaTypePath,
-						genericStorageSchema,
-					),
-				},
+				knownType: fixGQLTypeSchema(
+					types.GenericBackendStorageSchemaTypePath,
+					genericStorageSchema,
+				),
 			}
 			validator := manifest.NewRemoteTypeValidator(&hubCli)
 
