@@ -9,8 +9,8 @@ import (
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
-	"capact.io/capact/internal/cli/typeinstance"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
 	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -91,7 +91,7 @@ func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]
 		return nil, fmt.Errorf("TypeInstance %s not found", tiID)
 	}
 
-	backendData, err := typeinstance.NewStorageBackendData(ctx, cli, out)
+	backendData, err := storagebackend.NewTypeInstanceValue(ctx, cli, out)
 	if err != nil {
 		return nil, errors.Wrap(err, "while fetching storage backend data")
 	}
@@ -106,7 +106,7 @@ func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]
 		}
 	}
 
-	setTypeInstanceDataForMarshaling(backendData, &updateTI)
+	setTypeInstanceValueForMarshaling(backendData, &updateTI)
 	rawInput, err := yaml.Marshal(updateTI)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling updated TypeInstance")

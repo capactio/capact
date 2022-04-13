@@ -1,0 +1,33 @@
+typeInstances:
+  - alias: context
+    attributes: []
+    backend:
+      context: null
+      id: "{helm release storage backend ID}"
+    createdBy: default/example
+    typeRef:
+      path: cap.type.helm.chart.release
+      revision: 0.1.0
+    value: null
+  - alias: value
+    attributes: []
+    createdBy: default/example
+    typeRef:
+      path: cap.type.capactio.capact.validation.single-key
+      revision: 0.1.0
+    value: null
+  - alias: value-context
+    attributes: []
+    createdBy: default/example
+    typeRef:
+      path: cap.type.capactio.capact.validation.single-key
+      revision: 0.1.0
+    backend:
+      context: null
+      id: "{test storage backend ID}"
+    value: null
+usesRelations:
+  - from: context
+    to: value
+  - from: context
+    to: value-context

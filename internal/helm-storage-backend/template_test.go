@@ -97,10 +97,19 @@ func TestTemplate_CreateGetAndUpdate_Success(t *testing.T) {
 			svc := NewTemplateHandler(logger.Noop(), fetcher)
 
 			// when
-			outVal, gotErr := svc.GetValue(context.Background(), givenReq)
+			preCreateVal, getErr := svc.GetPreCreateValue(context.Background(), &pb.GetPreCreateValueRequest{
+				Context: givenReq.Context,
+			})
 
 			// then
-			assert.NoError(t, gotErr)
+			assert.NoError(t, getErr)
+			assert.EqualValues(t, preCreateVal, expResponse)
+
+			// when
+			outVal, getErr := svc.GetValue(context.Background(), givenReq)
+
+			// then
+			assert.NoError(t, getErr)
 			assert.EqualValues(t, outVal, expResponse)
 
 			// when
@@ -151,7 +160,7 @@ func TestTemplate_CreateGetAndUpdate_Failures(t *testing.T) {
 					},
 				}),
 			},
-			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' for TypeInstance '123' was not found",
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' (TypeInstance ID: '123') was not found",
 		},
 		{
 			name: "should return not found error if release namespace is wrong",
@@ -164,7 +173,7 @@ func TestTemplate_CreateGetAndUpdate_Failures(t *testing.T) {
 					},
 				}),
 			},
-			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' for TypeInstance '123' was not found",
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' (TypeInstance ID: '123') was not found",
 		},
 		{
 			name: "should return error indicating invalid goTemplate",
@@ -241,6 +250,101 @@ func TestTemplate_CreateGetAndUpdate_Failures(t *testing.T) {
 			// then
 			assert.EqualError(t, updateErr, test.expErrMsg)
 			assert.Empty(t, updateOut)
+		})
+	}
+}
+
+func TestTemplate_GetPreCreateValue_Failures(t *testing.T) {
+	// globally given
+	const (
+		releaseName      = "test-release"
+		releaseNamespace = "test-namespace"
+	)
+	tests := []struct {
+		name string
+
+		request       *pb.GetPreCreateValueRequest
+		internalError error
+
+		expErrMsg string
+	}{
+		{
+			name: "should return not found error if release name is wrong",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, TemplateContext{
+					HelmRelease: HelmRelease{
+						Name:      "other-release",
+						Namespace: releaseNamespace,
+					},
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'test-namespace/other-release' (TypeInstance ID: not yet known) was not found",
+		},
+		{
+			name: "should return not found error if release namespace is wrong",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, TemplateContext{
+					HelmRelease: HelmRelease{
+						Name:      releaseName,
+						Namespace: "other-ns",
+					},
+				}),
+			},
+			expErrMsg: "rpc error: code = NotFound desc = Helm release 'other-ns/test-release' (TypeInstance ID: not yet known) was not found",
+		},
+		{
+			name: "should return error indicating invalid goTemplate",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, TemplateContext{
+					HelmRelease: HelmRelease{
+						Name:      releaseName,
+						Namespace: releaseNamespace,
+					},
+					GoTemplate: `host: '{{ .Missing.property }}'`,
+				}),
+			},
+			expErrMsg: "rpc error: code = Internal desc = while rendering output value: while rendering additional output: while rendering chart: template: test-release-chart/additionalOutputTemplate:1:18: executing \"test-release-chart/additionalOutputTemplate\" at <.Missing.property>: nil pointer evaluating interface {}.property",
+		},
+		{
+			name: "should return internal error",
+			request: &pb.GetPreCreateValueRequest{
+				Context: mustMarshal(t, TemplateContext{
+					HelmRelease: HelmRelease{
+						Name:      releaseName,
+						Namespace: "other-ns",
+					},
+				}),
+			},
+			internalError: errors.New("internal error"),
+			expErrMsg:     "rpc error: code = Internal desc = while creating Helm get release client: internal error",
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// given
+			expHelmRelease := fixHelmRelease(releaseName, releaseNamespace)
+			expFlags := &genericclioptions.ConfigFlags{ClusterName: ptr.String("testing")}
+
+			mockConfigurationProducer := func(inputFlags *genericclioptions.ConfigFlags, inputDriver, inputNs string) (*action.Configuration, error) {
+				if test.internalError != nil {
+					return nil, test.internalError
+				}
+				producer := mockConfigurationProducer(t, expHelmRelease, expFlags, "secrets")
+				return producer(inputFlags, inputDriver, inputNs)
+			}
+			fetcher := NewHelmReleaseFetcher(expFlags)
+			fetcher.actionConfigurationProducer = mockConfigurationProducer
+
+			svc := NewTemplateHandler(logger.Noop(), fetcher)
+
+			// when
+			outVal, gotErr := svc.GetPreCreateValue(context.Background(), test.request)
+
+			// then
+			assert.EqualError(t, gotErr, test.expErrMsg)
+			assert.Nil(t, outVal)
 		})
 	}
 }

@@ -17,9 +17,9 @@ import (
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
 	cliprinter "capact.io/capact/internal/cli/printer"
-	"capact.io/capact/internal/cli/typeinstance"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/hub/client/local"
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
 )
 
 const (
@@ -83,11 +83,11 @@ func NewGet() *cobra.Command {
 			if opts.ExportToUpdateFormat {
 				for idx := range tis {
 					conv := mapTypeInstanceToUpdateType(&tis[idx])
-					backendData, err := typeinstance.NewStorageBackendData(cmd.Context(), cli, &tis[idx])
+					backendData, err := storagebackend.NewTypeInstanceValue(cmd.Context(), cli, &tis[idx])
 					if err != nil {
 						return errors.Wrap(err, "while fetching storage backend data")
 					}
-					setTypeInstanceDataForMarshaling(backendData, &conv)
+					setTypeInstanceValueForMarshaling(backendData, &conv)
 					fmt.Fprintln(out, yamlFileSeparator)
 					if err := resourcePrinter.Print(conv); err != nil {
 						return err

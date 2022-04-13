@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"capact.io/capact/internal/cli/typeinstance"
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
+
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/internal/ptr"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
@@ -86,7 +87,7 @@ func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) erro
 			Path:     testStorageTypePath,
 			Revision: testStorageTypeRevision,
 		},
-		Value: typeinstance.StorageBackendData{
+		Value: storagebackend.TypeInstanceValue{
 			URL:           i.cfg.TestStorageBackendURL,
 			AcceptValue:   true,
 			ContextSchema: contextSchema,

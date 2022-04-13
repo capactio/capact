@@ -1,8 +1,8 @@
 package typeinstance
 
 import (
-	"capact.io/capact/internal/cli/typeinstance"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
 	"github.com/spf13/cobra"
 )
 
@@ -78,15 +78,15 @@ func mapTypeInstanceToUpdateType(in *gqllocalapi.TypeInstance) gqllocalapi.Updat
 	return out
 }
 
-// setTypeInstanceDataForMarshaling sets TypeInstance data based on backend data.
-func setTypeInstanceDataForMarshaling(backendData *typeinstance.StorageBackendData, in *gqllocalapi.UpdateTypeInstancesInput) {
-	if backendData == nil {
+// setTypeInstanceValueForMarshaling sets TypeInstance value based on backend data.
+func setTypeInstanceValueForMarshaling(typeInstanceValue *storagebackend.TypeInstanceValue, in *gqllocalapi.UpdateTypeInstancesInput) {
+	if typeInstanceValue == nil {
 		return
 	}
-	if backendData.ContextSchema == nil {
+	if typeInstanceValue.ContextSchema == nil {
 		in.TypeInstance.Backend = nil
 	}
-	if !backendData.AcceptValue {
+	if !typeInstanceValue.AcceptValue {
 		in.TypeInstance.Value = nil
 	}
 }
