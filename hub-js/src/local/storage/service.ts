@@ -375,6 +375,11 @@ export default class DelegatedStorageService {
     }
   }
 
+  async IsValueAllowedByBackend(id: string): Promise<boolean> {
+    const backend = await this.getBackendContainer(id);
+    return backend.validateSpec.acceptValue;
+  }
+
   private async storageInstanceDetailsFetcher(
     id: string
   ): Promise<StorageTypeInstanceSpec> {

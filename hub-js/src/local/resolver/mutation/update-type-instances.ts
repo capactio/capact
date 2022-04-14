@@ -23,12 +23,20 @@ interface UpdateTypeInstancesInput {
       ownerID?: string;
       typeInstance: {
         value?: unknown;
+        backend?: BackendInput;
       };
     }
   ];
 }
 
-type updateArgsContainer = Map<string, { value: unknown; owner?: string }>;
+interface BackendInput {
+  context?: unknown;
+}
+
+type updateArgsContainer = Map<
+  string,
+  { backend?: BackendInput; value?: unknown; owner?: string }
+>;
 
 // Represents contract defined on finding whether TypeInstance's value is stored externally or not.
 interface ValueReference {
@@ -52,6 +60,7 @@ export async function updateTypeInstances(
   args.in.forEach((x) => {
     updateArgs.set(x.id, {
       value: x.typeInstance.value,
+      backend: x.typeInstance.backend,
       owner: x.ownerID,
     });
   });
@@ -228,13 +237,21 @@ async function storeValueExternally(
   }
   // 1. Based on our contract, if user didn't provide value, we need to fetch the old one and put it
   // to the new revision.
-  if (!args.value) {
+  const requiresInputValue = await delegatedStorage.IsValueAllowedByBackend(
+    fetchInput.backend.id
+  );
+  if (!args.value && requiresInputValue) {
     logger.debug("Fetching previous value from external storage", fetchInput);
     const resp = await delegatedStorage.Get(fetchInput);
     args.value = resp[id];
   }
 
-  // 2. Update TypeInstance's value
+  // 2. If user provided context, override it
+  if (args.backend?.context) {
+    fetchInput.backend.context = args.backend.context;
+  }
+
+  // 3. Update TypeInstance's value
   fetchInput.typeInstance.resourceVersion =
     Number(fetchInput.typeInstance.resourceVersion) + 1;
   const update = {
