@@ -242,6 +242,7 @@ func fixGQLType(path, rev, parent string) *gqlpublicapi.Type {
 			}},
 	}
 }
+
 func fixImplementation(inputArtifacts []wfv1.Artifact, implAdditionalInput *types.AdditionalInput) types.Implementation {
 	workflow := argo.Workflow{
 		WorkflowSpec: &wfv1.WorkflowSpec{

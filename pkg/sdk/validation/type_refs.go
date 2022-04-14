@@ -38,7 +38,7 @@ func ResolveTypeRefsToJSONSchemas(ctx context.Context, hubCli HubClient, inTypeR
 		return nil, errors.Wrap(err, "while fetching JSONSchemas for TypeRefs")
 	}
 
-	indexedTypes := map[string]interface{}{}
+	indexedTypes := map[string]string{}
 	for _, gotType := range gotTypes {
 		if gotType == nil {
 			continue
@@ -67,13 +67,8 @@ func ResolveTypeRefsToJSONSchemas(ctx context.Context, hubCli HubClient, inTypeR
 			merr = multierror.Append(merr, fmt.Errorf("TypeRef %q was not found in Hub", refKey))
 			continue
 		}
-		str, ok := schema.(string)
-		if !ok {
-			merr = multierror.Append(merr, fmt.Errorf("unexpected JSONSchema type for %q: expected %T, got %T", refKey, "", schema))
-			continue
-		}
 		schemas[name] = Schema{
-			Value:    str,
+			Value:    schema,
 			Required: ref.Required,
 		}
 	}
