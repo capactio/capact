@@ -1911,7 +1911,7 @@ type TypeRevision @additionalLabels(labels: ["published"]) {
 
 type TypeSpec @additionalLabels(labels: ["published"]) {
   additionalRefs: [NodePath!]
-  jsonSchema: Any
+  jsonSchema: String!
 }
 
 type Implementation @additionalLabels(labels: ["published"]) {
@@ -11519,11 +11519,14 @@ func (ec *executionContext) _TypeSpec_jsonSchema(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(interface{})
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -14675,6 +14678,9 @@ func (ec *executionContext) _TypeSpec(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._TypeSpec_additionalRefs(ctx, field, obj)
 		case "jsonSchema":
 			out.Values[i] = ec._TypeSpec_jsonSchema(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -363,8 +363,8 @@ type TypeRevision struct {
 }
 
 type TypeSpec struct {
-	AdditionalRefs []string    `json:"additionalRefs"`
-	JSONSchema     interface{} `json:"jsonSchema"`
+	AdditionalRefs []string `json:"additionalRefs"`
+	JSONSchema     string   `json:"jsonSchema"`
 }
 
 type FilterRule string

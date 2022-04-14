@@ -314,7 +314,7 @@ type TypeRevision @additionalLabels(labels: ["published"]) {
 
 type TypeSpec @additionalLabels(labels: ["published"]) {
   additionalRefs: [NodePath!]
-  jsonSchema: Any
+  jsonSchema: String!
 }
 
 type Implementation @additionalLabels(labels: ["published"]) {

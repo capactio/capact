@@ -117,18 +117,7 @@ func (v *RemoteTypeValidator) validateBackendStorageSchema(ctx context.Context, 
 		return res, fmt.Errorf("cannot find generic backend storage schema")
 	}
 
-	storageBytes, err := json.Marshal(gotType.LatestRevision.Spec.JSONSchema)
-	if err != nil {
-		return res, errors.Wrap(err, "while marshaling generic backend storage schema to bytes")
-	}
-
-	var storageSchema string
-	err = json.Unmarshal(storageBytes, &storageSchema)
-	if err != nil {
-		return res, errors.Wrap(err, "while converting generic backend storage schema to string")
-	}
-
-	schemaLoader := gojsonschema.NewStringLoader(storageSchema)
+	schemaLoader := gojsonschema.NewStringLoader(gotType.LatestRevision.Spec.JSONSchema)
 	dataLoader := gojsonschema.NewStringLoader(entity.Spec.JSONSchema.Value)
 
 	result, err := gojsonschema.Validate(schemaLoader, dataLoader)
