@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"capact.io/capact/internal/cli"
@@ -18,6 +19,7 @@ import (
 	cliprinter "capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/hub/client/local"
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
 )
 
 const (
@@ -66,14 +68,26 @@ func NewGet() *cobra.Command {
 				return ErrTableFormatWithExportFlag
 			}
 
-			tis, err := getTI(cmd.Context(), opts, resourcePrinter.PrintFormat())
+			ctx := cmd.Context()
+			server := config.GetDefaultContext()
+			cli, err := client.NewHub(server)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while creating hub client")
+			}
+
+			tis, err := getTI(ctx, cli, opts, resourcePrinter.PrintFormat())
+			if err != nil {
+				return errors.Wrap(err, "while getting TypeInstance")
 			}
 
 			if opts.ExportToUpdateFormat {
 				for idx := range tis {
 					conv := mapTypeInstanceToUpdateType(&tis[idx])
+					backendData, err := storagebackend.NewTypeInstanceValue(cmd.Context(), cli, &tis[idx])
+					if err != nil {
+						return errors.Wrap(err, "while fetching storage backend data")
+					}
+					setTypeInstanceValueForMarshaling(backendData, &conv)
 					fmt.Fprintln(out, yamlFileSeparator)
 					if err := resourcePrinter.Print(conv); err != nil {
 						return err
@@ -94,14 +108,7 @@ func NewGet() *cobra.Command {
 	return cmd
 }
 
-func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) ([]gqllocalapi.TypeInstance, error) {
-	server := config.GetDefaultContext()
-
-	hubCli, err := client.NewHub(server)
-	if err != nil {
-		return nil, err
-	}
-
+func getTI(ctx context.Context, cli client.Hub, opts GetOptions, format cliprinter.PrintFormat) ([]gqllocalapi.TypeInstance, error) {
 	var listOpts []local.TypeInstancesOption
 	if format == cliprinter.TableFormat {
 		listOpts = append(listOpts, local.WithFields(tableRequiredFields))
@@ -111,7 +118,7 @@ func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) 
 		if format != cliprinter.TableFormat {
 			printHugePayloadWarning()
 		}
-		return hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{}, listOpts...)
+		return cli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{}, listOpts...)
 	}
 
 	var (
@@ -121,7 +128,7 @@ func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) 
 
 	// TODO: make it client-side
 	for _, id := range opts.RequestedTypeInstancesIDs {
-		ti, err := hubCli.FindTypeInstance(ctx, id, listOpts...)
+		ti, err := cli.FindTypeInstance(ctx, id, listOpts...)
 		if err != nil {
 			errs = append(errs, err)
 			continue

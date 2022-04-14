@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
 	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -83,20 +85,36 @@ func editTI(ctx context.Context, opts editOptions, w io.Writer) error {
 func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]gqllocalapi.UpdateTypeInstancesInput, error) {
 	out, err := cli.FindTypeInstance(ctx, tiID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "while finding TypeInstance")
 	}
 	if out == nil {
 		return nil, fmt.Errorf("TypeInstance %s not found", tiID)
 	}
 
-	rawInput, err := yaml.Marshal(mapTypeInstanceToUpdateType(out))
+	backendData, err := storagebackend.NewTypeInstanceValue(ctx, cli, out)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "while fetching storage backend data")
+	}
+
+	updateTI := mapTypeInstanceToUpdateType(out)
+
+	var valueData string
+	if backendData != nil && !backendData.AcceptValue {
+		valueData, err = getCommentedOutTypeInstanceValue(&updateTI)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting commented out TypeInstance value")
+		}
+	}
+
+	setTypeInstanceValueForMarshaling(backendData, &updateTI)
+	rawInput, err := yaml.Marshal(updateTI)
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling updated TypeInstance")
 	}
 
 	prompt := &survey.Editor{
 		Message:       "Edit TypeInstance in YAML format",
-		Default:       string(rawInput),
+		Default:       fmt.Sprintf("%s%s", string(rawInput), valueData),
 		AppendDefault: true,
 		HideDefault:   true,
 	}
@@ -115,6 +133,24 @@ func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]
 	return []gqllocalapi.UpdateTypeInstancesInput{
 		edited,
 	}, nil
+}
+
+func getCommentedOutTypeInstanceValue(in *gqllocalapi.UpdateTypeInstancesInput) (string, error) {
+	type valueOnly struct {
+		Value interface{} `json:"value,omitempty"`
+	}
+	encodedValue, err := yaml.Marshal(valueOnly{in.TypeInstance.Value})
+	if err != nil {
+		return "", errors.Wrap(err, "while marshaling storage backend value")
+	}
+	lines := strings.Split(string(encodedValue), "\n")
+	for i := range lines {
+		if lines[i] == "" {
+			continue
+		}
+		lines[i] = "# " + lines[i]
+	}
+	return strings.Join(lines, "\n"), nil
 }
 
 func isValidUpdateTypeInstancesInput(val interface{}) error {
