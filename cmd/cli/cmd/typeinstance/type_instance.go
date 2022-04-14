@@ -81,6 +81,7 @@ func mapTypeInstanceToUpdateType(in *gqllocalapi.TypeInstance) gqllocalapi.Updat
 // setTypeInstanceValueForMarshaling sets TypeInstance value based on backend data.
 func setTypeInstanceValueForMarshaling(typeInstanceValue *storagebackend.TypeInstanceValue, in *gqllocalapi.UpdateTypeInstancesInput) {
 	if typeInstanceValue == nil {
+		in.TypeInstance.Backend = nil
 		return
 	}
 	if typeInstanceValue.ContextSchema == nil {
