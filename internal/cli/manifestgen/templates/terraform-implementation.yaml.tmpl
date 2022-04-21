@@ -137,7 +137,7 @@ spec:
                               - GOOGLE_PROJECT=<@ providercredentials.project_id @>
                               - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 {{- range $index, $output := .Outputs }}
                                 {{ $output.Name }}: "{{`{{`}} .{{ $output.Name }} {{`}}`}}"
                                 {{- end }}
