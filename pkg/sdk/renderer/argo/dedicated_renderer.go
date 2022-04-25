@@ -348,7 +348,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					// 3.9 Add TypeInstances to the upload graph
 					inputArtifacts := r.tplInputArguments[step.Template]
-					typeInstancesBackends, err := r.policyEnforcedCli.ListTypeInstancesBackendsBasedOnPolicy(ctx, rootimpl.Rule, rootimpl.Revision)
+					typeInstancesBackends, err := r.policyEnforcedCli.ListTypeInstancesBackendsBasedOnPolicy(ctx, rule, implementation)
 					if err != nil {
 						return nil, errors.Wrap(err, "while resolving TypeInstance Backend based on Policy")
 					}
