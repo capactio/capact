@@ -1,0 +1,89 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: storage
+  prefix: cap.type.helm.template
+  path: cap.type.helm.template.storage
+  displayName: Helm template chart storage
+  description: Describes Helm template storage
+  documentationURL: https://capact.io/docs
+  supportURL: https://helm.sh
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  additionalRefs:
+    - cap.core.type.hub.storage
+  jsonSchema: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The root schema",
+        "required": [
+          "url",
+          "contextSchema",
+          "acceptValue"
+        ],
+        "properties": {
+          "url": {
+            "$id": "#/properties/url",
+            "type": "string",
+            "format": "uri"
+          },
+          "contextSchema": {
+            "const": {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "type": "object",
+              "required": [
+                "goTemplate",
+                "release"
+              ],
+              "properties": {
+                "goTemplate": {
+                  "$id": "#/properties/context/properties/goTemplate",
+                  "type": "string"
+                },
+                "release": {
+                  "required": [
+                    "name",
+                    "namespace"
+                  ],
+                  "$id": "#/properties/context/properties/release",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "$id": "#/properties/context/properties/release/properties/name",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "$id": "#/properties/context/properties/release/properties/namespace",
+                      "type": "string"
+                    },
+                    "driver": {
+                      "$id": "#/properties/context/properties/release/properties/driver",
+                      "type": "string",
+                      "default": "secrets",
+                      "enum": [
+                        "secrets",
+                        "configmaps",
+                        "sql"
+                      ]
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "acceptValue": {
+            "$id": "#/properties/acceptValue",
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "additionalProperties": false
+      }

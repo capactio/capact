@@ -1,0 +1,1583 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: capact-root
+    templates:
+    - inputs:
+        artifacts:
+        - name: input-parameters
+        - name: postgresql
+          optional: true
+        - name: additional-parameters
+          optional: true
+      metadata: {}
+      name: mattermost-install
+      outputs:
+        artifacts:
+        - from: '{{steps.resolve-ti-value.outputs.artifacts.ti-artifact}}'
+          name: mattermost-config
+      steps:
+      - - arguments:
+            artifacts:
+            - name: input-parameters
+              raw:
+                data: |
+                  superuser:
+                    username: superuser
+                  defaultDBName: postgres
+          name: install-db
+          template: mattermost-install-install-db-postgres-install
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - name: input-parameters
+              raw:
+                data: |
+                  name: mattermost
+          name: create-user
+          template: mattermost-install-create-user-main
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  name: mattermost
+                  owner: "<@ name @>"
+            - from: '{{steps.create-user.outputs.artifacts.user}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: 'unpackValue: true'
+          name: render-create-db-args
+          template: mattermost-install-render-create-db-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{steps.render-create-db-args.outputs.artifacts.render}}'
+              name: input-parameters
+          name: create-db
+          template: mattermost-install-create-db-main
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - from: '{{inputs.artifacts.additional-parameters}}'
+              name: additional-parameters
+              optional: true
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: psql
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: db
+            - from: '{{steps.create-user.outputs.artifacts.user}}'
+              name: user
+          name: prepare-parameters
+          template: prepare-parameters
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: "generateName: true\nchart:\n  name: \"mattermost-team-edition\"\n
+                  \ repo: \"https://helm.mattermost.com\"\n  version: \"4.0.0\"\nvalues:\n
+                  \ image:\n    repository: <@ additionalinput.image.repository |
+                  default('mattermost/mattermost-team-edition') @>\n    tag: <@ additionalinput.image.tag
+                  | default('5.29.0') @>\n    imagePullPolicy: <@ additionalinput.image.imagePullPolicy
+                  | default('IfNotPresent') @>\n  initContainerImage:\n    repository:
+                  <@ additionalinput.initContainerImage.repository | default('appropriate/curl')
+                  @>\n    tag: <@ additionalinput.initContainerImage.tag | default('latest')
+                  @>\n    imagePullPolicy: <@ additionalinput.initContainerImage.imagePullPolicy
+                  | default('IfNotPresent') @>\n  revisionHistoryLimit: <@ additionalinput.revisionHistoryLimit
+                  | default(1) @>\n  persistence:\n    data:\n      enabled: <@ additionalinput.persistence.data.enabled
+                  | default(true) | tojson @>\n      size: <@ additionalinput.persistence.data.size
+                  | default('10Gi') @>\n      accessMode: <@ additionalinput.persistence.data.accessMode
+                  | default('ReadWriteOnce') @>\n      storageClass: <@ additionalinput.persistence.data.storageClass
+                  | default('') @>\n    plugins:\n      enabled: <@ additionalinput.persistence.plugins.enabled
+                  | default(true) | tojson @>\n      size: <@ additionalinput.persistence.plugins.size
+                  | default('1Gi') @>\n      accessMode: <@ additionalinput.persistence.plugins.accessMode
+                  | default('ReadWriteOnce') @>\n      storageClass: <@ additionalinput.persistence.plugins.storageClass
+                  | default('') @>\n  service:\n    type: <@ additionalinput.service.type
+                  | default('ClusterIP') @>\n    externalPort: <@ additionalinput.service.externalPort
+                  | default(8065) @>\n    internalPort: <@ additionalinput.service.internalPort
+                  | default(8065) @>\n    annotations: <@ additionalinput.service.annotations
+                  | default({}) @>\n    loadBalancerSourceRanges: <@ additionalinput.service.loadBalancerSourceRanges
+                  | default([]) @>\n  ingress:\n    enabled: <@ additionalinput.ingress.enabled
+                  | default(true) | tojson @>\n    path: <@ additionalinput.ingress.path
+                  | default('/') @>\n    annotations:\n      \"cert-manager.io/cluster-issuer\":
+                  letsencrypt\n    hosts:\n      - <@ input.host @>\n    tls:\n      -
+                  hosts:\n          - <@ input.host @>\n        secretName: mattermost-team-edition-tls-<@
+                  random_word(length=5) @>\n  route:\n    enabled: <@ additionalinput.route.enabled
+                  | default(false) | tojson @>\n  externalDB:\n    enabled: true\n
+                  \   externalDriverType: \"postgres\"\n    externalConnectionString:
+                  \"postgres://<@ user.name @>:<@ user.password @>@<@ psql.host @>:<@
+                  psql.port @>/<@ db.name @>?sslmode=disable\"\n  mysql:\n    enabled:
+                  false\n  extraPodAnnotations: <@ additionalinput.extraPodAnnotations
+                  | default({}) @>\n  extraEnvVars: <@ additionalinput.extraEnvVars
+                  | default([]) @>\n  extraInitContainers: <@ additionalinput.extraInitContainers
+                  | default([]) @>\n  extraVolumes: <@ additionalinput.extraVolumes
+                  | default([]) @>\n  extraVolumeMounts: <@ additionalinput.extraVolumeMounts
+                  | default([]) @>\n  nodeSelector: <@ additionalinput.nodeSelector
+                  | default({}) @>\n  affinity: <@ additionalinput.affinity | default({})
+                  @>\n  affinity: <@ additionalinput.resources | default({}) @>\n
+                  \ tolerations: <@ additionalinput.tolerations | default([]) @>\n\n
+                  \ configJSON:\n    ServiceSettings:\n      SiteURL: \"https://<@
+                  input.host @>\"\n      LicenseFileLocation: \"<@ input.configJSON.ServiceSettings.LicenseFileLocation
+                  | default('') @>\"\n      ListenAddress: \"<@ input.configJSON.ServiceSettings.ListenAddress
+                  | default(':8065') @>\"\n      ConnectionSecurity: \"<@ input.configJSON.ServiceSettings.ConnectionSecurity
+                  | default('') @>\"\n      TLSCertFile: \"<@ input.configJSON.ServiceSettings.TLSCertFile
+                  | default('') @>\"\n      TLSKeyFile: \"<@ input.configJSON.ServiceSettings.TLSKeyFile
+                  | default('') @>\"\n      UseLetsEncrypt: <@ input.configJSON.ServiceSettings.UseLetsEncrypt
+                  | default(false) | tojson @>\n      LetsEncryptCertificateCacheFile:
+                  \"<@ input.configJSON.ServiceSettings.LetsEncryptCertificateCacheFile
+                  | default('./config/letsencrypt.cache') @>\"\n      Forward80To443:
+                  <@ input.configJSON.ServiceSettings.Forward80To443 | default(false)
+                  | tojson @>\n      ReadTimeout: <@ input.configJSON.ServiceSettings.ReadTimeout
+                  | default(300) @>\n      WriteTimeout: <@ input.configJSON.ServiceSettings.WriteTimeout
+                  | default(300) @>\n      MaximumLoginAttempts: <@ input.configJSON.ServiceSettings.MaximumLoginAttempts
+                  | default(10) @>\n      GoroutineHealthThreshold: <@ input.configJSON.ServiceSettings.GoroutineHealthThreshold
+                  | default(-1) @>\n      GoogleDeveloperKey: \"<@ input.configJSON.ServiceSettings.GoogleDeveloperKey
+                  | default('') @>\"\n      EnableOAuthServiceProvider: <@ input.configJSON.ServiceSettings.EnableOAuthServiceProvider
+                  | default(false) | tojson @>\n      EnableIncomingWebhooks: <@ input.configJSON.ServiceSettings.EnableIncomingWebhooks
+                  | default(true) | tojson @>\n      EnableOutgoingWebhooks: <@ input.configJSON.ServiceSettings.EnableOutgoingWebhooks
+                  | default(true) | tojson @>\n      EnableCommands: <@ input.configJSON.ServiceSettings.EnableCommands
+                  | default(true) | tojson @>\n      EnableOnlyAdminIntegrations:
+                  <@ input.configJSON.ServiceSettings.EnableOnlyAdminIntegrations
+                  | default(false) | tojson @>\n      EnablePostUsernameOverride:
+                  <@ input.configJSON.ServiceSettings.EnablePostUsernameOverride |
+                  default(false) | tojson @>\n      EnablePostIconOverride: <@ input.configJSON.ServiceSettings.EnablePostIconOverride
+                  | default(false) | tojson @>\n      EnableBotAccountCreation: <@
+                  input.configJSON.ServiceSettings.EnableBotAccountCreation | default(false)
+                  | tojson @>\n      EnableUserAccessTokens: <@ input.configJSON.ServiceSettings.EnableUserAccessTokens
+                  | default(false) | tojson @>\n      EnableLinkPreviews: <@ input.configJSON.ServiceSettings.EnableLinkPreviews
+                  | default(false) | tojson @>\n      EnableTesting: <@ input.configJSON.ServiceSettings.EnableTesting
+                  | default(false) | tojson @>\n      EnableDeveloper: <@ input.configJSON.ServiceSettings.EnableDeveloper
+                  | default(false) | tojson @>\n      EnableSecurityFixAlert: <@ input.configJSON.ServiceSettings.EnableSecurityFixAlert
+                  | default(true) | tojson @>\n      EnableInsecureOutgoingConnections:
+                  <@ input.configJSON.ServiceSettings.EnableInsecureOutgoingConnections
+                  | default(false) | tojson @>\n      EnableMultifactorAuthentication:
+                  <@ input.configJSON.ServiceSettings.EnableMultifactorAuthentication
+                  | default(false) | tojson @>\n      EnforceMultifactorAuthentication:
+                  <@ input.configJSON.ServiceSettings.EnforceMultifactorAuthentication
+                  | default(false) | tojson @>\n      AllowCorsFrom: \"<@ input.configJSON.ServiceSettings.AllowCorsFrom
+                  | default('') @>\"\n      SessionLengthWebInDays: <@ input.configJSON.ServiceSettings.SessionLengthWebInDays
+                  | default(30) @>\n      SessionLengthMobileInDays: <@ input.configJSON.ServiceSettings.SessionLengthMobileInDays
+                  | default(30) @>\n      SessionLengthSSOInDays: <@ input.configJSON.ServiceSettings.SessionLengthSSOInDays
+                  | default(30) @>\n      SessionCacheInMinutes: <@ input.configJSON.ServiceSettings.SessionCacheInMinutes
+                  | default(10) @>\n      WebsocketSecurePort: <@ input.configJSON.ServiceSettings.WebsocketSecurePort
+                  | default(443) @>\n      WebsocketPort: <@ input.configJSON.ServiceSettings.WebsocketPort
+                  | default(80) @>\n      WebserverMode: \"<@ input.configJSON.ServiceSettings.WebserverMode
+                  | default('gzip') @>\"\n      EnableCustomEmoji: <@ input.configJSON.ServiceSettings.EnableCustomEmoji
+                  | default(false) @>\n      RestrictCustomEmojiCreation: \"<@ input.configJSON.ServiceSettings.RestrictCustomEmojiCreation
+                  | default('all') @>\"\n      RestrictPostDelete: \"<@ input.configJSON.ServiceSettings.RestrictPostDelete
+                  | default('all') @>\"\n      AllowEditPost: \"<@ input.configJSON.ServiceSettings.AllowEditPost
+                  | default('always') @>\"\n      PostEditTimeLimit: <@ input.configJSON.ServiceSettings.PostEditTimeLimit
+                  | default(300) @>\n      TimeBetweenUserTypingUpdatesMilliseconds:
+                  <@ input.configJSON.ServiceSettings.TimeBetweenUserTypingUpdatesMilliseconds
+                  | default(5000) @>\n      EnablePostSearch: <@ input.configJSON.ServiceSettings.EnablePostSearch
+                  | default(true) | tojson @>\n      EnableUserTypingMessages: <@
+                  input.configJSON.ServiceSettings.EnableUserTypingMessages | default(true)
+                  | tojson @>\n      EnableUserStatuses: <@ input.configJSON.ServiceSettings.EnableUserStatuses
+                  | default(true) | tojson @>\n      ClusterLogTimeoutMilliseconds:
+                  <@ input.configJSON.ServiceSettings.ClusterLogTimeoutMilliseconds
+                  | default(2000) @>\n    TeamSettings:\n      SiteName: \"<@ input.configJSON.TeamSettings.SiteName
+                  | default('Mattermost') @>\"\n      MaxUsersPerTeam: <@ input.configJSON.TeamSettings.MaxUsersPerTeam
+                  | default(50000) @>\n      EnableTeamCreation: <@ input.configJSON.TeamSettings.EnableTeamCreation
+                  | default(true) | tojson @>\n      EnableUserCreation: <@ input.configJSON.TeamSettings.EnableUserCreation
+                  | default(true) | tojson @>\n      EnableOpenServer: <@ input.configJSON.TeamSettings.EnableOpenServer
+                  | default(true) | tojson @>\n      RestrictCreationToDomains: \"<@
+                  input.configJSON.TeamSettings.RestrictCreationToDomains | default('')
+                  @>\"\n      EnableCustomBrand: <@ input.configJSON.TeamSettings.EnableCustomBrand
+                  | default(false) | tojson @>\n      CustomBrandText: \"<@ input.configJSON.TeamSettings.CustomBrandText
+                  | default('') @>\"\n      CustomDescriptionText: \"<@ input.configJSON.TeamSettings.CustomDescriptionText
+                  | default('') @>\"\n      RestrictDirectMessage: \"<@ input.configJSON.TeamSettings.RestrictDirectMessage
+                  | default('any') @>\"\n      RestrictTeamInvite: \"<@ input.configJSON.TeamSettings.RestrictTeamInvite
+                  | default('all') @>\"\n      RestrictPublicChannelManagement: \"<@
+                  input.configJSON.TeamSettings.RestrictPublicChannelManagement |
+                  default('all') @>\"\n      RestrictPrivateChannelManagement: \"<@
+                  input.configJSON.TeamSettings.RestrictPrivateChannelManagement |
+                  default('all') @>\"\n      RestrictPublicChannelCreation: \"<@ input.configJSON.TeamSettings.RestrictPublicChannelCreation
+                  | default('all') @>\"\n      RestrictPrivateChannelCreation: \"<@
+                  input.configJSON.TeamSettings.RestrictPrivateChannelCreation | default('all')
+                  @>\"\n      RestrictPublicChannelDeletion: \"<@ input.configJSON.TeamSettings.RestrictPublicChannelDeletion
+                  | default('all') @>\"\n      RestrictPrivateChannelDeletion: \"<@
+                  input.configJSON.TeamSettings.RestrictPrivateChannelDeletion | default('all')
+                  @>\"\n      RestrictPrivateChannelManageMembers: \"<@ input.configJSON.TeamSettings.RestrictPrivateChannelManageMembers
+                  | default('all') @>\"\n      UserStatusAwayTimeout: <@ input.configJSON.TeamSettings.UserStatusAwayTimeout
+                  | default(300) @>\n      MaxChannelsPerTeam: <@ input.configJSON.TeamSettings.MaxChannelsPerTeam
+                  | default(50000) @>\n      MaxNotificationsPerChannel: <@ input.configJSON.TeamSettings.MaxNotificationsPerChannel
+                  | default(1000) @>\n    SqlSettings:\n      DriverName: \"<@ input.configJSON.SqlSettings.DriverName
+                  | default('') @>\"\n      DataSource: \"<@ input.configJSON.SqlSettings.DataSource
+                  | default('') @>\"\n      DataSourceReplicas: <@ input.configJSON.SqlSettings.DataSourceReplicas
+                  | default([]) @>\n      DataSourceSearchReplicas: <@ input.configJSON.SqlSettings.DataSourceSearchReplicas
+                  | default([]) @>\n      MaxIdleConns: <@ input.configJSON.SqlSettings.MaxIdleConns
+                  | default(20) @>\n      MaxOpenConns: <@ input.configJSON.SqlSettings.MaxOpenConns
+                  | default(35) @>\n      Trace: <@ input.configJSON.SqlSettings.Trace
+                  | default(false) | tojson @>\n      AtRestEncryptKey: \"<@ input.configJSON.SqlSettings.AtRestEncryptKey
+                  | default('') @>\"\n      QueryTimeout: <@ input.configJSON.SqlSettings.QueryTimeout
+                  | default(30) @>\n    LogSettings:\n      EnableConsole: <@ input.configJSON.LogSettings.EnableConsole
+                  | default(true) | tojson @>\n      ConsoleLevel: \"<@ input.configJSON.LogSettings.ConsoleLevel
+                  | default('INFO') @>\"\n      EnableFile: <@ input.configJSON.LogSettings.EnableFile
+                  | default(true) | tojson @>\n      FileLevel: \"<@ input.configJSON.LogSettings.FileLevel
+                  | default('INFO') @>\"\n      FileFormat: \"<@ input.configJSON.LogSettings.FileFormat
+                  | default('') @>\"\n      FileLocation: \"<@ input.configJSON.LogSettings.FileLocation
+                  | default('') @>\"\n      EnableWebhookDebugging: <@ input.configJSON.LogSettings.EnableWebhookDebugging
+                  | default(true) | tojson @>\n      EnableDiagnostics: <@ input.configJSON.LogSettings.EnableDiagnostics
+                  | default(true) | tojson @>\n    PasswordSettings:\n      MinimumLength:
+                  <@ input.configJSON.PasswordSettings.MinimumLength | default(5)
+                  @>\n      Lowercase: <@ input.configJSON.PasswordSettings.Lowercase
+                  | default(false) | tojson @>\n      Number: <@ input.configJSON.PasswordSettings.Number
+                  | default(false) | tojson @>\n      Uppercase: <@ input.configJSON.PasswordSettings.Uppercase
+                  | default(false) | tojson @>\n      Symbol: <@ input.configJSON.PasswordSettings.Symbol
+                  | default(false) | tojson @>\n    FileSettings:\n      EnableFileAttachments:
+                  <@ input.configJSON.FileSettings.EnableFileAttachments | default(true)
+                  | tojson @>\n      MaxFileSize: <@ input.configJSON.FileSettings.MaxFileSize
+                  | default(52428800) @>\n      DriverName: \"<@ input.configJSON.FileSettings.DriverName
+                  | default('local') @>\"\n      Directory: \"<@ input.configJSON.FileSettings.Directory
+                  | default('./data/') @>\"\n      EnablePublicLink: <@ input.configJSON.FileSettings.EnablePublicLink
+                  | default(false) | tojson @>\n      PublicLinkSalt: \"<@ input.configJSON.FileSettings.PublicLinkSalt
+                  | default('') @>\"\n      ThumbnailWidth: <@ input.configJSON.FileSettings.ThumbnailWidth
+                  | default(120) @>\n      ThumbnailHeight: <@ input.configJSON.FileSettings.ThumbnailHeight
+                  | default(100) @>\n      PreviewWidth: <@ input.configJSON.FileSettings.PreviewWidth
+                  | default(1024) @>\n      PreviewHeight: <@ input.configJSON.FileSettings.PreviewHeight
+                  | default(0) @>\n      ProfileWidth: <@ input.configJSON.FileSettings.ProfileWidth
+                  | default(128) @>\n      ProfileHeight: <@ input.configJSON.FileSettings.ProfileHeight
+                  | default(128) @>\n      InitialFont: \"<@ input.configJSON.FileSettings.InitialFont
+                  | default('luximbi.ttf') @>\"\n      AmazonS3AccessKeyId: \"<@ input.configJSON.FileSettings.AmazonS3AccessKeyId
+                  | default('') @>\"\n      AmazonS3SecretAccessKey: \"<@ input.configJSON.FileSettings.AmazonS3SecretAccessKey
+                  | default('') @>\"\n      AmazonS3Bucket: \"<@ input.configJSON.FileSettings.AmazonS3Bucket
+                  | default('') @>\"\n      AmazonS3Region: \"<@ input.configJSON.FileSettings.AmazonS3Region
+                  | default('') @>\"\n      AmazonS3Endpoint: \"<@ input.configJSON.FileSettings.AmazonS3Endpoint
+                  | default('s3.amazonaws.com') @>\"\n      AmazonS3SSL: <@ input.configJSON.FileSettings.AmazonS3SSL
+                  | default(false) | tojson @>\n      AmazonS3SignV2: <@ input.configJSON.FileSettings.AmazonS3SignV2
+                  | default(false) | tojson @>\n    EmailSettings:\n      EnableSignUpWithEmail:
+                  <@ input.configJSON.EmailSettings.EnableSignUpWithEmail | default(true)
+                  | tojson @>\n      EnableSignInWithEmail: <@ input.configJSON.EmailSettings.EnableSignInWithEmail
+                  | default(true) | tojson @>\n      EnableSignInWithUsername: <@
+                  input.configJSON.EmailSettings.EnableSignInWithUsername | default(true)
+                  | tojson @>\n      SendEmailNotifications: <@ input.configJSON.EmailSettings.SendEmailNotifications
+                  | default(false) | tojson @>\n      RequireEmailVerification: <@
+                  input.configJSON.EmailSettings.RequireEmailVerification | default(false)
+                  | tojson @>\n      FeedbackName: \"<@ input.configJSON.EmailSettings.FeedbackName
+                  | default('') @>\"\n      FeedbackEmail: \"<@ input.configJSON.EmailSettings.FeedbackEmail
+                  | default('') @>\"\n      FeedbackOrganization: \"<@ input.configJSON.EmailSettings.FeedbackOrganization
+                  | default('') @>\"\n      SMTPUsername: \"<@ input.configJSON.EmailSettings.SMTPUsername
+                  | default('') @>\"\n      SMTPPassword: \"<@ input.configJSON.EmailSettings.SMTPPassword
+                  | default('') @>\"\n      EnableSMTPAuth: \"<@ input.configJSON.EmailSettings.EnableSMTPAuth
+                  | default('') @>\"\n      SMTPServer: \"<@ input.configJSON.EmailSettings.SMTPServer
+                  | default('') @>\"\n      SMTPPort: \"<@ input.configJSON.EmailSettings.SMTPPort
+                  | default('') @>\"\n      ConnectionSecurity: \"<@ input.configJSON.EmailSettings.ConnectionSecurity
+                  | default('') @>\"\n      InviteSalt: \"<@ input.configJSON.EmailSettings.InviteSalt
+                  | default('') @>\"\n      SendPushNotifications: <@ input.configJSON.EmailSettings.SendPushNotifications
+                  | default(true) | tojson @>\n      PushNotificationServer: \"<@
+                  input.configJSON.EmailSettings.PushNotificationServer | default('https://push-test.mattermost.com')
+                  @>\"\n      PushNotificationContents: \"<@ input.configJSON.EmailSettings.PushNotificationContents
+                  | default('generic') @>\"\n      EnableEmailBatching: <@ input.configJSON.EmailSettings.EnableEmailBatching
+                  | default(false) | tojson @>\n      EmailBatchingBufferSize: <@
+                  input.configJSON.EmailSettings.EmailBatchingBufferSize | default(256)
+                  @>\n      EmailBatchingInterval: <@ input.configJSON.EmailSettings.EmailBatchingInterval
+                  | default(30) @>\n      SkipServerCertificateVerification: <@ input.configJSON.EmailSettings.SkipServerCertificateVerification
+                  | default(false) | tojson @>\n    RateLimitSettings:\n      Enable:
+                  <@ input.configJSON.RateLimitSettings.Enable | default(false) |
+                  tojson @>\n      PerSec: <@ input.configJSON.RateLimitSettings.PerSec
+                  | default(10) @>\n      MaxBurst: <@ input.configJSON.RateLimitSettings.MaxBurst
+                  | default(100) @>\n      MemoryStoreSize: <@ input.configJSON.RateLimitSettings.MemoryStoreSize
+                  | default(10000) @>\n      VaryByRemoteAddr: <@ input.configJSON.RateLimitSettings.VaryByRemoteAddr
+                  | default(true) | tojson @>\n      VaryByHeader: \"<@ input.configJSON.RateLimitSettings.VaryByHeader
+                  | default('') @>\"\n    PrivacySettings:\n      ShowEmailAddress:
+                  <@ input.configJSON.PrivacySettings.ShowEmailAddress | default(true)
+                  | tojson @>\n      ShowFullName: <@ input.configJSON.PrivacySettings.ShowFullName
+                  | default(true) | tojson @>\n    SupportSettings:\n      TermsOfServiceLink:
+                  \"<@ input.configJSON.SupportSettings.TermsOfServiceLink | default('https://about.mattermost.com/default-terms/')
+                  @>\"\n      PrivacyPolicyLink: \"<@ input.configJSON.SupportSettings.PrivacyPolicyLink
+                  | default('https://about.mattermost.com/default-privacy-policy/')
+                  @>\"\n      AboutLink: \"<@ input.configJSON.SupportSettings.AboutLink
+                  | default('https://about.mattermost.com/default-about/') @>\"\n
+                  \     HelpLink: \"<@ input.configJSON.SupportSettings.HelpLink |
+                  default('https://about.mattermost.com/default-help/') @>\"\n      ReportAProblemLink:
+                  \"<@ input.configJSON.SupportSettings.ReportAProblemLink | default('https://about.mattermost.com/default-report-a-problem/')
+                  @>\"\n      SupportEmail: \"<@ input.configJSON.SupportSettings.SupportEmail
+                  | default('feedback@mattermost.com') @>\"\n    AnnouncementSettings:\n
+                  \     EnableBanner: <@ input.configJSON.AnnouncementSettings.EnableBanner
+                  | default(false) | tojson @>\n      BannerText: \"<@ input.configJSON.AnnouncementSettings.BannerText
+                  | default('') @>\"\n      BannerColor: \"<@ input.configJSON.AnnouncementSettings.BannerColor
+                  | default('#f2a93b') @>\"\n      BannerTextColor: \"<@ input.configJSON.AnnouncementSettings.BannerTextColor
+                  | default('#333333') @>\"\n      AllowBannerDismissal: <@ input.configJSON.AnnouncementSettings.AllowBannerDismissal
+                  | default(true) | tojson @>\n    GitLabSettings:\n      Enable:
+                  <@ input.configJSON.GitLabSettings.Enable | default(false) | tojson
+                  @>\n      Secret: \"<@ input.configJSON.GitLabSettings.Secret |
+                  default('') @>\"\n      Id: \"<@ input.configJSON.GitLabSettings.Id
+                  | default('') @>\"\n      Scope: \"<@ input.configJSON.GitLabSettings.Scope
+                  | default('') @>\"\n      AuthEndpoint: \"<@ input.configJSON.GitLabSettings.AuthEndpoint
+                  | default('') @>\"\n      TokenEndpoint: \"<@ input.configJSON.GitLabSettings.TokenEndpoint
+                  | default('') @>\"\n      UserApiEndpoint: \"<@ input.configJSON.GitLabSettings.UserApiEndpoint
+                  | default('') @>\"\n    LocalizationSettings:\n      DefaultServerLocale:
+                  \"<@ input.configJSON.LocalizationSettings.DefaultServerLocale |
+                  default('en') @>\"\n      DefaultClientLocale: \"<@ input.configJSON.LocalizationSettings.DefaultClientLocale
+                  | default('en') @>\"\n      AvailableLocales: \"<@ input.configJSON.LocalizationSettings.AvailableLocales
+                  | default('') @>\"\n    NativeAppSettings:\n      AppDownloadLink:
+                  \"<@ input.configJSON.NativeAppSettings.AppDownloadLink | default('https://about.mattermost.com/downloads/')
+                  @>\"\n      AndroidAppDownloadLink: \"<@ input.configJSON.NativeAppSettings.AndroidAppDownloadLink
+                  | default('https://about.mattermost.com/mattermost-android-app/')
+                  @>\"\n      IosAppDownloadLink: \"<@ input.configJSON.NativeAppSettings.IosAppDownloadLink
+                  | default('https://about.mattermost.com/mattermost-ios-app/') @>\"\n
+                  \   AnalyticsSettings:\n      MaxUsersForStatistics: <@ input.configJSON.AnalyticsSettings.MaxUsersForStatistics
+                  | default(2500) @>\n    WebrtcSettings:\n      Enable: <@ input.configJSON.WebrtcSettings.Enable
+                  | default(false) | tojson @>\n      GatewayWebsocketUrl: \"<@ input.configJSON.WebrtcSettings.GatewayWebsocketUrl
+                  | default('') @>\"\n      GatewayAdminUrl: \"<@ input.configJSON.WebrtcSettings.GatewayAdminUrl
+                  | default('') @>\"\n      GatewayAdminSecret: \"<@ input.configJSON.WebrtcSettings.GatewayAdminSecret
+                  | default('') @>\"\n      StunURI: \"<@ input.configJSON.WebrtcSettings.StunURI
+                  | default('') @>\"\n      TurnURI: \"<@ input.configJSON.WebrtcSettings.TurnURI
+                  | default('') @>\"\n      TurnUsername: \"<@ input.configJSON.WebrtcSettings.TurnUsername
+                  | default('') @>\"\n      TurnSharedKey: \"<@ input.configJSON.WebrtcSettings.TurnSharedKey
+                  | default('') @>\"\n    DisplaySettings:\n      CustomUrlSchemes:
+                  <@ input.configJSON.DisplaySettings.CustomUrlSchemes | default([])
+                  @>\n      ExperimentalTimezone: <@ input.configJSON.DisplaySettings.ExperimentalTimezone
+                  | default(true) | tojson @>\n    TimezoneSettings:\n      SupportedTimezonesPath:
+                  \"<@ input.configJSON.TimezoneSettings.SupportedTimezonesPath |
+                  default('timezones.json') @>\"\n    PluginSettings:\n      Enable:
+                  <@ input.configJSON.PluginSettings.Enable | default(true) @>\n      EnableUploads:
+                  <@ input.configJSON.PluginSettings.EnableUploads | default(true)
+                  | tojson @>\n      Directory: \"<@ input.configJSON.PluginSettings.Directory
+                  | default('./plugins') @>\"\n      ClientDirectory: \"<@ input.configJSON.PluginSettings.ClientDirectory
+                  | default('./client/plugins') @>\"\n      Plugins: <@ input.configJSON.PluginSettings.Plugins
+                  | default({}) @>\n      PluginStates: <@ input.configJSON.PluginSettings.PluginStates
+                  | default({}) @>\noutput:\n  helmRelease:\n    useHelmReleaseStorage:
+                  true\n  additional:\n    useHelmTemplateStorage: true  \n    goTemplate:
+                  |\n      host: \"{{ index .Values.ingress.hosts 0 }}\"\n      version:
+                  \"{{ .Values.image.tag }}\"\n"
+            - from: '{{steps.prepare-parameters.outputs.artifacts.merged}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: 'unpackValue: true'
+          name: create-helm-args
+          template: mattermost-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: helm-install
+          template: mattermost-install-helm-install-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
+              name: ti-artifact
+            - from: '{{workflow.outputs.artifacts.helm-template-storage}}'
+              name: backend
+          name: resolve-ti-value
+          template: resolve-ti-art-value
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-user.outputs.artifacts.user}}'
+              name: database-user
+          name: output-database-user
+          template: output-database-user
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-database
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
+              name: mattermost-helm-release
+          name: output-mattermost-helm-release
+          template: output-mattermost-helm-release
+      - - arguments:
+            artifacts:
+            - from: '{{steps.resolve-ti-value.outputs.artifacts.ti-artifact}}'
+              name: mattermost-config
+          name: output-mattermost-config
+          template: output-mattermost-config
+    - inputs:
+        artifacts:
+        - name: input-parameters
+        - name: kubeconfig
+          optional: true
+      metadata: {}
+      name: mattermost-install-install-db-postgres-install
+      outputs:
+        artifacts:
+        - from: '{{steps.resolve-psql-value.outputs.artifacts.ti-artifact}}'
+          name: postgresql
+      steps:
+      - - arguments: {}
+          name: inject-input-type-instances-0-1-step
+          template: inject-input-type-instances-0-1
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  generateName: true
+                  chart:
+                    name: "postgresql"
+                    repo: "https://charts.bitnami.com/bitnami"
+                    version: "10.2.6"
+                  values:
+                    volumePermissions:
+                      enabled: true
+                    global:
+                      postgresql:
+                        postgresqlDatabase: <@ defaultDBName | default('postgres') @>
+                        postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
+                  output:
+                    helmRelease:
+                      useHelmReleaseStorage: true
+                    additional:
+                      useHelmTemplateStorage: true
+                      goTemplate: |
+                        host: '{{ template "common.names.fullname" . }}.{{ .Release.Namespace }}'
+                        port: {{ template "postgresql.port" . }}
+                        defaultDBName: '{{ template "postgresql.database" . }}'
+                        superuser:
+                          # It cannot be changed
+                          username: 'postgres'
+                          password: '{{ template "postgresql.password" . }}'
+            - name: configuration
+              raw:
+                data: 'unpackValue: true'
+          name: create-helm-args
+          template: mattermost-install-install-db-postgres-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+            - from: '{{inputs.artifacts.kubeconfig}}'
+              name: kubeconfig
+              optional: true
+          name: helm-install
+          template: mattermost-install-install-db-postgres-install-helm-install-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
+              name: ti-artifact
+            - from: '{{workflow.outputs.artifacts.helm-template-storage}}'
+              name: backend
+          name: resolve-psql-value
+          template: mattermost-install-install-db-resolve-ti-art-value
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
+              name: psql-helm-release
+          name: output-psql-helm-release
+          template: output-mattermost-install-install-db-psql-helm-release
+      - - arguments:
+            artifacts:
+            - from: '{{steps.resolve-psql-value.outputs.artifacts.ti-artifact}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-mattermost-install-install-db-postgresql
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-install-db-postgres-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - inputs:
+        artifacts:
+        - name: input-parameters
+        - name: runner-context
+        - name: kubeconfig
+          optional: true
+      metadata: {}
+      name: mattermost-install-install-db-postgres-install-helm-install-helm
+      outputs:
+        artifacts:
+        - from: '{{steps.resolve-helm-rel-value.outputs.artifacts.ti-artifact}}'
+          name: helm-release
+        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
+          name: additional
+      steps:
+      - - arguments: {}
+          name: inject-input-type-instances-0-2-step
+          template: inject-input-type-instances-0-2
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - from: '{{inputs.artifacts.runner-context}}'
+              name: runner-context
+            - from: '{{inputs.artifacts.kubeconfig}}'
+              name: kubeconfig
+          name: helm-install
+          template: mattermost-install-install-db-postgres-install-helm-install-helm-install
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
+              name: ti-artifact
+            - from: '{{workflow.outputs.artifacts.helm-release-storage}}'
+              name: backend
+          name: resolve-helm-rel-value
+          template: mattermost-install-install-db-postgres-install-helm-install-resolve-ti-art-value
+      - - arguments:
+            artifacts:
+            - from: '{{steps.resolve-helm-rel-value.outputs.artifacts.ti-artifact}}'
+              name: helm-release
+          name: output-helm-release
+          template: output-mattermost-install-install-db-postgres-install-helm-install-helm-release
+    - container:
+        env:
+        - name: RUNNER_OPTIONAL_KUBECONFIG_TI
+          value: '{{inputs.artifacts.kubeconfig.path}}'
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        - name: RUNNER_COMMAND
+          value: install
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        image: ghcr.io/capactio/helm-runner:2ada6f8
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+        - name: kubeconfig
+          optional: true
+          path: /kubeconfig-ti
+      metadata: {}
+      name: mattermost-install-install-db-postgres-install-helm-install-helm-install
+      outputs:
+        artifacts:
+        - name: helm-release
+          path: /helm-release.yaml
+        - name: additional
+          optional: true
+          path: /additional.yaml
+      volumes:
+      - emptyDir: {}
+        name: tmp
+    - container:
+        env:
+        - name: APP_LOGGER_DEV_MODE
+          value: "true"
+        - name: APP_INPUT_TI_FILE_PATH
+          value: '{{inputs.artifacts.ti-artifact.path}}'
+        - name: APP_INPUT_BACKEND_TI_FILE_PATH
+          value: '{{inputs.artifacts.backend.path}}'
+        - name: APP_OUTPUT_FILE_PATH
+          value: '{{outputs.artifacts.ti-artifact.path}}'
+        image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/input-ti.yaml
+        - name: backend
+          path: /tmp/storage-backend.yaml
+      metadata: {}
+      name: mattermost-install-install-db-postgres-install-helm-install-resolve-ti-art-value
+      outputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/output.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-install-install-db-postgres-install-helm-install-helm-release
+      outputs:
+        artifacts:
+        - globalName: mattermost-install-install-db-postgres-install-helm-install-helm-release
+          name: helm-release
+          path: /typeinstance
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{a35a0c04-6153-4fe9-8d49-9ec35a0e86e,/helm-release-storage.yaml}'
+        - name: APP_LOCAL_HUB_ENDPOINT
+          value: http://capact-hub-local.capact-system/graphql
+        - name: APP_PUBLIC_HUB_ENDPOINT
+          value: http://capact-hub-public.capact-system/graphql
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-0-2
+      outputs:
+        artifacts:
+        - globalName: helm-release-storage
+          name: helm-release-storage
+          path: /helm-release-storage.yaml
+    - container:
+        env:
+        - name: APP_LOGGER_DEV_MODE
+          value: "true"
+        - name: APP_INPUT_TI_FILE_PATH
+          value: '{{inputs.artifacts.ti-artifact.path}}'
+        - name: APP_INPUT_BACKEND_TI_FILE_PATH
+          value: '{{inputs.artifacts.backend.path}}'
+        - name: APP_OUTPUT_FILE_PATH
+          value: '{{outputs.artifacts.ti-artifact.path}}'
+        image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/input-ti.yaml
+        - name: backend
+          path: /tmp/storage-backend.yaml
+      metadata: {}
+      name: mattermost-install-install-db-resolve-ti-art-value
+      outputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/output.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: psql-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-install-install-db-psql-helm-release
+      outputs:
+        artifacts:
+        - globalName: mattermost-install-install-db-psql-helm-release
+          name: psql-helm-release
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-install-install-db-postgresql
+      outputs:
+        artifacts:
+        - globalName: mattermost-install-install-db-postgresql
+          name: postgresql
+          path: /typeinstance
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{b1fcdf4c-f3e3-4b90-ba37-f8ca40c620e2,/helm-template-storage.yaml}'
+        - name: APP_LOCAL_HUB_ENDPOINT
+          value: http://capact-hub-local.capact-system/graphql
+        - name: APP_PUBLIC_HUB_ENDPOINT
+          value: http://capact-hub-public.capact-system/graphql
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-0-1
+      outputs:
+        artifacts:
+        - globalName: helm-template-storage
+          name: helm-template-storage
+          path: /helm-template-storage.yaml
+    - inputs:
+        artifacts:
+        - name: postgresql
+        - name: user-input
+      metadata: {}
+      name: mattermost-install-create-user-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-user.outputs.artifacts.user}}'
+          name: user
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  set -e
+                  <% set password = input.password | default(random_word()) %>
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE USER <@ input.name @> WITH PASSWORD '<@ password @>';"
+
+
+                  cat <<EOF > /user.yaml
+                  name: <@ input.name @>
+                  password: <@ password @>
+                  EOF
+                  sync
+            - from: '{{inputs.artifacts.user-input}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: 'prefix: input'
+          name: render-create-user-script
+          template: mattermost-install-create-user-main-render-create-user-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-user-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: ""
+          name: fill-db-config-in-user-script
+          template: mattermost-install-create-user-main-fill-db-config-in-user-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-db-config-in-user-script.outputs.artifacts.render}}'
+              name: script
+          name: create-user
+          template: mattermost-install-create-user-create-psql-user
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-user.outputs.artifacts.user}}'
+              name: user
+          name: output-user
+          template: output-mattermost-install-create-user-user
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-create-user-main-render-create-user-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-create-user-main-fill-db-config-in-user-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - sleep 1 && chmod +x /script.sh && /script.sh
+        command:
+        - bash
+        - -c
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: mattermost-install-create-user-create-psql-user
+      outputs:
+        artifacts:
+        - name: user
+          path: /user.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: user
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-install-create-user-user
+      outputs:
+        artifacts:
+        - globalName: mattermost-install-create-user-user
+          name: user
+          path: /typeinstance
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-render-create-db-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: mattermost-install-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
+
+                  cat <<EOF > /database.yml
+                  name: <@name@>
+                  owner: <@owner@>
+                  tablespace: ""
+                  EOF
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: mattermost-install-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: mattermost-install-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: mattermost-install-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-mattermost-install-create-db-database
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - sleep 1 && chmod +x /script.sh && /script.sh
+        command:
+        - bash
+        - -c
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: mattermost-install-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-install-create-db-database
+      outputs:
+        artifacts:
+        - globalName: mattermost-install-create-db-database
+          name: database
+          path: /typeinstance
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: mattermost-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - inputs:
+        artifacts:
+        - name: input-parameters
+        - name: runner-context
+        - name: kubeconfig
+          optional: true
+      metadata: {}
+      name: mattermost-install-helm-install-helm
+      outputs:
+        artifacts:
+        - from: '{{steps.resolve-helm-rel-value.outputs.artifacts.ti-artifact}}'
+          name: helm-release
+        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
+          name: additional
+      steps:
+      - - arguments: {}
+          name: inject-input-type-instances-0-3-step
+          template: inject-input-type-instances-0-3
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - from: '{{inputs.artifacts.runner-context}}'
+              name: runner-context
+            - from: '{{inputs.artifacts.kubeconfig}}'
+              name: kubeconfig
+          name: helm-install
+          template: mattermost-install-helm-install-helm-install
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
+              name: ti-artifact
+            - from: '{{workflow.outputs.artifacts.helm-release-storage}}'
+              name: backend
+          name: resolve-helm-rel-value
+          template: mattermost-install-helm-install-resolve-ti-art-value
+      - - arguments:
+            artifacts:
+            - from: '{{steps.resolve-helm-rel-value.outputs.artifacts.ti-artifact}}'
+              name: helm-release
+          name: output-helm-release
+          template: output-mattermost-install-helm-install-helm-release
+    - container:
+        env:
+        - name: RUNNER_OPTIONAL_KUBECONFIG_TI
+          value: '{{inputs.artifacts.kubeconfig.path}}'
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        - name: RUNNER_COMMAND
+          value: install
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        image: ghcr.io/capactio/helm-runner:2ada6f8
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+        - name: kubeconfig
+          optional: true
+          path: /kubeconfig-ti
+      metadata: {}
+      name: mattermost-install-helm-install-helm-install
+      outputs:
+        artifacts:
+        - name: helm-release
+          path: /helm-release.yaml
+        - name: additional
+          optional: true
+          path: /additional.yaml
+      volumes:
+      - emptyDir: {}
+        name: tmp
+    - container:
+        env:
+        - name: APP_LOGGER_DEV_MODE
+          value: "true"
+        - name: APP_INPUT_TI_FILE_PATH
+          value: '{{inputs.artifacts.ti-artifact.path}}'
+        - name: APP_INPUT_BACKEND_TI_FILE_PATH
+          value: '{{inputs.artifacts.backend.path}}'
+        - name: APP_OUTPUT_FILE_PATH
+          value: '{{outputs.artifacts.ti-artifact.path}}'
+        image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/input-ti.yaml
+        - name: backend
+          path: /tmp/storage-backend.yaml
+      metadata: {}
+      name: mattermost-install-helm-install-resolve-ti-art-value
+      outputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/output.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-install-helm-install-helm-release
+      outputs:
+        artifacts:
+        - globalName: mattermost-install-helm-install-helm-release
+          name: helm-release
+          path: /typeinstance
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{a35a0c04-6153-4fe9-8d49-9ec35a0e86e,/helm-release-storage.yaml}'
+        - name: APP_LOCAL_HUB_ENDPOINT
+          value: http://capact-hub-local.capact-system/graphql
+        - name: APP_PUBLIC_HUB_ENDPOINT
+          value: http://capact-hub-public.capact-system/graphql
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-0-3
+      outputs:
+        artifacts:
+        - globalName: helm-release-storage
+          name: helm-release-storage
+          path: /helm-release-storage.yaml
+    - container:
+        image: ghcr.io/capactio/infra/merger:2ada6f8
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /yamls/input.yaml
+        - name: additional-parameters
+          optional: true
+          path: /yamls/additionalinput.yaml
+        - name: psql
+          path: /yamls/psql.yaml
+        - name: db
+          path: /yamls/db.yaml
+        - name: user
+          path: /yamls/user.yaml
+      metadata: {}
+      name: prepare-parameters
+      outputs:
+        artifacts:
+        - name: merged
+          path: /merged.yaml
+    - container:
+        env:
+        - name: APP_LOGGER_DEV_MODE
+          value: "true"
+        - name: APP_INPUT_TI_FILE_PATH
+          value: '{{inputs.artifacts.ti-artifact.path}}'
+        - name: APP_INPUT_BACKEND_TI_FILE_PATH
+          value: '{{inputs.artifacts.backend.path}}'
+        - name: APP_OUTPUT_FILE_PATH
+          value: '{{outputs.artifacts.ti-artifact.path}}'
+        image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/input-ti.yaml
+        - name: backend
+          path: /tmp/storage-backend.yaml
+      metadata: {}
+      name: resolve-ti-art-value
+      outputs:
+        artifacts:
+        - name: ti-artifact
+          path: /tmp/output.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database-user
+          path: /typeinstance
+      metadata: {}
+      name: output-database-user
+      outputs:
+        artifacts:
+        - globalName: database-user
+          name: database-user
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-database
+      outputs:
+        artifacts:
+        - globalName: database
+          name: database
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: mattermost-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-helm-release
+      outputs:
+        artifacts:
+        - globalName: mattermost-helm-release
+          name: mattermost-helm-release
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: mattermost-config
+          path: /typeinstance
+      metadata: {}
+      name: output-mattermost-config
+      outputs:
+        artifacts:
+        - globalName: mattermost-config
+          name: mattermost-config
+          path: /typeinstance
+    - inputs: {}
+      metadata: {}
+      name: capact-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: inject-input-type-instances-0-0-step
+          template: inject-input-type-instances-0-0
+      - - arguments: {}
+          name: populate-input-parameters-step
+          template: populate-input-parameters
+      - - arguments:
+            artifacts:
+            - from: '{{steps.populate-input-parameters-step.outputs.artifacts.input-parameters}}'
+              name: input-parameters
+          name: start-entrypoint
+          template: mattermost-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.mattermost-config}}'
+              name: mattermost-config
+            - from: '{{workflow.outputs.artifacts.mattermost-install-install-db-postgresql}}'
+              name: mattermost-install-install-db-postgresql
+            - from: '{{workflow.outputs.artifacts.mattermost-install-install-db-postgres-install-helm-install-helm-release}}'
+              name: mattermost-install-install-db-postgres-install-helm-install-helm-release
+            - from: '{{workflow.outputs.artifacts.mattermost-install-create-user-user}}'
+              name: mattermost-install-create-user-user
+            - from: '{{workflow.outputs.artifacts.mattermost-install-create-db-database}}'
+              name: mattermost-install-create-db-database
+            - from: '{{workflow.outputs.artifacts.mattermost-install-helm-install-helm-release}}'
+              name: mattermost-install-helm-install-helm-release
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: mattermost-config
+                    attributes: []
+                    backend:
+                      context: null
+                      id: b1fcdf4c-f3e3-4b90-ba37-f8ca40c620e2
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.productivity.mattermost.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: mattermost-install-install-db-postgresql
+                    attributes: []
+                    backend:
+                      context: null
+                      id: b1fcdf4c-f3e3-4b90-ba37-f8ca40c620e2
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: mattermost-install-install-db-postgres-install-helm-install-helm-release
+                    attributes: []
+                    backend:
+                      context: null
+                      id: a35a0c04-6153-4fe9-8d49-9ec35a0e86e
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: mattermost-install-create-user-user
+                    attributes: []
+                    backend: null
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.database.postgresql.user
+                      revision: 0.1.0
+                    value: null
+                  - alias: mattermost-install-create-db-database
+                    attributes: []
+                    backend: null
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.database.postgresql.database
+                      revision: 0.1.0
+                    value: null
+                  - alias: mattermost-install-helm-install-helm-release
+                    attributes: []
+                    backend:
+                      context: null
+                      id: a35a0c04-6153-4fe9-8d49-9ec35a0e86e
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: mattermost-config
+                    to: mattermost-install-helm-install-helm-release
+                  - from: mattermost-config
+                    to: mattermost-install-install-db-postgresql
+                  - from: mattermost-config
+                    to: mattermost-install-create-db-database
+                  - from: mattermost-config
+                    to: mattermost-install-create-user-user
+                  - from: mattermost-install-install-db-postgresql
+                    to: mattermost-install-install-db-postgres-install-helm-install-helm-release
+                  - from: mattermost-install-create-user-user
+                    to: mattermost-install-install-db-postgresql
+                  - from: mattermost-install-create-db-database
+                    to: mattermost-install-install-db-postgresql
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: user-secret-volume
+      inputs: {}
+      metadata: {}
+      name: populate-input-parameters
+      outputs:
+        artifacts:
+        - name: input-parameters
+          path: /input/input-parameters
+      volumes:
+      - name: user-secret-volume
+        secret:
+          items:
+          - key: parameter-input-parameters
+            path: input-parameters
+          optional: false
+          secretName: user-input
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{b1fcdf4c-f3e3-4b90-ba37-f8ca40c620e2,/helm-template-storage.yaml}'
+        - name: APP_LOCAL_HUB_ENDPOINT
+          value: http://capact-hub-local.capact-system/graphql
+        - name: APP_PUBLIC_HUB_ENDPOINT
+          value: http://capact-hub-public.capact-system/graphql
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-0-0
+      outputs:
+        artifacts:
+        - globalName: helm-template-storage
+          name: helm-template-storage
+          path: /helm-template-storage.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+    - container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        - name: APP_LOCAL_HUB_ENDPOINT
+          value: http://capact-hub-local.capact-system/graphql
+        - name: APP_PUBLIC_HUB_ENDPOINT
+          value: http://capact-hub-public.capact-system/graphql
+        image: alpine:3.7
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: mattermost-config
+          path: /upload/typeInstances/mattermost-config
+        - name: mattermost-install-install-db-postgresql
+          path: /upload/typeInstances/mattermost-install-install-db-postgresql
+        - name: mattermost-install-install-db-postgres-install-helm-install-helm-release
+          path: /upload/typeInstances/mattermost-install-install-db-postgres-install-helm-install-helm-release
+        - name: mattermost-install-create-user-user
+          path: /upload/typeInstances/mattermost-install-create-user-user
+        - name: mattermost-install-create-db-database
+          path: /upload/typeInstances/mattermost-install-create-db-database
+        - name: mattermost-install-helm-install-helm-release
+          path: /upload/typeInstances/mattermost-install-helm-install-helm-release
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
+runnerInterface: cap.interface.runner.argo.run

@@ -1,0 +1,21 @@
+---
+id: b1fcdf4c-f3e3-4b90-ba37-f8ca40c620e2
+backend:
+    abstract: true
+    id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+typeRef:
+  path: cap.type.helm.template.storage
+  revision: 0.1.0
+latestResourceVersion:
+  resourceVersion: 1
+  spec:
+    backend:
+      context: null
+    instrumentation: null
+    value:
+      chart:
+        name: helm-storage-backend
+        repo: https://storage.googleapis.com/capactio-latest-charts
+        version: 0.6.0-2ada6f8
+      name: helm-storage-backend-1650977049
+      namespace: capact-system

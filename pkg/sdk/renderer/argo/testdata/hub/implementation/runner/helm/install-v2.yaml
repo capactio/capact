@@ -1,0 +1,169 @@
+metadata:
+  attributes: []
+  description: Install action for Helm Runner
+  displayName: Install
+  documentationURL: https://helm.sh/
+  iconURL:
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+  name: install
+  path: cap.implementation.runner.helm.install
+  prefix: cap.implementation.runner.helm
+  supportURL:
+revision: 0.2.0
+spec:
+  additionalInput:
+    typeInstances:
+      - kubeconfig:
+        typeRef:
+          path: cap.type.containerization.kubernetes.kubeconfig
+          revision: 0.1.0
+        verbs: [ "get" ]
+
+  additionalOutput:
+    typeInstances: []
+  outputTypeInstanceRelations:
+    - typeInstanceName: helm-release
+      uses: []
+  appVersion: 3.x.x
+  implements:
+    - path: cap.core.interface.runner.generic.run
+      revision: 0.1.0
+    - path: cap.interface.runner.helm.install
+      revision: 0.1.0
+  imports:
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
+      methods:
+        - name: run
+          revision: 0.1.0
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.type.helm.release.storage
+            revision: 0.1.0
+          alias: helm-release-storage
+          valueConstraints: {}
+      prefix: cap.core.type.hub.storage
+     
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: helm
+        templates:
+          - name: helm
+            inputs:
+              artifacts:
+                # The input parameters that holds information what should be executed
+                - name: input-parameters
+                - name: runner-context
+                - name: kubeconfig
+                  optional: true
+            outputs:
+              artifacts:
+                - name: helm-release
+                  from: "{{steps.resolve-helm-rel-value.outputs.artifacts.ti-artifact}}"
+                - name: additional
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
+            steps:
+              - - name: helm-install
+                  template: helm-install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: runner-context
+                        from: "{{inputs.artifacts.runner-context}}"
+                      - name: kubeconfig
+                        from: "{{inputs.artifacts.kubeconfig}}"
+
+              - - name: resolve-helm-rel-value
+                  template: resolve-ti-art-value
+                  capact-outputTypeInstances:
+                    - name: helm-release
+                      from: ti-artifact
+                      backend: helm-release-storage
+                  arguments:
+                    artifacts:
+                      - name: ti-artifact
+                        from: "{{steps.helm-install.outputs.artifacts.helm-release}}"
+                      - name: backend
+                        from: "{{workflow.outputs.artifacts.helm-release-storage}}"
+
+          - name: helm-install
+            inputs:
+              artifacts:
+                # The input parameters that holds information what should be executed
+                - name: input-parameters
+                  path: "/runner-args"
+                - name: runner-context
+                  path: "/runner-context"
+                - name: kubeconfig
+                  path: "/kubeconfig-ti"
+                  optional: true
+            outputs:
+              artifacts:
+                - name: helm-release
+                  path: "/helm-release.yaml"
+                - name: additional
+                  path: "/additional.yaml"
+                  optional: true
+            volumes:
+              - name: tmp
+                emptyDir: { }
+            container:
+              image: ghcr.io/capactio/helm-runner:2ada6f8
+              env:
+                - name: RUNNER_OPTIONAL_KUBECONFIG_TI
+                  value: "{{inputs.artifacts.kubeconfig.path}}"
+                - name: RUNNER_CONTEXT_PATH
+                  value: "{{inputs.artifacts.runner-context.path}}"
+                - name: RUNNER_ARGS_PATH
+                  value: "{{inputs.artifacts.input-parameters.path}}"
+                - name: RUNNER_LOGGER_DEV_MODE
+                  value: "true"
+                - name: RUNNER_COMMAND
+                  value: "install"
+                - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+                  value: "{{outputs.artifacts.helm-release.path}}"
+                - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+                  value: "{{outputs.artifacts.additional.path}}"
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+
+          - name: resolve-ti-art-value
+            inputs:
+              artifacts:
+                - name: ti-artifact
+                  path: /tmp/input-ti.yaml
+                - name: backend
+                  path: /tmp/storage-backend.yaml
+            outputs:
+              artifacts:
+                - name: ti-artifact
+                  path: /tmp/output.yaml
+            container:
+              image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+              env:
+                - name: APP_LOGGER_DEV_MODE
+                  value: "true"
+                - name: APP_INPUT_TI_FILE_PATH
+                  value: "{{inputs.artifacts.ti-artifact.path}}"
+                - name: APP_INPUT_BACKEND_TI_FILE_PATH
+                  value: "{{inputs.artifacts.backend.path}}"
+                - name: APP_OUTPUT_FILE_PATH
+                  value: "{{outputs.artifacts.ti-artifact.path}}"

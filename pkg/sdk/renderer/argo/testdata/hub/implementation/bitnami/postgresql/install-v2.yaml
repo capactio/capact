@@ -1,0 +1,165 @@
+---
+metadata:
+  attributes: []
+  description: Action which installs PostgreSQL database via Helm chart
+  displayName: Install PostgreSQL database
+  documentationURL: https://github.com/bitnami/charts
+  iconURL: https://bitnami.com
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+  name: install
+  path: cap.implementation.bitnami.postgresql.install
+  prefix: cap.implementation.bitnami.postgresql
+  supportURL: https://bitnami.com
+revision: 0.2.0
+spec:
+  additionalInput:
+    typeInstances:
+      - kubeconfig:
+        typeRef:
+          path: cap.type.containerization.kubernetes.kubeconfig
+          revision: 0.1.0
+        verbs: [ "get" ]
+  outputTypeInstanceRelations:
+    - typeInstanceName: postgresql
+      uses: [psql-helm-release]
+  appVersion: "10,11,12,13"
+  implements:
+    - path: cap.interface.database.postgresql.install
+      revision: 0.1.0
+  imports:
+    - alias: helm
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.helm
+      methods:
+        - name: install
+          revision: 0.2.0
+    - alias: jinja2
+      appVersion:
+      interfaceGroupPath: cap.interface.templating.jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
+      methods:
+        - name: run
+          revision: 0.1.0
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.type.helm.template.storage
+            revision: 0.1.0
+          alias: helm-template-storage
+          valueConstraints: {}
+      prefix: cap.core.type.hub.storage
+  
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: postgres-install
+        templates:
+          - name: postgres-install
+            inputs:
+              artifacts:
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+                - name: kubeconfig
+                  optional: true
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.resolve-psql-value.outputs.artifacts.ti-artifact}}"
+            steps:
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "postgresql"
+                              repo: "https://charts.bitnami.com/bitnami"
+                              version: "10.2.6"
+                            values:
+                              volumePermissions:
+                                enabled: true
+                              global:
+                                postgresql:
+                                  postgresqlDatabase: <@ defaultDBName | default('postgres') @>
+                                  postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
+                            output:
+                              helmRelease:
+                                useHelmReleaseStorage: true
+                              additional:
+                                useHelmTemplateStorage: true
+                                goTemplate: |
+                                  host: '{{ template "common.names.fullname" . }}.{{ .Release.Namespace }}'
+                                  port: {{ template "postgresql.port" . }}
+                                  defaultDBName: '{{ template "postgresql.database" . }}'
+                                  superuser:
+                                    # It cannot be changed
+                                    username: 'postgres'
+                                    password: '{{ template "postgresql.password" . }}'
+                      - name: configuration
+                        raw:
+                          data: "unpackValue: true"
+
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: psql-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: kubeconfig
+                        from: "{{inputs.artifacts.kubeconfig}}"
+                        optional: true
+
+              - - name: resolve-psql-value
+                  template: resolve-ti-art-value
+                  capact-outputTypeInstances:
+                    - name: postgresql
+                      from: ti-artifact
+                      backend: helm-template-storage
+                  arguments:
+                    artifacts:
+                      - name: ti-artifact
+                        from: "{{steps.helm-install.outputs.artifacts.additional}}"
+                      - name: backend
+                        from: "{{workflow.outputs.artifacts.helm-template-storage}}"
+
+          - name: resolve-ti-art-value
+            inputs:
+              artifacts:
+                - name: ti-artifact
+                  path: /tmp/input-ti.yaml
+                - name: backend
+                  path: /tmp/storage-backend.yaml
+            outputs:
+              artifacts:
+                - name: ti-artifact
+                  path: /tmp/output.yaml
+            container:
+              image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+              env:
+                - name: APP_LOGGER_DEV_MODE
+                  value: "true"
+                - name: APP_INPUT_TI_FILE_PATH
+                  value: "{{inputs.artifacts.ti-artifact.path}}"
+                - name: APP_INPUT_BACKEND_TI_FILE_PATH
+                  value: "{{inputs.artifacts.backend.path}}"
+                - name: APP_OUTPUT_FILE_PATH
+                  value: "{{outputs.artifacts.ti-artifact.path}}"

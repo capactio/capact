@@ -6,6 +6,43 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
+func fixHelmStorageGlobalPolicy() policy.Policy {
+	return policy.Policy{
+		Interface: policy.InterfacePolicy{
+			Default: &policy.InterfaceDefault{
+				Inject: &policy.DefaultInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID:          "a35a0c04-6153-4fe9-8d49-9ec35a0e86e",
+								Description: ptr.String("Helm release"),
+							},
+						},
+						{
+							TypeInstanceReference: policy.TypeInstanceReference{
+								ID:          "b1fcdf4c-f3e3-4b90-ba37-f8ca40c620e2",
+								Description: ptr.String("Helm template"),
+							},
+						},
+					},
+				},
+			},
+			Rules: policy.InterfaceRulesList{
+				{
+					Interface: types.ManifestRefWithOptRevision{
+						Path: "cap.*",
+					},
+					OneOf: []policy.Rule{
+						{
+							ImplementationConstraints: policy.ImplementationConstraints{},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func fixGCPGlobalPolicy() policy.Policy {
 	return policy.Policy{
 		Interface: policy.InterfacePolicy{

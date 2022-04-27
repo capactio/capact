@@ -950,14 +950,14 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-1-1-step
-          template: inject-input-type-instances-1-1
+          name: inject-input-type-instances-2-1-step
+          template: inject-input-type-instances-2-1
       - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
-          name: inject-input-type-instances-1-0-step
-          template: inject-input-type-instances-1-0
+          name: inject-input-type-instances-2-0-step
+          template: inject-input-type-instances-2-0
       - - arguments: {}
           name: populate-input-parameters-step
           template: populate-input-parameters
@@ -1072,7 +1072,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-1-0
+      name: inject-input-type-instances-2-0
       outputs:
         artifacts:
         - globalName: postgresql
@@ -1122,7 +1122,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-1-1
+      name: inject-input-type-instances-2-1
       outputs:
         artifacts:
         - globalName: postgresql
