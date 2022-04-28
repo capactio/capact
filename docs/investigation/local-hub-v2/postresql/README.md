@@ -25,7 +25,7 @@ To avoid implementing and maintaining our own solution, we could save time and u
     - You can even mix them in a single query
 - Missing support for apoc; we would still need to rewrite our queries
 - [Golang driver](https://github.com/bitnine-oss/agensgraph-golang) seems to be abandoned - no commits from over 3 years
-- [NodeJS driver]((https://github.com/bitnine-oss/agensgraph-nodejs)) seems to be at an early stage, without any commit for more than 9 months
+- [NodeJS driver](https://github.com/bitnine-oss/agensgraph-nodejs) seems to be at an early stage, without any commit for more than 9 months
 - Last commit on master was around 4 months ago
 - We cannot treat it as a replacement of Neo4j and simply use different DB with the [`neo4j-graphql`](https://github.com/neo4j/graphql) library, as it uses different driver with different protocol (bolt).
 

@@ -22,7 +22,7 @@ Based on the [comparison](#comparison) between different libraries, I selected t
 The best option is a `quicktype` generator. Check the [comparison](#comparison) section for more details about the pros and cons.
 
 The most problematic part of `quicktype` is that, it does not provide a dedicated Unmarshal/Marshal methods with a proper validation. Instead, we will need
-to use the JSON Schema validator. This can be more CPU and memory consuming, but we can compile the schemas and create a benchmark tests to select the best library for validation. There are already benchmarks for most popular validators [here](https://github.com/wbvinc/go-jsonschema-validator-benchmarks).
+to use the JSON Schema validator. This can be more CPU and memory consuming, but we can compile the schemas and create a benchmark tests to select the best library for validation.
 
 ## Investigation
 

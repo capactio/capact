@@ -35,11 +35,11 @@ APP_ACTION=DownloadAction APP_DOWNLOAD_CONFIG="{2282814e-7571-4708-9279-717aea3c
 
 To upload example TypeInstances:
 
-1. Install [Helm Storage Backends](https://capact.io/docs/feature/storage-backends/helm) and use them in Policy
+1. Install [Helm Storage Backends](https://capact.io/docs/next/feature/storage-backends/helm) and use them in Policy
 2. Install PostgreSQL according to the [Helm Runner installation](../helm-runner/README.md#installation) section.
 3. In the [`payload.yaml`](./example-input/upload/payload.yaml) file:
-   - replace `{helm release storage backend ID}` with the ID of the installed Helm Release backend 
-   - replace `{test storage backend ID}` with the ID of the installed Helm Release backend 
+   - replace `{helm release storage backend ID}` with the ID of the installed Helm Release backend
+   - replace `{test storage backend ID}` with the ID of the installed Helm Release backend
 4. Run:
 
     ```bash
