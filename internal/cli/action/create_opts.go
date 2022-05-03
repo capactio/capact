@@ -150,7 +150,6 @@ func (c *CreateOptions) resolveFromFiles() error {
 		if err != nil {
 			return errors.Wrap(err, "while converting YAML Action input parameters to JSON")
 		}
-		fmt.Println("parameters", string(c.parameters))
 	}
 
 	if c.TypeInstancesFilePath != "" {
