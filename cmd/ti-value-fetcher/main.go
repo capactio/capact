@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 
-	"capact.io/capact/internal/logger"
-	tivaluefetcher "capact.io/capact/internal/ti-value-fetcher"
 	"github.com/vrischmann/envconfig"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+
+	"capact.io/capact/internal/logger"
+	tivaluefetcher "capact.io/capact/internal/ti-value-fetcher"
 )
 
 // Config holds TypeInstance Value resolver configuration.
@@ -26,6 +28,8 @@ type Config struct {
 const appName = "ti-value-fetcher"
 
 func main() {
+	start := time.Now()
+
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
@@ -48,6 +52,13 @@ func main() {
 
 	err = tiValueFetcher.SaveToFile(cfg.OutputFilePath, res)
 	exitOnError(err, fmt.Sprintf("while saving output to file %q", cfg.OutputFilePath))
+
+	// Argo doesn't like when a Pod exits too fast
+	// and this may happen when value already provided and no further logic is executed
+	minTime := start.Add(time.Second)
+	if time.Now().Before(minTime) {
+		time.Sleep(time.Second)
+	}
 }
 
 func exitOnError(err error, context string) {

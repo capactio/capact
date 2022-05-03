@@ -98,7 +98,7 @@ spec:
                               source: "https://example.com/module.tgz"
                             env: []
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 instance_ids: "{{ .instance_ids }}"
                                 random_number: "{{ .random_number }}"
                             variables: |+

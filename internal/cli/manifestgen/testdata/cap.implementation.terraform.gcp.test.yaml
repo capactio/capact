@@ -112,7 +112,7 @@ spec:
                               - GOOGLE_PROJECT=<@ providercredentials.project_id @>
                               - GOOGLE_APPLICATION_CREDENTIALS=/additional
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 instance_ids: "{{ .instance_ids }}"
                                 random_number: "{{ .random_number }}"
                             variables: |+

@@ -1,7 +1,5 @@
 package terraform
 
-import "encoding/json"
-
 // CommandType represents the operation type to be performed by the runner.
 type CommandType string
 
@@ -33,7 +31,7 @@ type Module struct {
 
 // AdditionalOutput stores input arguments for generating the additional output.
 type AdditionalOutput struct {
-	GoTemplate json.RawMessage `yaml:"goTemplate"`
+	GoTemplate string `yaml:"goTemplate"`
 }
 
 // Config holds Runner related configuration.
