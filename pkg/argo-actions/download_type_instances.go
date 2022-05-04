@@ -55,7 +55,7 @@ func NewDownloadAction(log *zap.Logger, client *hubclient.Client, cfg []Download
 func (d *Download) Do(ctx context.Context) error {
 	for _, config := range d.cfg {
 		d.log.Info("Downloading TypeInstance", zap.String("ID", config.ID), zap.String("Path", config.Path))
-		typeInstance, err := d.client.FindTypeInstance(ctx, config.ID, local.WithFields(local.TypeInstanceLatestResourceVersionFields))
+		typeInstance, err := d.client.FindTypeInstance(ctx, config.ID, local.WithFields(local.TypeInstanceLatestResourceVersionFields|local.TypeInstanceRootFields))
 		if err != nil {
 			return err
 		}
