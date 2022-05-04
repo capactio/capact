@@ -153,21 +153,14 @@ func (t *terraform) variables() ([]byte, error) {
 }
 
 func (t *terraform) renderOutput() ([]byte, error) {
-	if t.args.Output.GoTemplate == nil {
+	if t.args.Output.GoTemplate == "" {
 		return []byte{}, nil
 	}
 	if len(t.runOutput) == 0 {
 		return []byte{}, nil
 	}
 
-	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
-	// but the GoTemplate is defined via YAML, so we need to revert that change
-	artifactTemplate, err := yaml.JSONToYAML(t.args.Output.GoTemplate)
-	if err != nil {
-		return nil, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
-	}
-
-	tmpl, err := template.New("output").Parse(string(artifactTemplate))
+	tmpl, err := template.New("output").Parse(t.args.Output.GoTemplate)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load template")
 	}

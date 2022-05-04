@@ -30,10 +30,12 @@ type Local interface {
 	UnlockTypeInstances(ctx context.Context, in *hublocalgraphql.UnlockTypeInstancesInput) error
 	UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput, opts ...local.TypeInstancesOption) ([]hublocalgraphql.TypeInstance, error)
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
+	FindTypeInstances(ctx context.Context, ids []string, opts ...local.TypeInstancesOption) (map[string]hublocalgraphql.TypeInstance, error)
 }
 
 // Public interface aggregates methods to interact with Capact Public Hub.
 type Public interface {
+	FindType(ctx context.Context, path string, opts ...public.TypeOption) (*hubpublicgraphql.Type, error)
 	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*hubpublicgraphql.Type, error)
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
 	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)

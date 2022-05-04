@@ -42,7 +42,7 @@ func NewHelmReleaseFetcher(flags *genericclioptions.ConfigFlags) *HelmReleaseFet
 }
 
 // FetchHelmRelease returns a given Helm release. It already handles the gRPC errors properly.
-func (f *HelmReleaseFetcher) FetchHelmRelease(tiID string, helmRelease HelmRelease) (*release.Release, error) {
+func (f *HelmReleaseFetcher) FetchHelmRelease(helmRelease HelmRelease, additionalErrMsg *string) (*release.Release, error) {
 	cfg, err := f.actionConfigurationProducer(f.helmCfgFlags, *helmRelease.Driver, helmRelease.Namespace)
 	if err != nil {
 		return nil, gRPCInternalError(errors.Wrap(err, "while creating Helm get release client"))
@@ -58,7 +58,11 @@ func (f *HelmReleaseFetcher) FetchHelmRelease(tiID string, helmRelease HelmRelea
 	switch {
 	case err == nil:
 	case errors.Is(err, driver.ErrReleaseNotFound):
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s' for TypeInstance '%s' was not found", helmRelease.Namespace, helmRelease.Name, tiID))
+		var additionalErrCtx string
+		if additionalErrMsg != nil {
+			additionalErrCtx = fmt.Sprintf(" (%s)", *additionalErrMsg)
+		}
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("Helm release '%s/%s'%s was not found", helmRelease.Namespace, helmRelease.Name, additionalErrCtx))
 	default:
 		return nil, gRPCInternalError(errors.Wrap(err, "while fetching Helm release"))
 	}

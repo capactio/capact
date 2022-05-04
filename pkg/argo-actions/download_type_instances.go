@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	hubclient "capact.io/capact/pkg/hub/client"
-	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
+
+	hubclient "capact.io/capact/pkg/hub/client"
+	"capact.io/capact/pkg/hub/client/local"
+	"capact.io/capact/pkg/runner"
 )
 
 // DownloadAction represents the download TypeInstance action.
@@ -52,7 +54,7 @@ func NewDownloadAction(log *zap.Logger, client *hubclient.Client, cfg []Download
 func (d *Download) Do(ctx context.Context) error {
 	for _, config := range d.cfg {
 		d.log.Info("Downloading TypeInstance", zap.String("ID", config.ID), zap.String("Path", config.Path))
-		typeInstance, err := d.client.FindTypeInstance(ctx, config.ID)
+		typeInstance, err := d.client.FindTypeInstance(ctx, config.ID, local.WithFields(local.TypeInstanceLatestResourceVersionFields))
 		if err != nil {
 			return err
 		}

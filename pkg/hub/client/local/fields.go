@@ -11,6 +11,7 @@ var typeInstancesFieldsRegistry = map[TypeInstancesQueryFields]string{
 	TypeInstanceUsesIDField:                       usesIDField,
 	TypeInstanceUsedByIDField:                     usedByIDField,
 	TypeInstanceLatestResourceVersionVersionField: latestResourceVersionField,
+	TypeInstanceLatestResourceVersionValueField:   latestResourceVersionValueField,
 	TypeInstanceLatestResourceVersionFields:       latestResourceVersionFields,
 	TypeInstanceAllFields:                         typeInstanceAllFields,
 	TypeInstanceUsesAllFields:                     typeInstanceUsesAllFields,
@@ -48,6 +49,13 @@ var (
 	latestResourceVersionField = `
 			latestResourceVersion {
 				resourceVersion
+			}`
+
+	latestResourceVersionValueField = `
+			latestResourceVersion {
+				spec {
+					value
+				}
 			}`
 
 	latestResourceVersionFields = fmt.Sprintf(`

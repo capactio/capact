@@ -11,7 +11,7 @@ env:
   # so setting it directly
   - GOOGLE_PROJECT=capact
 output:
-  goTemplate:
+  goTemplate: |
     host: "{{ .instance_ip_addr }}"
     port: 5432
     defaultDBName: postgres

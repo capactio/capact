@@ -14,8 +14,16 @@ import (
 
 type fakeHub struct {
 	checkManifestsFn  func(ctx context.Context, manifestRefs []gqlpublicapi.ManifestReference) (map[gqlpublicapi.ManifestReference]bool, error)
+	knownType         *gqlpublicapi.Type
 	knownTypes        []*gqlpublicapi.Type
 	interfaceRevision *gqlpublicapi.InterfaceRevision
+}
+
+func (h *fakeHub) FindType(ctx context.Context, path string, opts ...public.TypeOption) (*gqlpublicapi.Type, error) {
+	if h.knownType == nil {
+		return nil, nil
+	}
+	return h.knownType, nil
 }
 
 func (h *fakeHub) ListTypes(_ context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error) {

@@ -20,9 +20,9 @@ To run the tool use the following command:
 go run cmd/populator/main.go
 ```
 
-Check below documents for details how to use the tool: 
-* [populator_register-ocf-manifests.md](./docs/populator_register-ocf-manifests.md)	- Populates locally available manifests into Neo4j database.
-* [populator_register-capact-installation.md](./docs/populator_register-capact-installation.md)	- Produces and uploads TypeInstances which describe Capact installation.
+Check below documents for details how to use the tool:
+* [populator_register-ocf-manifests.md](./docs/populator_register_ocf-manifests.md)	- Populates locally available manifests into Neo4j database.
+* [populator_register-capact-installation.md](./docs/populator_register_capact-installation.md)	- Produces and uploads TypeInstances which describe Capact installation.
 
 ## Development
 

@@ -20,6 +20,8 @@ const (
 	TypeInstanceUsesIDField
 	// TypeInstanceLatestResourceVersionVersionField returns resourceVersion for LatestResourceVersion field.
 	TypeInstanceLatestResourceVersionVersionField
+	// TypeInstanceLatestResourceVersionValueField returns value for LatestResourceVersion field.
+	TypeInstanceLatestResourceVersionValueField
 	// TypeInstanceLatestResourceVersionFields returns TypeInstance's LatestResourceVersion fields.
 	TypeInstanceLatestResourceVersionFields
 	// TypeInstanceAllFields returns all TypeInstance fields.

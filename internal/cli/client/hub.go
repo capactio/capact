@@ -21,6 +21,7 @@ import (
 
 // Hub aggregates operation executed by Capact CLI against Capact Hub server.
 type Hub interface {
+	FindType(ctx context.Context, path string, opts ...public.TypeOption) (*gqlpublicapi.Type, error)
 	ListTypes(ctx context.Context, opts ...public.TypeOption) ([]*gqlpublicapi.Type, error)
 	ListInterfaces(ctx context.Context, opts ...public.InterfaceOption) ([]*gqlpublicapi.Interface, error)
 	ListTypeInstances(ctx context.Context, filter *gqllocalapi.TypeInstanceFilter, opts ...local.TypeInstancesOption) ([]gqllocalapi.TypeInstance, error)

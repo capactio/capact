@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	storagebackend "capact.io/capact/pkg/hub/storage-backend"
+
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/internal/ptr"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
@@ -42,12 +44,6 @@ const testStorageTypeContextSchema = `
       "additionalProperties": false
     }
 `
-
-type typeInstanceValue struct {
-	URL           string      `json:"url"`
-	AcceptValue   bool        `json:"acceptValue"`
-	ContextSchema interface{} `json:"contextSchema"`
-}
 
 // StorageBackendRegister provides functionality to produce and upload test storage backend TypeInstance.
 type StorageBackendRegister struct {
@@ -91,7 +87,7 @@ func (i *StorageBackendRegister) RegisterTypeInstances(ctx context.Context) erro
 			Path:     testStorageTypePath,
 			Revision: testStorageTypeRevision,
 		},
-		Value: typeInstanceValue{
+		Value: storagebackend.TypeInstanceValue{
 			URL:           i.cfg.TestStorageBackendURL,
 			AcceptValue:   true,
 			ContextSchema: contextSchema,

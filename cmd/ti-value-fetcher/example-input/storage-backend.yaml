@@ -1,0 +1,29 @@
+value:
+  acceptValue: false
+  contextSchema:
+    $schema: http://json-schema.org/draft-07/schema
+    additionalProperties: false
+    properties:
+      chartLocation:
+        $id: '#/properties/context/properties/chartLocation'
+        type: string
+      driver:
+        $id: '#/properties/context/properties/driver'
+        default: secrets
+        enum:
+          - secrets
+          - configmaps
+          - sql
+        type: string
+      name:
+        $id: '#/properties/context/properties/name'
+        type: string
+      namespace:
+        $id: '#/properties/context/properties/namespace'
+        type: string
+    required:
+      - name
+      - namespace
+      - chartLocation
+    type: object
+  url: localhost:50051

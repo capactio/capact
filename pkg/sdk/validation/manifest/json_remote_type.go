@@ -12,6 +12,7 @@ import (
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // RemoteTypeValidator is a validator for Type manifest, which calls Hub in order to do validation checks.
@@ -54,9 +55,23 @@ func (v *RemoteTypeValidator) Do(ctx context.Context, _ types.ManifestMetadata, 
 		return ValidationResult{}, err
 	}
 
-	return ValidationResult{
-		Errors: append(resExist.Errors, resNodes.Errors...),
-	}, nil
+	resBackendStorage, err := v.validateBackendStorageSchema(ctx, entity)
+	if err != nil {
+		return ValidationResult{}, err
+	}
+
+	errorLists := [][]error{
+		resExist.Errors,
+		resNodes.Errors,
+		resBackendStorage.Errors,
+	}
+
+	var validationResult ValidationResult
+	for _, errorList := range errorLists {
+		validationResult.Errors = append(validationResult.Errors, errorList...)
+	}
+
+	return validationResult, nil
 }
 
 func (v *RemoteTypeValidator) checkAdditionalRefs(ctx context.Context, entity types.Type) (ValidationResult, error) {
@@ -79,6 +94,41 @@ func (v *RemoteTypeValidator) checkAdditionalRefs(ctx context.Context, entity ty
 	for _, item := range gotTypes {
 		res.Errors = append(res.Errors, fmt.Errorf("%q cannot be used as parent node as it resolves to concrete Type", item.Path))
 	}
+	return res, nil
+}
+
+func (v *RemoteTypeValidator) validateBackendStorageSchema(ctx context.Context, entity types.Type) (ValidationResult, error) {
+	res := ValidationResult{}
+
+	if !entity.IsExtendingHubStorage() {
+		return res, nil
+	}
+
+	opts := []public.TypeOption{
+		public.WithTypeLatestRevision(public.TypeRevisionSpecFields),
+	}
+
+	gotType, err := v.hub.FindType(ctx, types.GenericBackendStorageSchemaTypePath, opts...)
+	if err != nil {
+		return res, errors.Wrap(err, "while get Type")
+	}
+
+	if gotType == nil || gotType.LatestRevision == nil || gotType.LatestRevision.Spec == nil {
+		return res, fmt.Errorf("cannot find generic backend storage schema")
+	}
+
+	schemaLoader := gojsonschema.NewStringLoader(gotType.LatestRevision.Spec.JSONSchema)
+	dataLoader := gojsonschema.NewStringLoader(entity.Spec.JSONSchema.Value)
+
+	result, err := gojsonschema.Validate(schemaLoader, dataLoader)
+	if err != nil {
+		return res, errors.Wrap(err, "while validating JSON Schema against the generic storage backend schema")
+	}
+
+	for _, err := range result.Errors() {
+		res.Errors = append(res.Errors, fmt.Errorf("while validating JSON Schema against the generic storage backend schema (%q):: %s", types.GenericBackendStorageSchemaTypePath, err.String()))
+	}
+
 	return res, nil
 }
 
