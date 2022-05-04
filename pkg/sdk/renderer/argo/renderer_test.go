@@ -204,6 +204,16 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		policy                  policy.Policy
 	}{
 		{
+			name: "Mattermost workflow with storage backends",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.productivity.mattermost.install",
+			},
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"host":"mattermost.local"}`,
+			},
+			policy: fixHelmStorageGlobalPolicy(),
+		},
+		{
 			name: "Mattermost with CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",

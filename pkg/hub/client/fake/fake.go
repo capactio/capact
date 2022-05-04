@@ -124,7 +124,8 @@ func (s *FileSystemClient) ListTypes(ctx context.Context, opts ...public.TypeOpt
 					Path: typeRev.Metadata.Path,
 				},
 				Spec: &hubpublicgraphql.TypeSpec{
-					JSONSchema: typeRev.Spec.JSONSchema,
+					JSONSchema:     typeRev.Spec.JSONSchema,
+					AdditionalRefs: typeRev.Spec.AdditionalRefs,
 				},
 			}},
 		})

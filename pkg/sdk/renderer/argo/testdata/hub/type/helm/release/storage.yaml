@@ -1,0 +1,79 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: storage
+  prefix: cap.type.helm.release
+  path: cap.type.helm.release.storage
+  displayName: Helm release chart storage
+  description: Describes Helm storage
+  documentationURL: https://capact.io/docs
+  supportURL: https://helm.sh
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  additionalRefs:
+    - cap.core.type.hub.storage
+  jsonSchema: |- 
+    {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The root schema",
+        "required": [
+          "url",
+          "contextSchema",
+          "acceptValue"
+        ],
+        "properties": {
+          "url": {
+            "$id": "#/properties/url",
+            "type": "string",
+            "format": "uri"
+          },
+          "contextSchema": {
+            "const":{
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "type": "object",
+              "required": [
+                "name",
+                "namespace",
+                "chartLocation"
+              ],
+              "properties": {
+                "name": {
+                  "$id": "#/properties/context/properties/name",
+                  "type": "string"
+                },
+                "namespace": {
+                  "$id": "#/properties/context/properties/namespace",
+                  "type": "string"
+                },
+                "chartLocation": {
+                  "$id": "#/properties/context/properties/chartLocation",
+                  "type": "string"
+                },
+                "driver": {
+                  "$id": "#/properties/context/properties/driver",
+                  "type": "string",
+                  "default": "secrets",
+                  "enum": [
+                    "secrets",
+                    "configmaps",
+                    "sql"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "acceptValue": {
+            "$id": "#/properties/acceptValue",
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "additionalProperties": false
+      }

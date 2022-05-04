@@ -174,8 +174,8 @@ args:
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
-          name: inject-input-type-instances-2-0-step
-          template: inject-input-type-instances-2-0
+          name: inject-input-type-instances-3-0-step
+          template: inject-input-type-instances-3-0
       - - arguments: {}
           name: populate-input-parameters-step
           template: populate-input-parameters
@@ -258,7 +258,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-2-0
+      name: inject-input-type-instances-3-0
       outputs:
         artifacts:
         - globalName: gcp-sa

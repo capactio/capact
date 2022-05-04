@@ -348,7 +348,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					// 3.9 Add TypeInstances to the upload graph
 					inputArtifacts := r.tplInputArguments[step.Template]
-					typeInstancesBackends, err := r.policyEnforcedCli.ListTypeInstancesBackendsBasedOnPolicy(ctx, rootimpl.Rule, rootimpl.Revision)
+					typeInstancesBackends, err := r.policyEnforcedCli.ListTypeInstancesBackendsBasedOnPolicy(ctx, rule, implementation)
 					if err != nil {
 						return nil, errors.Wrap(err, "while resolving TypeInstance Backend based on Policy")
 					}
@@ -982,6 +982,16 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 				stepOutputBackendAlias = ptr.StringPtrToString(output.Backend)
 				name = addPrefix(prefix, output.From)
 				r.tryReplaceTypeInstanceName(output.Name, name)
+
+				for i := range mappings {
+					if mappings[i].Name == name {
+						mappings[name] = artefactNameWithBackend{
+							Name:    output.Name,
+							Backend: mappings[i].Backend,
+						}
+						delete(mappings, i)
+					}
+				}
 			} else {
 				// if the TypeInstance was not defined in capact-outputTypeInstances, then just prefix it
 				name = addPrefix(prefix, item.TypeInstanceName)
@@ -1041,7 +1051,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 }
 
 func (*dedicatedRenderer) selectBackendAlias(upperStep, resolvedStep string) (*string, error) {
-	if upperStep != "" && resolvedStep != "" {
+	if upperStep != "" && resolvedStep != "" && upperStep != resolvedStep {
 		return nil, errors.Errorf("cannot override backend on capact-outputTypeInstances")
 	}
 	for _, alias := range []string{upperStep, resolvedStep} {

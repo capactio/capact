@@ -1,0 +1,535 @@
+ocfVersion: 0.0.1
+revision: 0.2.0
+kind: Implementation
+metadata:
+  path: cap.implementation.mattermost.mattermost-team-edition.install
+  prefix: cap.implementation.mattermost.mattermost-team-edition
+  name: install
+  displayName: Install Mattermost Team Edition
+  description: Action which installs Mattermost Team Edition via Helm chart
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  license:
+    name: "Apache 2.0"
+  attributes: []
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  appVersion: "10,11,12,13"
+
+  outputTypeInstanceRelations:
+    - typeInstanceName: mattermost-config
+      uses:
+        - mattermost-helm-release
+        - postgresql
+        - database
+        - database-user
+
+  additionalInput:
+    typeInstances:
+     - name: postgresql
+       typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+       verbs: ["GET"]
+
+  implements:
+    - path: cap.interface.productivity.mattermost.install
+      revision: 0.1.0
+
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.type.helm.template.storage
+            revision: 0.1.0
+          alias: helm-template-storage
+          valueConstraints: {}
+      prefix: cap.core.type.hub.storage
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.2.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.2.0
+        - name: create-db
+          revision: 0.1.0
+        - name: create-user
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: mattermost-install
+        templates:
+          - name: mattermost-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+                  optional: true
+                - name: additional-parameters
+                  optional: true
+            outputs:
+              artifacts:
+                - name: mattermost-config
+                  from: "{{steps.resolve-ti-value.outputs.artifacts.ti-artifact}}"
+            steps:
+              # Install DB
+              - - name: install-db
+                  capact-when: postgresql == nil
+                  capact-action: postgresql.install
+                  capact-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
+                      backend: helm-template-storage
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: superuser
+                            defaultDBName: postgres
+
+              - - name: create-user
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
+                    - name: database-user
+                      from: user
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            name: mattermost
+
+              - - name: render-create-db-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            name: mattermost
+                            owner: "<@ name @>"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: "unpackValue: true"
+
+              - - name: create-db
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
+                    - name: database
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
+
+              - - name: prepare-parameters
+                  template: prepare-parameters
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: additional-parameters
+                        from: "{{inputs.artifacts.additional-parameters}}"
+                        optional: true
+                      - name: psql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: db
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: user
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+
+              # Install Mattermost
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "mattermost-team-edition"
+                              repo: "https://helm.mattermost.com"
+                              version: "4.0.0"
+                            values:
+                              image:
+                                repository: <@ additionalinput.image.repository | default('mattermost/mattermost-team-edition') @>
+                                tag: <@ additionalinput.image.tag | default('5.29.0') @>
+                                imagePullPolicy: <@ additionalinput.image.imagePullPolicy | default('IfNotPresent') @>
+                              initContainerImage:
+                                repository: <@ additionalinput.initContainerImage.repository | default('appropriate/curl') @>
+                                tag: <@ additionalinput.initContainerImage.tag | default('latest') @>
+                                imagePullPolicy: <@ additionalinput.initContainerImage.imagePullPolicy | default('IfNotPresent') @>
+                              revisionHistoryLimit: <@ additionalinput.revisionHistoryLimit | default(1) @>
+                              persistence:
+                                data:
+                                  enabled: <@ additionalinput.persistence.data.enabled | default(true) | tojson @>
+                                  size: <@ additionalinput.persistence.data.size | default('10Gi') @>
+                                  accessMode: <@ additionalinput.persistence.data.accessMode | default('ReadWriteOnce') @>
+                                  storageClass: <@ additionalinput.persistence.data.storageClass | default('') @>
+                                plugins:
+                                  enabled: <@ additionalinput.persistence.plugins.enabled | default(true) | tojson @>
+                                  size: <@ additionalinput.persistence.plugins.size | default('1Gi') @>
+                                  accessMode: <@ additionalinput.persistence.plugins.accessMode | default('ReadWriteOnce') @>
+                                  storageClass: <@ additionalinput.persistence.plugins.storageClass | default('') @>
+                              service:
+                                type: <@ additionalinput.service.type | default('ClusterIP') @>
+                                externalPort: <@ additionalinput.service.externalPort | default(8065) @>
+                                internalPort: <@ additionalinput.service.internalPort | default(8065) @>
+                                annotations: <@ additionalinput.service.annotations | default({}) @>
+                                loadBalancerSourceRanges: <@ additionalinput.service.loadBalancerSourceRanges | default([]) @>
+                              ingress:
+                                enabled: <@ additionalinput.ingress.enabled | default(true) | tojson @>
+                                path: <@ additionalinput.ingress.path | default('/') @>
+                                annotations:
+                                  "cert-manager.io/cluster-issuer": letsencrypt
+                                hosts:
+                                  - <@ input.host @>
+                                tls:
+                                  - hosts:
+                                      - <@ input.host @>
+                                    secretName: mattermost-team-edition-tls-<@ random_word(length=5) @>
+                              route:
+                                enabled: <@ additionalinput.route.enabled | default(false) | tojson @>
+                              externalDB:
+                                enabled: true
+                                externalDriverType: "postgres"
+                                externalConnectionString: "postgres://<@ user.name @>:<@ user.password @>@<@ psql.host @>:<@ psql.port @>/<@ db.name @>?sslmode=disable"
+                              mysql:
+                                enabled: false
+                              extraPodAnnotations: <@ additionalinput.extraPodAnnotations | default({}) @>
+                              extraEnvVars: <@ additionalinput.extraEnvVars | default([]) @>
+                              extraInitContainers: <@ additionalinput.extraInitContainers | default([]) @>
+                              extraVolumes: <@ additionalinput.extraVolumes | default([]) @>
+                              extraVolumeMounts: <@ additionalinput.extraVolumeMounts | default([]) @>
+                              nodeSelector: <@ additionalinput.nodeSelector | default({}) @>
+                              affinity: <@ additionalinput.affinity | default({}) @>
+                              affinity: <@ additionalinput.resources | default({}) @>
+                              tolerations: <@ additionalinput.tolerations | default([]) @>
+
+                              configJSON:
+                                ServiceSettings:
+                                  SiteURL: "https://<@ input.host @>"
+                                  LicenseFileLocation: "<@ input.configJSON.ServiceSettings.LicenseFileLocation | default('') @>"
+                                  ListenAddress: "<@ input.configJSON.ServiceSettings.ListenAddress | default(':8065') @>"
+                                  ConnectionSecurity: "<@ input.configJSON.ServiceSettings.ConnectionSecurity | default('') @>"
+                                  TLSCertFile: "<@ input.configJSON.ServiceSettings.TLSCertFile | default('') @>"
+                                  TLSKeyFile: "<@ input.configJSON.ServiceSettings.TLSKeyFile | default('') @>"
+                                  UseLetsEncrypt: <@ input.configJSON.ServiceSettings.UseLetsEncrypt | default(false) | tojson @>
+                                  LetsEncryptCertificateCacheFile: "<@ input.configJSON.ServiceSettings.LetsEncryptCertificateCacheFile | default('./config/letsencrypt.cache') @>"
+                                  Forward80To443: <@ input.configJSON.ServiceSettings.Forward80To443 | default(false) | tojson @>
+                                  ReadTimeout: <@ input.configJSON.ServiceSettings.ReadTimeout | default(300) @>
+                                  WriteTimeout: <@ input.configJSON.ServiceSettings.WriteTimeout | default(300) @>
+                                  MaximumLoginAttempts: <@ input.configJSON.ServiceSettings.MaximumLoginAttempts | default(10) @>
+                                  GoroutineHealthThreshold: <@ input.configJSON.ServiceSettings.GoroutineHealthThreshold | default(-1) @>
+                                  GoogleDeveloperKey: "<@ input.configJSON.ServiceSettings.GoogleDeveloperKey | default('') @>"
+                                  EnableOAuthServiceProvider: <@ input.configJSON.ServiceSettings.EnableOAuthServiceProvider | default(false) | tojson @>
+                                  EnableIncomingWebhooks: <@ input.configJSON.ServiceSettings.EnableIncomingWebhooks | default(true) | tojson @>
+                                  EnableOutgoingWebhooks: <@ input.configJSON.ServiceSettings.EnableOutgoingWebhooks | default(true) | tojson @>
+                                  EnableCommands: <@ input.configJSON.ServiceSettings.EnableCommands | default(true) | tojson @>
+                                  EnableOnlyAdminIntegrations: <@ input.configJSON.ServiceSettings.EnableOnlyAdminIntegrations | default(false) | tojson @>
+                                  EnablePostUsernameOverride: <@ input.configJSON.ServiceSettings.EnablePostUsernameOverride | default(false) | tojson @>
+                                  EnablePostIconOverride: <@ input.configJSON.ServiceSettings.EnablePostIconOverride | default(false) | tojson @>
+                                  EnableBotAccountCreation: <@ input.configJSON.ServiceSettings.EnableBotAccountCreation | default(false) | tojson @>
+                                  EnableUserAccessTokens: <@ input.configJSON.ServiceSettings.EnableUserAccessTokens | default(false) | tojson @>
+                                  EnableLinkPreviews: <@ input.configJSON.ServiceSettings.EnableLinkPreviews | default(false) | tojson @>
+                                  EnableTesting: <@ input.configJSON.ServiceSettings.EnableTesting | default(false) | tojson @>
+                                  EnableDeveloper: <@ input.configJSON.ServiceSettings.EnableDeveloper | default(false) | tojson @>
+                                  EnableSecurityFixAlert: <@ input.configJSON.ServiceSettings.EnableSecurityFixAlert | default(true) | tojson @>
+                                  EnableInsecureOutgoingConnections: <@ input.configJSON.ServiceSettings.EnableInsecureOutgoingConnections | default(false) | tojson @>
+                                  EnableMultifactorAuthentication: <@ input.configJSON.ServiceSettings.EnableMultifactorAuthentication | default(false) | tojson @>
+                                  EnforceMultifactorAuthentication: <@ input.configJSON.ServiceSettings.EnforceMultifactorAuthentication | default(false) | tojson @>
+                                  AllowCorsFrom: "<@ input.configJSON.ServiceSettings.AllowCorsFrom | default('') @>"
+                                  SessionLengthWebInDays: <@ input.configJSON.ServiceSettings.SessionLengthWebInDays | default(30) @>
+                                  SessionLengthMobileInDays: <@ input.configJSON.ServiceSettings.SessionLengthMobileInDays | default(30) @>
+                                  SessionLengthSSOInDays: <@ input.configJSON.ServiceSettings.SessionLengthSSOInDays | default(30) @>
+                                  SessionCacheInMinutes: <@ input.configJSON.ServiceSettings.SessionCacheInMinutes | default(10) @>
+                                  WebsocketSecurePort: <@ input.configJSON.ServiceSettings.WebsocketSecurePort | default(443) @>
+                                  WebsocketPort: <@ input.configJSON.ServiceSettings.WebsocketPort | default(80) @>
+                                  WebserverMode: "<@ input.configJSON.ServiceSettings.WebserverMode | default('gzip') @>"
+                                  EnableCustomEmoji: <@ input.configJSON.ServiceSettings.EnableCustomEmoji | default(false) @>
+                                  RestrictCustomEmojiCreation: "<@ input.configJSON.ServiceSettings.RestrictCustomEmojiCreation | default('all') @>"
+                                  RestrictPostDelete: "<@ input.configJSON.ServiceSettings.RestrictPostDelete | default('all') @>"
+                                  AllowEditPost: "<@ input.configJSON.ServiceSettings.AllowEditPost | default('always') @>"
+                                  PostEditTimeLimit: <@ input.configJSON.ServiceSettings.PostEditTimeLimit | default(300) @>
+                                  TimeBetweenUserTypingUpdatesMilliseconds: <@ input.configJSON.ServiceSettings.TimeBetweenUserTypingUpdatesMilliseconds | default(5000) @>
+                                  EnablePostSearch: <@ input.configJSON.ServiceSettings.EnablePostSearch | default(true) | tojson @>
+                                  EnableUserTypingMessages: <@ input.configJSON.ServiceSettings.EnableUserTypingMessages | default(true) | tojson @>
+                                  EnableUserStatuses: <@ input.configJSON.ServiceSettings.EnableUserStatuses | default(true) | tojson @>
+                                  ClusterLogTimeoutMilliseconds: <@ input.configJSON.ServiceSettings.ClusterLogTimeoutMilliseconds | default(2000) @>
+                                TeamSettings:
+                                  SiteName: "<@ input.configJSON.TeamSettings.SiteName | default('Mattermost') @>"
+                                  MaxUsersPerTeam: <@ input.configJSON.TeamSettings.MaxUsersPerTeam | default(50000) @>
+                                  EnableTeamCreation: <@ input.configJSON.TeamSettings.EnableTeamCreation | default(true) | tojson @>
+                                  EnableUserCreation: <@ input.configJSON.TeamSettings.EnableUserCreation | default(true) | tojson @>
+                                  EnableOpenServer: <@ input.configJSON.TeamSettings.EnableOpenServer | default(true) | tojson @>
+                                  RestrictCreationToDomains: "<@ input.configJSON.TeamSettings.RestrictCreationToDomains | default('') @>"
+                                  EnableCustomBrand: <@ input.configJSON.TeamSettings.EnableCustomBrand | default(false) | tojson @>
+                                  CustomBrandText: "<@ input.configJSON.TeamSettings.CustomBrandText | default('') @>"
+                                  CustomDescriptionText: "<@ input.configJSON.TeamSettings.CustomDescriptionText | default('') @>"
+                                  RestrictDirectMessage: "<@ input.configJSON.TeamSettings.RestrictDirectMessage | default('any') @>"
+                                  RestrictTeamInvite: "<@ input.configJSON.TeamSettings.RestrictTeamInvite | default('all') @>"
+                                  RestrictPublicChannelManagement: "<@ input.configJSON.TeamSettings.RestrictPublicChannelManagement | default('all') @>"
+                                  RestrictPrivateChannelManagement: "<@ input.configJSON.TeamSettings.RestrictPrivateChannelManagement | default('all') @>"
+                                  RestrictPublicChannelCreation: "<@ input.configJSON.TeamSettings.RestrictPublicChannelCreation | default('all') @>"
+                                  RestrictPrivateChannelCreation: "<@ input.configJSON.TeamSettings.RestrictPrivateChannelCreation | default('all') @>"
+                                  RestrictPublicChannelDeletion: "<@ input.configJSON.TeamSettings.RestrictPublicChannelDeletion | default('all') @>"
+                                  RestrictPrivateChannelDeletion: "<@ input.configJSON.TeamSettings.RestrictPrivateChannelDeletion | default('all') @>"
+                                  RestrictPrivateChannelManageMembers: "<@ input.configJSON.TeamSettings.RestrictPrivateChannelManageMembers | default('all') @>"
+                                  UserStatusAwayTimeout: <@ input.configJSON.TeamSettings.UserStatusAwayTimeout | default(300) @>
+                                  MaxChannelsPerTeam: <@ input.configJSON.TeamSettings.MaxChannelsPerTeam | default(50000) @>
+                                  MaxNotificationsPerChannel: <@ input.configJSON.TeamSettings.MaxNotificationsPerChannel | default(1000) @>
+                                SqlSettings:
+                                  DriverName: "<@ input.configJSON.SqlSettings.DriverName | default('') @>"
+                                  DataSource: "<@ input.configJSON.SqlSettings.DataSource | default('') @>"
+                                  DataSourceReplicas: <@ input.configJSON.SqlSettings.DataSourceReplicas | default([]) @>
+                                  DataSourceSearchReplicas: <@ input.configJSON.SqlSettings.DataSourceSearchReplicas | default([]) @>
+                                  MaxIdleConns: <@ input.configJSON.SqlSettings.MaxIdleConns | default(20) @>
+                                  MaxOpenConns: <@ input.configJSON.SqlSettings.MaxOpenConns | default(35) @>
+                                  Trace: <@ input.configJSON.SqlSettings.Trace | default(false) | tojson @>
+                                  AtRestEncryptKey: "<@ input.configJSON.SqlSettings.AtRestEncryptKey | default('') @>"
+                                  QueryTimeout: <@ input.configJSON.SqlSettings.QueryTimeout | default(30) @>
+                                LogSettings:
+                                  EnableConsole: <@ input.configJSON.LogSettings.EnableConsole | default(true) | tojson @>
+                                  ConsoleLevel: "<@ input.configJSON.LogSettings.ConsoleLevel | default('INFO') @>"
+                                  EnableFile: <@ input.configJSON.LogSettings.EnableFile | default(true) | tojson @>
+                                  FileLevel: "<@ input.configJSON.LogSettings.FileLevel | default('INFO') @>"
+                                  FileFormat: "<@ input.configJSON.LogSettings.FileFormat | default('') @>"
+                                  FileLocation: "<@ input.configJSON.LogSettings.FileLocation | default('') @>"
+                                  EnableWebhookDebugging: <@ input.configJSON.LogSettings.EnableWebhookDebugging | default(true) | tojson @>
+                                  EnableDiagnostics: <@ input.configJSON.LogSettings.EnableDiagnostics | default(true) | tojson @>
+                                PasswordSettings:
+                                  MinimumLength: <@ input.configJSON.PasswordSettings.MinimumLength | default(5) @>
+                                  Lowercase: <@ input.configJSON.PasswordSettings.Lowercase | default(false) | tojson @>
+                                  Number: <@ input.configJSON.PasswordSettings.Number | default(false) | tojson @>
+                                  Uppercase: <@ input.configJSON.PasswordSettings.Uppercase | default(false) | tojson @>
+                                  Symbol: <@ input.configJSON.PasswordSettings.Symbol | default(false) | tojson @>
+                                FileSettings:
+                                  EnableFileAttachments: <@ input.configJSON.FileSettings.EnableFileAttachments | default(true) | tojson @>
+                                  MaxFileSize: <@ input.configJSON.FileSettings.MaxFileSize | default(52428800) @>
+                                  DriverName: "<@ input.configJSON.FileSettings.DriverName | default('local') @>"
+                                  Directory: "<@ input.configJSON.FileSettings.Directory | default('./data/') @>"
+                                  EnablePublicLink: <@ input.configJSON.FileSettings.EnablePublicLink | default(false) | tojson @>
+                                  PublicLinkSalt: "<@ input.configJSON.FileSettings.PublicLinkSalt | default('') @>"
+                                  ThumbnailWidth: <@ input.configJSON.FileSettings.ThumbnailWidth | default(120) @>
+                                  ThumbnailHeight: <@ input.configJSON.FileSettings.ThumbnailHeight | default(100) @>
+                                  PreviewWidth: <@ input.configJSON.FileSettings.PreviewWidth | default(1024) @>
+                                  PreviewHeight: <@ input.configJSON.FileSettings.PreviewHeight | default(0) @>
+                                  ProfileWidth: <@ input.configJSON.FileSettings.ProfileWidth | default(128) @>
+                                  ProfileHeight: <@ input.configJSON.FileSettings.ProfileHeight | default(128) @>
+                                  InitialFont: "<@ input.configJSON.FileSettings.InitialFont | default('luximbi.ttf') @>"
+                                  AmazonS3AccessKeyId: "<@ input.configJSON.FileSettings.AmazonS3AccessKeyId | default('') @>"
+                                  AmazonS3SecretAccessKey: "<@ input.configJSON.FileSettings.AmazonS3SecretAccessKey | default('') @>"
+                                  AmazonS3Bucket: "<@ input.configJSON.FileSettings.AmazonS3Bucket | default('') @>"
+                                  AmazonS3Region: "<@ input.configJSON.FileSettings.AmazonS3Region | default('') @>"
+                                  AmazonS3Endpoint: "<@ input.configJSON.FileSettings.AmazonS3Endpoint | default('s3.amazonaws.com') @>"
+                                  AmazonS3SSL: <@ input.configJSON.FileSettings.AmazonS3SSL | default(false) | tojson @>
+                                  AmazonS3SignV2: <@ input.configJSON.FileSettings.AmazonS3SignV2 | default(false) | tojson @>
+                                EmailSettings:
+                                  EnableSignUpWithEmail: <@ input.configJSON.EmailSettings.EnableSignUpWithEmail | default(true) | tojson @>
+                                  EnableSignInWithEmail: <@ input.configJSON.EmailSettings.EnableSignInWithEmail | default(true) | tojson @>
+                                  EnableSignInWithUsername: <@ input.configJSON.EmailSettings.EnableSignInWithUsername | default(true) | tojson @>
+                                  SendEmailNotifications: <@ input.configJSON.EmailSettings.SendEmailNotifications | default(false) | tojson @>
+                                  RequireEmailVerification: <@ input.configJSON.EmailSettings.RequireEmailVerification | default(false) | tojson @>
+                                  FeedbackName: "<@ input.configJSON.EmailSettings.FeedbackName | default('') @>"
+                                  FeedbackEmail: "<@ input.configJSON.EmailSettings.FeedbackEmail | default('') @>"
+                                  FeedbackOrganization: "<@ input.configJSON.EmailSettings.FeedbackOrganization | default('') @>"
+                                  SMTPUsername: "<@ input.configJSON.EmailSettings.SMTPUsername | default('') @>"
+                                  SMTPPassword: "<@ input.configJSON.EmailSettings.SMTPPassword | default('') @>"
+                                  EnableSMTPAuth: "<@ input.configJSON.EmailSettings.EnableSMTPAuth | default('') @>"
+                                  SMTPServer: "<@ input.configJSON.EmailSettings.SMTPServer | default('') @>"
+                                  SMTPPort: "<@ input.configJSON.EmailSettings.SMTPPort | default('') @>"
+                                  ConnectionSecurity: "<@ input.configJSON.EmailSettings.ConnectionSecurity | default('') @>"
+                                  InviteSalt: "<@ input.configJSON.EmailSettings.InviteSalt | default('') @>"
+                                  SendPushNotifications: <@ input.configJSON.EmailSettings.SendPushNotifications | default(true) | tojson @>
+                                  PushNotificationServer: "<@ input.configJSON.EmailSettings.PushNotificationServer | default('https://push-test.mattermost.com') @>"
+                                  PushNotificationContents: "<@ input.configJSON.EmailSettings.PushNotificationContents | default('generic') @>"
+                                  EnableEmailBatching: <@ input.configJSON.EmailSettings.EnableEmailBatching | default(false) | tojson @>
+                                  EmailBatchingBufferSize: <@ input.configJSON.EmailSettings.EmailBatchingBufferSize | default(256) @>
+                                  EmailBatchingInterval: <@ input.configJSON.EmailSettings.EmailBatchingInterval | default(30) @>
+                                  SkipServerCertificateVerification: <@ input.configJSON.EmailSettings.SkipServerCertificateVerification | default(false) | tojson @>
+                                RateLimitSettings:
+                                  Enable: <@ input.configJSON.RateLimitSettings.Enable | default(false) | tojson @>
+                                  PerSec: <@ input.configJSON.RateLimitSettings.PerSec | default(10) @>
+                                  MaxBurst: <@ input.configJSON.RateLimitSettings.MaxBurst | default(100) @>
+                                  MemoryStoreSize: <@ input.configJSON.RateLimitSettings.MemoryStoreSize | default(10000) @>
+                                  VaryByRemoteAddr: <@ input.configJSON.RateLimitSettings.VaryByRemoteAddr | default(true) | tojson @>
+                                  VaryByHeader: "<@ input.configJSON.RateLimitSettings.VaryByHeader | default('') @>"
+                                PrivacySettings:
+                                  ShowEmailAddress: <@ input.configJSON.PrivacySettings.ShowEmailAddress | default(true) | tojson @>
+                                  ShowFullName: <@ input.configJSON.PrivacySettings.ShowFullName | default(true) | tojson @>
+                                SupportSettings:
+                                  TermsOfServiceLink: "<@ input.configJSON.SupportSettings.TermsOfServiceLink | default('https://about.mattermost.com/default-terms/') @>"
+                                  PrivacyPolicyLink: "<@ input.configJSON.SupportSettings.PrivacyPolicyLink | default('https://about.mattermost.com/default-privacy-policy/') @>"
+                                  AboutLink: "<@ input.configJSON.SupportSettings.AboutLink | default('https://about.mattermost.com/default-about/') @>"
+                                  HelpLink: "<@ input.configJSON.SupportSettings.HelpLink | default('https://about.mattermost.com/default-help/') @>"
+                                  ReportAProblemLink: "<@ input.configJSON.SupportSettings.ReportAProblemLink | default('https://about.mattermost.com/default-report-a-problem/') @>"
+                                  SupportEmail: "<@ input.configJSON.SupportSettings.SupportEmail | default('feedback@mattermost.com') @>"
+                                AnnouncementSettings:
+                                  EnableBanner: <@ input.configJSON.AnnouncementSettings.EnableBanner | default(false) | tojson @>
+                                  BannerText: "<@ input.configJSON.AnnouncementSettings.BannerText | default('') @>"
+                                  BannerColor: "<@ input.configJSON.AnnouncementSettings.BannerColor | default('#f2a93b') @>"
+                                  BannerTextColor: "<@ input.configJSON.AnnouncementSettings.BannerTextColor | default('#333333') @>"
+                                  AllowBannerDismissal: <@ input.configJSON.AnnouncementSettings.AllowBannerDismissal | default(true) | tojson @>
+                                GitLabSettings:
+                                  Enable: <@ input.configJSON.GitLabSettings.Enable | default(false) | tojson @>
+                                  Secret: "<@ input.configJSON.GitLabSettings.Secret | default('') @>"
+                                  Id: "<@ input.configJSON.GitLabSettings.Id | default('') @>"
+                                  Scope: "<@ input.configJSON.GitLabSettings.Scope | default('') @>"
+                                  AuthEndpoint: "<@ input.configJSON.GitLabSettings.AuthEndpoint | default('') @>"
+                                  TokenEndpoint: "<@ input.configJSON.GitLabSettings.TokenEndpoint | default('') @>"
+                                  UserApiEndpoint: "<@ input.configJSON.GitLabSettings.UserApiEndpoint | default('') @>"
+                                LocalizationSettings:
+                                  DefaultServerLocale: "<@ input.configJSON.LocalizationSettings.DefaultServerLocale | default('en') @>"
+                                  DefaultClientLocale: "<@ input.configJSON.LocalizationSettings.DefaultClientLocale | default('en') @>"
+                                  AvailableLocales: "<@ input.configJSON.LocalizationSettings.AvailableLocales | default('') @>"
+                                NativeAppSettings:
+                                  AppDownloadLink: "<@ input.configJSON.NativeAppSettings.AppDownloadLink | default('https://about.mattermost.com/downloads/') @>"
+                                  AndroidAppDownloadLink: "<@ input.configJSON.NativeAppSettings.AndroidAppDownloadLink | default('https://about.mattermost.com/mattermost-android-app/') @>"
+                                  IosAppDownloadLink: "<@ input.configJSON.NativeAppSettings.IosAppDownloadLink | default('https://about.mattermost.com/mattermost-ios-app/') @>"
+                                AnalyticsSettings:
+                                  MaxUsersForStatistics: <@ input.configJSON.AnalyticsSettings.MaxUsersForStatistics | default(2500) @>
+                                WebrtcSettings:
+                                  Enable: <@ input.configJSON.WebrtcSettings.Enable | default(false) | tojson @>
+                                  GatewayWebsocketUrl: "<@ input.configJSON.WebrtcSettings.GatewayWebsocketUrl | default('') @>"
+                                  GatewayAdminUrl: "<@ input.configJSON.WebrtcSettings.GatewayAdminUrl | default('') @>"
+                                  GatewayAdminSecret: "<@ input.configJSON.WebrtcSettings.GatewayAdminSecret | default('') @>"
+                                  StunURI: "<@ input.configJSON.WebrtcSettings.StunURI | default('') @>"
+                                  TurnURI: "<@ input.configJSON.WebrtcSettings.TurnURI | default('') @>"
+                                  TurnUsername: "<@ input.configJSON.WebrtcSettings.TurnUsername | default('') @>"
+                                  TurnSharedKey: "<@ input.configJSON.WebrtcSettings.TurnSharedKey | default('') @>"
+                                DisplaySettings:
+                                  CustomUrlSchemes: <@ input.configJSON.DisplaySettings.CustomUrlSchemes | default([]) @>
+                                  ExperimentalTimezone: <@ input.configJSON.DisplaySettings.ExperimentalTimezone | default(true) | tojson @>
+                                TimezoneSettings:
+                                  SupportedTimezonesPath: "<@ input.configJSON.TimezoneSettings.SupportedTimezonesPath | default('timezones.json') @>"
+                                PluginSettings:
+                                  Enable: <@ input.configJSON.PluginSettings.Enable | default(true) @>
+                                  EnableUploads: <@ input.configJSON.PluginSettings.EnableUploads | default(true) | tojson @>
+                                  Directory: "<@ input.configJSON.PluginSettings.Directory | default('./plugins') @>"
+                                  ClientDirectory: "<@ input.configJSON.PluginSettings.ClientDirectory | default('./client/plugins') @>"
+                                  Plugins: <@ input.configJSON.PluginSettings.Plugins | default({}) @>
+                                  PluginStates: <@ input.configJSON.PluginSettings.PluginStates | default({}) @>
+                            output:
+                              helmRelease:
+                                useHelmReleaseStorage: true
+                              additional:
+                                useHelmTemplateStorage: true  
+                                goTemplate: |
+                                  host: "{{ index .Values.ingress.hosts 0 }}"
+                                  version: "{{ .Values.image.tag }}"
+                      - name: input-parameters
+                        from: "{{steps.prepare-parameters.outputs.artifacts.merged}}"
+                      - name: configuration
+                        raw:
+                          data: "unpackValue: true"
+
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: mattermost-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+              - - name: resolve-ti-value
+                  template: resolve-ti-art-value
+                  capact-outputTypeInstances:
+                    - name: mattermost-config
+                      from: ti-artifact
+                      backend: helm-template-storage
+                  arguments:
+                    artifacts:
+                      - name: ti-artifact
+                        from: "{{steps.helm-install.outputs.artifacts.additional}}"
+                      - name: backend
+                        from: "{{workflow.outputs.artifacts.helm-template-storage}}"
+
+          - name: prepare-parameters
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: /yamls/input.yaml
+                - name: additional-parameters
+                  path: /yamls/additionalinput.yaml
+                  optional: true
+                - name: psql
+                  path: /yamls/psql.yaml
+                - name: db
+                  path: /yamls/db.yaml
+                - name: user
+                  path: /yamls/user.yaml
+            container:
+              image: ghcr.io/capactio/infra/merger:2ada6f8
+            outputs:
+              artifacts:
+              - name: merged
+                path: /merged.yaml
+
+          - name: resolve-ti-art-value
+            inputs:
+              artifacts:
+                - name: ti-artifact
+                  path: /tmp/input-ti.yaml
+                - name: backend
+                  path: /tmp/storage-backend.yaml
+            outputs:
+              artifacts:
+                - name: ti-artifact
+                  path: /tmp/output.yaml
+            container:
+              image: ghcr.io/capactio/ti-value-fetcher:2ada6f8
+              env:
+                - name: APP_LOGGER_DEV_MODE
+                  value: "true"
+                - name: APP_INPUT_TI_FILE_PATH
+                  value: "{{inputs.artifacts.ti-artifact.path}}"
+                - name: APP_INPUT_BACKEND_TI_FILE_PATH
+                  value: "{{inputs.artifacts.backend.path}}"
+                - name: APP_OUTPUT_FILE_PATH
+                  value: "{{outputs.artifacts.ti-artifact.path}}"
+
