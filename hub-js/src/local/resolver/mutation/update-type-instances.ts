@@ -38,6 +38,11 @@ type updateArgsContainer = Map<
   { backend?: BackendInput; value?: unknown; owner?: string }
 >;
 
+interface StoredValue {
+  rollbackInput: DeleteRevisionInput;
+  newContext?: unknown;
+}
+
 // Represents contract defined on finding whether TypeInstance's value is stored externally or not.
 interface ValueReference {
   // Specifies whether data is stored in built-in or external storage.
@@ -68,6 +73,8 @@ export async function updateTypeInstances(
   const neo4jSession = context.driver.session();
 
   const externallyStored: DeleteRevisionInput[] = [];
+  const updatedContexts: Map<string, unknown> = new Map<string, unknown>();
+
   try {
     return await neo4jSession.writeTransaction(async (tx: Transaction) => {
       const instancesResult = await extractInformationAboutValueStore(tx, args);
@@ -86,8 +93,27 @@ export async function updateTypeInstances(
           ref.fetchInput
         );
 
-        externallyStored.push(out);
+        externallyStored.push(out.rollbackInput);
+        if (!out.newContext) {
+          continue;
+        }
+        updatedContexts.set(id, out.newContext);
       }
+
+      args.in.forEach((x, index, array) => {
+        if (!updatedContexts.has(x.id)) {
+          return;
+        }
+        const newCtx = updatedContexts.get(x.id);
+        logger.debug("Backend contexts was changed by external backend", {
+          id: x.id,
+          oldContext: x.typeInstance.backend?.context,
+          newContext: newCtx,
+        });
+        array[index].typeInstance.backend = {
+          context: newCtx,
+        };
+      }, args);
 
       const [query, queryParams] = cypherMutation(args, context, resolveInfo);
       const outputResult = await tx.run(query, queryParams);
@@ -228,7 +254,7 @@ async function storeValueExternally(
   updateArgs: updateArgsContainer,
   delegatedStorage: DelegatedStorageService,
   fetchInput: GetInput
-): Promise<DeleteRevisionInput> {
+): Promise<StoredValue> {
   const args = updateArgs.get(id);
   if (!args) {
     throw Error(
@@ -264,14 +290,22 @@ async function storeValueExternally(
     },
   };
 
-  logger.debug("Storing new value into external storage", update);
-  await delegatedStorage.Update(update);
-  return {
-    backend: update.backend,
-    typeInstance: {
-      id: update.typeInstance.id,
-      resourceVersion: update.typeInstance.newResourceVersion,
-      ownerID: update.typeInstance.ownerID,
+  const out: StoredValue = {
+    rollbackInput: {
+      backend: update.backend,
+      typeInstance: {
+        id: update.typeInstance.id,
+        resourceVersion: update.typeInstance.newResourceVersion,
+        ownerID: update.typeInstance.ownerID,
+      },
     },
   };
+
+  logger.debug("Storing new value into external storage", update);
+  const updatedContexts = await delegatedStorage.Update(update);
+  if (Object.keys(updatedContexts).length) {
+    out.newContext = updatedContexts[update.typeInstance.id];
+  }
+
+  return out;
 }
