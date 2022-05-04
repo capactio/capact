@@ -12,12 +12,13 @@ import (
 
 	"capact.io/capact/pkg/hub/client/local"
 
-	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
-	hubclient "capact.io/capact/pkg/hub/client"
-	"capact.io/capact/pkg/sdk/validation"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
+
+	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
+	hubclient "capact.io/capact/pkg/hub/client"
+	"capact.io/capact/pkg/sdk/validation"
 )
 
 // UpdateAction represents the update TypeInstancess action.
@@ -176,14 +177,16 @@ func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values 
 			return errors.Wrap(err, "while marshaling TypeInstance")
 		}
 
-		unmarshalledTIValue := graphqllocal.UpdateTypeInstanceInput{}
+		unmarshalledTIValue := UploadTypeInstanceData{}
 		err = json.Unmarshal(data, &unmarshalledTIValue)
 		if err != nil {
 			return errors.Wrap(err, "while unmarshaling TypeInstance")
 		}
 
 		if unmarshalledTIValue.Backend != nil {
-			typeInstance.TypeInstance.Backend = unmarshalledTIValue.Backend
+			typeInstance.TypeInstance.Backend = &graphqllocal.UpdateTypeInstanceBackendInput{
+				Context: unmarshalledTIValue.Backend.Context,
+			}
 		}
 
 		includeValue, err := shouldIncludeValue(typeInstance)

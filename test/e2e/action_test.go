@@ -4,7 +4,6 @@
 package e2e
 
 import (
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -19,6 +18,7 @@ import (
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/local"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -161,6 +161,16 @@ var _ = Describe("Action", func() {
 			updateTIOutput := mapToOutputTypeInstanceDetails(updateTI2, expUploadTIBackend)
 			uploadedTIOutput = mapToOutputTypeInstanceDetails(uploadedTI2, expUploadTIBackend)
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElements(updateTIOutput, uploadedTIOutput), HaveLen(2)))
+
+			By("9.3 Update TypeInstance has ID field")
+			latestRevUpdateTI, err := hubClient.FindTypeInstance(ctx, updateTI2.ID, local.WithFields(local.TypeInstanceLatestResourceVersionFields))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updateTI).ToNot(BeNil())
+			fmt.Println(latestRevUpdateTI.LatestResourceVersion.Spec.Value)
+			Expect(latestRevUpdateTI.LatestResourceVersion.Spec.Value).Should(Equal(map[string]interface{}{
+				"key": implIndicatorValue,
+				"id":  updateTI2.ID, // proves that the download step inject also TI id.
+			}))
 		})
 
 		It("should pick Implementation B based on Policy rule", func() {

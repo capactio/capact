@@ -89,6 +89,10 @@ export async function updateTypeInstances(
         );
         externallyStored.push(out.rollbackInput);
 
+        if (!out.newContext) {
+          continue;
+        }
+
         logger.debug("Backend contexts was changed by external backend", {
           id: item.id,
           oldContext: item.typeInstance.backend?.context,
