@@ -33,10 +33,12 @@ interface BackendInput {
   context?: unknown;
 }
 
-type updateArgsContainer = Map<
-  string,
-  { backend?: BackendInput; value?: unknown; owner?: string }
->;
+interface UpdateArgs {
+  id: string;
+  backend?: BackendInput;
+  value?: unknown;
+  owner?: string;
+}
 
 interface StoredValue {
   rollbackInput: DeleteRevisionInput;
@@ -60,60 +62,42 @@ export async function updateTypeInstances(
 ) {
   logger.debug("Executing query to update TypeInstance(s)", args);
 
-  const updateArgs: updateArgsContainer = new Map();
-
-  args.in.forEach((x) => {
-    updateArgs.set(x.id, {
-      value: x.typeInstance.value,
-      backend: x.typeInstance.backend,
-      owner: x.ownerID,
-    });
-  });
-
   const neo4jSession = context.driver.session();
-
   const externallyStored: DeleteRevisionInput[] = [];
-  const updatedContexts: Map<string, unknown> = new Map<string, unknown>();
 
   try {
     return await neo4jSession.writeTransaction(async (tx: Transaction) => {
-      const instancesResult = await extractInformationAboutValueStore(tx, args);
-      for (const record of instancesResult.records) {
-        const id = record.get("id");
-        const ref: ValueReference = record.get("ref");
+      const externalBackends = await extractInformationAboutValueStore(
+        tx,
+        args
+      );
 
-        if (ref.abstract) {
+      for (const [index, item] of args.in.entries()) {
+        if (!externalBackends.has(item.id)) {
           continue;
         }
 
         const out = await storeValueExternally(
-          id,
-          updateArgs,
+          {
+            id: item.id,
+            value: item.typeInstance.value,
+            backend: item.typeInstance.backend,
+            owner: item.ownerID,
+          },
           context.delegatedStorage,
-          ref.fetchInput
+          externalBackends.get(item.id) as GetInput
         );
-
         externallyStored.push(out.rollbackInput);
-        if (!out.newContext) {
-          continue;
-        }
-        updatedContexts.set(id, out.newContext);
-      }
 
-      args.in.forEach((x, index, array) => {
-        if (!updatedContexts.has(x.id)) {
-          return;
-        }
-        const newCtx = updatedContexts.get(x.id);
         logger.debug("Backend contexts was changed by external backend", {
-          id: x.id,
-          oldContext: x.typeInstance.backend?.context,
-          newContext: newCtx,
+          id: item.id,
+          oldContext: item.typeInstance.backend?.context,
+          newContext: out.newContext,
         });
-        array[index].typeInstance.backend = {
-          context: newCtx,
+        args.in[index].typeInstance.backend = {
+          context: out.newContext,
         };
-      }, args);
+      }
 
       const [query, queryParams] = cypherMutation(args, context, resolveInfo);
       const outputResult = await tx.run(query, queryParams);
@@ -186,9 +170,9 @@ function extractUpdateMutationResult(result: QueryResult) {
 async function extractInformationAboutValueStore(
   tx: Transaction,
   args: UpdateTypeInstancesInput
-) {
+): Promise<Map<string, GetInput>> {
   const typeInstanceIds = args.in.map((x) => x.id);
-  return tx.run(
+  const instancesResult = await tx.run(
     `
            UNWIND $ids as id
            MATCH (ti:TypeInstance {id: id})
@@ -231,6 +215,19 @@ async function extractInformationAboutValueStore(
         `,
     { ids: typeInstanceIds }
   );
+
+  const externalBackends: Map<string, GetInput> = new Map();
+  instancesResult.records.forEach((record) => {
+    const id = record.get("id");
+    const ref: ValueReference = record.get("ref");
+
+    if (ref.abstract) {
+      return;
+    }
+    externalBackends.set(id, ref.fetchInput);
+  });
+
+  return externalBackends;
 }
 
 // Ensure that data is deleted in case of not committed transaction
@@ -250,17 +247,10 @@ async function rollbackExternalStoredRevision(
 }
 
 async function storeValueExternally(
-  id: string,
-  updateArgs: updateArgsContainer,
+  args: UpdateArgs,
   delegatedStorage: DelegatedStorageService,
   fetchInput: GetInput
 ): Promise<StoredValue> {
-  const args = updateArgs.get(id);
-  if (!args) {
-    throw Error(
-      "missing details about TypeInstance which should be updated externally"
-    );
-  }
   // 1. Based on our contract, if user didn't provide value, we need to fetch the old one and put it
   // to the new revision.
   const requiresInputValue = await delegatedStorage.IsValueAllowedByBackend(
@@ -269,7 +259,7 @@ async function storeValueExternally(
   if (!args.value && requiresInputValue) {
     logger.debug("Fetching previous value from external storage", fetchInput);
     const resp = await delegatedStorage.Get(fetchInput);
-    args.value = resp[id];
+    args.value = resp[args.id];
   }
 
   // 2. If user provided context, override it
