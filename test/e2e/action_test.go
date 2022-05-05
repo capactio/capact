@@ -166,10 +166,9 @@ var _ = Describe("Action", func() {
 			latestRevUpdateTI, err := hubClient.FindTypeInstance(ctx, updateTI2.ID, local.WithFields(local.TypeInstanceLatestResourceVersionFields))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(updateTI).ToNot(BeNil())
-			fmt.Println(latestRevUpdateTI.LatestResourceVersion.Spec.Value)
 			Expect(latestRevUpdateTI.LatestResourceVersion.Spec.Value).Should(Equal(map[string]interface{}{
-				"key": implIndicatorValue,
-				"id":  updateTI2.ID, // proves that the download step inject also TI id.
+				"key":                    implIndicatorValue,
+				"downloadTypeInstanceId": updateTI2.ID, // proves that the download step inject also TI id.
 			}))
 		})
 
