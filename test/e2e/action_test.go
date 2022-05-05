@@ -166,10 +166,12 @@ var _ = Describe("Action", func() {
 			latestRevUpdateTI, err := hubClient.FindTypeInstance(ctx, updateTI2.ID, local.WithFields(local.TypeInstanceLatestResourceVersionFields))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(updateTI).ToNot(BeNil())
-			Expect(latestRevUpdateTI.LatestResourceVersion.Spec.Value).Should(Equal(map[string]interface{}{
-				"key":                    implIndicatorValue,
-				"downloadTypeInstanceId": updateTI2.ID, // proves that the download step inject also TI id.
-			}))
+			Expect(latestRevUpdateTI.LatestResourceVersion.Spec.Value).Should(HaveKeyWithValue(
+				"key", implIndicatorValue,
+			))
+			Expect(latestRevUpdateTI.LatestResourceVersion.Spec.Value).Should(HaveKeyWithValue(
+				"downloadTypeInstanceId", updateTI2.ID, // proves that the download step inject also TI id.
+			))
 		})
 
 		It("should pick Implementation B based on Policy rule", func() {
