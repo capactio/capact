@@ -30,7 +30,8 @@ builds:
         goarch: arm64
     hooks: &build-hooks
       # Install upx first, https://github.com/upx/upx/releases
-      post: upx -9 "{{ .Path }}"
+      # Do not compress darwin arm64 binary as it causes upx to output broken file
+      post: sh -c 'if ! ( grep -q "darwin" <<< "{{ .Path }}" && grep -q "arm64" <<< "{{ .Path }}" ); then upx -9 "{{ .Path }}"; fi'
     main: ./cmd/cli
     binary: 'capact'
     ldflags:
