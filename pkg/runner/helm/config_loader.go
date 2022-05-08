@@ -14,8 +14,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// KubeconfigTypeInstanceFieldKey defines property name under which the kubeconfig is stored in TypeInstance.
-const KubeconfigTypeInstanceFieldKey = "config"
+// KubeconfigInput defines type under which the kubeconfig is stored in TypeInstance.
+type KubeconfigInput struct {
+	Value KubeconfigContent `yaml:"value"`
+}
+
+// KubeconfigContent defines type for kubeconfig TypeInstance value content.
+type KubeconfigContent struct {
+	Config map[string]interface{} `yaml:"config"`
+}
 
 func (r *helmRunner) loadKubeconfig() (*rest.Config, error) {
 	err := setKubeconfigEnvIfTypeInstanceExists(r.cfg.OptionalKubeconfigTI, r.log)
@@ -50,13 +57,18 @@ func setKubeconfigEnvIfTypeInstanceExists(path string, log *zap.Logger) error {
 		return err
 	}
 
+	return SetNewKubeconfig(kcfg, log)
+}
+
+// SetNewKubeconfig creates a temporary kubeconfig file from bytes and sets environment variable to that file.
+func SetNewKubeconfig(kubeconfig []byte, log *zap.Logger) error {
 	file, err := ioutil.TempFile("", "kubeconfig")
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	if _, err = file.Write(kcfg); err != nil {
+	if _, err = file.Write(kubeconfig); err != nil {
 		return err
 	}
 
@@ -69,28 +81,23 @@ func setKubeconfigEnvIfTypeInstanceExists(path string, log *zap.Logger) error {
 	if err = os.Setenv(clientcmd.RecommendedConfigPathEnvVar, file.Name()); err != nil {
 		return errors.Wrapf(err, "while setting up %s env", clientcmd.RecommendedConfigPathEnvVar)
 	}
-
 	return nil
 }
 
 func extractKubeconfigFromTI(path string) ([]byte, error) {
 	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "while reading Kubeconfig TypeInstance path")
 	}
-	raw := map[string]interface{}{}
-	if err := yaml.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	rawKubeconfig, found := raw[KubeconfigTypeInstanceFieldKey]
-	if !found {
-		return nil, fmt.Errorf("TypeInstance doesn't have %q field", KubeconfigTypeInstanceFieldKey)
+	kubeconfigInput := KubeconfigInput{}
+	if err := yaml.Unmarshal(data, &kubeconfigInput); err != nil {
+		return nil, errors.Wrapf(err, "while unmarshaling Kubeconfig TypeInstance")
 	}
 
-	kcfg, err := yaml.Marshal(rawKubeconfig)
+	kcfg, err := yaml.Marshal(kubeconfigInput.Value.Config)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "while marshaling Kubeconfig TypeInstance")
 	}
+
 	return kcfg, nil
 }

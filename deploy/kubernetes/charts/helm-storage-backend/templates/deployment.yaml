@@ -46,6 +46,9 @@ spec:
             httpGet:
               path: /healthz
               port: 8082
+          volumeMounts:
+            - mountPath: /tmp
+              name: cache-volume-for-release
           resources:
             {{- toYaml .Values.helmReleaseBackend.resources | nindent 12 }}
           env:
@@ -57,6 +60,10 @@ spec:
               value: "true"
             - name: APP_MODE
               value: "release"
+            - name: APP_LOCAL_HUB_ENDPOINT
+              value: {{ .Values.localHubEndpoint }}
+            - name: APP_KUBECONFIG_TYPEINSTANCE_ID
+              value: {{ .Values.kubeconfig.typeInstanceID }}
         {{- end }}
         {{- if .Values.helmTemplateBackend.enabled }}
         - name: template
@@ -78,7 +85,7 @@ spec:
               port: 8083
           volumeMounts:
             - mountPath: /tmp
-              name: cache-volume
+              name: cache-volume-for-template
           resources:
             {{- toYaml .Values.helmTemplateBackend.resources | nindent 12 }}
           env:
@@ -90,9 +97,15 @@ spec:
               value: "true"
             - name: APP_MODE
               value: "template"
+            - name: APP_LOCAL_HUB_ENDPOINT
+              value: {{ .Values.localHubEndpoint }}
+            - name: APP_KUBECONFIG_TYPEINSTANCE_ID
+              value: {{ .Values.kubeconfig.typeInstanceID }}
         {{- end }}
       volumes:
-        - name: cache-volume
+        - name: cache-volume-for-release
+          emptyDir: { }
+        - name: cache-volume-for-template
           emptyDir: { }
       {{- with .Values.nodeSelector }}
       nodeSelector:
