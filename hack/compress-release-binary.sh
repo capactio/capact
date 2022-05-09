@@ -14,15 +14,15 @@ main() {
     number_of_arguments=$1
     file_path=$2
 
-    if [[ $number_of_arguments < 1 ]]; then
+    if [[ $number_of_arguments -lt 1 ]]; then
         echo "Path to the binary file not provided"
         exit 1
     fi
 
     # Do not compress darwin arm64 binary as it causes UPX to output broken file
-    if ! ( grep -q "darwin" <<< $file_path && grep -q "arm64" <<< $file_path ); then 
-        upx -9 $file_path
+    if ! ( grep -q "darwin" <<< "$file_path" && grep -q "arm64" <<< "$file_path" ); then 
+        upx -9 "$file_path"
     fi
 }
 
-main $# ${1:-""}
+main $# "${1:-""}"
