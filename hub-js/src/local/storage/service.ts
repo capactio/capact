@@ -180,7 +180,9 @@ export default class DelegatedStorageService {
    * @param inputs - Describes what should be updated.
    *
    */
-  async Update(...inputs: UpdateInput[]) {
+  async Update(...inputs: UpdateInput[]): Promise<UpdatedContexts> {
+    let mapping: UpdatedContexts = {};
+
     for (const input of inputs) {
       logger.debug("Updating TypeInstance in external backend", {
         typeInstanceId: input.typeInstance.id,
@@ -202,8 +204,19 @@ export default class DelegatedStorageService {
         ownerId: input.typeInstance.ownerID,
       };
 
-      await backend.client.onUpdate(req);
+      const res = await backend.client.onUpdate(req);
+      if (!res.context) {
+        continue;
+      }
+
+      const updateCtx = JSON.parse(res.context.toString());
+      mapping = {
+        ...mapping,
+        [input.typeInstance.id]: updateCtx,
+      };
     }
+
+    return mapping;
   }
 
   /**
