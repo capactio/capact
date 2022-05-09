@@ -29,11 +29,9 @@ builds:
       - goos: windows
         goarch: arm64
     hooks: &build-hooks
-      # Install upx first, https://github.com/upx/upx/releases
-      # Do not compress darwin arm64 binary as it causes upx to output broken file
-      post: sh -c 'if ! ( grep -q "darwin" <<< "{{ .Path }}" && grep -q "arm64" <<< "{{ .Path }}" ); then upx -9 "{{ .Path }}"; fi'
+      post: ./hack/compress-release-binary.sh {{ .Path }}
     main: ./cmd/cli
-    binary: 'capact'
+    binary: "capact"
     ldflags:
       - -s -w -X  capact.io/capact/cmd/cli/cmd.Version={{.Version}} -X  capact.io/capact/cmd/cli/cmd.Revision={{.ShortCommit}} -X capact.io/capact/cmd/cli/cmd.BuildDate={{.Date}} -X capact.io/capact/cmd/cli/cmd.Branch={{.Branch}}
 
@@ -45,25 +43,25 @@ builds:
     ignore: *build-ignore
     hooks: *build-hooks
     main: ./cmd/populator
-    binary: 'populator'
+    binary: "populator"
 
 archives:
   - id: capact-archive
-    name_template: &archives-name-template '{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    name_template: &archives-name-template "{{ .Binary }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
     format: &archives-format binary
     builds:
-    - capact
+      - capact
 
   - id: populator-archive
     name_template: *archives-name-template
     format: *archives-format
     builds:
-    - populator
+      - populator
 
 brews:
   - name: capact
     ids:
-    - capact-archive
+      - capact-archive
     homepage: &homebrew-homepage https://github.com/capactio/homebrew-tap
     description: "Capact CLI is a command-line tool, which manages Capact resources."
     license: "Apache License 2.0"
@@ -71,14 +69,14 @@ brews:
       owner: capactio
       name: homebrew-tap
     commit_author: &homebrew-commit-author
-        name: Capact Bot
-        email: capactbot@capact.io
+      name: Capact Bot
+      email: capactbot@capact.io
     test: |
       system "#{bin}/capact version"
 
   - name: populator
     ids:
-    - populator-archive
+      - populator-archive
     homepage: *homebrew-homepage
     description: "Populator is a command-line tool, which helps to populate various Capact content."
     license: "Apache License 2.0"
@@ -98,7 +96,7 @@ dockers:
       - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}"
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 snapshot:
   name_template: "{{ .Tag }}-next"
@@ -107,8 +105,8 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
 
 dist: bin
 
