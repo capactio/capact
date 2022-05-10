@@ -29,23 +29,23 @@ variables:
   GOPROXY: 'direct'
   GOSUMDB: 'off'
   USER: 'root'
+  DOCKER_REPOSITORY: 'gcr.io/sm-cluster-dev'
 
 stages:
-  # - stage: 'Test'
-  #   jobs:
-  #   - job: 'TestJob'
-  #     container: eu.gcr.io/rnd-docker-public/ultimate-toolkit:3
-  #     steps:
-  #       - template: 'templates/test.yml'
-  #   displayName: 'Run tests'
+  - stage: 'Test'
+    jobs:
+    - job: 'TestJob'
+      container: eu.gcr.io/rnd-docker-public/ultimate-toolkit:3
+      steps:
+        - template: 'templates/test.yml'
+    displayName: 'Run tests'
 
   - stage: 'Build'
     dependsOn:
-    # - 'Test'
-    # condition: "succeeded('Test')"
+    - 'Test'
+    condition: "succeeded('Test')"
     jobs:
     - job: 'BuildJob'
-      # container: eu.gcr.io/rnd-docker-public/ultimate-toolkit:3
       steps:
         - template: 'templates/build.yml'
-    displayName: 'Run build app images'
+    displayName: 'Run build all images'
