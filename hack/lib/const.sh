@@ -24,6 +24,7 @@ readonly CAPACT_NAMESPACE="capact-system"
 readonly CAPACT_RELEASE_NAME="capact"
 readonly DEV_CLUSTER_NAME="dev-capact"
 readonly KIND_CI_CLUSTER_NAME="kind-ci-capact"
+readonly K3D_CI_CLUSTER_NAME="k3d-ci-capact"
 
 #
 # OCF

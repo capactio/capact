@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script provisions testing environment using 'kind'(kubernetes-in-docker)
+# This script provisions testing environment using 'kind'(kubernetes-in-docker) or 'k3d' (Rancher Lab's minimal Kubernetes distribution)
 # and execute end-to-end Capact tests.
 #
 # It requires Docker to be installed.
@@ -58,15 +58,21 @@ main() {
         export HELM_VERSION=${STABLE_HELM_VERSION}
         host::install::helm
     else
-        echo "Skipping kind and helm installation cause SKIP_DEPS_INSTALLATION is set to true."
+        echo "Skipping $CLUSTER_TYPE and helm installation cause SKIP_DEPS_INSTALLATION is set to true."
     fi
 
 
     export REPO_DIR=$REPO_ROOT_DIR
-    export CLUSTER_TYPE=${CLUSTER_TYPE:-"kind"}
+    export CLUSTER_TYPE
 
     export KUBECONFIG="${TMP_DIR}/kubeconfig"
-    export CLUSTER_NAME=${CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
+
+    if [ "$CLUSTER_TYPE" == "kind" ]; then
+        export CLUSTER_NAME=${CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
+    else
+        export CLUSTER_NAME=${CLUSTER_NAME:-${K3D_CI_CLUSTER_NAME}}
+    fi
+
     export HELM_VERSION=${STABLE_HELM_VERSION}
     capact::create_cluster
 
