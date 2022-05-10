@@ -1,39 +1,51 @@
-# Go
-# Build your Go project.
-# Add steps that test, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+# Copyright 2022 Nordcloud Oy or its affiliates. All Rights Reserved.
 
 trigger:
-- main
+  branches:
+    include:
+    - 'master'
+  tags:
+    include:
+    - 'v*'
+pr:
+  branches:
+    include:
+    - 'master'
 
-pool:
-  vmImage: ubuntu-latest
+pool:  
+  vmImage: 'ubuntu-latest'
 
+resources:
+  repositories:
+    - repository: nordcloud-templates
+      type: github
+      name: nordcloud/azure-pipelines-templates
+      endpoint: nordcloud
+      
 variables:
-  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  GOROOT: '/usr/local/go1.11' # Go installation path
-  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+  NODE_VERSION: '12'
+  GOPATH: '$(Pipeline.Workspace)/gopath'
+  GO_VERSION: '1.16'
+  GOPROXY: 'direct'
+  GOSUMDB: 'off'
+  USER: 'root'
 
-steps:
-- script: |
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(modulePath)'
-    shopt -s extglob
-    shopt -s dotglob
-    mv !(gopath) '$(modulePath)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-  displayName: 'Set up the Go workspace'
+stages:
+  # - stage: 'Test'
+  #   jobs:
+  #   - job: 'TestJob'
+  #     container: eu.gcr.io/rnd-docker-public/ultimate-toolkit:3
+  #     steps:
+  #       - template: 'templates/test.yml'
+  #   displayName: 'Run tests'
 
-- script: |
-    go version
-    go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    go build -v .
-  workingDirectory: '$(modulePath)'
-  displayName: 'Get dependencies, then build'
+  - stage: 'Build'
+    dependsOn:
+    # - 'Test'
+    # condition: "succeeded('Test')"
+    jobs:
+    - job: 'BuildJob'
+      # container: eu.gcr.io/rnd-docker-public/ultimate-toolkit:3
+      steps:
+        - template: 'templates/build.yml'
+    displayName: 'Run build app images'

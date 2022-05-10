@@ -1,0 +1,18 @@
+# Copyright 2022 Nordcloud Oy or its affiliates. All Rights Reserved.
+
+steps:
+- task: GoTool@0
+  inputs:
+    version: $(GO_VERSION)
+- script: |
+    mkdir -p $(GOPATH)
+- task: Cache@2
+  inputs:
+    key: 'go2 | "$(Agent.OS)" | go.sum | go.mod'
+    restoreKeys: |
+        go2 | "$(Agent.OS)" | go.sum | go.mod
+    path: $(GOPATH)/pkg/mod
+  displayName: 'Set go mod cache'
+- script: |
+    make test-unit
+  displayName: 'Run tests'
