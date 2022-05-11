@@ -281,7 +281,7 @@ jobs:
           chmod +x ./capact
       - name: Run cross-functional integration tests
         env:
-          BUILD_IMAGES: "true" # Should switch it back to "false"
+          BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
           CAPACT_BINARY: "./capact"
