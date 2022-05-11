@@ -281,11 +281,12 @@ jobs:
           chmod +x ./capact
       - name: Run cross-functional integration tests
         env:
-          BUILD_IMAGES: "false"
+          BUILD_IMAGES: "true"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
           CAPACT_BINARY: "./capact"
           CLUSTER_TYPE: ${{ matrix.cluster }}
+          K3D_REGISTRY: "--enable-registry"
         run: |
           make test-integration
       - name: Upload artifacts
