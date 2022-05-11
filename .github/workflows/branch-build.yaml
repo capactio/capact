@@ -259,7 +259,7 @@ jobs:
     # needs: [ entry-tests, build-app, build-tests ]
     strategy:
       matrix:
-        cluster: [ kind, k3d ]
+        cluster: [ k3d ]
     permissions:
       contents: read
     steps:
