@@ -468,8 +468,6 @@ jobs:
       contents: read
     env:
       CAPACT_BINARY: "${{ github.workspace}}/capact"
-      CLUSTER_TYPE: ${{ matrix.cluster }}
-      DISABLE_K3D_REGISTRY: "true"
 
     steps:
       - name: Checkout code
@@ -502,6 +500,8 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
+          CLUSTER_TYPE: ${{ matrix.cluster }}
+          DISABLE_K3D_REGISTRY: "true"
         run: |
           make test-integration
       - name: Upload artifacts
