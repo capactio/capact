@@ -286,7 +286,7 @@ jobs:
           DISABLE_MONITORING_INSTALLATION: "true"
           CAPACT_BINARY: "./capact"
           CLUSTER_TYPE: ${{ matrix.cluster }}
-          K3D_REGISTRY: "--enable-registry"
+          DISABLE_K3D_REGISTRY: "true"
         run: |
           make test-integration
       - name: Upload artifacts
