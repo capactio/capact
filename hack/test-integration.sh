@@ -23,6 +23,8 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; 
 # shellcheck source=./hack/lib/const.sh
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
+CLUSTER_TYPE=${CLUSTER_TYPE:-"kind"}
+
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 DUMP_CLUSTER_INFO="${DUMP_CLUSTER_INFO:-false}"
