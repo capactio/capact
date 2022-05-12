@@ -75,7 +75,7 @@ func (t *tfCmd) executeAndStreamOutput(ctx context.Context, command string, args
 	t.log.Info("Piping the Terraform output to stdout and stderr")
 
 	cmdOutLogger := t.log.
-		Named("tf"). // not using the zap.String("source", "Terraform") field as it bloats the output
+		Named("tf").
 		WithOptions(zap.WithCaller(false), zap.AddStacktrace(zap.PanicLevel))
 
 	t.readAndPrintConcurrently(ctx, stdOut, func(s string) { cmdOutLogger.Debug(s) })

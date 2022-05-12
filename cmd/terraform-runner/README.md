@@ -51,7 +51,7 @@ GOOGLE_APPLICATION_CREDENTIALS=$GCP_CREDS_FILEPATH \
 To clean up resources created from the [Apply](#apply) section, run:
 
 ```bash
-# Backup TFState file as the one from workspace will be overriden by Terraform Runner
+# Backup TFState file as the one from workspace will be overwritten by Terraform Runner
 cp /tmp/tf-runner-workspace/terraform.tfstate /tmp/tf-runner-workspace/terraform.tfstate.bak 
 
 # Copy TypeInstance file
