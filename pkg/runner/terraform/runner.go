@@ -171,23 +171,25 @@ func (r *terraformRunner) injectStateTypeInstance() error {
 		return runner.SaveToFile(varsFilepath, []byte("\n"))
 	}
 
-	r.log.Debug("Reading TFState file", zap.String("path", r.cfg.StateTypeInstanceFilepath))
+	r.log.Debug("Reading TypeInstance with TF state and vars", zap.String("path", r.cfg.StateTypeInstanceFilepath))
 	data, err := ioutil.ReadFile(r.cfg.StateTypeInstanceFilepath)
 	if err != nil {
 		return errors.Wrapf(err, "while reading state file %s", r.cfg.StateTypeInstanceFilepath)
 	}
 
-	state := &StateTypeInstance{}
-	if err := yaml.Unmarshal(data, state); err != nil {
+	state := struct {
+		Value StateTypeInstance `json:"value"`
+	}{}
+	if err := yaml.Unmarshal(data, &state); err != nil {
 		return errors.Wrap(err, "while unmarshaling StateTypeInstance")
 	}
 
 	stateFilepath := path.Join(r.cfg.WorkDir, stateFile)
-	if err := runner.SaveToFile(stateFilepath, state.State); err != nil {
+	if err := runner.SaveToFile(stateFilepath, state.Value.State); err != nil {
 		return errors.Wrapf(err, "while writing state file %s", stateFilepath)
 	}
 
-	if err := runner.SaveToFile(varsFilepath, state.Variables); err != nil {
+	if err := runner.SaveToFile(varsFilepath, state.Value.Variables); err != nil {
 		return errors.Wrapf(err, "while writing vars file %s", varsFilepath)
 	}
 
