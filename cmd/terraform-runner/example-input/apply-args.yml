@@ -1,7 +1,7 @@
 command: "apply"
 module:
   name: cloudsql
-  source: "./cmd/terraform-runner/example-input/cloudsql.tgz"
+  source: "/tmp/cloudsql.tgz"
 variables: |+
   user_name = "capact"
   user_password = "12-43i213j}"
