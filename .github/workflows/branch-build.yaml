@@ -257,6 +257,9 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     needs: [ entry-tests, build-app, build-tests ]
+    strategy:
+      matrix:
+        cluster: [ kind, k3d ]
     permissions:
       contents: read
     steps:
@@ -282,6 +285,8 @@ jobs:
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
           CAPACT_BINARY: "./capact"
+          CLUSTER_TYPE: ${{ matrix.cluster }}
+          DISABLE_K3D_REGISTRY: "true"
         run: |
           make test-integration
       - name: Upload artifacts
