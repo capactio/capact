@@ -31,7 +31,7 @@ func NewWait() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&opts.For, "for", "", "The filed condition to wait on. Currently supported `phase=phase-name`.")
+	flags.StringVar(&opts.For, "for", "", "The filed condition to wait on. Currently, only the 'phase' filed is supported 'phase=phase-name'.")
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action was created.")
 	flags.DurationVar(&opts.Timeout, "wait-timeout", 10*time.Minute, `Maximum time to wait before giving up. "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	client.RegisterFlags(flags)
