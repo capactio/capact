@@ -24,13 +24,36 @@ To get the GCP Service Account you can follow the documentation [here](https://c
 
 ## Usage
 
-To start the runner type:
+### Apply
+
+To run example which provisions CloudSQL for PostgreSQL on GCP, execute:
 ```bash
-GOOGLE_APPLICATION_CREDENTIALS={full-path-to-gcp-service-account-credentials-json} \
-  RUNNER_ARGS_PATH=cmd/terraform-runner/example-input/args.yml \
+GCP_CREDS_FILEPATH={full-path-to-gcp-service-account-credentials-json} 
+
+GOOGLE_APPLICATION_CREDENTIALS=$GCP_CREDS_FILEPATH \
+  RUNNER_ARGS_PATH=cmd/terraform-runner/example-input/apply-args.yml \
   RUNNER_CONTEXT_PATH=cmd/terraform-runner/example-input/context.yml \
   RUNNER_LOGGER_DEV_MODE=true \
-  RUNNER_WORKDIR=/tmp/workspace \
+  RUNNER_WORKDIR=/tmp/tf-runner-workspace \
+  go run cmd/terraform-runner/main.go
+```
+
+### Destroy
+
+To clean up resources created from the [Apply](#apply) section, run:
+
+```bash
+GCP_CREDS_FILEPATH={full-path-to-gcp-service-account-credentials-json}
+
+# Copy TFState file as the one from workspace will be overriden by Terraform Runner
+cp /tmp/tf-runner-workspace/terraform.tfstate /tmp/cloudsql.tfstate 
+
+GOOGLE_APPLICATION_CREDENTIALS=$GCP_CREDS_FILEPATH \
+  RUNNER_STATE_TYPE_INSTANCE_FILEPATH=/tmp/cloudsql.tfstate \
+  RUNNER_ARGS_PATH=cmd/terraform-runner/example-input/destroy-args.yml \
+  RUNNER_CONTEXT_PATH=cmd/terraform-runner/example-input/context.yml \
+  RUNNER_LOGGER_DEV_MODE=true \
+  RUNNER_WORKDIR=/tmp/tf-runner-workspace \
   go run cmd/terraform-runner/main.go
 ```
 

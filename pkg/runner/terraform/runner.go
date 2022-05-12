@@ -171,6 +171,7 @@ func (r *terraformRunner) injectStateTypeInstance() error {
 		return runner.SaveToFile(varsFilepath, []byte("\n"))
 	}
 
+	r.log.Debug("Reading TFState file", zap.String("path", r.cfg.StateTypeInstanceFilepath))
 	data, err := ioutil.ReadFile(r.cfg.StateTypeInstanceFilepath)
 	if err != nil {
 		return errors.Wrapf(err, "while reading state file %s", r.cfg.StateTypeInstanceFilepath)

@@ -46,8 +46,11 @@ func (t *tfCmd) Output() ([]byte, error) {
 	t.log.Info("Running command", zap.Strings("args", cmd.Args))
 
 	out, err := cmd.CombinedOutput()
-	t.log.Debug("Terraform output", zap.ByteString("output", out))
-	return out, err
+	if err != nil {
+		return nil, errors.Wrap(err, "while waiting for command to exit")
+	}
+
+	return out, nil
 }
 
 func (t *tfCmd) executeAndStreamOutput(ctx context.Context, command string, args ...string) error {
