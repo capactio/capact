@@ -21,7 +21,7 @@ capact act wait --for=phase=READY_TO_RUN example
 ### Options
 
 ```
-      --for phase=phase-name    The filed condition to wait on. Currently supported phase=phase-name.
+      --for string              The filed condition to wait on. Currently, only the 'phase' filed is supported 'phase=phase-name'.
   -h, --help                    help for wait
   -n, --namespace string        Kubernetes namespace where the Action was created. (default "default")
       --timeout duration        Timeout for HTTP request (default 30s)
