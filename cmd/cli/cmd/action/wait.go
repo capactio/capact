@@ -18,10 +18,10 @@ func NewWait() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "wait ACTION",
-		Short: "Wait for a specific condition on a given Action",
+		Short: "Wait for a specific condition of a given Action",
 		Args:  cobra.ExactArgs(1),
 		Example: heredoc.WithCLIName(`
-			# Wait for the Actin "example" to contain the phase "READY_TO_RUN"
+			# Wait for the Action "example" to contain the phase "READY_TO_RUN"
 			<cli> act wait --for=phase=READY_TO_RUN example
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -31,7 +31,7 @@ func NewWait() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&opts.For, "for", "", "The filed condition to wait on. Currently, only the 'phase' filed is supported 'phase=phase-name'.")
+	flags.StringVar(&opts.For, "for", "", "The field condition to wait on. Currently, only the 'phase' field is supported: 'phase={phase-name}'.")
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action was created.")
 	flags.DurationVar(&opts.Timeout, "wait-timeout", 10*time.Minute, `Maximum time to wait before giving up. "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	client.RegisterFlags(flags)

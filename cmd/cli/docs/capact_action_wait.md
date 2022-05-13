@@ -4,7 +4,7 @@ title: capact action wait
 
 ## capact action wait
 
-Wait for a specific condition on a given Action
+Wait for a specific condition of a given Action
 
 ```
 capact action wait ACTION [flags]
@@ -13,7 +13,7 @@ capact action wait ACTION [flags]
 ### Examples
 
 ```
-# Wait for the Actin "example" to contain the phase "READY_TO_RUN"
+# Wait for the Action "example" to contain the phase "READY_TO_RUN"
 capact act wait --for=phase=READY_TO_RUN example
 
 ```
@@ -21,7 +21,7 @@ capact act wait --for=phase=READY_TO_RUN example
 ### Options
 
 ```
-      --for string              The filed condition to wait on. Currently, only the 'phase' filed is supported 'phase=phase-name'.
+      --for string              The field condition to wait on. Currently, only the 'phase' field is supported: 'phase={phase-name}'.
   -h, --help                    help for wait
   -n, --namespace string        Kubernetes namespace where the Action was created. (default "default")
       --timeout duration        Timeout for HTTP request (default 30s)
