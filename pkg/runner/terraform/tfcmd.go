@@ -78,7 +78,7 @@ func (t *tfCmd) executeAndStreamOutput(ctx context.Context, command string, args
 		Named("tf").
 		WithOptions(zap.WithCaller(false), zap.AddStacktrace(zap.PanicLevel))
 
-	t.readAndPrintConcurrently(ctx, stdOut, func(s string) { cmdOutLogger.Debug(s) })
+	t.readAndPrintConcurrently(ctx, stdOut, func(s string) { cmdOutLogger.Info(s) })
 	t.readAndPrintConcurrently(ctx, stdErr, func(s string) { cmdOutLogger.Error(s) })
 
 	err = cmd.Wait()
