@@ -27,7 +27,7 @@ capact config get-contexts
 ### Options inherited from parent commands
 
 ```
-  -c, --config string                 Path to the YAML config file
+  -C, --config string                 Path to the YAML config file
   -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - trace (default 0 - disable)
 ```
 
