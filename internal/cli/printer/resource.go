@@ -49,6 +49,13 @@ func WithJSON() ResourcePrinterOption {
 	}
 }
 
+// WithJSONPath registers JSON path format type.
+func WithJSONPath() ResourcePrinterOption {
+	return func(r *ResourcePrinter) {
+		r.printers[JSONPathFormat] = &JSONPath{}
+	}
+}
+
 // WithYAML registers YAML format type.
 func WithYAML() ResourcePrinterOption {
 	return func(r *ResourcePrinter) {

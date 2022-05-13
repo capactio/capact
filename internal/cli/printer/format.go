@@ -16,6 +16,8 @@ const (
 	TableFormat PrintFormat = "table"
 	// JSONFormat represents JSON data format.
 	JSONFormat PrintFormat = "json"
+	// JSONPathFormat represents JSON path data format.
+	JSONPathFormat PrintFormat = "jsonpath"
 	// YAMLFormat represents YAML data format.
 	YAMLFormat PrintFormat = "yaml"
 )
@@ -23,7 +25,7 @@ const (
 // IsValid returns true if PrintFormat is valid.
 func (o PrintFormat) IsValid() bool {
 	switch o {
-	case TableFormat, JSONFormat, YAMLFormat:
+	case TableFormat, JSONFormat, YAMLFormat, JSONPathFormat:
 		return true
 	}
 	return false
