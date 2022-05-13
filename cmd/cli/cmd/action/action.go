@@ -42,6 +42,7 @@ func NewCmd() *cobra.Command {
 		NewGet(),
 		NewWatch(),
 		NewWait(),
+		NewLogs(),
 	)
 	return root
 }

@@ -51,7 +51,7 @@ capact [flags]
 ### Options
 
 ```
-  -c, --config string                 Path to the YAML config file
+  -C, --config string                 Path to the YAML config file
   -h, --help                          help for capact
   -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - trace (default 0 - disable)
 ```
