@@ -72,9 +72,10 @@ func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*run
 		return nil, errors.Wrap(err, "while merging variables")
 	}
 
-	r.terraform = newTerraform(r.log, r.cfg.WorkDir, args)
+	tfCmd := newTFCmd(r.log, r.cfg.WorkDir)
+	r.terraform = newTerraform(r.log, args, tfCmd)
 
-	err = r.terraform.Start(in.RunnerCtx.DryRun)
+	err = r.terraform.Start(ctx, in.RunnerCtx.DryRun)
 	if err != nil {
 		return nil, errors.Wrap(err, "while starting terraform")
 	}
@@ -108,12 +109,12 @@ func (r *terraformRunner) WaitForCompletion(ctx context.Context, in runner.WaitF
 	if err != nil {
 		return &runner.WaitForCompletionOutput{}, errors.Wrap(err, "while getting additional info")
 	}
-	tfstate, err := r.terraform.tfstate()
+	tfstate, err := r.terraform.ReadTFStateFile(r.cfg.WorkDir)
 	if err != nil {
 		return &runner.WaitForCompletionOutput{}, errors.Wrap(err, "while getting terraform.tfstate file")
 	}
 
-	variables, err := r.terraform.variables()
+	variables, err := r.terraform.ReadVariablesFile(r.cfg.WorkDir)
 	if err != nil {
 		return &runner.WaitForCompletionOutput{}, errors.Wrap(err, "while getting terraform.tfvars file")
 	}
@@ -170,22 +171,25 @@ func (r *terraformRunner) injectStateTypeInstance() error {
 		return runner.SaveToFile(varsFilepath, []byte("\n"))
 	}
 
+	r.log.Debug("Reading TypeInstance with TF state and vars", zap.String("path", r.cfg.StateTypeInstanceFilepath))
 	data, err := ioutil.ReadFile(r.cfg.StateTypeInstanceFilepath)
 	if err != nil {
 		return errors.Wrapf(err, "while reading state file %s", r.cfg.StateTypeInstanceFilepath)
 	}
 
-	state := &StateTypeInstance{}
-	if err := yaml.Unmarshal(data, state); err != nil {
+	state := struct {
+		Value StateTypeInstance `json:"value"`
+	}{}
+	if err := yaml.Unmarshal(data, &state); err != nil {
 		return errors.Wrap(err, "while unmarshaling StateTypeInstance")
 	}
 
 	stateFilepath := path.Join(r.cfg.WorkDir, stateFile)
-	if err := runner.SaveToFile(stateFilepath, state.State); err != nil {
+	if err := runner.SaveToFile(stateFilepath, state.Value.State); err != nil {
 		return errors.Wrapf(err, "while writing state file %s", stateFilepath)
 	}
 
-	if err := runner.SaveToFile(varsFilepath, state.Variables); err != nil {
+	if err := runner.SaveToFile(varsFilepath, state.Value.Variables); err != nil {
 		return errors.Wrapf(err, "while writing vars file %s", varsFilepath)
 	}
 
