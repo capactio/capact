@@ -87,16 +87,16 @@ func SetNewKubeconfig(kubeconfig []byte, log *zap.Logger) error {
 func extractKubeconfigFromTI(path string) ([]byte, error) {
 	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return nil, errors.Wrapf(err, "while reading Kubeconfig TypeInstance path")
+		return nil, errors.Wrapf(err, "while reading kubeconfig TypeInstance path")
 	}
 	kubeconfigInput := KubeconfigInput{}
 	if err := yaml.Unmarshal(data, &kubeconfigInput); err != nil {
-		return nil, errors.Wrapf(err, "while unmarshaling Kubeconfig TypeInstance")
+		return nil, errors.Wrapf(err, "while unmarshaling kubeconfig TypeInstance")
 	}
 
 	kcfg, err := yaml.Marshal(kubeconfigInput.Value.Config)
 	if err != nil {
-		return nil, errors.Wrapf(err, "while marshaling Kubeconfig TypeInstance")
+		return nil, errors.Wrapf(err, "while marshaling kubeconfig TypeInstance")
 	}
 
 	return kcfg, nil

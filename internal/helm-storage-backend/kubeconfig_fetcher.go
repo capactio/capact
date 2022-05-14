@@ -23,7 +23,7 @@ type KubeconfigFetcher struct {
 	tiGetter TypeInstanceGetter
 }
 
-// NewKubeconfigFetcher returns a new kubeconfigFetcher object.
+// NewKubeconfigFetcher returns a new KubeconfigFetcher object.
 func NewKubeconfigFetcher(tiGetter TypeInstanceGetter) *KubeconfigFetcher {
 	return &KubeconfigFetcher{tiGetter: tiGetter}
 }
@@ -57,15 +57,15 @@ func (k *KubeconfigFetcher) FetchByTypeInstanceID(ctx context.Context, typeInsta
 	return kubeconfig, nil
 }
 
-// SetKubeconfigBasedOnTypeInstance sets a kubeconfig based on TypeInstance.
-func (k *KubeconfigFetcher) SetKubeconfigBasedOnTypeInstance(ctx context.Context, logger *zap.Logger, typeInstanceID string) error {
+// SetKubeconfigBasedOnTypeInstanceID sets a kubeconfig based on TypeInstance.
+func (k *KubeconfigFetcher) SetKubeconfigBasedOnTypeInstanceID(ctx context.Context, logger *zap.Logger, typeInstanceID string) error {
 	kubeconfig, err := k.FetchByTypeInstanceID(ctx, typeInstanceID)
 	if err != nil {
 		return errors.Wrap(err, "while getting kubeconfig TypeInstance")
 	}
 	kcfg, err := yaml.Marshal(kubeconfig.Value.Config)
 	if err != nil {
-		return errors.Wrap(err, "while marshaling Kubeconfig TypeInstance")
+		return errors.Wrap(err, "while marshaling kubeconfig TypeInstance")
 	}
 	return helmrunner.SetNewKubeconfig(kcfg, logger)
 }

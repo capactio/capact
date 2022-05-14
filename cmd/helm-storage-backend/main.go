@@ -71,7 +71,7 @@ func main() {
 	if cfg.KubeconfigTypeinstanceID != "" {
 		hubClient := local.NewDefaultClient(cfg.LocalHubEndpoint)
 		kubeconfigFetcher := helm_storage_backend.NewKubeconfigFetcher(hubClient)
-		err := kubeconfigFetcher.SetKubeconfigBasedOnTypeInstance(ctx, logger, cfg.KubeconfigTypeinstanceID)
+		err := kubeconfigFetcher.SetKubeconfigBasedOnTypeInstanceID(ctx, logger, cfg.KubeconfigTypeinstanceID)
 		if err != nil {
 			exitOnError(err, fmt.Sprintf("while setting kubeconfig based on TypeInstance ID: %s", cfg.KubeconfigTypeinstanceID))
 		}
