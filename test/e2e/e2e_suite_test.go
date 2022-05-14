@@ -6,9 +6,10 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"github.com/machinebox/graphql"
 	"testing"
 	"time"
+
+	"github.com/machinebox/graphql"
 
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	engineclient "capact.io/capact/pkg/engine/client"

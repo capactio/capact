@@ -74,7 +74,7 @@ func NewRoot() *cobra.Command {
 		},
 	}
 
-	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Path to the YAML config file")
+	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "C", "", "Path to the YAML config file")
 	cli.RegisterVerboseModeFlag(rootCmd.PersistentFlags())
 
 	rootCmd.AddCommand(

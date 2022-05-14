@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"os"
-	"os/exec"
 	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -22,39 +21,39 @@ const (
 )
 
 type terraform struct {
+	tfCmd     *tfCmd
 	log       *zap.Logger
-	workdir   string
 	args      Arguments
 	_waitCh   chan error
 	runOutput []byte
 }
 
-func newTerraform(log *zap.Logger, workdir string, args Arguments) *terraform {
+func newTerraform(log *zap.Logger, args Arguments, tfCmd *tfCmd) *terraform {
 	return &terraform{
-		log:     log,
-		workdir: workdir,
-		args:    args,
+		log:   log,
+		args:  args,
+		tfCmd: tfCmd,
 	}
 }
 
 // Start starts the Terraform operation.
-func (t *terraform) Start(dryRun bool) error {
+func (t *terraform) Start(ctx context.Context, dryRun bool) error {
 	t._waitCh = make(chan error)
 
 	go func() {
-		err := t.init()
+		err := t.tfCmd.Init(ctx)
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while initializing terraform")
 			return
 		}
 
-		err = t.run(dryRun)
+		err = t.run(ctx, dryRun)
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while running terraform")
 			return
 		}
 		// TODO returning error here is misleading as resources were deployed
-		out, err := t.output()
+		out, err := t.tfCmd.Output()
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while running terraform")
 			return
@@ -89,67 +88,39 @@ func (t *terraform) releaseInfo() ([]byte, error) {
 	return bytes, nil
 }
 
-func (t *terraform) _execute(command string, arg ...string) ([]byte, error) {
-	allArgs := []string{command, "-no-color"}
-	allArgs = append(allArgs, arg...)
-
-	// #nosec
-	cmd := exec.Command("terraform", allArgs...)
-	cmd.Dir = t.workdir
-	cmd.Env = append(os.Environ(), "TF_IN_AUTOMATION=true")
-
-	t.log.Info("Running terraform command", zap.Strings("args", allArgs))
-	out, err := cmd.CombinedOutput()
-	t.log.Debug("Terraform output", zap.ByteString("output", out))
-	return out, err
-}
-
-func (t *terraform) init() error {
-	_, err := t._execute("init")
-	return err
-}
-
-func (t *terraform) output() ([]byte, error) {
-	out, err := t._execute("output", "-json")
-	return out, err
-}
-
-func (t *terraform) run(dryRun bool) error {
+func (t *terraform) run(ctx context.Context, dryRun bool) error {
 	if dryRun {
-		return t._plan()
-	} else if t.args.Command == ApplyCommand {
-		if err := t._plan(); err != nil {
+		return t.tfCmd.Plan(ctx)
+	}
+
+	switch t.args.Command {
+	case ApplyCommand:
+		if err := t.tfCmd.Plan(ctx); err != nil {
 			return err
 		}
 
-		return t._apply()
-	} else if t.args.Command == DestroyCommand {
-		return t._destroy()
+		return t.tfCmd.Apply(ctx)
+	case DestroyCommand:
+		return t.tfCmd.Destroy(ctx)
 	}
+
 	return fmt.Errorf("command `%s` is not supported", t.args.Command)
 }
 
-func (t *terraform) _plan() error {
-	_, err := t._execute("plan")
-	return err
+func (t *terraform) ReadTFStateFile(dir string) ([]byte, error) {
+	return t.readFile(path.Join(dir, stateFile))
 }
 
-func (t *terraform) _apply() error {
-	_, err := t._execute("apply", "-auto-approve")
-	return err
+func (t *terraform) ReadVariablesFile(dir string) ([]byte, error) {
+	return t.readFile(path.Join(dir, variablesFile))
 }
 
-func (t *terraform) _destroy() error {
-	_, err := t._execute("destroy", "-auto-approve")
-	return err
-}
-
-func (t *terraform) tfstate() ([]byte, error) {
-	return ioutil.ReadFile(path.Join(t.workdir, "terraform.tfstate"))
-}
-
-func (t *terraform) variables() ([]byte, error) {
-	return ioutil.ReadFile(path.Join(t.workdir, variablesFile))
+func (t *terraform) readFile(filePath string) ([]byte, error) {
+	bytes, err := ioutil.ReadFile(filepath.Clean(filePath))
+	if err != nil {
+		return nil, errors.Wrapf(err, "while reading file from path %q", filePath)
+	}
+	return bytes, nil
 }
 
 func (t *terraform) renderOutput() ([]byte, error) {

@@ -1,0 +1,9 @@
+command: "destroy"
+module:
+  name: cloudsql
+  source: "/tmp/cloudsql.tgz"
+variables: |+
+  user_name = "capact"
+  user_password = "12-43i213j}"
+env:
+  - GOOGLE_PROJECT=capact

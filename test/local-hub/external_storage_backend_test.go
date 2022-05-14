@@ -206,7 +206,7 @@ func TestExternalStorage(t *testing.T) {
 			backend.Context = nil
 		}
 
-		// 	// For cap.type.parent don't update value and `context` - use old ones
+		// For cap.type.parent don't update value and `context` - use old ones
 		if member.TypeRef.Path == "cap.type.parent" {
 			val = nil
 			backend = nil
@@ -646,28 +646,25 @@ func assertDataInExternalStorageDoesntExist(t *testing.T, addr string, refs []ty
 	}
 }
 
-func assertTypeInstancesDetail(t *testing.T, typeInstances interface{}, family []gqllocalapi.CreateTypeInstanceOutput, storage map[string]externalData, expectedData []*expectedTypeInstanceData) {
+func assertTypeInstancesDetail(t *testing.T, typeInstances []gqllocalapi.TypeInstance, family []gqllocalapi.CreateTypeInstanceOutput, storage map[string]externalData, expectedData []*expectedTypeInstanceData) {
 	mapping := map[string]string{}
 	for _, member := range family {
 		mapping[member.ID] = member.Alias
 	}
 
-	switch in := typeInstances.(type) {
-	case []gqllocalapi.TypeInstance:
-		for _, ti := range in {
-			expectedTI, err := findExpectedTypeInstance(expectedData, mapping[ti.ID])
-			require.NoError(t, err)
-			dataInExternalBackend := mustMarshal(t, expectedTI.dataInExternalBackend)
-			if dataInExternalBackend == "null" {
-				assert.Equal(t, storage[ti.ID].Value, "")
-			} else {
-				assert.Equal(t, storage[ti.ID].Value, dataInExternalBackend)
-			}
-			assert.Equal(t, mustMarshal(t, ti.LatestResourceVersion.Spec.Backend.Context), mustMarshal(t, expectedTI.backendContext))
-			assert.Equal(t, mustMarshal(t, ti.LatestResourceVersion.Spec.Value), mustMarshal(t, expectedTI.dataInGQL))
-			assert.Equal(t, stringDefault(ti.LockedBy, ""), expectedTI.locked)
-			assert.Equal(t, stringDefault(storage[ti.ID].LockedBy, ""), expectedTI.lockedInExternalBackend)
+	for _, ti := range typeInstances {
+		expectedTI, err := findExpectedTypeInstance(expectedData, mapping[ti.ID])
+		require.NoError(t, err)
+		dataInExternalBackend := mustMarshal(t, expectedTI.dataInExternalBackend)
+		if dataInExternalBackend == "null" {
+			assert.Equal(t, storage[ti.ID].Value, "", "Not equal for TI %q", mapping[ti.ID])
+		} else {
+			assert.Equal(t, storage[ti.ID].Value, dataInExternalBackend, "Not equal for TI %q", mapping[ti.ID])
 		}
+		assert.Equal(t, mustMarshal(t, expectedTI.backendContext), mustMarshal(t, ti.LatestResourceVersion.Spec.Backend.Context), "Not equal for TI %q", mapping[ti.ID])
+		assert.Equal(t, mustMarshal(t, expectedTI.dataInGQL), mustMarshal(t, ti.LatestResourceVersion.Spec.Value), "Not equal for TI %q", mapping[ti.ID])
+		assert.Equal(t, expectedTI.locked, stringDefault(ti.LockedBy, ""), "Not equal for TI %q", mapping[ti.ID])
+		assert.Equal(t, expectedTI.lockedInExternalBackend, stringDefault(storage[ti.ID].LockedBy, ""), "Not equal for TI %q", mapping[ti.ID])
 	}
 }
 

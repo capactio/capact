@@ -461,6 +461,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     needs: [ push-apps, push-tests, build-cli ]
+    strategy:
+      matrix:
+        cluster: [ kind, k3d ]
     permissions:
       contents: read
     env:
@@ -497,6 +500,8 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
+          CLUSTER_TYPE: ${{ matrix.cluster }}
+          DISABLE_K3D_REGISTRY: "true"
         run: |
           make test-integration
       - name: Upload artifacts

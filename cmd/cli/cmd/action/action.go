@@ -41,6 +41,14 @@ func NewCmd() *cobra.Command {
 		NewRun(),
 		NewGet(),
 		NewWatch(),
+		NewWait(),
+		NewLogs(),
 	)
 	return root
+}
+
+func panicOnError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

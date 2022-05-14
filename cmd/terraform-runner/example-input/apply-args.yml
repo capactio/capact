@@ -1,14 +1,11 @@
 command: "apply"
 module:
   name: cloudsql
-  source: "./cmd/terraform-runner/example-input/cloudsql.tgz"
+  source: "/tmp/cloudsql.tgz"
 variables: |+
   user_name = "capact"
   user_password = "12-43i213j}"
 env:
-  # TODO this looks like a bug. google_sql_database_instance.settings.provider is optional and when missing
-  # it should be taken from credentials. In credentials there is no `project` though but only `project_id`
-  # so setting it directly
   - GOOGLE_PROJECT=capact
 output:
   goTemplate: |
