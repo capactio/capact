@@ -9,7 +9,7 @@ import (
 type JSONPath struct{}
 
 func (p *JSONPath) Print(in interface{}, w io.Writer) error {
-	printer, err := printers.NewJSONPathPrinter(".[0].latestResourceVersion.spec.value") // TODO Move somewhere else
+	printer, err := printers.NewJSONPathPrinter("{[0].backend.id}") // TODO Move somewhere else
 	if err != nil {
 		return err
 	}
