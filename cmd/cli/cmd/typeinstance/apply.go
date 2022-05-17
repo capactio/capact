@@ -31,6 +31,7 @@ func NewApply() *cobra.Command {
 	resourcePrinter := printer.NewForResource(
 		os.Stdout,
 		printer.WithJSON(),
+		printer.WithJSONPath(),
 		printer.WithYAML(),
 		printer.WithTable(tableDataOnGet),
 	)

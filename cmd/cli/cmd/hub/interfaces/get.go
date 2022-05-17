@@ -31,7 +31,13 @@ const (
 func NewGet() *cobra.Command {
 	var opts getOptions
 
-	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithJSON(), cliprinter.WithYAML(), cliprinter.WithTable(tableDataOnGet))
+	resourcePrinter := cliprinter.NewForResource(
+		os.Stdout,
+		cliprinter.WithJSON(),
+		cliprinter.WithJSONPath(),
+		cliprinter.WithYAML(),
+		cliprinter.WithTable(tableDataOnGet),
+	)
 
 	get := &cobra.Command{
 		Use:   "get",

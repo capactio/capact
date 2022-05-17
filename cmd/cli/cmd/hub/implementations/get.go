@@ -28,7 +28,13 @@ type getOptions struct {
 func NewGet() *cobra.Command {
 	var opts getOptions
 
-	resourcePrinter := printer.NewForResource(os.Stdout, printer.WithJSON(), printer.WithYAML(), printer.WithTable(tableDataOnGet))
+	resourcePrinter := printer.NewForResource(
+		os.Stdout,
+		printer.WithJSON(),
+		printer.WithJSONPath(),
+		printer.WithYAML(),
+		printer.WithTable(tableDataOnGet),
+	)
 
 	get := &cobra.Command{
 		Use:   "get",

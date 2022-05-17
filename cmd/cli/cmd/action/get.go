@@ -16,7 +16,13 @@ import (
 func NewGet() *cobra.Command {
 	var opts action.GetOptions
 
-	resourcePrinter := printer.NewForResource(os.Stdout, printer.WithJSON(), printer.WithYAML(), printer.WithTable(action.TableDataOnGet))
+	resourcePrinter := printer.NewForResource(
+		os.Stdout,
+		printer.WithJSON(),
+		printer.WithJSONPath(),
+		printer.WithYAML(),
+		printer.WithTable(action.TableDataOnGet),
+	)
 
 	cmd := &cobra.Command{
 		Use:   "get",
