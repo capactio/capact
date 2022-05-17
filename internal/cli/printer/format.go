@@ -25,7 +25,7 @@ const (
 // IsValid returns true if PrintFormat is valid.
 func (o PrintFormat) IsValid() bool {
 	switch o {
-	case TableFormat, JSONFormat, YAMLFormat:
+	case TableFormat, JSONFormat, JSONPathFormat, YAMLFormat:
 		return true
 	}
 

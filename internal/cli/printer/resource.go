@@ -103,6 +103,10 @@ func (r *ResourcePrinter) Print(in interface{}) error {
 	}
 
 	if r.output == JSONPathFormat {
+		if r.template == "" {
+			return errors.New("JSON path output template not provided")
+		}
+
 		jsonPathPrinter, err := printers.NewJSONPathPrinter(r.template)
 		if err != nil {
 			return errors.Wrap(err, "while creating JSON path printer")
