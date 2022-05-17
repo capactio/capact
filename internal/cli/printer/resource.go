@@ -6,9 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 // Printer is an interface that knows how to print objects.
@@ -92,47 +90,12 @@ func (r *ResourcePrinter) PrintFormat() PrintFormat {
 
 // Print prints received object in requested format.
 func (r *ResourcePrinter) Print(in interface{}) error {
-	printer, err := r.getPrinter()
-	if err != nil {
-		return err
+	printer, found := r.printers[r.output]
+	if !found {
+		return fmt.Errorf("printer %q is not available", r.output)
 	}
 
 	return printer.Print(in, r.writer)
-}
-
-func (r *ResourcePrinter) getPrinter() (Printer, error) {
-	var printFormat PrintFormat
-
-	if strings.HasPrefix(string(r.output), string(JSONPathFormat)) {
-		printFormat = JSONPathFormat
-	} else {
-		printFormat = r.output
-	}
-
-	printer, found := r.printers[printFormat]
-	if !found {
-		return nil, fmt.Errorf("printer %q is not available", r.output)
-	}
-
-	if printFormat == JSONPathFormat {
-		templatePrefix := string(JSONPathFormat) + "="
-
-		if !strings.HasPrefix(string(r.output), string(templatePrefix)) {
-			return nil, fmt.Errorf("JSON path output template should be prefixed with %q", templatePrefix)
-		}
-
-		template := string(r.output)[len(templatePrefix):]
-		fmt.Println(template)
-
-		jsonPathPrinter, err := printers.NewJSONPathPrinter(template)
-		if err != nil {
-			return nil, errors.Wrap(err, "while creating JSON path printer")
-		}
-
-		return &JSONPath{printer: jsonPathPrinter}, nil
-	}
-
-	return printer, nil
 }
 
 func (r *ResourcePrinter) availablePrinters() string {
