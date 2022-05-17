@@ -6,7 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 // Printer is an interface that knows how to print objects.
@@ -18,8 +20,9 @@ type Printer interface {
 // ResourcePrinter provides functionality to print a given resource in requested format.
 // Can be configured with pflag.FlagSet.
 type ResourcePrinter struct {
-	writer io.Writer
-	output PrintFormat
+	writer   io.Writer
+	output   PrintFormat
+	template string
 
 	printers map[PrintFormat]Printer
 }
@@ -81,6 +84,10 @@ func WithDefaultOutputFormat(format PrintFormat) ResourcePrinterOption {
 // RegisterFlags registers ResourcePrinter terminal flags.
 func (r *ResourcePrinter) RegisterFlags(flags *pflag.FlagSet) {
 	flags.VarP(&r.output, "output", "o", fmt.Sprintf("Output format. One of: %s", r.availablePrinters()))
+
+	if _, ok := r.printers[JSONPathFormat]; ok {
+		flags.StringVarP(&r.template, "template", "t", "", "JSON path output template")
+	}
 }
 
 // PrintFormat returns default print format type.
@@ -93,6 +100,15 @@ func (r *ResourcePrinter) Print(in interface{}) error {
 	printer, found := r.printers[r.output]
 	if !found {
 		return fmt.Errorf("printer %q is not available", r.output)
+	}
+
+	if r.output == JSONPathFormat {
+		jsonPathPrinter, err := printers.NewJSONPathPrinter(r.template)
+		if err != nil {
+			return errors.Wrap(err, "while creating JSON path printer")
+		}
+
+		printer = &JSONPath{printer: jsonPathPrinter}
 	}
 
 	return printer.Print(in, r.writer)
