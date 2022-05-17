@@ -11,5 +11,7 @@ type JSONPath struct {
 }
 
 func (p *JSONPath) Print(in interface{}, w io.Writer) error {
+	p.printer.EnableJSONOutput(true)
+
 	return p.printer.JSONPath.Execute(w, in)
 }
