@@ -25,7 +25,7 @@ To run a single Action you need to:
 
 13. Extract the output TypeInstances:
     ```
-    capact action get psql-install -ojson | jq -r '.Actions[].output.typeInstances | map(select(.typeRef.path == "cap.type.database.postgresql.config"))'
+    capact action get psql-install -ojsonpath -t '{.Actions[*].output.typeInstances[?(@.typeRef.path == "cap.type.database.postgresql.config")]}'
     ```
 
 
