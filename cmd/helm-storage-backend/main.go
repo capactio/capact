@@ -38,7 +38,7 @@ type Config struct {
 	// LocalHubEndpoint is an endpoint to the Local Hub.
 	LocalHubEndpoint string `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
 
-	// KubeconfigTypeinstanceID is the optional Kubeconfig TypeInstance.
+	// KubeconfigTypeinstanceID is the optional kubeconfig TypeInstance ID.
 	KubeconfigTypeinstanceID string `envconfig:"optional"`
 
 	// GRPCAddr is the TCP address the gRPC server binds to.

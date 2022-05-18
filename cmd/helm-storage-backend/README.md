@@ -38,13 +38,15 @@ The server listens to gRPC calls according to the [Storage Backend Protocol Buff
 
 ## Configuration
 
-| Name                | Required | Default          | Description                                        |
-|---------------------|----------|------------------|----------------------------------------------------|
-| APP_MODE            | yes      |                  | One of the service modes: `release` or `template`. |
-| KUBECONFIG          | no       | `~/.kube/config` | Path to kubeconfig file                            |
-| APP_GRPC_ADDR       | no       | `:50051`         | TCP address the gRPC server binds to.              |
-| APP_HEALTHZ_ADDR    | no       | `:8082`          | TCP address the health probes endpoint binds to.   |
-| APP_LOGGER_DEV_MODE | no       | `false`          | Enable development mode logging.                   |
+| Name                           | Required | Default                                         | Description                                        |
+|--------------------------------|----------|-------------------------------------------------|----------------------------------------------------|
+| APP_MODE                       | yes      |                                                 | One of the service modes: `release` or `template`. |
+| KUBECONFIG                     | no       | `~/.kube/config`                                | Path to kubeconfig file.                           |
+| APP_GRPC_ADDR                  | no       | `:50051`                                        | TCP address the gRPC server binds to.              |
+| APP_LOCAL_HUB_ENDPOINT         | no       | `http://capact-hub-local.capact-system/graphql` | Capact Local Hub Endpoint.                         |
+| APP_KUBECONFIG_TYPEINSTANCE_ID | no       | ` `                                             | ID of the kubeconfig TypeInstance.                 |
+| APP_HEALTHZ_ADDR               | no       | `:8082`                                         | TCP address the health probes endpoint binds to.   |
+| APP_LOGGER_DEV_MODE            | no       | `false`                                         | Enable development mode logging.                   |
 
 ## Development
 
