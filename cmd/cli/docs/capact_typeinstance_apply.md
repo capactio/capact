@@ -29,7 +29,8 @@ capact typeinstance apply -f /tmp/typeinstances.yaml
 ```
   -f, --from-file strings   The TypeInstances input in YAML format (can specify multiple)
   -h, --help                help for apply
-  -o, --output string       Output format. One of: json | table | yaml (default "table")
+  -o, --output string       Output format. One of: json | jsonpath | table | yaml (default "table")
+  -t, --template string     JSON path output template
       --timeout duration    Timeout for HTTP request (default 30s)
 ```
 

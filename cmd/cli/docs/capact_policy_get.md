@@ -14,7 +14,8 @@ capact policy get [flags]
 
 ```
   -h, --help               help for get
-  -o, --output string      Output format. One of: json | yaml (default "yaml")
+  -o, --output string      Output format. One of: json | jsonpath | yaml (default "yaml")
+  -t, --template string    JSON path output template
       --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
