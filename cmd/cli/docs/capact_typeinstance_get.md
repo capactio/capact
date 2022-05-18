@@ -28,7 +28,7 @@ capact typeinstance get c49b 4793 -oyaml --export > /tmp/typeinstances.yaml
       --export             Converts TypeInstance to update format.
   -h, --help               help for get
   -o, --output string      Output format. One of: json | jsonpath | table | yaml (default "table")
-  -t, --template string    JSON path output template
+  -t, --template string    JSON path output template (https://kubernetes.io/docs/reference/kubectl/jsonpath)
       --timeout duration   Timeout for HTTP request (default 30s)
 ```
 

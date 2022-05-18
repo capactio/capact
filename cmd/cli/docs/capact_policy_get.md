@@ -15,7 +15,7 @@ capact policy get [flags]
 ```
   -h, --help               help for get
   -o, --output string      Output format. One of: json | jsonpath | yaml (default "yaml")
-  -t, --template string    JSON path output template
+  -t, --template string    JSON path output template (https://kubernetes.io/docs/reference/kubectl/jsonpath)
       --timeout duration   Timeout for HTTP request (default 30s)
 ```
 

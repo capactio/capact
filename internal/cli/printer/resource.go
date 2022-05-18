@@ -86,7 +86,7 @@ func (r *ResourcePrinter) RegisterFlags(flags *pflag.FlagSet) {
 	flags.VarP(&r.output, "output", "o", fmt.Sprintf("Output format. One of: %s", r.availablePrinters()))
 
 	if _, ok := r.printers[JSONPathFormat]; ok {
-		flags.StringVarP(&r.template, "template", "t", "", "JSON path output template")
+		flags.StringVarP(&r.template, "template", "t", "", "JSON path output template (https://kubernetes.io/docs/reference/kubectl/jsonpath)")
 	}
 }
 

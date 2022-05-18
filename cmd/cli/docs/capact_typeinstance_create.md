@@ -50,7 +50,7 @@ capact typeinstance create -f ./tmp/typeinstances.yaml
   -f, --from-file strings   The TypeInstances input in YAML format (can specify multiple)
   -h, --help                help for create
   -o, --output string       Output format. One of: json | jsonpath | table | yaml (default "table")
-  -t, --template string     JSON path output template
+  -t, --template string     JSON path output template (https://kubernetes.io/docs/reference/kubectl/jsonpath)
       --timeout duration    Timeout for HTTP request (default 30s)
 ```
 
