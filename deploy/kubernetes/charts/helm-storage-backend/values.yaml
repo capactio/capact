@@ -9,6 +9,11 @@ image:
   name: helm-storage-backend
   pullPolicy: IfNotPresent
 
+localHubEndpoint: "http://capact-hub-local.capact-system/graphql"
+
+kubeconfig:
+  typeInstanceID: ""
+
 helmReleaseBackend:
   enabled: true
   service:
