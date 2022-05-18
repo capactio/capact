@@ -20,6 +20,7 @@ import (
 	"capact.io/capact/internal/healthz"
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/hub/api/grpc/storage_backend"
+	"capact.io/capact/pkg/hub/client/local"
 )
 
 // Mode describes the selected handler for the Helm storage backend gRPC server.
@@ -34,6 +35,12 @@ const (
 
 // Config holds application related configuration.
 type Config struct {
+	// LocalHubEndpoint is an endpoint to the Local Hub.
+	LocalHubEndpoint string `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
+
+	// KubeconfigTypeinstanceID is the optional kubeconfig TypeInstance ID.
+	KubeconfigTypeinstanceID string `envconfig:"optional"`
+
 	// GRPCAddr is the TCP address the gRPC server binds to.
 	GRPCAddr string `envconfig:"default=:50051"`
 
@@ -61,7 +68,14 @@ func main() {
 
 	logger := unnamedLogger.Named(appName).Named(string(cfg.Mode))
 
-	// k8s
+	if cfg.KubeconfigTypeinstanceID != "" {
+		hubClient := local.NewDefaultClient(cfg.LocalHubEndpoint)
+		kubeconfigFetcher := helm_storage_backend.NewKubeconfigFetcher(hubClient)
+		err := kubeconfigFetcher.SetKubeconfigBasedOnTypeInstanceID(ctx, logger, cfg.KubeconfigTypeinstanceID)
+		if err != nil {
+			exitOnError(err, fmt.Sprintf("while setting kubeconfig based on TypeInstance ID: %s", cfg.KubeconfigTypeinstanceID))
+		}
+	}
 
 	k8sCfg, err := config.GetConfig()
 	exitOnError(err, "while getting K8s config")
