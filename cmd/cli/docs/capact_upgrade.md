@@ -27,19 +27,18 @@ capact upgrade --version 0.1.0
 ### Options
 
 ```
-      --action-name-prefix string           Specifies Capact upgrade Action name prefix. (default "capact-upgrade-")
-      --crd string                          Overrides the Capact Action CRD location.
-      --enable-test-setup                   Enables test setup for the Capact E2E validation scenarios.
-      --helm-repo string                    Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
-  -h, --help                                help for upgrade
-      --increase-resource-limits            Enables higher resource requests and limits for components. (default true)
-      --max-queue-time duration             Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
-      --override-capact-image-repo string   Allows you to override Docker image repository for Capact components. By default, Docker image repository from Helm chart is used.
-      --override-capact-image-tag string    Allows you to override Docker image tag for Capact components. By default, Docker image tag from Helm chart is used.
-      --print-insecure-helm-release-notes   Prints the base64-encoded Gateway password directly in Helm release notes.
-      --timeout duration                    Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
-      --version string                      Capact version. (default "@latest")
-  -w, --wait                                Waits for the upgrade process until it's finished or the defined "--timeout" has occurred. (default true)
+      --action-name-prefix string              Specifies Capact upgrade Action name prefix. (default "capact-upgrade-")
+      --capact-overrides strings               Overrides for Capact component.
+      --cert-manager-overrides strings         Overrides for Cert Manager component.
+      --crd string                             Overrides the Capact Action CRD location.
+      --helm-repo string                       Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
+  -h, --help                                   help for upgrade
+      --increase-resource-limits               Enables higher resource requests and limits for components. (default true)
+      --ingress-controller-overrides strings   Overrides for Ingress controller component.
+      --max-queue-time duration                Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
+      --timeout duration                       Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
+      --version string                         Capact version. (default "@latest")
+  -w, --wait                                   Waits for the upgrade process until it's finished or the defined "--timeout" has occurred. (default true)
 ```
 
 ### Options inherited from parent commands
