@@ -12,7 +12,13 @@ import (
 
 // NewGet return a cobra.Command for getting the Capact Global policy on a Capact environment.
 func NewGet() *cobra.Command {
-	resourcePrinter := printer.NewForResource(os.Stdout, printer.WithJSON(), printer.WithYAML(), printer.WithDefaultOutputFormat(printer.YAMLFormat))
+	resourcePrinter := printer.NewForResource(
+		os.Stdout,
+		printer.WithJSON(),
+		printer.WithJSONPath(),
+		printer.WithYAML(),
+		printer.WithDefaultOutputFormat(printer.YAMLFormat),
+	)
 
 	cmd := &cobra.Command{
 		Use:   "get",

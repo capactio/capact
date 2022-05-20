@@ -46,6 +46,7 @@ func NewGet() *cobra.Command {
 	resourcePrinter := cliprinter.NewForResource(
 		out,
 		cliprinter.WithJSON(),
+		cliprinter.WithJSONPath(),
 		cliprinter.WithYAML(),
 		cliprinter.WithTable(tableDataOnGet),
 	)
