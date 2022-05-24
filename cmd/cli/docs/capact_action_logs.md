@@ -22,19 +22,19 @@ capact action logs ACTION [POD] [flags]
 
 ```
 # Print the logs of an Action:
-capact logs example
+capact action logs example
 
 # Follow the logs of an Action:
-capact logs example --follow
+capact action logs example --follow
 
 # Print the logs of single container in a pod
-capact logs example step-pod -c step-pod-container
+capact action logs example step-pod -c step-pod-container
 
 # Print the logs of an Action's step:
-capact logs example step-pod
+capact action logs example step-pod
 
 # Print the logs of the latest executed Action:
-capact logs @latest
+capact action logs @latest
 
 ```
 

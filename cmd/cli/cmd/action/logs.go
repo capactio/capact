@@ -25,19 +25,19 @@ func NewLogs() *cobra.Command {
 
 	cmd.Example = heredoc.WithCLIName(`
 			# Print the logs of an Action:
-			<cli> logs example
+			<cli> action logs example
 
 			# Follow the logs of an Action:
-			<cli> logs example --follow
+			<cli> action logs example --follow
 
 			# Print the logs of single container in a pod
-			<cli> logs example step-pod -c step-pod-container
+			<cli> action logs example step-pod -c step-pod-container
 
 			# Print the logs of an Action's step:
-			<cli> logs example step-pod
+			<cli> action logs example step-pod
 
 			# Print the logs of the latest executed Action:
-			<cli> logs @latest
+			<cli> action logs @latest
 		`, cli.Name)
 
 	client.AddKubectlFlagsToCmd(cmd)
