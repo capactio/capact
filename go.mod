@@ -97,7 +97,7 @@ replace (
 	// TODO:
 	// 	- Remove when we can compile argo without static files
 	//  Check PR description on how to update to newer version: https://github.com/capactio/capact/pull/541
-	github.com/argoproj/argo-workflows/v3 => github.com/capactio/argo-workflows/v3 v3.2.2-for-capact
+	github.com/argoproj/argo-workflows/v3 => github.com/capactio/argo-workflows/v3 v3.2.11-for-capact
 
 	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.8
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
