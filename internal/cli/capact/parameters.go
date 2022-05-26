@@ -81,7 +81,13 @@ type (
 	}
 	//Populator values
 	Populator struct {
-		Enabled bool `json:"enabled,omitempty"`
+		Enabled            bool                `json:"enabled,omitempty"`
+		ManifestsLocations []ManifestsLocation `json:"manifestsLocations,omitempty"`
+	}
+	// ManifestsLocation values
+	ManifestsLocation struct {
+		Branch     string `json:"branch,omitempty"`
+		Repository string `json:"respository,omitempty"`
 	}
 )
 
