@@ -87,7 +87,7 @@ type (
 	// ManifestsLocation values
 	ManifestsLocation struct {
 		Branch     string `json:"branch,omitempty"`
-		Repository string `json:"respository,omitempty"`
+		Repository string `json:"repository,omitempty"`
 	}
 )
 
