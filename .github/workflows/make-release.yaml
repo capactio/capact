@@ -84,7 +84,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v0.6.0
       - name: Run GoReleaser
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
         run: make release-binaries
       - name: Generate release notes
         run: |
