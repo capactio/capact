@@ -83,7 +83,7 @@ populator:
   useEmbeddedSourceOnly: false
   manifestsLocations:
     - repository: github.com/capactio/hub-manifests
-      branch: main
+      branch: release-0.7
       # sshKey is a base64 encoded private key used by populator to download manifests. It has read only access
       #sshKey:
   args: ["while true; do /app register ocf-manifests --source $MANIFESTS_SOURCES; sleep 600;done"]
