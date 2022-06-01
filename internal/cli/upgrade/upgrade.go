@@ -100,6 +100,10 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 	}
 
 	status.Step("Creating upgrade Action for %s 💾", opts.Parameters.Version)
+	err = opts.Parameters.SetCapactValuesFromOverrides()
+	if err != nil {
+		return errors.Wrap(err, "while parsing Capact overrides")
+	}
 
 	inputParams, err := mapToInputParameters(opts.Parameters)
 	if err != nil {
