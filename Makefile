@@ -7,7 +7,7 @@ export GOPROXY = https://proxy.golang.org
 # enable the BuildKit builder in the Docker CLI.
 export DOCKER_BUILDKIT = 1
 
-DOCKER_REPOSITORY ?= ghcr.io/capactio
+DOCKER_REPOSITORY ?= gcr.io/sm-cluster-dev
 DOCKER_TAG ?= latest
 
 all: generate build-all-images test-unit test-lint ## Default: generate all, build all, test all and lint
@@ -17,13 +17,14 @@ all: generate build-all-images test-unit test-lint ## Default: generate all, bui
 # Building #
 ############
 
-APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions gitlab-api-runner secret-storage-backend helm-storage-backend ti-value-fetcher
+APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator cli terraform-runner gcplist-runner manifestrepo-runner jira-runner argo-actions gitlab-api-runner secret-storage-backend helm-storage-backend ti-value-fetcher azure-runner autopatcher-runner capact-runner confluence-runner azviz toolbox
 TESTS = e2e local-hub
-INFRA = json-go-gen graphql-schema-linter jinja2 merger
+INFRA = json-go-gen graphql-schema-linter jinja2 merger neo4j
 
+# Tools
 build-all-tools: ## Builds the standalone binaries for all tools
 	goreleaser build --rm-dist --skip-post-hooks --snapshot --single-target
-.PHONY: build-cli-tools
+.PHONY: build-all-tools
 
 build-tool-cli: ## Builds the standalone binaries for the capact CLI
 	goreleaser build --id capact --rm-dist --skip-post-hooks --snapshot --single-target
@@ -43,7 +44,7 @@ build-all-tests-images: $(addprefix build-test-image-,$(TESTS)) ## Builds all te
 build-all-images: build-all-apps-images build-all-tests-images $(addprefix build-infra-image-,$(INFRA)) ## Build all images
 .PHONY: build-all-images
 
-push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-image-,$(TESTS)) $(addprefix push-infra-image-,$(INFRA)) ## Push all images to the repository
+push-all-images: $(addprefix push-app-image-,$(APPS)) $(addprefix push-test-image-,$(TESTS)) $(addprefix push-infra-image-,$(INFRA)) ## Push all images to the repository
 .PHONY: push-all-images
 
 # App images
@@ -61,6 +62,37 @@ build-app-image-terraform-runner: ## Build application image for terraform runne
 	$(eval APP := terraform-runner)
 	docker build --build-arg COMPONENT=$(APP) --target terraform-runner -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-terraform-runner
+
+build-app-image-azure-runner: ## Build application image for azure runner
+	$(eval APP := azure-runner)
+	docker build --build-arg COMPONENT=$(APP) --target azure-runner -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-azure-runner
+
+build-app-image-autopatcher-runner: ## Build application image for autopatcher runner
+	$(eval APP := autopatcher-runner)
+	docker build --build-arg COMPONENT=$(APP) --target autopatcher-runner -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-autopatcher-runner
+
+build-app-image-cli: ## Build application image for capact cli
+	$(eval APP := cli)
+	docker build --build-arg COMPONENT=$(APP) --target cli -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-cli
+
+build-app-image-capact-runner: ## Build application image for capact runner
+	$(eval APP := capact-runner)
+	sed -i "s/CAPACT_VERSION_REPLEACEMENT/$(DOCKER_TAG)/g" ./Dockerfile
+	docker build --build-arg COMPONENT=$(APP) --target capact-runner -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-capact-runner
+
+build-app-image-azviz:
+	$(eval APP := azviz)
+	docker build --build-arg COMPONENT=$(APP) --build-arg SSH_PRIVATE_KEY="$(SVG_SSH_PRIVATE_KEY)" --target azviz -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-azviz
+
+build-app-image-toolbox:
+	$(eval APP := toolbox)
+	docker build --build-arg COMPONENT=$(APP) --target toolbox -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-toolbox
 
 build-app-image-%:
 	$(eval APP := $*)
@@ -229,13 +261,13 @@ release-latest-binaries: ## Release latest Capact binaries
 	# https://goreleaser.com/limitations/semver/
 	#
 	# Update binaries
-	gsutil -m rsync -x "goreleaserdocker.*" -r ./bin/ gs://capactio-binaries/latest/
+	gsutil -m rsync -x "goreleaserdocker.*" -r ./bin/ gs://supermaestro-binaries/latest/
 	# By default Google sets `cache-control: public, max-age=3600`.
 	# We need to change to ensure the file is not cached by http clients, so latest version is always downloaded
 	# source: https://cloud.google.com/storage/docs/caching#performance_considerations
-	gsutil setmeta -h "Cache-Control: no-cache, no-store" gs://capactio-binaries/latest/*
+	gsutil setmeta -h "Cache-Control: no-cache, no-store" gs://supermaestro-binaries/latest/*
 	# Update Docker images
-	docker push ghcr.io/capactio/tools/capact-cli:latest
+	docker push gcr.io/sm-cluster-dev/tools/capact-cli:latest
 
 #############
 # Other     #

@@ -30,7 +30,7 @@ dockers:
     ids:
       - capact
     image_templates:
-      - "ghcr.io/capactio/tools/capact-cli:latest"
+      - "gcr.io/sm-cluster-dev/tools/capact-cli:latest"
 
 checksum:
   name_template: 'checksums.txt'

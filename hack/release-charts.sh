@@ -7,6 +7,7 @@
 set -o nounset
 set -o errexit
 set -o pipefail
+set -x
 
 CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
@@ -15,8 +16,8 @@ readonly REPO_ROOT_DIR
 readonly DEPLOY_CHARTS_DIR="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
 readonly CR_PACKAGE_PATH="${REPO_ROOT_DIR}/tmp/charts"
-readonly CAPACTIO_OFFICIAL_BUCKET="capactio-stable-charts"
-readonly CAPACTIO_LATEST_BUCKET="capactio-latest-charts"
+readonly CAPACTIO_OFFICIAL_BUCKET="supermaestro-stable-charts"
+readonly CAPACTIO_LATEST_BUCKET="supermaestro-latest-charts"
 
 readonly charts=(
   "argo"
@@ -47,7 +48,7 @@ main() {
   local CAPACTIO_BUCKET="${CAPACTIO_OFFICIAL_BUCKET}"
   if [ "${MAIN_BUILD:-}" = "true" ]; then
     CAPACTIO_BUCKET="${CAPACTIO_LATEST_BUCKET}"
-    setChartVersionAndImageTagToCommitSHA
+    # setChartVersionAndImageTagToCommitSHA
   fi
 
   readonly CAPACTIO_REPO_URL=https://storage.googleapis.com/${CAPACTIO_BUCKET}
